@@ -101,12 +101,22 @@ const StudentProgress = () => {
               <span className="text-xs bg-muted text-muted-foreground px-2.5 py-1 rounded-full">{student.status_bacaan}</span>
             </div>
           </div>
-          <Link to={`/exam/${student.id}`}>
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-gold text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-gold">
-              <ClipboardList className="w-4 h-4" />
-              Ujian Kenaikan
-            </button>
-          </Link>
+          <div className="flex gap-2 flex-wrap">
+            {(student.level === "Tahsin Dasar" || student.level === "Tahsin Lanjutan" || student.level === "Tahfizh") && (
+              <Link to={`/tahsin/${student.id}`}>
+                <button className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
+                  <BookOpen className="w-4 h-4" />
+                  Penilaian Tahsin
+                </button>
+              </Link>
+            )}
+            <Link to={`/exam/${student.id}`}>
+              <button className="flex items-center gap-2 px-4 py-2.5 bg-gold text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-gold">
+                <ClipboardList className="w-4 h-4" />
+                Ujian Kenaikan
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
 
