@@ -220,3 +220,69 @@ export const useAddExam = () => {
     },
   });
 };
+
+// ─── TAHSIN ASSESSMENTS ───────────────────────────────────────────────────────
+export interface TahsinAssessment {
+  id: string;
+  student_id: string;
+  created_by: string | null;
+  tanggal: string;
+  makhraj_huruf: number;
+  hukum_nun_mati: number;
+  hukum_mim_mati: number;
+  mad: number;
+  tartil: number;
+  nilai_total: number;
+  predikat: string;
+  keterangan: Record<string, string>;
+  catatan: string;
+  level_dinilai: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const useTahsinAssessments = (studentId: string) =>
+  useQuery({
+    queryKey: ["tahsin", studentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("tahsin_assessments" as never)
+        .select("*")
+        .eq("student_id", studentId)
+        .order("tanggal", { ascending: false });
+      if (error) throw error;
+      return data as TahsinAssessment[];
+    },
+    enabled: !!studentId,
+  });
+
+export const useAddTahsinAssessment = () => {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (assessment: {
+      student_id: string;
+      level_dinilai: string;
+      makhraj_huruf: number;
+      hukum_nun_mati: number;
+      hukum_mim_mati: number;
+      mad: number;
+      tartil: number;
+      nilai_total: number;
+      predikat: string;
+      keterangan: Record<string, string>;
+      catatan: string;
+    }) => {
+      const { data, error } = await supabase
+        .from("tahsin_assessments" as never)
+        .insert({ ...assessment, created_by: user?.id ?? null } as never)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as TahsinAssessment;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["tahsin", data.student_id] });
+    },
+  });
+};

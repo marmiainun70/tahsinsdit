@@ -192,6 +192,71 @@ export type Database = {
         }
         Relationships: []
       }
+      tahsin_assessments: {
+        Row: {
+          catatan: string | null
+          created_at: string
+          created_by: string | null
+          hukum_mim_mati: number
+          hukum_nun_mati: number
+          id: string
+          keterangan: Json | null
+          level_dinilai: string
+          mad: number
+          makhraj_huruf: number
+          nilai_total: number
+          predikat: string
+          student_id: string
+          tanggal: string
+          tartil: number
+          updated_at: string
+        }
+        Insert: {
+          catatan?: string | null
+          created_at?: string
+          created_by?: string | null
+          hukum_mim_mati?: number
+          hukum_nun_mati?: number
+          id?: string
+          keterangan?: Json | null
+          level_dinilai: string
+          mad?: number
+          makhraj_huruf?: number
+          nilai_total?: number
+          predikat?: string
+          student_id: string
+          tanggal?: string
+          tartil?: number
+          updated_at?: string
+        }
+        Update: {
+          catatan?: string | null
+          created_at?: string
+          created_by?: string | null
+          hukum_mim_mati?: number
+          hukum_nun_mati?: number
+          id?: string
+          keterangan?: Json | null
+          level_dinilai?: string
+          mad?: number
+          makhraj_huruf?: number
+          nilai_total?: number
+          predikat?: string
+          student_id?: string
+          tanggal?: string
+          tartil?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tahsin_assessments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
