@@ -30,6 +30,12 @@ const Dashboard = () => {
       tahsinDasar: cls.filter(s => s.level === "Tahsin Dasar").length,
       tahsinLanjutan: cls.filter(s => s.level === "Tahsin Lanjutan").length,
       tahfizh: cls.filter(s => s.level === "Tahfizh").length,
+      rombel: {
+        A: cls.filter(s => (s as any).rombel === "A").length,
+        B: cls.filter(s => (s as any).rombel === "B").length,
+        C: cls.filter(s => (s as any).rombel === "C").length,
+        D: cls.filter(s => (s as any).rombel === "D").length,
+      },
     };
   };
 
