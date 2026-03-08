@@ -520,19 +520,19 @@ const BulkImportStudents = ({ onClose }: Props) => {
               animate={{ scale: 1, opacity: 1 }}
               className="py-8 text-center space-y-4"
             >
-              <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
-                <CheckCircle className="w-10 h-10 text-emerald-600" />
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <CheckCircle className="w-10 h-10 text-primary" />
               </div>
               <h3 className="text-xl font-bold text-foreground">Import Selesai!</h3>
               <div className="flex justify-center gap-4">
-                <div className="px-6 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-center">
-                  <p className="text-2xl font-bold text-emerald-700">{importResult.ok}</p>
-                  <p className="text-xs text-emerald-600">Berhasil</p>
+                <div className="px-6 py-3 bg-primary/5 border border-primary/20 rounded-xl text-center">
+                  <p className="text-2xl font-bold text-primary">{importResult.ok}</p>
+                  <p className="text-xs text-primary/70">Berhasil</p>
                 </div>
                 {importResult.fail > 0 && (
-                  <div className="px-6 py-3 bg-red-50 border border-red-200 rounded-xl text-center">
-                    <p className="text-2xl font-bold text-red-600">{importResult.fail}</p>
-                    <p className="text-xs text-red-500">Gagal</p>
+                  <div className="px-6 py-3 bg-destructive/5 border border-destructive/20 rounded-xl text-center">
+                    <p className="text-2xl font-bold text-destructive">{importResult.fail}</p>
+                    <p className="text-xs text-destructive/70">Gagal</p>
                   </div>
                 )}
               </div>
