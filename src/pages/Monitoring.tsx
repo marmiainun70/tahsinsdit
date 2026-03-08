@@ -20,6 +20,7 @@ const Monitoring = () => {
   const iqroCount = LEVELS.filter(l => l.startsWith("Iqro")).reduce((a, l) => a + (levelCount[l] || 0), 0);
   const tahsinCount = (levelCount["Tahsin Dasar"] || 0) + (levelCount["Tahsin Lanjutan"] || 0);
   const tahfizhCount = levelCount["Tahfizh"] || 0;
+  const perluPerhatian = students.filter(s => (s as any).perlu_perhatian === true);
 
   const levelData = LEVELS.map(l => ({
     level: l.replace("Tahsin Dasar", "Ts. Dasar").replace("Tahsin Lanjutan", "Ts. Lanjutan"),

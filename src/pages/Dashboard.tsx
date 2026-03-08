@@ -83,6 +83,58 @@ const Dashboard = () => {
         ))}
       </div>
 
+      {/* Panel Peringatan Siswa Tahsin */}
+      <AnimatePresence>
+        {perluPerhatian.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="bg-destructive/5 border border-destructive/30 rounded-2xl overflow-hidden"
+          >
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-destructive/20 bg-destructive/10">
+              <div className="w-8 h-8 rounded-xl bg-destructive/20 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-4 h-4 text-destructive" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-destructive">
+                  {perluPerhatian.length} Siswa Tahsin Perlu Perhatian Khusus
+                </p>
+                <p className="text-xs text-destructive/70">
+                  Nilai rata-rata di bawah 70 selama 2 penilaian berturut-turut
+                </p>
+              </div>
+            </div>
+            <div className="divide-y divide-destructive/10">
+              {perluPerhatian.map(s => (
+                <Link key={s.id} to={`/tahsin/${s.id}`}>
+                  <div className="flex items-center gap-4 px-5 py-3 hover:bg-destructive/5 transition-colors cursor-pointer">
+                    <div className="w-8 h-8 rounded-xl bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                      <span className="text-destructive font-bold text-sm">{s.nama.charAt(0)}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">{s.nama}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Kelas {s.kelas} · {s.level}
+                        {(s as any).catatan_perhatian && (
+                          <span className="ml-1 italic text-destructive/70">— {(s as any).catatan_perhatian}</span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/20">
+                        ⚠ Perlu Perhatian
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-destructive/50" />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-foreground">Ringkasan Per Kelas</h2>
