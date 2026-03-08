@@ -42,7 +42,9 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  const results: Student[] = students.filter(s => {
+  const { data: allStudents = [] } = useStudents();
+
+  const results: Student[] = allStudents.filter(s => {
     const matchQuery = query.trim() === "" || s.nama.toLowerCase().includes(query.toLowerCase());
     const matchKelas = filterKelas === null || s.kelas === filterKelas;
     const matchLevel = filterLevel === null || s.level === filterLevel;
