@@ -199,7 +199,7 @@ const Monitoring = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-muted/50 border-b border-border">
-                    {["No", "Nama", "Kelas", "Level", "Status Bacaan", "Halaman"].map(h => (
+                    {["No", "Nama", "Kelas", "Level", "Status Bacaan", "Halaman", "Flag"].map(h => (
                       <th key={h} className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3 px-4 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
