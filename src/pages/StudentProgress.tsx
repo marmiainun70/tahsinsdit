@@ -129,6 +129,16 @@ const StudentProgress = () => {
                 Ujian Kenaikan
               </button>
             </Link>
+            <button
+              onClick={() => exportPDF(student, progres, ujian, tahsinData)}
+              disabled={exporting}
+              className="flex items-center gap-2 px-4 py-2.5 bg-card border border-border text-foreground rounded-xl text-sm font-medium hover:bg-muted transition-colors disabled:opacity-60"
+            >
+              {exporting
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <FileDown className="w-4 h-4" />}
+              {exporting ? "Memproses…" : "Export PDF"}
+            </button>
           </div>
         </div>
       </div>
