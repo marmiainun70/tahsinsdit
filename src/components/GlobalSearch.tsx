@@ -260,10 +260,10 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
                               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${LEVEL_COLORS[s.level]}`}>
                                 {s.level}
                               </span>
-                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_COLORS[s.statusBacaan]}`}>
-                                {s.statusBacaan}
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_COLORS[s.status_bacaan]}`}>
+                                {s.status_bacaan}
                               </span>
-                              <span className="text-xs text-muted-foreground">Hal. {s.halamanTerakhir}</span>
+                              <span className="text-xs text-muted-foreground">Hal. {s.halaman_terakhir}</span>
                             </div>
                           </div>
 
