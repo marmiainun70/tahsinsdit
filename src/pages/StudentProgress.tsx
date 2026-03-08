@@ -238,8 +238,8 @@ const StudentProgress = () => {
         </form>
       </div>
 
-      {/* Tahsin Trend Chart — hanya untuk level Tahsin */}
-      {(student.level === "Tahsin Dasar" || student.level === "Tahsin Lanjutan" || student.level === "Tahfizh") && (
+      {/* Tahsin Trend Chart — untuk level Tahsin Dasar (Iqro) dan Tahsin Lanjutan/Tahfizh */}
+      {isTahsinDasar(student.level as ReadingLevel) && (
         <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
           <div className="p-5 border-b border-border flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-primary" />

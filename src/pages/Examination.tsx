@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useStudent, useAddExam, useUpdateStudent, LEVEL_COLORS, LEVELS, getNextLevel } from "@/hooks/useSupabaseData";
+import { useStudent, useAddExam, useUpdateStudent, LEVEL_COLORS, getNextLevel, getLevelDisplayLabel } from "@/hooks/useSupabaseData";
 import { ChevronRight, Award, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
