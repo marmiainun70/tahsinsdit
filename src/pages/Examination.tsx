@@ -165,11 +165,12 @@ const Examination = () => {
                 <CheckCircle className="w-10 h-10 text-emerald-600" />
               </div>
               <h2 className="text-2xl font-bold text-emerald-600 mb-2">LULUS! 🎉</h2>
-              <p className="text-muted-foreground mb-4"><span className="font-semibold text-foreground">{student.nama}</span> berhasil lulus ujian {student.level}</p>
+              <p className="text-muted-foreground mb-4"><span className="font-semibold text-foreground">{student.nama}</span> berhasil lulus ujian {getLevelDisplayLabel(student.level as ReadingLevel)}</p>
               {nextLevel && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
-                  <p className="text-emerald-700 font-medium">Level baru: <span className={`px-2 py-0.5 rounded-full text-xs ml-1 ${LEVEL_COLORS[nextLevel]}`}>{nextLevel}</span></p>
-                  {nextLevel === "Tahsin Dasar" && <p className="text-emerald-600 text-sm mt-1">🌟 Selamat! Siswa menyelesaikan seluruh Iqro dan masuk program Tahsin!</p>}
+                  <p className="text-emerald-700 font-medium">Level baru: <span className={`px-2 py-0.5 rounded-full text-xs ml-1 ${LEVEL_COLORS[nextLevel]}`}>{getLevelDisplayLabel(nextLevel)}</span></p>
+                  {nextLevel === "Tahsin Lanjutan" && <p className="text-emerald-600 text-sm mt-1">🌟 Selamat! Siswa telah menyelesaikan seluruh Iqro dan masuk Tahsin Lanjutan!</p>}
+                  {nextLevel && nextLevel !== "Tahsin Lanjutan" && nextLevel !== "Tahfizh" && <p className="text-emerald-600 text-sm mt-1">✨ Lanjut ke jilid berikutnya!</p>}
                 </div>
               )}
             </>

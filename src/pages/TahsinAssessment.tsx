@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useStudent, LEVEL_COLORS, useTahsinAssessments, useAddTahsinAssessment } from "@/hooks/useSupabaseData";
+import { useStudent, LEVEL_COLORS, useTahsinAssessments, useAddTahsinAssessment, getLevelDisplayLabel } from "@/hooks/useSupabaseData";
 import {
   ChevronRight, BookOpenCheck, Star, Loader2,
   CalendarDays, ChevronDown, ChevronUp, Info, TrendingUp,
