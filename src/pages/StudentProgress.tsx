@@ -263,5 +263,4 @@ const AddProgressForm = ({ studentId, level }: { studentId: string; level: strin
   );
 };
 
-import { useState } from "react";
 export default StudentProgress;
