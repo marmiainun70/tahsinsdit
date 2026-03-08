@@ -5,7 +5,7 @@ import {
   useStudent, useProgressEntries, useExamRecords,
   useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS
 } from "@/hooks/useSupabaseData";
-import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2 } from "lucide-react";
+import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -99,6 +99,11 @@ const StudentProgress = () => {
               <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LEVEL_COLORS[student.level]}`}>{student.level}</span>
               <span className="text-xs bg-muted text-muted-foreground px-2.5 py-1 rounded-full">Hal. {student.halaman_terakhir}</span>
               <span className="text-xs bg-muted text-muted-foreground px-2.5 py-1 rounded-full">{student.status_bacaan}</span>
+              {(student as any).perlu_perhatian && (
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/20 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" /> Perlu Perhatian
+                </span>
+              )}
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">

@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { useStudents, LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
-import { Users, TrendingUp, BookOpen, Award, Star, Loader2 } from "lucide-react";
+import { Users, TrendingUp, BookOpen, Award, Star, Loader2, AlertTriangle, BookOpenCheck, ChevronRight } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -19,6 +20,7 @@ const Monitoring = () => {
   const iqroCount = LEVELS.filter(l => l.startsWith("Iqro")).reduce((a, l) => a + (levelCount[l] || 0), 0);
   const tahsinCount = (levelCount["Tahsin Dasar"] || 0) + (levelCount["Tahsin Lanjutan"] || 0);
   const tahfizhCount = levelCount["Tahfizh"] || 0;
+  const perluPerhatian = students.filter(s => (s as any).perlu_perhatian === true);
 
   const levelData = LEVELS.map(l => ({
     level: l.replace("Tahsin Dasar", "Ts. Dasar").replace("Tahsin Lanjutan", "Ts. Lanjutan"),
@@ -70,6 +72,43 @@ const Monitoring = () => {
           </motion.div>
         ))}
       </div>
+
+      {/* Panel Peringatan */}
+      {perluPerhatian.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-destructive/5 border border-destructive/30 rounded-2xl overflow-hidden"
+        >
+          <div className="flex items-center gap-3 px-5 py-3.5 border-b border-destructive/20 bg-destructive/10">
+            <div className="w-8 h-8 rounded-xl bg-destructive/20 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-4 h-4 text-destructive" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-destructive">
+                {perluPerhatian.length} Siswa Tahsin Perlu Perhatian Khusus
+              </p>
+              <p className="text-xs text-destructive/70">Nilai rata-rata Tahsin &lt; 70 selama 2 penilaian berturut-turut</p>
+            </div>
+          </div>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {perluPerhatian.map(s => (
+              <Link key={s.id} to={`/tahsin/${s.id}`}>
+                <div className="flex items-center gap-3 p-3 rounded-xl border border-destructive/20 bg-card hover:bg-destructive/5 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-destructive font-bold text-sm">{s.nama.charAt(0)}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">{s.nama}</p>
+                    <p className="text-xs text-muted-foreground">Kelas {s.kelas} · {s.level}</p>
+                  </div>
+                  <BookOpenCheck className="w-4 h-4 text-destructive/50 flex-shrink-0" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {total === 0 ? (
         <div className="bg-card rounded-2xl border border-border p-12 text-center">
@@ -160,22 +199,39 @@ const Monitoring = () => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-muted/50 border-b border-border">
-                    {["No", "Nama", "Kelas", "Level", "Status Bacaan", "Halaman"].map(h => (
+                    {["No", "Nama", "Kelas", "Level", "Status Bacaan", "Halaman", "Flag"].map(h => (
                       <th key={h} className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3 px-4 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {students.map((s, i) => (
-                    <tr key={s.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="py-3 px-4 text-xs text-muted-foreground">{i + 1}</td>
-                      <td className="py-3 px-4 text-sm font-medium text-foreground whitespace-nowrap">{s.nama}</td>
-                      <td className="py-3 px-4 text-sm text-muted-foreground">{s.kelas}</td>
-                      <td className="py-3 px-4"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${LEVEL_COLORS[s.level as ReadingLevel]}`}>{s.level}</span></td>
-                      <td className="py-3 px-4 text-sm text-muted-foreground">{s.status_bacaan}</td>
-                      <td className="py-3 px-4 text-sm font-semibold text-foreground">{s.halaman_terakhir}</td>
-                    </tr>
-                  ))}
+                  {students.map((s, i) => {
+                    const flagged = (s as any).perlu_perhatian === true;
+                    return (
+                      <tr key={s.id} className={`hover:bg-muted/20 transition-colors ${flagged ? "bg-destructive/5" : ""}`}>
+                        <td className="py-3 px-4 text-xs text-muted-foreground">{i + 1}</td>
+                        <td className="py-3 px-4 text-sm font-medium text-foreground whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            {flagged && (
+                              <AlertTriangle className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
+                            )}
+                            <Link to={`/student/${s.id}`} className="hover:text-primary transition-colors">{s.nama}</Link>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-muted-foreground">{s.kelas}</td>
+                        <td className="py-3 px-4"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${LEVEL_COLORS[s.level as ReadingLevel]}`}>{s.level}</span></td>
+                        <td className="py-3 px-4 text-sm text-muted-foreground">{s.status_bacaan}</td>
+                        <td className="py-3 px-4 text-sm font-semibold text-foreground">{s.halaman_terakhir}</td>
+                        <td className="py-3 px-4">
+                          {flagged && (
+                            <Link to={`/tahsin/${s.id}`}>
+                              <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/20 whitespace-nowrap">⚠ Perlu Perhatian</span>
+                            </Link>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
