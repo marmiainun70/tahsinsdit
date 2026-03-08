@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, X, CheckCircle, AlertTriangle, Download, Loader2, Users, FileText } from "lucide-react";
-import { useAddStudent, LEVELS } from "@/hooks/useSupabaseData";
+import { useAddStudent, LEVELS, getLevelDisplayLabel } from "@/hooks/useSupabaseData";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -58,8 +58,9 @@ function parseCSV(text: string): ParsedStudent[] {
 const TEMPLATE_CSV =
 `Nama,Kelas,Rombel,Level
 Ahmad Fauzi,1,A,Iqro 1
-Siti Aminah,1,B,Iqro 2
-Budi Santoso,2,A,Tahsin Dasar`;
+Siti Aminah,1,B,Iqro 3
+Budi Santoso,2,A,Iqro 6
+Dewi Rahayu,2,C,Tahsin Lanjutan`;
 
 interface Props {
   onClose: () => void;

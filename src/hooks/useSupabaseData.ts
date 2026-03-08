@@ -12,15 +12,50 @@ export const LEVELS: ReadingLevel[] = [
 ];
 
 export const LEVEL_COLORS: Record<ReadingLevel, string> = {
-  "Iqro 1": "bg-blue-100 text-blue-700",
-  "Iqro 2": "bg-sky-100 text-sky-700",
-  "Iqro 3": "bg-cyan-100 text-cyan-700",
-  "Iqro 4": "bg-teal-100 text-teal-700",
-  "Iqro 5": "bg-emerald-100 text-emerald-700",
-  "Iqro 6": "bg-green-100 text-green-700",
-  "Tahsin Dasar": "bg-yellow-100 text-yellow-700",
-  "Tahsin Lanjutan": "bg-orange-100 text-orange-700",
+  "Iqro 1": "bg-amber-100 text-amber-700",
+  "Iqro 2": "bg-amber-100 text-amber-700",
+  "Iqro 3": "bg-amber-100 text-amber-700",
+  "Iqro 4": "bg-amber-100 text-amber-700",
+  "Iqro 5": "bg-amber-100 text-amber-700",
+  "Iqro 6": "bg-amber-100 text-amber-700",
+  "Tahsin Dasar": "bg-orange-100 text-orange-700",
+  "Tahsin Lanjutan": "bg-emerald-100 text-emerald-700",
   "Tahfizh": "bg-purple-100 text-purple-700",
+};
+
+// ─── GROUPING HELPERS ─────────────────────────────────────────────────────────
+/** Iqro 1-6 merupakan sub-level dari "Tahsin Dasar" */
+export const IQRO_LEVELS: ReadingLevel[] = [
+  "Iqro 1", "Iqro 2", "Iqro 3", "Iqro 4", "Iqro 5", "Iqro 6",
+];
+
+/** Label tampilan untuk setiap level — Iqro ditampilkan dengan grup Tahsin Dasar */
+export const getLevelDisplayLabel = (level: ReadingLevel): string => {
+  if (IQRO_LEVELS.includes(level)) return `Tahsin Dasar — ${level}`;
+  return level;
+};
+
+/** Apakah level ini termasuk dalam grup "Tahsin Dasar" (Iqro 1-6) */
+export const isTahsinDasar = (level: ReadingLevel): boolean =>
+  IQRO_LEVELS.includes(level) || level === "Tahsin Dasar";
+
+/** Grup level untuk statistik/filter: Tahsin Dasar mencakup semua Iqro */
+export type LevelGroup = "Tahsin Dasar" | "Tahsin Lanjutan" | "Tahfizh";
+export const getLevelGroup = (level: ReadingLevel): LevelGroup | null => {
+  if (IQRO_LEVELS.includes(level) || level === "Tahsin Dasar") return "Tahsin Dasar";
+  if (level === "Tahsin Lanjutan") return "Tahsin Lanjutan";
+  if (level === "Tahfizh") return "Tahfizh";
+  return null;
+};
+
+/** Warna khusus per jilid Iqro saat ditampilkan dalam grup */
+export const IQRO_JILID_COLORS: Record<string, string> = {
+  "Iqro 1": "bg-amber-50 text-amber-600 ring-1 ring-amber-200",
+  "Iqro 2": "bg-yellow-50 text-yellow-700 ring-1 ring-yellow-200",
+  "Iqro 3": "bg-lime-50 text-lime-700 ring-1 ring-lime-200",
+  "Iqro 4": "bg-green-50 text-green-700 ring-1 ring-green-200",
+  "Iqro 5": "bg-teal-50 text-teal-700 ring-1 ring-teal-200",
+  "Iqro 6": "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200",
 };
 
 export const getNextLevel = (current: ReadingLevel): ReadingLevel | null => {

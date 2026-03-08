@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   useStudent, useProgressEntries, useExamRecords,
   useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS,
-  useTahsinAssessments,
+  useTahsinAssessments, getLevelDisplayLabel, isTahsinDasar,
 } from "@/hooks/useSupabaseData";
 import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
@@ -99,7 +99,9 @@ const StudentProgress = () => {
             <h1 className="text-xl font-bold text-foreground">{student.nama}</h1>
             <div className="flex flex-wrap gap-2 mt-2">
               <span className="text-xs bg-secondary text-secondary-foreground px-2.5 py-1 rounded-full">Kelas {student.kelas}</span>
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LEVEL_COLORS[student.level]}`}>{student.level}</span>
+            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LEVEL_COLORS[student.level]}`}>
+                {getLevelDisplayLabel(student.level as ReadingLevel)}
+              </span>
               <span className="text-xs bg-muted text-muted-foreground px-2.5 py-1 rounded-full">Hal. {student.halaman_terakhir}</span>
               <span className="text-xs bg-muted text-muted-foreground px-2.5 py-1 rounded-full">{student.status_bacaan}</span>
               {(student as any).perlu_perhatian && (
@@ -110,7 +112,7 @@ const StudentProgress = () => {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
-            {(student.level === "Tahsin Dasar" || student.level === "Tahsin Lanjutan" || student.level === "Tahfizh") && (
+          {isTahsinDasar(student.level as ReadingLevel) && (
               <Link to={`/tahsin/${student.id}`}>
                 <button className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
                   <BookOpen className="w-4 h-4" />
@@ -236,8 +238,8 @@ const StudentProgress = () => {
         </form>
       </div>
 
-      {/* Tahsin Trend Chart — hanya untuk level Tahsin */}
-      {(student.level === "Tahsin Dasar" || student.level === "Tahsin Lanjutan" || student.level === "Tahfizh") && (
+      {/* Tahsin Trend Chart — untuk level Tahsin Dasar (Iqro) dan Tahsin Lanjutan/Tahfizh */}
+      {isTahsinDasar(student.level as ReadingLevel) && (
         <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
           <div className="p-5 border-b border-border flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-primary" />

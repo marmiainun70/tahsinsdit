@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { useStudents, LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
+import { useStudents, LEVELS, LEVEL_COLORS, getLevelGroup, IQRO_LEVELS } from "@/hooks/useSupabaseData";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { Users, TrendingUp, BookOpen, Award, Star, Loader2, AlertTriangle, BookOpenCheck, ChevronRight } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
-const PIE_COLORS = ["#3b82f6", "#06b6d4", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", "#f97316", "#ec4899", "#14b8a6"];
+const PIE_COLORS = ["#f59e0b", "#10b981", "#8b5cf6"];
 
 const Monitoring = () => {
   const { data: students = [], isLoading } = useStudents();
@@ -17,31 +17,34 @@ const Monitoring = () => {
   LEVELS.forEach(l => { levelCount[l] = 0; });
   students.forEach(s => { levelCount[s.level] = (levelCount[s.level] || 0) + 1; });
 
-  const iqroCount = LEVELS.filter(l => l.startsWith("Iqro")).reduce((a, l) => a + (levelCount[l] || 0), 0);
-  const tahsinCount = (levelCount["Tahsin Dasar"] || 0) + (levelCount["Tahsin Lanjutan"] || 0);
+  // Tahsin Dasar = semua Iqro 1-6
+  const tahsinDasarCount = students.filter(s => getLevelGroup(s.level as ReadingLevel) === "Tahsin Dasar").length;
+  const tahsinLanjutanCount = levelCount["Tahsin Lanjutan"] || 0;
   const tahfizhCount = levelCount["Tahfizh"] || 0;
   const perluPerhatian = students.filter(s => (s as any).perlu_perhatian === true);
 
-  const levelData = LEVELS.map(l => ({
-    level: l.replace("Tahsin Dasar", "Ts. Dasar").replace("Tahsin Lanjutan", "Ts. Lanjutan"),
+  const levelData = IQRO_LEVELS.map((l, i) => ({
+    level: `Jilid ${i + 1}`,
     fullName: l,
     count: levelCount[l] || 0,
+    group: "Tahsin Dasar",
   }));
 
   const classData = [1, 2, 3, 4, 5, 6].map(k => {
     const cls = students.filter(s => s.kelas === k);
     return {
       kelas: `Kelas ${k}`,
-      iqro: cls.filter(s => s.level.startsWith("Iqro")).length,
-      tahsinDasar: cls.filter(s => s.level === "Tahsin Dasar").length,
-      tahsinLanjutan: cls.filter(s => s.level === "Tahsin Lanjutan").length,
-      tahfizh: cls.filter(s => s.level === "Tahfizh").length,
+      "Tahsin Dasar (Iqro)": cls.filter(s => getLevelGroup(s.level as ReadingLevel) === "Tahsin Dasar").length,
+      "Tahsin Lanjutan": cls.filter(s => s.level === "Tahsin Lanjutan").length,
+      "Tahfizh": cls.filter(s => s.level === "Tahfizh").length,
     };
   });
 
-  const pieData = LEVELS.filter(l => (levelCount[l] || 0) > 0).map((l, i) => ({
-    name: l, value: levelCount[l] || 0, color: PIE_COLORS[i % PIE_COLORS.length],
-  }));
+  const pieData = [
+    { name: "Tahsin Dasar (Iqro 1–6)", value: tahsinDasarCount, color: "#f59e0b" },
+    { name: "Tahsin Lanjutan", value: tahsinLanjutanCount, color: "#10b981" },
+    { name: "Tahfizh", value: tahfizhCount, color: "#8b5cf6" },
+  ].filter(d => d.value > 0);
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-64">
@@ -59,8 +62,8 @@ const Monitoring = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Total Siswa", value: total, icon: Users, color: "bg-primary" },
-          { label: "Sedang Iqro", value: iqroCount, icon: BookOpen, color: "bg-blue-500" },
-          { label: "Program Tahsin", value: tahsinCount, icon: Star, color: "bg-gold" },
+          { label: "Tahsin Dasar (Iqro)", value: tahsinDasarCount, icon: BookOpen, color: "bg-gold" },
+          { label: "Tahsin Lanjutan", value: tahsinLanjutanCount, icon: Star, color: "bg-emerald-600" },
           { label: "Program Tahfizh", value: tahfizhCount, icon: Award, color: "bg-purple-600" },
         ].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="bg-card rounded-2xl border border-border p-5 shadow-sm">
@@ -119,24 +122,54 @@ const Monitoring = () => {
       ) : (
         <>
           <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
-            <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
+            <h2 className="font-bold text-foreground mb-1 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-primary" />
               Distribusi Siswa Per Level
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {LEVELS.map((level, i) => {
+            <p className="text-xs text-muted-foreground mb-4">Iqro Jilid 1–6 adalah bagian dari <span className="font-semibold text-foreground">Tahsin Dasar</span></p>
+
+            {/* Tahsin Dasar — Iqro 1-6 grup */}
+            <div className="mb-4 border border-amber-200 rounded-xl overflow-hidden bg-amber-50/30">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-100/70 border-b border-amber-200">
+                <BookOpen className="w-4 h-4 text-amber-700" />
+                <span className="text-xs font-bold text-amber-800 uppercase tracking-wide">Tahsin Dasar — Iqro Jilid 1–6</span>
+                <span className="ml-auto text-xs font-bold text-amber-700">{tahsinDasarCount} siswa</span>
+              </div>
+              <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {IQRO_LEVELS.map((level, i) => {
+                  const count = levelCount[level] || 0;
+                  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                  return (
+                    <motion.div key={level} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="flex items-center gap-2 p-2.5 bg-card rounded-lg border border-amber-100">
+                      <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground">Jilid {i + 1}</p>
+                        <div className="h-1 bg-muted rounded-full overflow-hidden mt-0.5">
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.3 + i * 0.05 }} className="h-full bg-amber-400 rounded-full" />
+                        </div>
+                      </div>
+                      <span className="text-sm font-bold text-foreground">{count}</span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Tahsin Lanjutan & Tahfizh */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {(["Tahsin Lanjutan", "Tahfizh"] as const).map((level, i) => {
                 const count = levelCount[level] || 0;
                 const pct = total > 0 ? Math.round((count / total) * 100) : 0;
                 return (
-                  <motion.div key={level} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="flex items-center gap-3 p-3 bg-muted/40 rounded-xl">
-                    <span className={`text-xs font-medium px-2.5 py-1.5 rounded-lg w-28 text-center flex-shrink-0 ${LEVEL_COLORS[level as ReadingLevel]}`}>{level}</span>
+                  <motion.div key={level} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.05 }} className="flex items-center gap-3 p-3 bg-muted/40 rounded-xl">
+                    <span className={`text-xs font-medium px-2.5 py-1.5 rounded-lg text-center flex-shrink-0 ${LEVEL_COLORS[level as ReadingLevel]}`}>{level}</span>
                     <div className="flex-1">
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-muted-foreground">{pct}%</span>
                         <span className="font-semibold text-foreground">{count}</span>
                       </div>
                       <div className="h-1.5 bg-border rounded-full overflow-hidden">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.4 + i * 0.05 }} className="h-full bg-gradient-hero rounded-full" />
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.6 + i * 0.05 }} className="h-full bg-gradient-hero rounded-full" />
                       </div>
                     </div>
                   </motion.div>
@@ -147,20 +180,20 @@ const Monitoring = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-card rounded-2xl border border-border p-5 shadow-sm">
-              <h2 className="font-bold text-foreground mb-4">📊 Jumlah Siswa Per Level</h2>
+              <h2 className="font-bold text-foreground mb-4">📊 Jumlah Siswa Per Jilid Iqro</h2>
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={levelData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="level" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                  <XAxis dataKey="level" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                   <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "12px" }} formatter={(v, _n, props) => [v, props.payload.fullName]} />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="count" fill="#f59e0b" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-card rounded-2xl border border-border p-5 shadow-sm">
-              <h2 className="font-bold text-foreground mb-4">🥧 Proporsi Level Bacaan</h2>
+              <h2 className="font-bold text-foreground mb-4">🥧 Proporsi Program Belajar</h2>
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
                   <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value">
@@ -182,10 +215,9 @@ const Monitoring = () => {
                 <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "12px" }} />
                 <Legend iconSize={10} formatter={(v) => <span style={{ fontSize: 11 }}>{v}</span>} />
-                <Bar dataKey="iqro" name="Iqro" fill="#3b82f6" stackId="a" />
-                <Bar dataKey="tahsinDasar" name="Tahsin Dasar" fill="#f59e0b" stackId="a" />
-                <Bar dataKey="tahsinLanjutan" name="Tahsin Lanjutan" fill="#10b981" stackId="a" />
-                <Bar dataKey="tahfizh" name="Tahfizh" fill="#8b5cf6" stackId="a" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="Tahsin Dasar (Iqro)" name="Tahsin Dasar (Iqro)" fill="#f59e0b" stackId="a" />
+                <Bar dataKey="Tahsin Lanjutan" name="Tahsin Lanjutan" fill="#10b981" stackId="a" />
+                <Bar dataKey="Tahfizh" name="Tahfizh" fill="#8b5cf6" stackId="a" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </motion.div>

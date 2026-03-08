@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useStudents } from "@/hooks/useSupabaseData";
-import { LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
+import { useStudents, LEVELS, LEVEL_COLORS, getLevelDisplayLabel, getLevelGroup, IQRO_LEVELS, IQRO_JILID_COLORS } from "@/hooks/useSupabaseData";
 import { Users, BookOpen, Star, TrendingUp, Award, Loader2, AlertTriangle, ChevronRight, BookOpenCheck } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
+
+type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
 const classColors = [
   "from-blue-500 to-blue-600",
@@ -17,8 +19,9 @@ const Dashboard = () => {
   const { data: students = [], isLoading } = useStudents();
 
   const total = students.length;
-  const iqroCount = students.filter(s => s.level.startsWith("Iqro")).length;
-  const tahsinCount = students.filter(s => s.level === "Tahsin Dasar" || s.level === "Tahsin Lanjutan").length;
+  // Tahsin Dasar = semua Iqro 1-6 (mereka adalah sub-level Tahsin Dasar)
+  const tahsinDasarCount = students.filter(s => getLevelGroup(s.level as ReadingLevel) === "Tahsin Dasar").length;
+  const tahsinLanjutanCount = students.filter(s => s.level === "Tahsin Lanjutan").length;
   const tahfizhCount = students.filter(s => s.level === "Tahfizh").length;
   const perluPerhatian = students.filter(s => (s as any).perlu_perhatian === true);
 
@@ -26,8 +29,7 @@ const Dashboard = () => {
     const cls = students.filter(s => s.kelas === kelas);
     return {
       total: cls.length,
-      iqro: cls.filter(s => s.level.startsWith("Iqro")).length,
-      tahsinDasar: cls.filter(s => s.level === "Tahsin Dasar").length,
+      tahsinDasar: cls.filter(s => getLevelGroup(s.level as ReadingLevel) === "Tahsin Dasar").length,
       tahsinLanjutan: cls.filter(s => s.level === "Tahsin Lanjutan").length,
       tahfizh: cls.filter(s => s.level === "Tahfizh").length,
       rombel: {
@@ -41,8 +43,8 @@ const Dashboard = () => {
 
   const statCards = [
     { label: "Total Siswa", value: total, icon: Users, color: "bg-primary", sub: "Seluruh kelas" },
-    { label: "Level Iqro", value: iqroCount, icon: BookOpen, color: "bg-gold", sub: "Iqro 1–6" },
-    { label: "Level Tahsin", value: tahsinCount, icon: Star, color: "bg-emerald-600", sub: "Dasar & Lanjutan" },
+    { label: "Tahsin Dasar", value: tahsinDasarCount, icon: BookOpen, color: "bg-gold", sub: "Iqro Jilid 1–6" },
+    { label: "Tahsin Lanjutan", value: tahsinLanjutanCount, icon: Star, color: "bg-emerald-600", sub: "Al-Qur'an" },
     { label: "Tahfizh", value: tahfizhCount, icon: Award, color: "bg-purple-600", sub: "Hafalan" },
   ];
 
@@ -173,11 +175,11 @@ const Dashboard = () => {
                       </div>
                        <div className="mb-3">
                          <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                           <span>Tahsin</span>
+                           <span>Tahsin Dasar (Iqro)</span>
                            <span>{pct}%</span>
                          </div>
                          <div className="h-2 bg-muted rounded-full overflow-hidden">
-                           <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                           <div className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
                          </div>
                        </div>
                        {/* Rombel breakdown */}
@@ -218,21 +220,55 @@ const Dashboard = () => {
 
       {students.length > 0 && (
         <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
-          <h2 className="text-base font-bold text-foreground mb-4">Distribusi Level Seluruh Siswa</h2>
-          <div className="space-y-3">
-            {LEVELS.map((level) => {
+          <h2 className="text-base font-bold text-foreground mb-1">Distribusi Level Seluruh Siswa</h2>
+          <p className="text-xs text-muted-foreground mb-4">Iqro Jilid 1–6 merupakan bagian dari program <span className="font-semibold text-foreground">Tahsin Dasar</span></p>
+
+          {/* Grup Tahsin Dasar (Iqro 1-6) */}
+          <div className="mb-4 border border-amber-200 rounded-xl overflow-hidden bg-amber-50/40">
+            <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-100/70 border-b border-amber-200">
+              <BookOpen className="w-4 h-4 text-amber-700" />
+              <span className="text-xs font-bold text-amber-800 uppercase tracking-wide">Tahsin Dasar — Iqro Jilid 1–6</span>
+            </div>
+            <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {IQRO_LEVELS.map((level, i) => {
+                const count = students.filter(s => s.level === level).length;
+                const pct = total > 0 ? (count / total) * 100 : 0;
+                const jilidNum = i + 1;
+                return (
+                  <div key={level} className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 border border-amber-100">
+                    <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">{jilidNum}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-foreground truncate">Jilid {jilidNum}</p>
+                      <div className="h-1 bg-muted rounded-full overflow-hidden mt-0.5">
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.2 + i * 0.05, duration: 0.5 }} className="h-full bg-amber-400 rounded-full" />
+                      </div>
+                    </div>
+                    <span className="text-sm font-bold text-foreground">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="px-4 py-2 border-t border-amber-200 bg-amber-100/40 flex items-center justify-between">
+              <span className="text-xs text-amber-700 font-medium">Total Tahsin Dasar (Iqro)</span>
+              <span className="text-sm font-bold text-amber-800">{IQRO_LEVELS.reduce((a, l) => a + students.filter(s => s.level === l).length, 0)} siswa</span>
+            </div>
+          </div>
+
+          {/* Tahsin Lanjutan + Tahfizh */}
+          <div className="space-y-2">
+            {(["Tahsin Lanjutan", "Tahfizh"] as const).map((level) => {
               const count = students.filter(s => s.level === level).length;
               const pct = total > 0 ? (count / total) * 100 : 0;
               return (
                 <div key={level} className="flex items-center gap-3">
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full w-28 text-center flex-shrink-0 ${LEVEL_COLORS[level]}`}>
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full w-32 text-center flex-shrink-0 ${LEVEL_COLORS[level]}`}>
                     {level}
                   </span>
                   <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${pct}%` }}
-                      transition={{ delay: 0.3, duration: 0.6 }}
+                      transition={{ delay: 0.5, duration: 0.6 }}
                       className="h-full bg-gradient-hero rounded-full"
                     />
                   </div>
