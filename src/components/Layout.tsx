@@ -69,23 +69,38 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
       <div className="pt-3">
         <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-3">Data Kelas</p>
         {[1, 2, 3, 4, 5, 6].map(k => {
-          const active = location.pathname === `/class/${k}`;
+          const isClassActive = location.pathname === `/class/${k}`;
           return (
-            <Link
-              key={k}
-              to={`/class/${k}`}
-              onClick={onClose}
-              className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-sm ${
-                active
-                  ? "bg-sidebar-accent text-sidebar-foreground font-medium"
-                  : "text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
-              }`}
-            >
-              <span className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold">
-                {k}
-              </span>
-              Kelas {k}
-            </Link>
+            <div key={k}>
+              <Link
+                to={`/class/${k}`}
+                onClick={onClose}
+                className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-sm ${
+                  isClassActive
+                    ? "bg-sidebar-accent text-sidebar-foreground font-medium"
+                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+                }`}
+              >
+                <span className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold">
+                  {k}
+                </span>
+                Kelas {k}
+              </Link>
+              {isClassActive && (
+                <div className="ml-3 pl-3 border-l border-sidebar-border/30 mt-1 mb-1 grid grid-cols-4 gap-1">
+                  {["A","B","C","D"].map(r => (
+                    <Link
+                      key={r}
+                      to={`/class/${k}`}
+                      onClick={onClose}
+                      className="flex items-center justify-center py-1 rounded-lg text-xs font-bold text-sidebar-foreground/50 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground transition-all"
+                    >
+                      {r}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
