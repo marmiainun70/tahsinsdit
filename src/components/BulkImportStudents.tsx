@@ -58,8 +58,9 @@ function parseCSV(text: string): ParsedStudent[] {
 const TEMPLATE_CSV =
 `Nama,Kelas,Rombel,Level
 Ahmad Fauzi,1,A,Iqro 1
-Siti Aminah,1,B,Iqro 2
-Budi Santoso,2,A,Tahsin Dasar`;
+Siti Aminah,1,B,Iqro 3
+Budi Santoso,2,A,Iqro 6
+Dewi Rahayu,2,C,Tahsin Lanjutan`;
 
 interface Props {
   onClose: () => void;
