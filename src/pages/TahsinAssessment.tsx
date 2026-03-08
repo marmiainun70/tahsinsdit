@@ -426,7 +426,7 @@ const TahsinAssessment = () => {
             const p = result ? getPredikat(result.total) : predikat;
             return (
               <>
-                <div className={`w-24 h-24 rounded-full ${p.bg} border-2 ${p.border} flex items-center justify-center mx-auto mb-4`}>
+                <div className={`w-24 h-24 rounded-full border-2 flex items-center justify-center mx-auto mb-4 ${p.bg} ${p.border}`}>
                   <span className="text-4xl">{p.emoji}</span>
                 </div>
                 <h2 className={`text-3xl font-bold ${p.color} mb-1`}>{p.label}</h2>
