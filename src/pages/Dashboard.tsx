@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useStudents } from "@/hooks/useSupabaseData";
 import { LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
-import { Users, BookOpen, Star, TrendingUp, Award, Loader2 } from "lucide-react";
+import { Users, BookOpen, Star, TrendingUp, Award, Loader2, AlertTriangle, ChevronRight, BookOpenCheck } from "lucide-react";
 
 const classColors = [
   "from-blue-500 to-blue-600",

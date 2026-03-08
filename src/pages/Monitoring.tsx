@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { useStudents, LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
-import { Users, TrendingUp, BookOpen, Award, Star, Loader2 } from "lucide-react";
+import { Users, TrendingUp, BookOpen, Award, Star, Loader2, AlertTriangle, BookOpenCheck, ChevronRight } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
