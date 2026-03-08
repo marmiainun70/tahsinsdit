@@ -77,10 +77,10 @@ export const useAddStudent = () => {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async (student: { nama: string; kelas: number; level: ReadingLevel }) => {
+    mutationFn: async (student: { nama: string; kelas: number; level: ReadingLevel; rombel?: string }) => {
       const { data, error } = await supabase
         .from("students")
-        .insert({ ...student, created_by: user?.id ?? null })
+        .insert({ ...student, rombel: student.rombel ?? 'A', created_by: user?.id ?? null })
         .select()
         .single();
       if (error) throw error;
