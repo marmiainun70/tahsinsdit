@@ -6,9 +6,11 @@ import {
   useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS,
   useTahsinAssessments, getLevelDisplayLabel, isTahsinDasar,
 } from "@/hooks/useSupabaseData";
-import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle } from "lucide-react";
+import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle, FileDown } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import TahsinTrendChart from "@/components/TahsinTrendChart";
+import StudentReportPDF from "@/components/StudentReportPDF";
+import { useExportPDF } from "@/hooks/useExportPDF";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 type ReadingStatus = Database["public"]["Enums"]["reading_status"];
@@ -38,6 +40,7 @@ const StudentProgress = () => {
   const { data: tahsinData = [] } = useTahsinAssessments(studentId ?? "");
   const addProgress = useAddProgress();
   const updateStudent = useUpdateStudent();
+  const { reportRef, exporting, exportPDF } = useExportPDF();
 
   const [form, setForm] = useState({
     halaman: "", kelancaran: "", makhraj: "", tajwid: "", catatan: "",
@@ -126,6 +129,16 @@ const StudentProgress = () => {
                 Ujian Kenaikan
               </button>
             </Link>
+            <button
+              onClick={() => exportPDF(student, progres, ujian, tahsinData)}
+              disabled={exporting}
+              className="flex items-center gap-2 px-4 py-2.5 bg-card border border-border text-foreground rounded-xl text-sm font-medium hover:bg-muted transition-colors disabled:opacity-60"
+            >
+              {exporting
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <FileDown className="w-4 h-4" />}
+              {exporting ? "Memproses…" : "Export PDF"}
+            </button>
           </div>
         </div>
       </div>
@@ -281,6 +294,26 @@ const StudentProgress = () => {
           </div>
         </div>
       )}
+
+      {/* Hidden PDF Report — rendered off-screen, captured by html2canvas */}
+      <div
+        style={{
+          position: "fixed",
+          left: "-9999px",
+          top: 0,
+          zIndex: -1,
+          pointerEvents: "none",
+        }}
+        aria-hidden
+      >
+        <StudentReportPDF
+          ref={reportRef}
+          student={student}
+          progres={progres}
+          ujian={ujian}
+          tahsinData={tahsinData}
+        />
+      </div>
     </div>
   );
 };
