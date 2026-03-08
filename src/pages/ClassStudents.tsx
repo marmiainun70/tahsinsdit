@@ -211,7 +211,16 @@ const ClassStudents = () => {
                   onChange={e => setNewLevel(e.target.value as ReadingLevel)}
                   className="flex-1 px-3 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
                 >
-                  {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+                  <optgroup label="Tahsin Dasar (Iqro)">
+                    {["Iqro 1","Iqro 2","Iqro 3","Iqro 4","Iqro 5","Iqro 6"].map(l => (
+                      <option key={l} value={l}>Jilid {l.split(" ")[1]}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Program Lanjutan">
+                    {["Tahsin Lanjutan","Tahfizh"].map(l => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </optgroup>
                 </select>
                 <button
                   type="submit"
