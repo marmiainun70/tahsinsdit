@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStudentsByClass, useAddStudent, useDeleteStudent, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
-import { ChevronRight, Search, UserPlus, FileText, Eye, Trash2, Loader2, X, AlertTriangle } from "lucide-react";
+import { ChevronRight, Search, UserPlus, FileText, Eye, Trash2, Loader2, X, AlertTriangle, Upload } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import BulkImportStudents from "@/components/BulkImportStudents";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 

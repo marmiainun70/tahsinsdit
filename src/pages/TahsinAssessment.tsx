@@ -3,10 +3,11 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStudent, LEVEL_COLORS, useTahsinAssessments, useAddTahsinAssessment } from "@/hooks/useSupabaseData";
 import {
-  ChevronRight, BookOpenCheck, CheckCircle, Star, Loader2,
-  CalendarDays, ChevronDown, ChevronUp, Info
+  ChevronRight, BookOpenCheck, Star, Loader2,
+  CalendarDays, ChevronDown, ChevronUp, Info, TrendingUp,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import TahsinTrendChart from "@/components/TahsinTrendChart";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
