@@ -1,23 +1,29 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import heroPattern from "@/assets/hero-pattern.png";
-import { BookOpen, Eye, EyeOff, Lock, User } from "lucide-react";
+import { BookOpen, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const { signIn } = useAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === "guru" && password === "iqro123") {
-      localStorage.setItem("auth", "true");
-      navigate("/");
-    } else {
-      setError("Username atau password salah.");
+    setError("");
+    if (!email || !password) {
+      setError("Email dan password harus diisi.");
+      return;
+    }
+    setLoading(true);
+    const { error: err } = await signIn(email, password);
+    setLoading(false);
+    if (err) {
+      setError("Email atau password salah. Silakan coba lagi.");
     }
   };
 
@@ -68,7 +74,7 @@ const Login = () => {
             transition={{ delay: 0.6 }}
             className="mt-10 grid grid-cols-3 gap-4"
           >
-            {[["36", "Total Siswa"], ["9", "Level"], ["6", "Kelas"]].map(([n, l]) => (
+            {[["6", "Kelas"], ["9", "Level"], ["Realtime", "Monitoring"]].map(([n, l]) => (
               <div key={l} className="bg-white/10 rounded-xl p-4 text-center">
                 <p className="text-3xl font-bold text-gold">{n}</p>
                 <p className="text-primary-foreground/80 text-xs mt-1">{l}</p>
@@ -90,9 +96,7 @@ const Login = () => {
             <div className="w-10 h-10 rounded-full bg-gradient-hero flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-primary-foreground" />
             </div>
-            <div>
-              <p className="font-bold text-foreground text-sm">Monitoring Iqro & Tahsin</p>
-            </div>
+            <p className="font-bold text-foreground text-sm">Monitoring Iqro & Tahsin</p>
           </div>
 
           <h2 className="text-3xl font-bold text-foreground mb-2">Selamat Datang</h2>
@@ -100,14 +104,14 @@ const Login = () => {
 
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Username</label>
+              <label className="block text-sm font-medium text-foreground mb-2">Email Guru</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
-                  type="text"
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  placeholder="Masukkan username"
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="guru@sekolah.ac.id"
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm"
                 />
               </div>
@@ -121,7 +125,7 @@ const Login = () => {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="Masukkan password"
+                  placeholder="Password Anda"
                   className="w-full pl-10 pr-10 py-3 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm"
                 />
                 <button
@@ -142,15 +146,25 @@ const Login = () => {
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-hero text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-green"
+              disabled={loading}
+              className="w-full py-3 rounded-xl bg-gradient-hero text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-green disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              Masuk ke Sistem
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Memverifikasi...
+                </>
+              ) : "Masuk ke Sistem"}
             </button>
           </form>
 
           <div className="mt-6 p-4 bg-secondary rounded-xl text-sm text-secondary-foreground">
-            <p className="font-medium mb-1">Demo Login:</p>
-            <p>Username: <span className="font-mono font-bold">guru</span> | Password: <span className="font-mono font-bold">iqro123</span></p>
+            <p className="font-medium mb-2 flex items-center gap-2">
+              <span>💡</span> Belum punya akun?
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Hubungi admin sekolah untuk mendaftarkan akun guru Anda ke sistem ini.
+            </p>
           </div>
         </motion.div>
       </div>
