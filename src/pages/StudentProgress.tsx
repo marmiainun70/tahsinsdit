@@ -35,6 +35,7 @@ const StudentProgress = () => {
   const { data: student, isLoading: loadingStudent } = useStudent(studentId ?? "");
   const { data: progres = [], isLoading: loadingProgress } = useProgressEntries(studentId ?? "");
   const { data: ujian = [] } = useExamRecords(studentId ?? "");
+  const { data: tahsinData = [] } = useTahsinAssessments(studentId ?? "");
   const addProgress = useAddProgress();
   const updateStudent = useUpdateStudent();
 
