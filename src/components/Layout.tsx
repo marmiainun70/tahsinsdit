@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen, LayoutDashboard, Users, BarChart3, ClipboardList,
-  Menu, X, LogOut, Bell, ChevronRight
+  Menu, X, LogOut, Bell, ChevronRight, Search
 } from "lucide-react";
+import GlobalSearch from "@/components/GlobalSearch";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -115,6 +116,7 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
 
 const Layout = ({ children }: LayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -122,6 +124,17 @@ const Layout = ({ children }: LayoutProps) => {
     localStorage.removeItem("auth");
     navigate("/login");
   };
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "/" && !searchOpen && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [searchOpen]);
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -161,16 +174,36 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 lg:px-6 flex-shrink-0 shadow-sm">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg hover:bg-secondary transition-colors"
+              className="lg:hidden p-2 rounded-lg hover:bg-secondary transition-colors flex-shrink-0"
             >
               <Menu className="w-5 h-5 text-foreground" />
             </button>
             <Breadcrumb pathname={location.pathname} />
           </div>
-          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Search bar — wide on desktop, icon-only on mobile */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="hidden sm:flex items-center gap-2 px-3 py-2 bg-muted hover:bg-secondary border border-border rounded-xl text-sm text-muted-foreground transition-all hover:border-primary/40 group"
+            >
+              <Search className="w-4 h-4" />
+              <span className="hidden md:inline w-44 text-left">Cari siswa...</span>
+              <kbd className="hidden md:inline text-xs bg-background border border-border px-1.5 py-0.5 rounded text-muted-foreground/60 ml-auto">
+                /
+              </kbd>
+            </button>
+            {/* Mobile search icon */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="sm:hidden p-2 rounded-xl hover:bg-secondary transition-colors"
+            >
+              <Search className="w-5 h-5 text-muted-foreground" />
+            </button>
+
             <button className="p-2 rounded-xl hover:bg-secondary transition-colors relative">
               <Bell className="w-5 h-5 text-muted-foreground" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-gold" />
@@ -188,6 +221,9 @@ const Layout = ({ children }: LayoutProps) => {
           {children}
         </main>
       </div>
+
+      {/* Global Search Modal */}
+      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 };
