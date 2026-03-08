@@ -492,12 +492,11 @@ const StudentReportPDF = React.forwardRef<HTMLDivElement, Props>(
                       <p
                         style={{
                           marginTop: 8,
-                          fontSize: 10,
+                      fontSize: 10,
                           color: "#6b7280",
                           fontStyle: "italic",
                           borderTop: "1px solid #e5e7eb",
                           paddingTop: 6,
-                          margin: 0,
                           marginTop: 8,
                         }}
                       >
