@@ -171,33 +171,38 @@ const Dashboard = () => {
                           <Users className="w-6 h-6 text-white" />
                         </div>
                       </div>
-                      <div className="mb-4">
-                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                          <span>Tahsin</span>
-                          <span>{pct}%</span>
-                        </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-muted rounded-xl p-2.5 text-center">
-                          <p className="text-lg font-bold text-foreground">{stats.total}</p>
-                          <p className="text-xs text-muted-foreground">Total</p>
-                        </div>
-                        <div className="bg-blue-50 rounded-xl p-2.5 text-center">
-                          <p className="text-lg font-bold text-blue-600">{stats.iqro}</p>
-                          <p className="text-xs text-blue-400">Iqro</p>
-                        </div>
-                        <div className="bg-yellow-50 rounded-xl p-2.5 text-center">
-                          <p className="text-lg font-bold text-yellow-600">{stats.tahsinDasar}</p>
-                          <p className="text-xs text-yellow-400">Tahsin Dasar</p>
-                        </div>
-                        <div className="bg-emerald-50 rounded-xl p-2.5 text-center">
-                          <p className="text-lg font-bold text-emerald-600">{stats.tahsinLanjutan + stats.tahfizh}</p>
-                          <p className="text-xs text-emerald-400">Tahsin Lanjut</p>
-                        </div>
-                      </div>
+                       <div className="mb-3">
+                         <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                           <span>Tahsin</span>
+                           <span>{pct}%</span>
+                         </div>
+                         <div className="h-2 bg-muted rounded-full overflow-hidden">
+                           <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                         </div>
+                       </div>
+                       {/* Rombel breakdown */}
+                       <div className="grid grid-cols-4 gap-1.5 mb-3">
+                         {(["A","B","C","D"] as const).map((r, ri) => {
+                           const rombelColors = ["bg-blue-500","bg-emerald-500","bg-violet-500","bg-orange-500"];
+                           return (
+                             <div key={r} className="rounded-xl p-2 text-center bg-muted/60">
+                               <div className={`w-4 h-1 rounded-full ${rombelColors[ri]} mx-auto mb-1`} />
+                               <p className="text-xs font-bold text-foreground">{stats.rombel[r]}</p>
+                               <p className="text-xs text-muted-foreground">{r}</p>
+                             </div>
+                           );
+                         })}
+                       </div>
+                       <div className="grid grid-cols-2 gap-2">
+                         <div className="bg-muted rounded-xl p-2.5 text-center">
+                           <p className="text-lg font-bold text-foreground">{stats.total}</p>
+                           <p className="text-xs text-muted-foreground">Total</p>
+                         </div>
+                         <div className="bg-muted rounded-xl p-2.5 text-center">
+                           <p className="text-lg font-bold text-foreground">{stats.tahsinDasar + stats.tahsinLanjutan + stats.tahfizh}</p>
+                           <p className="text-xs text-muted-foreground">Tahsin</p>
+                         </div>
+                       </div>
                       <div className="mt-3 flex items-center gap-1 text-primary text-xs font-medium group-hover:gap-2 transition-all">
                         <TrendingUp className="w-3.5 h-3.5" />
                         Lihat detail kelas {kelas}
