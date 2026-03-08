@@ -295,6 +295,27 @@ const StudentProgress = () => {
         </div>
       )}
     </div>
+
+      {/* Hidden PDF Report — rendered off-screen, captured by html2canvas */}
+      <div
+        style={{
+          position: "fixed",
+          left: "-9999px",
+          top: 0,
+          zIndex: -1,
+          pointerEvents: "none",
+        }}
+        aria-hidden
+      >
+        <StudentReportPDF
+          ref={reportRef}
+          student={student}
+          progres={progres}
+          ujian={ujian}
+          tahsinData={tahsinData}
+        />
+      </div>
+    </div>
   );
 };
 
