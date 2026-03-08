@@ -125,7 +125,18 @@ const Layout = ({ children }: LayoutProps) => {
     navigate("/login");
   };
 
-  return (
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "/" && !searchOpen && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [searchOpen]);
+
+
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Mobile overlay */}
       <AnimatePresence>
