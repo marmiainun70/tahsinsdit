@@ -99,7 +99,9 @@ const StudentProgress = () => {
             <h1 className="text-xl font-bold text-foreground">{student.nama}</h1>
             <div className="flex flex-wrap gap-2 mt-2">
               <span className="text-xs bg-secondary text-secondary-foreground px-2.5 py-1 rounded-full">Kelas {student.kelas}</span>
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LEVEL_COLORS[student.level]}`}>{student.level}</span>
+            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LEVEL_COLORS[student.level]}`}>
+                {getLevelDisplayLabel(student.level as ReadingLevel)}
+              </span>
               <span className="text-xs bg-muted text-muted-foreground px-2.5 py-1 rounded-full">Hal. {student.halaman_terakhir}</span>
               <span className="text-xs bg-muted text-muted-foreground px-2.5 py-1 rounded-full">{student.status_bacaan}</span>
               {(student as any).perlu_perhatian && (
