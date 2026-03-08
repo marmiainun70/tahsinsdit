@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  BookOpen, LayoutDashboard, Users, BarChart3, ClipboardList,
+  BookOpen, LayoutDashboard, BarChart3, ClipboardList,
   Menu, X, LogOut, Bell, ChevronRight, Search
 } from "lucide-react";
 import GlobalSearch from "@/components/GlobalSearch";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,10 +21,11 @@ const navItems = [
 interface SidebarContentProps {
   location: { pathname: string };
   onLogout: () => void;
+  profile: { full_name: string; role: string } | null;
   onClose?: () => void;
 }
 
-const SidebarContent = ({ location, onLogout, onClose }: SidebarContentProps) => (
+const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContentProps) => (
   <div className="flex flex-col h-full">
     <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -89,7 +91,14 @@ const SidebarContent = ({ location, onLogout, onClose }: SidebarContentProps) =>
       </div>
     </nav>
 
-    <div className="p-4 border-t border-sidebar-border">
+    {/* User info + Logout */}
+    <div className="p-4 border-t border-sidebar-border space-y-2">
+      {profile && (
+        <div className="px-3 py-2 bg-sidebar-accent rounded-xl">
+          <p className="text-sidebar-foreground text-xs font-semibold truncate">{profile.full_name}</p>
+          <p className="text-sidebar-foreground/50 text-xs capitalize">{profile.role}</p>
+        </div>
+      )}
       <button
         onClick={onLogout}
         className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sidebar-foreground/60 hover:bg-destructive/20 hover:text-red-400 transition-all text-sm"
@@ -119,9 +128,10 @@ const Layout = ({ children }: LayoutProps) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { signOut, profile } = useAuth();
 
-  const handleLogout = () => {
-    localStorage.removeItem("auth");
+  const handleLogout = async () => {
+    await signOut();
     navigate("/login");
   };
 
@@ -138,7 +148,6 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-      {/* Mobile overlay */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.div
@@ -151,7 +160,6 @@ const Layout = ({ children }: LayoutProps) => {
         )}
       </AnimatePresence>
 
-      {/* Mobile sidebar */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.aside
@@ -161,17 +169,15 @@ const Layout = ({ children }: LayoutProps) => {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="fixed left-0 top-0 h-full w-64 bg-sidebar z-30 lg:hidden"
           >
-            <SidebarContent location={location} onLogout={handleLogout} onClose={() => setSidebarOpen(false)} />
+            <SidebarContent location={location} onLogout={handleLogout} profile={profile} onClose={() => setSidebarOpen(false)} />
           </motion.aside>
         )}
       </AnimatePresence>
 
-      {/* Desktop sidebar */}
       <aside className="hidden lg:flex flex-col w-64 bg-sidebar flex-shrink-0">
-        <SidebarContent location={location} onLogout={handleLogout} />
+        <SidebarContent location={location} onLogout={handleLogout} profile={profile} />
       </aside>
 
-      {/* Main */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 lg:px-6 flex-shrink-0 shadow-sm">
           <div className="flex items-center gap-3 min-w-0">
@@ -185,18 +191,14 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Search bar — wide on desktop, icon-only on mobile */}
             <button
               onClick={() => setSearchOpen(true)}
-              className="hidden sm:flex items-center gap-2 px-3 py-2 bg-muted hover:bg-secondary border border-border rounded-xl text-sm text-muted-foreground transition-all hover:border-primary/40 group"
+              className="hidden sm:flex items-center gap-2 px-3 py-2 bg-muted hover:bg-secondary border border-border rounded-xl text-sm text-muted-foreground transition-all hover:border-primary/40"
             >
               <Search className="w-4 h-4" />
-              <span className="hidden md:inline w-44 text-left">Cari siswa...</span>
-              <kbd className="hidden md:inline text-xs bg-background border border-border px-1.5 py-0.5 rounded text-muted-foreground/60 ml-auto">
-                /
-              </kbd>
+              <span className="hidden md:inline w-40 text-left">Cari siswa...</span>
+              <kbd className="hidden md:inline text-xs bg-background border border-border px-1.5 py-0.5 rounded text-muted-foreground/60 ml-auto">/</kbd>
             </button>
-            {/* Mobile search icon */}
             <button
               onClick={() => setSearchOpen(true)}
               className="sm:hidden p-2 rounded-xl hover:bg-secondary transition-colors"
@@ -206,13 +208,16 @@ const Layout = ({ children }: LayoutProps) => {
 
             <button className="p-2 rounded-xl hover:bg-secondary transition-colors relative">
               <Bell className="w-5 h-5 text-muted-foreground" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-gold" />
             </button>
             <div className="flex items-center gap-2 bg-secondary rounded-xl px-3 py-2">
               <div className="w-7 h-7 rounded-full bg-gradient-hero flex items-center justify-center">
-                <span className="text-primary-foreground text-xs font-bold">G</span>
+                <span className="text-primary-foreground text-xs font-bold">
+                  {profile?.full_name?.charAt(0)?.toUpperCase() ?? "G"}
+                </span>
               </div>
-              <span className="text-sm font-medium text-foreground hidden sm:block">Guru Admin</span>
+              <span className="text-sm font-medium text-foreground hidden sm:block max-w-[120px] truncate">
+                {profile?.full_name ?? "Guru"}
+              </span>
             </div>
           </div>
         </header>
@@ -222,7 +227,6 @@ const Layout = ({ children }: LayoutProps) => {
         </main>
       </div>
 
-      {/* Global Search Modal */}
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
