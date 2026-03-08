@@ -43,6 +43,7 @@ const ClassStudents = () => {
   const [activeRombel, setActiveRombel] = useState<Rombel>("A");
   const [search, setSearch] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [newName, setNewName] = useState("");
   const [newLevel, setNewLevel] = useState<ReadingLevel>("Iqro 1");
   const [newRombel, setNewRombel] = useState<Rombel>("A");
