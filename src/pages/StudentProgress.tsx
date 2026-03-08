@@ -1,6 +1,11 @@
 import { useState } from "react";
-import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  useStudent, useProgressEntries, useExamRecords,
+  useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS
+} from "@/hooks/useSupabaseData";
+import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
