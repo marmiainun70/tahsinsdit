@@ -3,10 +3,12 @@ import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   useStudent, useProgressEntries, useExamRecords,
-  useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS
+  useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS,
+  useTahsinAssessments,
 } from "@/hooks/useSupabaseData";
 import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import TahsinTrendChart from "@/components/TahsinTrendChart";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 type ReadingStatus = Database["public"]["Enums"]["reading_status"];
