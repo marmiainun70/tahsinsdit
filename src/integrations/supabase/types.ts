@@ -167,6 +167,7 @@ export type Database = {
           level: Database["public"]["Enums"]["reading_level"]
           nama: string
           perlu_perhatian: boolean
+          rombel: string
           status_bacaan: Database["public"]["Enums"]["reading_status"]
           updated_at: string
         }
@@ -180,6 +181,7 @@ export type Database = {
           level?: Database["public"]["Enums"]["reading_level"]
           nama: string
           perlu_perhatian?: boolean
+          rombel?: string
           status_bacaan?: Database["public"]["Enums"]["reading_status"]
           updated_at?: string
         }
@@ -193,6 +195,7 @@ export type Database = {
           level?: Database["public"]["Enums"]["reading_level"]
           nama?: string
           perlu_perhatian?: boolean
+          rombel?: string
           status_bacaan?: Database["public"]["Enums"]["reading_status"]
           updated_at?: string
         }
