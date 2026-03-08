@@ -2,7 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Filter, ChevronRight, BookOpen } from "lucide-react";
-import { students, LEVELS, LEVEL_COLORS, type Level, type Student } from "@/data/mockData";
+import { useStudents, LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
+import type { Database } from "@/integrations/supabase/types";
+
+type ReadingLevel = Database["public"]["Enums"]["reading_level"];
+type Student = Database["public"]["Tables"]["students"]["Row"];
 
 const KELAS_OPTIONS = [1, 2, 3, 4, 5, 6];
 
@@ -14,7 +18,7 @@ interface GlobalSearchProps {
 const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
   const [query, setQuery] = useState("");
   const [filterKelas, setFilterKelas] = useState<number | null>(null);
-  const [filterLevel, setFilterLevel] = useState<Level | null>(null);
+  const [filterLevel, setFilterLevel] = useState<ReadingLevel | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -38,7 +42,9 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  const results: Student[] = students.filter(s => {
+  const { data: allStudents = [] } = useStudents();
+
+  const results: Student[] = allStudents.filter(s => {
     const matchQuery = query.trim() === "" || s.nama.toLowerCase().includes(query.toLowerCase());
     const matchKelas = filterKelas === null || s.kelas === filterKelas;
     const matchLevel = filterLevel === null || s.level === filterLevel;
@@ -254,10 +260,10 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
                               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${LEVEL_COLORS[s.level]}`}>
                                 {s.level}
                               </span>
-                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_COLORS[s.statusBacaan]}`}>
-                                {s.statusBacaan}
+                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_COLORS[s.status_bacaan]}`}>
+                                {s.status_bacaan}
                               </span>
-                              <span className="text-xs text-muted-foreground">Hal. {s.halamanTerakhir}</span>
+                              <span className="text-xs text-muted-foreground">Hal. {s.halaman_terakhir}</span>
                             </div>
                           </div>
 
