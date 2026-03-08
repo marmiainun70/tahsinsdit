@@ -211,12 +211,12 @@ const GroupSection = ({
         </div>
         <div className="flex items-center gap-1.5">
           {validInGroup > 0 && (
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">
               {validInGroup} ✓
             </span>
           )}
           {errorInGroup > 0 && (
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600">
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-destructive/10 text-destructive">
               {errorInGroup} ✗
             </span>
           )}
