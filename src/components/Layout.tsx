@@ -136,7 +136,7 @@ const Layout = ({ children }: LayoutProps) => {
     return () => window.removeEventListener("keydown", handler);
   }, [searchOpen]);
 
-
+  return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Mobile overlay */}
       <AnimatePresence>
