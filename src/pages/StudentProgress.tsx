@@ -236,6 +236,20 @@ const StudentProgress = () => {
         </form>
       </div>
 
+      {/* Tahsin Trend Chart — hanya untuk level Tahsin */}
+      {(student.level === "Tahsin Dasar" || student.level === "Tahsin Lanjutan" || student.level === "Tahfizh") && (
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-border flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            <h2 className="font-bold text-foreground">Tren Nilai Tahsin Per Materi</h2>
+            <span className="ml-auto text-xs text-muted-foreground">{tahsinData.length} penilaian</span>
+          </div>
+          <div className="p-5">
+            <TahsinTrendChart data={tahsinData} />
+          </div>
+        </div>
+      )}
+
       {/* Exam History */}
       {ujian.length > 0 && (
         <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
