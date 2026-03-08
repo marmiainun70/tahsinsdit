@@ -73,6 +73,43 @@ const Monitoring = () => {
         ))}
       </div>
 
+      {/* Panel Peringatan */}
+      {perluPerhatian.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-destructive/5 border border-destructive/30 rounded-2xl overflow-hidden"
+        >
+          <div className="flex items-center gap-3 px-5 py-3.5 border-b border-destructive/20 bg-destructive/10">
+            <div className="w-8 h-8 rounded-xl bg-destructive/20 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-4 h-4 text-destructive" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-destructive">
+                {perluPerhatian.length} Siswa Tahsin Perlu Perhatian Khusus
+              </p>
+              <p className="text-xs text-destructive/70">Nilai rata-rata Tahsin &lt; 70 selama 2 penilaian berturut-turut</p>
+            </div>
+          </div>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {perluPerhatian.map(s => (
+              <Link key={s.id} to={`/tahsin/${s.id}`}>
+                <div className="flex items-center gap-3 p-3 rounded-xl border border-destructive/20 bg-card hover:bg-destructive/5 transition-colors">
+                  <div className="w-9 h-9 rounded-xl bg-destructive/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-destructive font-bold text-sm">{s.nama.charAt(0)}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">{s.nama}</p>
+                    <p className="text-xs text-muted-foreground">Kelas {s.kelas} · {s.level}</p>
+                  </div>
+                  <BookOpenCheck className="w-4 h-4 text-destructive/50 flex-shrink-0" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
       {total === 0 ? (
         <div className="bg-card rounded-2xl border border-border p-12 text-center">
           <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
