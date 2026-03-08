@@ -205,16 +205,33 @@ const Monitoring = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {students.map((s, i) => (
-                    <tr key={s.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="py-3 px-4 text-xs text-muted-foreground">{i + 1}</td>
-                      <td className="py-3 px-4 text-sm font-medium text-foreground whitespace-nowrap">{s.nama}</td>
-                      <td className="py-3 px-4 text-sm text-muted-foreground">{s.kelas}</td>
-                      <td className="py-3 px-4"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${LEVEL_COLORS[s.level as ReadingLevel]}`}>{s.level}</span></td>
-                      <td className="py-3 px-4 text-sm text-muted-foreground">{s.status_bacaan}</td>
-                      <td className="py-3 px-4 text-sm font-semibold text-foreground">{s.halaman_terakhir}</td>
-                    </tr>
-                  ))}
+                  {students.map((s, i) => {
+                    const flagged = (s as any).perlu_perhatian === true;
+                    return (
+                      <tr key={s.id} className={`hover:bg-muted/20 transition-colors ${flagged ? "bg-destructive/5" : ""}`}>
+                        <td className="py-3 px-4 text-xs text-muted-foreground">{i + 1}</td>
+                        <td className="py-3 px-4 text-sm font-medium text-foreground whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            {flagged && (
+                              <AlertTriangle className="w-3.5 h-3.5 text-destructive flex-shrink-0" title="Perlu perhatian khusus" />
+                            )}
+                            <Link to={`/student/${s.id}`} className="hover:text-primary transition-colors">{s.nama}</Link>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-muted-foreground">{s.kelas}</td>
+                        <td className="py-3 px-4"><span className={`text-xs font-medium px-2 py-0.5 rounded-full ${LEVEL_COLORS[s.level as ReadingLevel]}`}>{s.level}</span></td>
+                        <td className="py-3 px-4 text-sm text-muted-foreground">{s.status_bacaan}</td>
+                        <td className="py-3 px-4 text-sm font-semibold text-foreground">{s.halaman_terakhir}</td>
+                        <td className="py-3 px-4">
+                          {flagged && (
+                            <Link to={`/tahsin/${s.id}`}>
+                              <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/20 whitespace-nowrap">⚠ Perlu Perhatian</span>
+                            </Link>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
