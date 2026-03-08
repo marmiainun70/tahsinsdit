@@ -186,7 +186,6 @@ const NilaiSlider = ({
 // ─── Halaman Utama ────────────────────────────────────────────────────────────
 const TahsinAssessment = () => {
   const { studentId } = useParams();
-  const navigate = useNavigate();
   const { data: student, isLoading } = useStudent(studentId ?? "");
   const { data: riwayat = [], isLoading: loadingRiwayat } = useTahsinAssessments(studentId ?? "");
   const addAssessment = useAddTahsinAssessment();
