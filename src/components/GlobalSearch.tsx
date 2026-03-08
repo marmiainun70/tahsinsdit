@@ -2,7 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Filter, ChevronRight, BookOpen } from "lucide-react";
-import { students, LEVELS, LEVEL_COLORS, type Level, type Student } from "@/data/mockData";
+import { useStudents, LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
+import type { Database } from "@/integrations/supabase/types";
+
+type ReadingLevel = Database["public"]["Enums"]["reading_level"];
+type Student = Database["public"]["Tables"]["students"]["Row"];
 
 const KELAS_OPTIONS = [1, 2, 3, 4, 5, 6];
 
