@@ -175,11 +175,11 @@ const Dashboard = () => {
                       </div>
                        <div className="mb-3">
                          <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                           <span>Tahsin</span>
+                           <span>Tahsin Dasar (Iqro)</span>
                            <span>{pct}%</span>
                          </div>
                          <div className="h-2 bg-muted rounded-full overflow-hidden">
-                           <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                           <div className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
                          </div>
                        </div>
                        {/* Rombel breakdown */}
