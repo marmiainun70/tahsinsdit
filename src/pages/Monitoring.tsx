@@ -62,8 +62,8 @@ const Monitoring = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: "Total Siswa", value: total, icon: Users, color: "bg-primary" },
-          { label: "Sedang Iqro", value: iqroCount, icon: BookOpen, color: "bg-blue-500" },
-          { label: "Program Tahsin", value: tahsinCount, icon: Star, color: "bg-gold" },
+          { label: "Tahsin Dasar (Iqro)", value: tahsinDasarCount, icon: BookOpen, color: "bg-gold" },
+          { label: "Tahsin Lanjutan", value: tahsinLanjutanCount, icon: Star, color: "bg-emerald-600" },
           { label: "Program Tahfizh", value: tahfizhCount, icon: Award, color: "bg-purple-600" },
         ].map((s, i) => (
           <motion.div key={s.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} className="bg-card rounded-2xl border border-border p-5 shadow-sm">
