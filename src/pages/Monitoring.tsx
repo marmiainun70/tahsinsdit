@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { useStudents, LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
+import { useStudents, LEVELS, LEVEL_COLORS, getLevelGroup, IQRO_LEVELS } from "@/hooks/useSupabaseData";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { Users, TrendingUp, BookOpen, Award, Star, Loader2, AlertTriangle, BookOpenCheck, ChevronRight } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
-const PIE_COLORS = ["#3b82f6", "#06b6d4", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", "#f97316", "#ec4899", "#14b8a6"];
+const PIE_COLORS = ["#f59e0b", "#10b981", "#8b5cf6"];
 
 const Monitoring = () => {
   const { data: students = [], isLoading } = useStudents();
@@ -17,31 +17,34 @@ const Monitoring = () => {
   LEVELS.forEach(l => { levelCount[l] = 0; });
   students.forEach(s => { levelCount[s.level] = (levelCount[s.level] || 0) + 1; });
 
-  const iqroCount = LEVELS.filter(l => l.startsWith("Iqro")).reduce((a, l) => a + (levelCount[l] || 0), 0);
-  const tahsinCount = (levelCount["Tahsin Dasar"] || 0) + (levelCount["Tahsin Lanjutan"] || 0);
+  // Tahsin Dasar = semua Iqro 1-6
+  const tahsinDasarCount = students.filter(s => getLevelGroup(s.level as ReadingLevel) === "Tahsin Dasar").length;
+  const tahsinLanjutanCount = levelCount["Tahsin Lanjutan"] || 0;
   const tahfizhCount = levelCount["Tahfizh"] || 0;
   const perluPerhatian = students.filter(s => (s as any).perlu_perhatian === true);
 
-  const levelData = LEVELS.map(l => ({
-    level: l.replace("Tahsin Dasar", "Ts. Dasar").replace("Tahsin Lanjutan", "Ts. Lanjutan"),
+  const levelData = IQRO_LEVELS.map((l, i) => ({
+    level: `Jilid ${i + 1}`,
     fullName: l,
     count: levelCount[l] || 0,
+    group: "Tahsin Dasar",
   }));
 
   const classData = [1, 2, 3, 4, 5, 6].map(k => {
     const cls = students.filter(s => s.kelas === k);
     return {
       kelas: `Kelas ${k}`,
-      iqro: cls.filter(s => s.level.startsWith("Iqro")).length,
-      tahsinDasar: cls.filter(s => s.level === "Tahsin Dasar").length,
-      tahsinLanjutan: cls.filter(s => s.level === "Tahsin Lanjutan").length,
-      tahfizh: cls.filter(s => s.level === "Tahfizh").length,
+      "Tahsin Dasar (Iqro)": cls.filter(s => getLevelGroup(s.level as ReadingLevel) === "Tahsin Dasar").length,
+      "Tahsin Lanjutan": cls.filter(s => s.level === "Tahsin Lanjutan").length,
+      "Tahfizh": cls.filter(s => s.level === "Tahfizh").length,
     };
   });
 
-  const pieData = LEVELS.filter(l => (levelCount[l] || 0) > 0).map((l, i) => ({
-    name: l, value: levelCount[l] || 0, color: PIE_COLORS[i % PIE_COLORS.length],
-  }));
+  const pieData = [
+    { name: "Tahsin Dasar (Iqro 1–6)", value: tahsinDasarCount, color: "#f59e0b" },
+    { name: "Tahsin Lanjutan", value: tahsinLanjutanCount, color: "#10b981" },
+    { name: "Tahfizh", value: tahfizhCount, color: "#8b5cf6" },
+  ].filter(d => d.value > 0);
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-64">

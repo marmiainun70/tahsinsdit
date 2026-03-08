@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   useStudent, useProgressEntries, useExamRecords,
   useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS,
-  useTahsinAssessments,
+  useTahsinAssessments, getLevelDisplayLabel, isTahsinDasar,
 } from "@/hooks/useSupabaseData";
 import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
