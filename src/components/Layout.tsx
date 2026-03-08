@@ -3,8 +3,9 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen, LayoutDashboard, Users, BarChart3, ClipboardList,
-  Menu, X, LogOut, Bell, ChevronRight
+  Menu, X, LogOut, Bell, ChevronRight, Search
 } from "lucide-react";
+import GlobalSearch from "@/components/GlobalSearch";
 
 interface LayoutProps {
   children: React.ReactNode;
