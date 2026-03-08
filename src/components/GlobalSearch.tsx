@@ -18,7 +18,7 @@ interface GlobalSearchProps {
 const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
   const [query, setQuery] = useState("");
   const [filterKelas, setFilterKelas] = useState<number | null>(null);
-  const [filterLevel, setFilterLevel] = useState<Level | null>(null);
+  const [filterLevel, setFilterLevel] = useState<ReadingLevel | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
