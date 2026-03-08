@@ -122,24 +122,54 @@ const Monitoring = () => {
       ) : (
         <>
           <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
-            <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
+            <h2 className="font-bold text-foreground mb-1 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-primary" />
               Distribusi Siswa Per Level
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {LEVELS.map((level, i) => {
+            <p className="text-xs text-muted-foreground mb-4">Iqro Jilid 1–6 adalah bagian dari <span className="font-semibold text-foreground">Tahsin Dasar</span></p>
+
+            {/* Tahsin Dasar — Iqro 1-6 grup */}
+            <div className="mb-4 border border-amber-200 rounded-xl overflow-hidden bg-amber-50/30">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-100/70 border-b border-amber-200">
+                <BookOpen className="w-4 h-4 text-amber-700" />
+                <span className="text-xs font-bold text-amber-800 uppercase tracking-wide">Tahsin Dasar — Iqro Jilid 1–6</span>
+                <span className="ml-auto text-xs font-bold text-amber-700">{tahsinDasarCount} siswa</span>
+              </div>
+              <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {IQRO_LEVELS.map((level, i) => {
+                  const count = levelCount[level] || 0;
+                  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
+                  return (
+                    <motion.div key={level} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="flex items-center gap-2 p-2.5 bg-card rounded-lg border border-amber-100">
+                      <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">{i + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-foreground">Jilid {i + 1}</p>
+                        <div className="h-1 bg-muted rounded-full overflow-hidden mt-0.5">
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.3 + i * 0.05 }} className="h-full bg-amber-400 rounded-full" />
+                        </div>
+                      </div>
+                      <span className="text-sm font-bold text-foreground">{count}</span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Tahsin Lanjutan & Tahfizh */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {(["Tahsin Lanjutan", "Tahfizh"] as const).map((level, i) => {
                 const count = levelCount[level] || 0;
                 const pct = total > 0 ? Math.round((count / total) * 100) : 0;
                 return (
-                  <motion.div key={level} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="flex items-center gap-3 p-3 bg-muted/40 rounded-xl">
-                    <span className={`text-xs font-medium px-2.5 py-1.5 rounded-lg w-28 text-center flex-shrink-0 ${LEVEL_COLORS[level as ReadingLevel]}`}>{level}</span>
+                  <motion.div key={level} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.5 + i * 0.05 }} className="flex items-center gap-3 p-3 bg-muted/40 rounded-xl">
+                    <span className={`text-xs font-medium px-2.5 py-1.5 rounded-lg text-center flex-shrink-0 ${LEVEL_COLORS[level as ReadingLevel]}`}>{level}</span>
                     <div className="flex-1">
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-muted-foreground">{pct}%</span>
                         <span className="font-semibold text-foreground">{count}</span>
                       </div>
                       <div className="h-1.5 bg-border rounded-full overflow-hidden">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.4 + i * 0.05 }} className="h-full bg-gradient-hero rounded-full" />
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.6 + i * 0.05 }} className="h-full bg-gradient-hero rounded-full" />
                       </div>
                     </div>
                   </motion.div>
@@ -150,20 +180,20 @@ const Monitoring = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-card rounded-2xl border border-border p-5 shadow-sm">
-              <h2 className="font-bold text-foreground mb-4">📊 Jumlah Siswa Per Level</h2>
+              <h2 className="font-bold text-foreground mb-4">📊 Jumlah Siswa Per Jilid Iqro</h2>
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={levelData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="level" tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} />
+                  <XAxis dataKey="level" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                   <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                   <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "12px" }} formatter={(v, _n, props) => [v, props.payload.fullName]} />
-                  <Bar dataKey="count" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="count" fill="#f59e0b" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </motion.div>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-card rounded-2xl border border-border p-5 shadow-sm">
-              <h2 className="font-bold text-foreground mb-4">🥧 Proporsi Level Bacaan</h2>
+              <h2 className="font-bold text-foreground mb-4">🥧 Proporsi Program Belajar</h2>
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
                   <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} paddingAngle={3} dataKey="value">
@@ -185,10 +215,9 @@ const Monitoring = () => {
                 <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "12px", fontSize: "12px" }} />
                 <Legend iconSize={10} formatter={(v) => <span style={{ fontSize: 11 }}>{v}</span>} />
-                <Bar dataKey="iqro" name="Iqro" fill="#3b82f6" stackId="a" />
-                <Bar dataKey="tahsinDasar" name="Tahsin Dasar" fill="#f59e0b" stackId="a" />
-                <Bar dataKey="tahsinLanjutan" name="Tahsin Lanjutan" fill="#10b981" stackId="a" />
-                <Bar dataKey="tahfizh" name="Tahfizh" fill="#8b5cf6" stackId="a" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="Tahsin Dasar (Iqro)" name="Tahsin Dasar (Iqro)" fill="#f59e0b" stackId="a" />
+                <Bar dataKey="Tahsin Lanjutan" name="Tahsin Lanjutan" fill="#10b981" stackId="a" />
+                <Bar dataKey="Tahfizh" name="Tahfizh" fill="#8b5cf6" stackId="a" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </motion.div>
