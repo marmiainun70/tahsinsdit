@@ -254,7 +254,7 @@ const GroupSection = ({
                     <td className="px-3 py-2 text-xs text-muted-foreground w-8">{i + 1}</td>
                     <td className="px-3 py-2 w-8">
                       {s.valid
-                        ? <CheckCircle className="w-4 h-4 text-emerald-500" />
+                        ? <CheckCircle className="w-4 h-4 text-primary" />
                         : <AlertTriangle className="w-4 h-4 text-destructive" />}
                     </td>
                     <td className="px-3 py-2 font-medium text-foreground whitespace-nowrap">
