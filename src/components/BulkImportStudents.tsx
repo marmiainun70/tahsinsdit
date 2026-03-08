@@ -492,12 +492,12 @@ const BulkImportStudents = ({ onClose }: Props) => {
                         dalam {groups.length} grup
                       </span>
                       {validCount > 0 && (
-                        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary/10 text-primary flex items-center gap-1">
                           <CheckCircle className="w-3 h-3" /> {validCount} siap import
                         </span>
                       )}
                       {invalidCount > 0 && (
-                        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-red-100 text-red-700 flex items-center gap-1">
+                        <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-destructive/10 text-destructive flex items-center gap-1">
                           <AlertTriangle className="w-3 h-3" /> {invalidCount} error
                         </span>
                       )}
