@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useStudents } from "@/hooks/useSupabaseData";
-import { LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
+import { useStudents, LEVELS, LEVEL_COLORS, getLevelDisplayLabel, getLevelGroup, IQRO_LEVELS, IQRO_JILID_COLORS } from "@/hooks/useSupabaseData";
 import { Users, BookOpen, Star, TrendingUp, Award, Loader2, AlertTriangle, ChevronRight, BookOpenCheck } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
+
+type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
 const classColors = [
   "from-blue-500 to-blue-600",
@@ -17,8 +19,9 @@ const Dashboard = () => {
   const { data: students = [], isLoading } = useStudents();
 
   const total = students.length;
-  const iqroCount = students.filter(s => s.level.startsWith("Iqro")).length;
-  const tahsinCount = students.filter(s => s.level === "Tahsin Dasar" || s.level === "Tahsin Lanjutan").length;
+  // Tahsin Dasar = semua Iqro 1-6 (mereka adalah sub-level Tahsin Dasar)
+  const tahsinDasarCount = students.filter(s => getLevelGroup(s.level as ReadingLevel) === "Tahsin Dasar").length;
+  const tahsinLanjutanCount = students.filter(s => s.level === "Tahsin Lanjutan").length;
   const tahfizhCount = students.filter(s => s.level === "Tahfizh").length;
   const perluPerhatian = students.filter(s => (s as any).perlu_perhatian === true);
 
@@ -26,8 +29,7 @@ const Dashboard = () => {
     const cls = students.filter(s => s.kelas === kelas);
     return {
       total: cls.length,
-      iqro: cls.filter(s => s.level.startsWith("Iqro")).length,
-      tahsinDasar: cls.filter(s => s.level === "Tahsin Dasar").length,
+      tahsinDasar: cls.filter(s => getLevelGroup(s.level as ReadingLevel) === "Tahsin Dasar").length,
       tahsinLanjutan: cls.filter(s => s.level === "Tahsin Lanjutan").length,
       tahfizh: cls.filter(s => s.level === "Tahfizh").length,
       rombel: {
@@ -41,8 +43,8 @@ const Dashboard = () => {
 
   const statCards = [
     { label: "Total Siswa", value: total, icon: Users, color: "bg-primary", sub: "Seluruh kelas" },
-    { label: "Level Iqro", value: iqroCount, icon: BookOpen, color: "bg-gold", sub: "Iqro 1–6" },
-    { label: "Level Tahsin", value: tahsinCount, icon: Star, color: "bg-emerald-600", sub: "Dasar & Lanjutan" },
+    { label: "Tahsin Dasar", value: tahsinDasarCount, icon: BookOpen, color: "bg-gold", sub: "Iqro Jilid 1–6" },
+    { label: "Tahsin Lanjutan", value: tahsinLanjutanCount, icon: Star, color: "bg-emerald-600", sub: "Al-Qur'an" },
     { label: "Tahfizh", value: tahfizhCount, icon: Award, color: "bg-purple-600", sub: "Hafalan" },
   ];
 
