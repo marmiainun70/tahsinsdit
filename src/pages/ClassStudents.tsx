@@ -324,6 +324,16 @@ const ClassStudents = () => {
           </div>
         )}
       </div>
+
+      {/* Bulk Import Modal */}
+      <AnimatePresence>
+        {showImport && (
+          <BulkImportStudents
+            onClose={() => setShowImport(false)}
+            defaultKelas={kelas}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
