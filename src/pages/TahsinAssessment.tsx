@@ -3,10 +3,11 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStudent, LEVEL_COLORS, useTahsinAssessments, useAddTahsinAssessment } from "@/hooks/useSupabaseData";
 import {
-  ChevronRight, BookOpenCheck, CheckCircle, Star, Loader2,
-  CalendarDays, ChevronDown, ChevronUp, Info
+  ChevronRight, BookOpenCheck, Star, Loader2,
+  CalendarDays, ChevronDown, ChevronUp, Info, TrendingUp,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import TahsinTrendChart from "@/components/TahsinTrendChart";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -283,44 +284,57 @@ const TahsinAssessment = () => {
             className="overflow-hidden"
           >
             <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-border">
-                <h3 className="font-bold text-foreground text-sm">Riwayat Penilaian Tahsin</h3>
+              <div className="p-4 border-b border-border flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-primary" />
+                <h3 className="font-bold text-foreground text-sm">Tren Nilai Per Materi</h3>
+                <span className="ml-auto text-xs text-muted-foreground">{riwayat.length} penilaian</span>
               </div>
               {loadingRiwayat ? (
                 <div className="p-6 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
-              ) : riwayat.length === 0 ? (
-                <div className="p-6 text-center text-muted-foreground text-sm">Belum ada riwayat penilaian.</div>
               ) : (
-                <div className="divide-y divide-border">
-                  {riwayat.map(r => {
-                    const p = getPredikat(r.nilai_total);
-                    return (
-                      <div key={r.id} className="p-4 hover:bg-muted/20">
-                        <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">{r.tanggal}</p>
-                            <p className="text-xs text-muted-foreground">{r.level_dinilai}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xl font-bold text-foreground">{r.nilai_total}</span>
-                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${p.color} ${p.bg} ${p.border}`}>
-                              {p.emoji} {p.label}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-5 gap-2 mt-2">
-                          {MATERI.map(m => (
-                            <div key={m.key} className="text-center">
-                              <p className="text-xs text-muted-foreground truncate">{m.label.split(" ")[0]}</p>
-                              <p className={`text-sm font-bold ${r[m.key] >= 80 ? "text-emerald-600" : r[m.key] >= 70 ? "text-blue-600" : r[m.key] >= 60 ? "text-yellow-600" : "text-red-500"}`}>{r[m.key]}</p>
+                <>
+                  {/* Line chart tren */}
+                  {riwayat.length >= 2 && (
+                    <div className="p-4 border-b border-border">
+                      <TahsinTrendChart data={riwayat} compact />
+                    </div>
+                  )}
+                  {/* Riwayat list */}
+                  {riwayat.length === 0 ? (
+                    <div className="p-6 text-center text-muted-foreground text-sm">Belum ada riwayat penilaian.</div>
+                  ) : (
+                    <div className="divide-y divide-border">
+                      {riwayat.map(r => {
+                        const p = getPredikat(r.nilai_total);
+                        return (
+                          <div key={r.id} className="p-4 hover:bg-muted/20">
+                            <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                              <div>
+                                <p className="text-sm font-semibold text-foreground">{r.tanggal}</p>
+                                <p className="text-xs text-muted-foreground">{r.level_dinilai}</p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xl font-bold text-foreground">{r.nilai_total}</span>
+                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${p.color} ${p.bg} ${p.border}`}>
+                                  {p.emoji} {p.label}
+                                </span>
+                              </div>
                             </div>
-                          ))}
-                        </div>
-                        {r.catatan && <p className="text-xs text-muted-foreground bg-muted rounded-lg px-3 py-2 mt-2 italic">"{r.catatan}"</p>}
-                      </div>
-                    );
-                  })}
-                </div>
+                            <div className="grid grid-cols-5 gap-2 mt-2">
+                              {MATERI.map(m => (
+                                <div key={m.key} className="text-center">
+                                  <p className="text-xs text-muted-foreground truncate">{m.label.split(" ")[0]}</p>
+                                  <p className={`text-sm font-bold ${r[m.key] >= 80 ? "text-emerald-600" : r[m.key] >= 70 ? "text-blue-600" : r[m.key] >= 60 ? "text-yellow-600" : "text-red-500"}`}>{r[m.key]}</p>
+                                </div>
+                              ))}
+                            </div>
+                            {r.catatan && <p className="text-xs text-muted-foreground bg-muted rounded-lg px-3 py-2 mt-2 italic">"{r.catatan}"</p>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </motion.div>

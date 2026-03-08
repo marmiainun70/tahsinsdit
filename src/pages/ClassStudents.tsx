@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStudentsByClass, useAddStudent, useDeleteStudent, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
-import { ChevronRight, Search, UserPlus, FileText, Eye, Trash2, Loader2, X, AlertTriangle } from "lucide-react";
+import { ChevronRight, Search, UserPlus, FileText, Eye, Trash2, Loader2, X, AlertTriangle, Upload } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import BulkImportStudents from "@/components/BulkImportStudents";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -42,6 +43,7 @@ const ClassStudents = () => {
   const [activeRombel, setActiveRombel] = useState<Rombel>("A");
   const [search, setSearch] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [newName, setNewName] = useState("");
   const [newLevel, setNewLevel] = useState<ReadingLevel>("Iqro 1");
   const [newRombel, setNewRombel] = useState<Rombel>("A");
@@ -98,6 +100,13 @@ const ClassStudents = () => {
               className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
             />
           </div>
+          <button
+            onClick={() => setShowImport(true)}
+            className="flex items-center gap-2 px-4 py-2.5 border border-border bg-card text-foreground rounded-xl text-sm font-medium hover:bg-muted transition-colors whitespace-nowrap"
+          >
+            <Upload className="w-4 h-4" />
+            <span className="hidden sm:inline">Import CSV</span>
+          </button>
           <button
             onClick={() => { setShowAddForm(true); setNewRombel(activeRombel); }}
             className="flex items-center gap-2 px-4 py-2.5 bg-gradient-hero text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
@@ -315,6 +324,16 @@ const ClassStudents = () => {
           </div>
         )}
       </div>
+
+      {/* Bulk Import Modal */}
+      <AnimatePresence>
+        {showImport && (
+          <BulkImportStudents
+            onClose={() => setShowImport(false)}
+            defaultKelas={kelas}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

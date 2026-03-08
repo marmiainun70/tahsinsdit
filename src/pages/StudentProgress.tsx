@@ -3,10 +3,12 @@ import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   useStudent, useProgressEntries, useExamRecords,
-  useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS
+  useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS,
+  useTahsinAssessments,
 } from "@/hooks/useSupabaseData";
 import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import TahsinTrendChart from "@/components/TahsinTrendChart";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 type ReadingStatus = Database["public"]["Enums"]["reading_status"];
@@ -33,6 +35,7 @@ const StudentProgress = () => {
   const { data: student, isLoading: loadingStudent } = useStudent(studentId ?? "");
   const { data: progres = [], isLoading: loadingProgress } = useProgressEntries(studentId ?? "");
   const { data: ujian = [] } = useExamRecords(studentId ?? "");
+  const { data: tahsinData = [] } = useTahsinAssessments(studentId ?? "");
   const addProgress = useAddProgress();
   const updateStudent = useUpdateStudent();
 
@@ -232,6 +235,20 @@ const StudentProgress = () => {
           </div>
         </form>
       </div>
+
+      {/* Tahsin Trend Chart — hanya untuk level Tahsin */}
+      {(student.level === "Tahsin Dasar" || student.level === "Tahsin Lanjutan" || student.level === "Tahfizh") && (
+        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-border flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            <h2 className="font-bold text-foreground">Tren Nilai Tahsin Per Materi</h2>
+            <span className="ml-auto text-xs text-muted-foreground">{tahsinData.length} penilaian</span>
+          </div>
+          <div className="p-5">
+            <TahsinTrendChart data={tahsinData} />
+          </div>
+        </div>
+      )}
 
       {/* Exam History */}
       {ujian.length > 0 && (
