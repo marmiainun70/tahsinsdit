@@ -289,8 +289,8 @@ const ClassStudents = () => {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${LEVEL_COLORS[s.level]}`}>{s.level}</span>
+                       <td className="py-3.5 px-4">
+                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${LEVEL_COLORS[s.level]}`}>{s.level.startsWith("Iqro") ? `Tahsin Dasar — ${s.level}` : s.level}</span>
                       </td>
                       <td className="py-3.5 px-4 text-sm font-medium text-foreground">{s.halaman_terakhir}</td>
                       <td className="py-3.5 px-4">
