@@ -14,7 +14,184 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      exam_records: {
+        Row: {
+          adab: number
+          catatan: string | null
+          created_at: string
+          created_by: string | null
+          dibantu_guru: number
+          hasil: Database["public"]["Enums"]["exam_result"]
+          id: string
+          kelancaran: number
+          kesalahan_makhraj: number
+          kesalahan_tajwid: number
+          level_diuji: Database["public"]["Enums"]["reading_level"]
+          makhraj: number
+          student_id: string
+          tajwid: number
+          tanggal: string
+          terhenti: number
+        }
+        Insert: {
+          adab: number
+          catatan?: string | null
+          created_at?: string
+          created_by?: string | null
+          dibantu_guru?: number
+          hasil: Database["public"]["Enums"]["exam_result"]
+          id?: string
+          kelancaran: number
+          kesalahan_makhraj?: number
+          kesalahan_tajwid?: number
+          level_diuji: Database["public"]["Enums"]["reading_level"]
+          makhraj: number
+          student_id: string
+          tajwid: number
+          tanggal?: string
+          terhenti?: number
+        }
+        Update: {
+          adab?: number
+          catatan?: string | null
+          created_at?: string
+          created_by?: string | null
+          dibantu_guru?: number
+          hasil?: Database["public"]["Enums"]["exam_result"]
+          id?: string
+          kelancaran?: number
+          kesalahan_makhraj?: number
+          kesalahan_tajwid?: number
+          level_diuji?: Database["public"]["Enums"]["reading_level"]
+          makhraj?: number
+          student_id?: string
+          tajwid?: number
+          tanggal?: string
+          terhenti?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_records_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      progress_entries: {
+        Row: {
+          buku: string
+          catatan: string | null
+          created_at: string
+          created_by: string | null
+          halaman: number
+          id: string
+          kelancaran: number
+          makhraj: number
+          student_id: string
+          tajwid: number
+          tanggal: string
+        }
+        Insert: {
+          buku: string
+          catatan?: string | null
+          created_at?: string
+          created_by?: string | null
+          halaman: number
+          id?: string
+          kelancaran: number
+          makhraj: number
+          student_id: string
+          tajwid: number
+          tanggal?: string
+        }
+        Update: {
+          buku?: string
+          catatan?: string | null
+          created_at?: string
+          created_by?: string | null
+          halaman?: number
+          id?: string
+          kelancaran?: number
+          makhraj?: number
+          student_id?: string
+          tajwid?: number
+          tanggal?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "progress_entries_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          halaman_terakhir: number
+          id: string
+          kelas: number
+          level: Database["public"]["Enums"]["reading_level"]
+          nama: string
+          status_bacaan: Database["public"]["Enums"]["reading_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          halaman_terakhir?: number
+          id?: string
+          kelas: number
+          level?: Database["public"]["Enums"]["reading_level"]
+          nama: string
+          status_bacaan?: Database["public"]["Enums"]["reading_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          halaman_terakhir?: number
+          id?: string
+          kelas?: number
+          level?: Database["public"]["Enums"]["reading_level"]
+          nama?: string
+          status_bacaan?: Database["public"]["Enums"]["reading_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +200,18 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      exam_result: "Lulus" | "Tidak Lulus"
+      reading_level:
+        | "Iqro 1"
+        | "Iqro 2"
+        | "Iqro 3"
+        | "Iqro 4"
+        | "Iqro 5"
+        | "Iqro 6"
+        | "Tahsin Dasar"
+        | "Tahsin Lanjutan"
+        | "Tahfizh"
+      reading_status: "Lancar" | "Cukup" | "Perlu Latihan" | "Terbata-bata"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +338,20 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      exam_result: ["Lulus", "Tidak Lulus"],
+      reading_level: [
+        "Iqro 1",
+        "Iqro 2",
+        "Iqro 3",
+        "Iqro 4",
+        "Iqro 5",
+        "Iqro 6",
+        "Tahsin Dasar",
+        "Tahsin Lanjutan",
+        "Tahfizh",
+      ],
+      reading_status: ["Lancar", "Cukup", "Perlu Latihan", "Terbata-bata"],
+    },
   },
 } as const
