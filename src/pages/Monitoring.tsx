@@ -213,7 +213,7 @@ const Monitoring = () => {
                         <td className="py-3 px-4 text-sm font-medium text-foreground whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             {flagged && (
-                              <AlertTriangle className="w-3.5 h-3.5 text-destructive flex-shrink-0" title="Perlu perhatian khusus" />
+                              <AlertTriangle className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
                             )}
                             <Link to={`/student/${s.id}`} className="hover:text-primary transition-colors">{s.nama}</Link>
                           </div>
