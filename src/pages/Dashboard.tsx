@@ -20,6 +20,7 @@ const Dashboard = () => {
   const iqroCount = students.filter(s => s.level.startsWith("Iqro")).length;
   const tahsinCount = students.filter(s => s.level === "Tahsin Dasar" || s.level === "Tahsin Lanjutan").length;
   const tahfizhCount = students.filter(s => s.level === "Tahfizh").length;
+  const perluPerhatian = students.filter(s => (s as any).perlu_perhatian === true);
 
   const getClassStats = (kelas: number) => {
     const cls = students.filter(s => s.kelas === kelas);
