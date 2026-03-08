@@ -258,7 +258,7 @@ const TahsinAssessment = () => {
             <h1 className="text-xl font-bold text-foreground">{student.nama}</h1>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className="text-xs bg-secondary text-secondary-foreground px-2.5 py-1 rounded-full">Kelas {student.kelas}</span>
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LEVEL_COLORS[student.level as ReadingLevel]}`}>{student.level}</span>
+              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LEVEL_COLORS[student.level as ReadingLevel]}`}>{getLevelDisplayLabel(student.level as ReadingLevel)}</span>
               <span className="text-xs text-muted-foreground">Penilaian Tahsin</span>
             </div>
           </div>

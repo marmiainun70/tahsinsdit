@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, X, CheckCircle, AlertTriangle, Download, Loader2, Users, FileText } from "lucide-react";
-import { useAddStudent, LEVELS } from "@/hooks/useSupabaseData";
+import { useAddStudent, LEVELS, getLevelDisplayLabel } from "@/hooks/useSupabaseData";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
