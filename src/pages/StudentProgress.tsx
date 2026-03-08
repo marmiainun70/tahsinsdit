@@ -294,7 +294,6 @@ const StudentProgress = () => {
           </div>
         </div>
       )}
-    </div>
 
       {/* Hidden PDF Report — rendered off-screen, captured by html2canvas */}
       <div
