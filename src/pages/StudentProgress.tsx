@@ -112,7 +112,7 @@ const StudentProgress = () => {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
-            {(student.level === "Tahsin Dasar" || student.level === "Tahsin Lanjutan" || student.level === "Tahfizh") && (
+          {isTahsinDasar(student.level as ReadingLevel) && (
               <Link to={`/tahsin/${student.id}`}>
                 <button className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
                   <BookOpen className="w-4 h-4" />
