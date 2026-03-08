@@ -40,6 +40,7 @@ const StudentProgress = () => {
   const { data: tahsinData = [] } = useTahsinAssessments(studentId ?? "");
   const addProgress = useAddProgress();
   const updateStudent = useUpdateStudent();
+  const { reportRef, exporting, exportPDF } = useExportPDF();
 
   const [form, setForm] = useState({
     halaman: "", kelancaran: "", makhraj: "", tajwid: "", catatan: "",
