@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { getClassStats, getOverallStats, LEVELS, LEVEL_COLORS } from "@/data/mockData";
-import { Users, BookOpen, Star, TrendingUp, Award } from "lucide-react";
+import { useStudents } from "@/hooks/useSupabaseData";
+import { LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
+import { Users, BookOpen, Star, TrendingUp, Award, Loader2 } from "lucide-react";
 
 const classColors = [
   "from-blue-500 to-blue-600",
@@ -13,18 +14,42 @@ const classColors = [
 ];
 
 const Dashboard = () => {
-  const overall = getOverallStats();
+  const { data: students = [], isLoading } = useStudents();
+
+  const total = students.length;
+  const iqroCount = students.filter(s => s.level.startsWith("Iqro")).length;
+  const tahsinCount = students.filter(s => s.level === "Tahsin Dasar" || s.level === "Tahsin Lanjutan").length;
+  const tahfizhCount = students.filter(s => s.level === "Tahfizh").length;
+
+  const getClassStats = (kelas: number) => {
+    const cls = students.filter(s => s.kelas === kelas);
+    return {
+      total: cls.length,
+      iqro: cls.filter(s => s.level.startsWith("Iqro")).length,
+      tahsinDasar: cls.filter(s => s.level === "Tahsin Dasar").length,
+      tahsinLanjutan: cls.filter(s => s.level === "Tahsin Lanjutan").length,
+      tahfizh: cls.filter(s => s.level === "Tahfizh").length,
+    };
+  };
 
   const statCards = [
-    { label: "Total Siswa", value: overall.total, icon: Users, color: "bg-primary", sub: "Seluruh kelas" },
-    { label: "Level Iqro", value: LEVELS.filter(l => l.startsWith("Iqro")).reduce((a, l) => a + (overall.levelCount[l] || 0), 0), icon: BookOpen, color: "bg-gold", sub: "Iqro 1–6" },
-    { label: "Level Tahsin", value: (overall.levelCount["Tahsin Dasar"] || 0) + (overall.levelCount["Tahsin Lanjutan"] || 0), icon: Star, color: "bg-emerald-600", sub: "Dasar & Lanjutan" },
-    { label: "Tahfizh", value: overall.levelCount["Tahfizh"] || 0, icon: Award, color: "bg-purple-600", sub: "Hafalan" },
+    { label: "Total Siswa", value: total, icon: Users, color: "bg-primary", sub: "Seluruh kelas" },
+    { label: "Level Iqro", value: iqroCount, icon: BookOpen, color: "bg-gold", sub: "Iqro 1–6" },
+    { label: "Level Tahsin", value: tahsinCount, icon: Star, color: "bg-emerald-600", sub: "Dasar & Lanjutan" },
+    { label: "Tahfizh", value: tahfizhCount, icon: Award, color: "bg-purple-600", sub: "Hafalan" },
   ];
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center h-64">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <p className="text-muted-foreground text-sm">Memuat data...</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -32,13 +57,12 @@ const Dashboard = () => {
       >
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_70%_50%,hsl(43_74%_49%),transparent)]" />
         <div className="relative z-10">
-          <p className="text-primary-foreground/70 text-sm mb-1">Selamat Datang, Guru Admin 👋</p>
+          <p className="text-primary-foreground/70 text-sm mb-1">Selamat Datang 👋</p>
           <h1 className="text-2xl font-bold mb-1">Sistem Monitoring Iqro & Tahsin</h1>
           <p className="text-primary-foreground/70 text-sm">SD Islam — Tahun Ajaran 2024/2025</p>
         </div>
       </motion.div>
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((s, i) => (
           <motion.div
@@ -58,7 +82,6 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Class Cards */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-foreground">Ringkasan Per Kelas</h2>
@@ -67,6 +90,8 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((kelas, i) => {
             const stats = getClassStats(kelas);
+            const tahsinTotal = stats.tahsinDasar + stats.tahsinLanjutan + stats.tahfizh;
+            const pct = stats.total > 0 ? Math.round(tahsinTotal / stats.total * 100) : 0;
             return (
               <motion.div
                 key={kelas}
@@ -87,20 +112,15 @@ const Dashboard = () => {
                           <Users className="w-6 h-6 text-white" />
                         </div>
                       </div>
-
                       <div className="mb-4">
                         <div className="flex justify-between text-xs text-muted-foreground mb-1">
                           <span>Tahsin</span>
-                          <span>{((stats.tahsinDasar + stats.tahsinLanjutan + stats.tahfizh) / stats.total * 100).toFixed(0)}%</span>
+                          <span>{pct}%</span>
                         </div>
                         <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700"
-                            style={{ width: `${(stats.tahsinDasar + stats.tahsinLanjutan + stats.tahfizh) / stats.total * 100}%` }}
-                          />
+                          <div className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
                         </div>
                       </div>
-
                       <div className="grid grid-cols-2 gap-2">
                         <div className="bg-muted rounded-xl p-2.5 text-center">
                           <p className="text-lg font-bold text-foreground">{stats.total}</p>
@@ -119,7 +139,6 @@ const Dashboard = () => {
                           <p className="text-xs text-emerald-400">Tahsin Lanjut</p>
                         </div>
                       </div>
-
                       <div className="mt-3 flex items-center gap-1 text-primary text-xs font-medium group-hover:gap-2 transition-all">
                         <TrendingUp className="w-3.5 h-3.5" />
                         Lihat detail kelas {kelas}
@@ -133,32 +152,46 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Level Summary */}
-      <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
-        <h2 className="text-base font-bold text-foreground mb-4">Distribusi Level Seluruh Siswa</h2>
-        <div className="space-y-3">
-          {LEVELS.map((level) => {
-            const count = overall.levelCount[level] || 0;
-            const pct = (count / overall.total) * 100;
-            return (
-              <div key={level} className="flex items-center gap-3">
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full w-28 text-center flex-shrink-0 ${LEVEL_COLORS[level]}`}>
-                  {level}
-                </span>
-                <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ delay: 0.3, duration: 0.6 }}
-                    className="h-full bg-gradient-hero rounded-full"
-                  />
+      {students.length > 0 && (
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+          <h2 className="text-base font-bold text-foreground mb-4">Distribusi Level Seluruh Siswa</h2>
+          <div className="space-y-3">
+            {LEVELS.map((level) => {
+              const count = students.filter(s => s.level === level).length;
+              const pct = total > 0 ? (count / total) * 100 : 0;
+              return (
+                <div key={level} className="flex items-center gap-3">
+                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full w-28 text-center flex-shrink-0 ${LEVEL_COLORS[level]}`}>
+                    {level}
+                  </span>
+                  <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${pct}%` }}
+                      transition={{ delay: 0.3, duration: 0.6 }}
+                      className="h-full bg-gradient-hero rounded-full"
+                    />
+                  </div>
+                  <span className="text-sm font-semibold text-foreground w-8 text-right">{count}</span>
                 </div>
-                <span className="text-sm font-semibold text-foreground w-8 text-right">{count}</span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
+
+      {students.length === 0 && !isLoading && (
+        <div className="bg-card rounded-2xl border border-border p-10 text-center">
+          <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="font-semibold text-foreground mb-1">Belum ada data siswa</p>
+          <p className="text-sm text-muted-foreground mb-4">Mulai tambahkan siswa melalui halaman kelas</p>
+          <Link to="/class/1">
+            <button className="px-5 py-2.5 bg-gradient-hero text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-green">
+              Tambah Siswa Pertama
+            </button>
+          </Link>
+        </div>
+      )}
     </div>
   );
 };
