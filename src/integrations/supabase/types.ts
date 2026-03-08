@@ -158,6 +158,7 @@ export type Database = {
       }
       students: {
         Row: {
+          catatan_perhatian: string | null
           created_at: string
           created_by: string | null
           halaman_terakhir: number
@@ -165,10 +166,12 @@ export type Database = {
           kelas: number
           level: Database["public"]["Enums"]["reading_level"]
           nama: string
+          perlu_perhatian: boolean
           status_bacaan: Database["public"]["Enums"]["reading_status"]
           updated_at: string
         }
         Insert: {
+          catatan_perhatian?: string | null
           created_at?: string
           created_by?: string | null
           halaman_terakhir?: number
@@ -176,10 +179,12 @@ export type Database = {
           kelas: number
           level?: Database["public"]["Enums"]["reading_level"]
           nama: string
+          perlu_perhatian?: boolean
           status_bacaan?: Database["public"]["Enums"]["reading_status"]
           updated_at?: string
         }
         Update: {
+          catatan_perhatian?: string | null
           created_at?: string
           created_by?: string | null
           halaman_terakhir?: number
@@ -187,6 +192,7 @@ export type Database = {
           kelas?: number
           level?: Database["public"]["Enums"]["reading_level"]
           nama?: string
+          perlu_perhatian?: boolean
           status_bacaan?: Database["public"]["Enums"]["reading_status"]
           updated_at?: string
         }
