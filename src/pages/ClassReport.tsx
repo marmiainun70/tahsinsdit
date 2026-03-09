@@ -1,0 +1,450 @@
+import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, Cell,
+} from "recharts";
+import { BarChart3, ChevronRight, Loader2, TrendingUp, BookOpen, Award } from "lucide-react";
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+interface ProgressRow {
+  student_id: string;
+  kelancaran: number;
+  makhraj: number;
+  tajwid: number;
+  tanggal: string;
+  students: { kelas: number; rombel: string; nama: string } | null;
+}
+
+// ─── Hook: fetch all latest progress per student ──────────────────────────────
+const useClassReportData = () =>
+  useQuery({
+    queryKey: ["class_report"],
+    queryFn: async () => {
+      // Get the latest progress entry per student via a wide fetch, then deduplicate
+      const { data, error } = await supabase
+        .from("progress_entries")
+        .select("student_id, kelancaran, makhraj, tajwid, tanggal, students(kelas, rombel, nama)")
+        .order("tanggal", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(1000);
+      if (error) throw error;
+      return data as unknown as ProgressRow[];
+    },
+  });
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+const ROMBEL_LIST = ["A", "B", "C", "D"] as const;
+type Rombel = typeof ROMBEL_LIST[number];
+
+const ROMBEL_COLORS: Record<Rombel, { bar: string; bg: string; text: string; border: string }> = {
+  A: { bar: "#3b82f6", bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200"   },
+  B: { bar: "#10b981", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
+  C: { bar: "#8b5cf6", bg: "bg-violet-50", text: "text-violet-700", border: "border-violet-200" },
+  D: { bar: "#f59e0b", bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200"  },
+};
+
+const METRIC_COLORS = {
+  kelancaran: "#3b82f6",
+  makhraj:    "#10b981",
+  tajwid:     "#8b5cf6",
+};
+
+const METRIC_LABELS = { kelancaran: "Kelancaran", makhraj: "Makhraj", tajwid: "Tajwid" };
+
+type MetricKey = keyof typeof METRIC_LABELS;
+
+const avg = (arr: number[]) =>
+  arr.length === 0 ? 0 : Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+
+const scoreColor = (v: number) =>
+  v >= 80 ? "text-emerald-600" : v >= 65 ? "text-yellow-600" : "text-red-500";
+
+const scoreBg = (v: number) =>
+  v >= 80 ? "bg-emerald-100 text-emerald-700" : v >= 65 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-600";
+
+// ─── Custom tooltip ───────────────────────────────────────────────────────────
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-card border border-border rounded-xl shadow-lg p-3 text-sm">
+      <p className="font-bold text-foreground mb-1">Rombel {label}</p>
+      {payload.map((p: any) => (
+        <p key={p.dataKey} style={{ color: p.fill }} className="flex justify-between gap-4">
+          <span>{METRIC_LABELS[p.dataKey as MetricKey]}</span>
+          <span className="font-bold">{p.value}</span>
+        </p>
+      ))}
+    </div>
+  );
+};
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+const ClassReport = () => {
+  const { data: raw = [], isLoading } = useClassReportData();
+  const [selectedKelas, setSelectedKelas] = useState<number | "all">("all");
+  const [selectedMetrics, setSelectedMetrics] = useState<MetricKey[]>(["kelancaran", "makhraj", "tajwid"]);
+
+  // Deduplicate: only keep the latest entry per student
+  const latest = useMemo(() => {
+    const seen = new Map<string, ProgressRow>();
+    for (const row of raw) {
+      if (!seen.has(row.student_id)) seen.set(row.student_id, row);
+    }
+    return Array.from(seen.values());
+  }, [raw]);
+
+  // Filter by kelas
+  const filtered = useMemo(() =>
+    selectedKelas === "all"
+      ? latest
+      : latest.filter(r => r.students?.kelas === selectedKelas),
+    [latest, selectedKelas]
+  );
+
+  // Group by rombel → compute averages
+  const rombelStats = useMemo(() => {
+    return ROMBEL_LIST.map(rombel => {
+      const group = filtered.filter(r => r.students?.rombel === rombel);
+      const count = group.length;
+      return {
+        rombel,
+        count,
+        kelancaran: avg(group.map(r => r.kelancaran)),
+        makhraj:    avg(group.map(r => r.makhraj)),
+        tajwid:     avg(group.map(r => r.tajwid)),
+        total:      count > 0 ? avg(group.map(r => Math.round((r.kelancaran + r.makhraj + r.tajwid) / 3))) : 0,
+      };
+    }).filter(s => s.count > 0);
+  }, [filtered]);
+
+  // Per-kelas summary (for "all" view)
+  const kelasStats = useMemo(() => {
+    return [1, 2, 3, 4, 5, 6].map(kelas => {
+      const group = latest.filter(r => r.students?.kelas === kelas);
+      const count = group.length;
+      return {
+        kelas,
+        count,
+        kelancaran: avg(group.map(r => r.kelancaran)),
+        makhraj:    avg(group.map(r => r.makhraj)),
+        tajwid:     avg(group.map(r => r.tajwid)),
+      };
+    }).filter(s => s.count > 0);
+  }, [latest]);
+
+  const toggleMetric = (m: MetricKey) => {
+    setSelectedMetrics(prev =>
+      prev.includes(m)
+        ? prev.length > 1 ? prev.filter(x => x !== m) : prev
+        : [...prev, m]
+    );
+  };
+
+  const totalStudents = filtered.length;
+  const overallKel = avg(filtered.map(r => r.kelancaran));
+  const overallMak = avg(filtered.map(r => r.makhraj));
+  const overallTaj = avg(filtered.map(r => r.tajwid));
+
+  return (
+    <div className="space-y-5 max-w-6xl">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
+        <Link to="/" className="hover:text-primary transition-colors">Dashboard</Link>
+        <ChevronRight className="w-3 h-3" />
+        <span className="text-foreground font-medium">Rekap Nilai Kelas</span>
+      </div>
+
+      {/* Header card */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-hero rounded-2xl p-6 text-primary-foreground relative overflow-hidden"
+      >
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_70%_50%,hsl(43_74%_49%),transparent)]" />
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center flex-shrink-0">
+            <BarChart3 className="w-6 h-6 text-primary-foreground" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold">Rekap Nilai Per Rombel</h1>
+            <p className="text-primary-foreground/70 text-sm">
+              Rata-rata Kelancaran, Makhraj & Tajwid — berdasarkan progres terakhir setiap siswa
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Filter bar */}
+      <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Kelas filter */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kelas:</span>
+            {(["all", 1, 2, 3, 4, 5, 6] as const).map(k => (
+              <button
+                key={k}
+                onClick={() => setSelectedKelas(k)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                  selectedKelas === k
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-muted text-muted-foreground border-border hover:border-primary/40 hover:bg-secondary"
+                }`}
+              >
+                {k === "all" ? "Semua" : `Kelas ${k}`}
+              </button>
+            ))}
+          </div>
+
+          <div className="w-px h-6 bg-border hidden sm:block" />
+
+          {/* Metric toggle */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tampilkan:</span>
+            {(Object.keys(METRIC_LABELS) as MetricKey[]).map(m => (
+              <button
+                key={m}
+                onClick={() => toggleMetric(m)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                  selectedMetrics.includes(m)
+                    ? "text-white border-transparent"
+                    : "bg-muted text-muted-foreground border-border hover:bg-secondary"
+                }`}
+                style={selectedMetrics.includes(m) ? { backgroundColor: METRIC_COLORS[m], borderColor: METRIC_COLORS[m] } : {}}
+              >
+                {METRIC_LABELS[m]}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="bg-card rounded-2xl border border-border p-12 text-center">
+          <BarChart3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="font-semibold text-foreground">Belum ada data progres</p>
+          <p className="text-sm text-muted-foreground mt-1">Catat progres siswa terlebih dahulu untuk melihat rekap nilai.</p>
+        </div>
+      ) : (
+        <>
+          {/* Summary stat cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: "Total Siswa", value: totalStudents, icon: TrendingUp, suffix: "siswa" },
+              { label: "Avg Kelancaran", value: overallKel, icon: TrendingUp, suffix: "/100", color: METRIC_COLORS.kelancaran },
+              { label: "Avg Makhraj",    value: overallMak, icon: BookOpen,   suffix: "/100", color: METRIC_COLORS.makhraj },
+              { label: "Avg Tajwid",     value: overallTaj, icon: Award,      suffix: "/100", color: METRIC_COLORS.tajwid },
+            ].map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.07 }}
+                className="bg-card rounded-2xl border border-border p-5 shadow-sm"
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+                  style={{ backgroundColor: s.color ? `${s.color}22` : undefined }}
+                >
+                  <s.icon className="w-5 h-5" style={{ color: s.color ?? "hsl(var(--primary))" }} />
+                </div>
+                <p
+                  className={`text-2xl font-bold ${s.color ? scoreColor(s.value) : "text-foreground"}`}
+                >
+                  {s.value}
+                </p>
+                <p className="text-sm font-medium text-foreground">{s.label}</p>
+                <p className="text-xs text-muted-foreground">{s.suffix}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Bar chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
+          >
+            <div className="p-5 border-b border-border flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              <h2 className="font-bold text-foreground">
+                Grafik Rata-rata Nilai per Rombel
+                {selectedKelas !== "all" && ` — Kelas ${selectedKelas}`}
+              </h2>
+              <span className="ml-auto text-xs text-muted-foreground">{rombelStats.length} rombel aktif</span>
+            </div>
+            <div className="p-5">
+              {rombelStats.length === 0 ? (
+                <p className="text-center text-muted-foreground text-sm py-8">Tidak ada data rombel untuk filter ini.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={rombelStats} margin={{ top: 10, right: 20, left: 0, bottom: 0 }} barCategoryGap="25%">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis
+                      dataKey="rombel"
+                      tickFormatter={(v) => `Rombel ${v}`}
+                      tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      tickCount={6}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend
+                      formatter={(value) => METRIC_LABELS[value as MetricKey] ?? value}
+                      wrapperStyle={{ fontSize: 12 }}
+                    />
+                    {selectedMetrics.includes("kelancaran") && (
+                      <Bar dataKey="kelancaran" fill={METRIC_COLORS.kelancaran} radius={[5, 5, 0, 0]} maxBarSize={48} />
+                    )}
+                    {selectedMetrics.includes("makhraj") && (
+                      <Bar dataKey="makhraj" fill={METRIC_COLORS.makhraj} radius={[5, 5, 0, 0]} maxBarSize={48} />
+                    )}
+                    {selectedMetrics.includes("tajwid") && (
+                      <Bar dataKey="tajwid" fill={METRIC_COLORS.tajwid} radius={[5, 5, 0, 0]} maxBarSize={48} />
+                    )}
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Detail table per rombel */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.22 }}
+            className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
+          >
+            <div className="p-5 border-b border-border flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              <h2 className="font-bold text-foreground">
+                Tabel Rekap per Rombel
+                {selectedKelas !== "all" && ` — Kelas ${selectedKelas}`}
+              </h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-muted/50 border-b border-border">
+                    {["Rombel", "Jumlah Siswa", "Avg Kelancaran", "Avg Makhraj", "Avg Tajwid", "Rata-rata Total"].map(h => (
+                      <th key={h} className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3 px-4">
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {rombelStats.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-10 text-center text-muted-foreground text-sm">
+                        Tidak ada data untuk filter yang dipilih.
+                      </td>
+                    </tr>
+                  ) : (
+                    rombelStats.map((s, i) => {
+                      const colors = ROMBEL_COLORS[s.rombel as Rombel];
+                      return (
+                        <motion.tr
+                          key={s.rombel}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: i * 0.05 }}
+                          className="hover:bg-muted/20 transition-colors"
+                        >
+                          <td className="py-3.5 px-4">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${colors.bg} ${colors.text} ${colors.border}`}>
+                              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bar }} />
+                              Rombel {s.rombel}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="text-sm font-semibold text-foreground">{s.count}</span>
+                            <span className="text-xs text-muted-foreground ml-1">siswa</span>
+                          </td>
+                          {(["kelancaran", "makhraj", "tajwid"] as MetricKey[]).map(m => (
+                            <td key={m} className="py-3.5 px-4">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-sm font-bold px-2 py-0.5 rounded-lg ${scoreBg(s[m])}`}>
+                                  {s[m]}
+                                </span>
+                                <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden min-w-[40px]">
+                                  <div
+                                    className="h-full rounded-full transition-all duration-700"
+                                    style={{ width: `${s[m]}%`, backgroundColor: METRIC_COLORS[m] }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+                          ))}
+                          <td className="py-3.5 px-4">
+                            <span className={`text-sm font-bold ${scoreColor(s.total)}`}>{s.total}</span>
+                          </td>
+                        </motion.tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+
+          {/* Per-kelas summary table (only shown when "all" is selected) */}
+          {selectedKelas === "all" && kelasStats.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
+            >
+              <div className="p-5 border-b border-border flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-primary" />
+                <h2 className="font-bold text-foreground">Perbandingan Antar Kelas</h2>
+                <span className="ml-auto text-xs text-muted-foreground">klik kelas untuk filter</span>
+              </div>
+              <div className="p-5">
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={kelasStats} margin={{ top: 8, right: 20, left: 0, bottom: 0 }} barCategoryGap="25%">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis
+                      dataKey="kelas"
+                      tickFormatter={(v) => `Kelas ${v}`}
+                      tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
+                    />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickCount={6} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend formatter={(value) => METRIC_LABELS[value as MetricKey] ?? value} wrapperStyle={{ fontSize: 12 }} />
+                    {selectedMetrics.includes("kelancaran") && (
+                      <Bar dataKey="kelancaran" fill={METRIC_COLORS.kelancaran} radius={[5, 5, 0, 0]} maxBarSize={36}
+                        onClick={(d) => setSelectedKelas(d.kelas)} className="cursor-pointer" />
+                    )}
+                    {selectedMetrics.includes("makhraj") && (
+                      <Bar dataKey="makhraj" fill={METRIC_COLORS.makhraj} radius={[5, 5, 0, 0]} maxBarSize={36}
+                        onClick={(d) => setSelectedKelas(d.kelas)} className="cursor-pointer" />
+                    )}
+                    {selectedMetrics.includes("tajwid") && (
+                      <Bar dataKey="tajwid" fill={METRIC_COLORS.tajwid} radius={[5, 5, 0, 0]} maxBarSize={36}
+                        onClick={(d) => setSelectedKelas(d.kelas)} className="cursor-pointer" />
+                    )}
+                  </BarChart>
+                </ResponsiveContainer>
+                <p className="text-xs text-muted-foreground text-center mt-2">Klik batang grafik untuk filter ke kelas tersebut</p>
+              </div>
+            </motion.div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+export default ClassReport;

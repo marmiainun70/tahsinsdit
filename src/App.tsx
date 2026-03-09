@@ -13,6 +13,7 @@ import Examination from "@/pages/Examination";
 import ExamList from "@/pages/ExamList";
 import Monitoring from "@/pages/Monitoring";
 import TahsinAssessment from "@/pages/TahsinAssessment";
+import ClassReport from "@/pages/ClassReport";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const AppRoutes = () => {
       <Route path="/exam-list" element={<ProtectedRoute><ExamList /></ProtectedRoute>} />
       <Route path="/monitoring" element={<ProtectedRoute><Monitoring /></ProtectedRoute>} />
       <Route path="/tahsin/:studentId" element={<ProtectedRoute><TahsinAssessment /></ProtectedRoute>} />
+      <Route path="/report/class" element={<ProtectedRoute><ClassReport /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
