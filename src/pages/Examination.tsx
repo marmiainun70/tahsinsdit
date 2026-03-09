@@ -14,6 +14,7 @@ const Examination = () => {
   const { data: student, isLoading } = useStudent(studentId ?? "");
   const addExam = useAddExam();
   const updateStudent = useUpdateStudent();
+  const addActivityLog = useAddActivityLog();
 
   const [form, setForm] = useState({
     kelancaran: 70, makhraj: 70, tajwid: 70, adab: 70,

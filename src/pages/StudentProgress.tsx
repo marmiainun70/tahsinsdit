@@ -435,6 +435,9 @@ const StudentProgress = () => {
         </div>
       )}
 
+      {/* Activity Log */}
+      <ActivityLogPanel studentId={student.id} />
+
       {/* Hidden PDF Report — rendered off-screen, captured by html2canvas */}
       <div
         style={{
