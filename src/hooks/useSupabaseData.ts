@@ -131,7 +131,7 @@ export const useAddStudent = () => {
 export const useUpdateStudent = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; level?: ReadingLevel; halaman_terakhir?: number; status_bacaan?: ReadingStatus }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; level?: ReadingLevel; halaman_terakhir?: number; status_bacaan?: ReadingStatus; rombel?: string }) => {
       const { data, error } = await supabase
         .from("students")
         .update(updates)

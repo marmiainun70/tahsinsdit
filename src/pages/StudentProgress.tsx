@@ -6,14 +6,35 @@ import {
   useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS,
   useTahsinAssessments, getLevelDisplayLabel, isTahsinDasar,
 } from "@/hooks/useSupabaseData";
-import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle, FileDown } from "lucide-react";
+import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle, FileDown, ArrowRightLeft } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import TahsinTrendChart from "@/components/TahsinTrendChart";
 import StudentReportPDF from "@/components/StudentReportPDF";
 import { useExportPDF } from "@/hooks/useExportPDF";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 type ReadingStatus = Database["public"]["Enums"]["reading_status"];
+
+const ROMBEL_OPTIONS = ["A", "B", "C", "D"] as const;
+type Rombel = typeof ROMBEL_OPTIONS[number];
+
+const ROMBEL_COLORS: Record<Rombel, string> = {
+  A: "bg-blue-500/10 text-blue-700 border-blue-200",
+  B: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
+  C: "bg-violet-500/10 text-violet-700 border-violet-200",
+  D: "bg-orange-500/10 text-orange-700 border-orange-200",
+};
 
 const ScoreBar = ({ value, label }: { value: number; label: string }) => (
   <div>
@@ -41,12 +62,27 @@ const StudentProgress = () => {
   const addProgress = useAddProgress();
   const updateStudent = useUpdateStudent();
   const { reportRef, exporting, exportPDF } = useExportPDF();
+  const { toast } = useToast();
 
   const [form, setForm] = useState({
     halaman: "", kelancaran: "", makhraj: "", tajwid: "", catatan: "",
     status_bacaan: "Cukup" as ReadingStatus,
   });
   const [saved, setSaved] = useState(false);
+
+  // Pindah Rombel state
+  const [showPindahRombel, setShowPindahRombel] = useState(false);
+  const [targetRombel, setTargetRombel] = useState<Rombel>("A");
+
+  const handlePindahRombel = async () => {
+    if (!student || targetRombel === (student as any).rombel) return;
+    await updateStudent.mutateAsync({ id: student.id, rombel: targetRombel });
+    setShowPindahRombel(false);
+    toast({
+      title: "Rombel berhasil diubah",
+      description: `${student.nama} dipindahkan ke Rombel ${targetRombel}`,
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +138,14 @@ const StudentProgress = () => {
             <h1 className="text-xl font-bold text-foreground">{student.nama}</h1>
             <div className="flex flex-wrap gap-2 mt-2">
               <span className="text-xs bg-secondary text-secondary-foreground px-2.5 py-1 rounded-full">Kelas {student.kelas}</span>
-            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LEVEL_COLORS[student.level]}`}>
+              {/* Rombel badge — clickable shortcut to open pindah rombel */}
+              <button
+                onClick={() => { setTargetRombel((student as any).rombel as Rombel); setShowPindahRombel(true); }}
+                className={`text-xs px-2.5 py-1 rounded-full font-semibold border transition-opacity hover:opacity-80 ${ROMBEL_COLORS[(student as any).rombel as Rombel] ?? "bg-muted text-muted-foreground border-border"}`}
+              >
+                Rombel {(student as any).rombel}
+              </button>
+              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LEVEL_COLORS[student.level]}`}>
                 {getLevelDisplayLabel(student.level as ReadingLevel)}
               </span>
               <span className="text-xs bg-muted text-muted-foreground px-2.5 py-1 rounded-full">Hal. {student.halaman_terakhir}</span>
@@ -115,7 +158,14 @@ const StudentProgress = () => {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
-          {isTahsinDasar(student.level as ReadingLevel) && (
+            <button
+              onClick={() => { setTargetRombel((student as any).rombel as Rombel); setShowPindahRombel(true); }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-card border border-border text-foreground rounded-xl text-sm font-medium hover:bg-muted transition-colors"
+            >
+              <ArrowRightLeft className="w-4 h-4" />
+              Pindah Rombel
+            </button>
+            {isTahsinDasar(student.level as ReadingLevel) && (
               <Link to={`/tahsin/${student.id}`}>
                 <button className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
                   <BookOpen className="w-4 h-4" />
@@ -142,6 +192,63 @@ const StudentProgress = () => {
           </div>
         </div>
       </div>
+
+      {/* Pindah Rombel Dialog */}
+      <AlertDialog open={showPindahRombel} onOpenChange={setShowPindahRombel}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="w-5 h-5 text-primary" />
+              Pindah Rombel
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Pindahkan <span className="font-semibold text-foreground">{student.nama}</span> dari{" "}
+              <span className="font-semibold text-foreground">Rombel {(student as any).rombel}</span> ke rombel tujuan:
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          {/* Rombel selector */}
+          <div className="grid grid-cols-4 gap-2 py-2">
+            {ROMBEL_OPTIONS.map(r => (
+              <button
+                key={r}
+                onClick={() => setTargetRombel(r)}
+                disabled={r === (student as any).rombel}
+                className={`
+                  py-3 rounded-xl text-sm font-bold border-2 transition-all
+                  ${r === (student as any).rombel
+                    ? "opacity-40 cursor-not-allowed border-border bg-muted text-muted-foreground"
+                    : targetRombel === r
+                    ? "border-primary bg-primary/10 text-primary scale-105 shadow-sm"
+                    : "border-border bg-card text-foreground hover:border-primary/50 hover:bg-muted/50"
+                  }
+                `}
+              >
+                Rombel {r}
+              </button>
+            ))}
+          </div>
+
+          {targetRombel !== (student as any).rombel && (
+            <p className="text-xs text-muted-foreground bg-muted rounded-lg px-3 py-2">
+              Siswa akan dipindahkan ke <span className="font-semibold text-foreground">Rombel {targetRombel}</span>.
+              Perubahan ini akan langsung terlihat di halaman kelas.
+            </p>
+          )}
+
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handlePindahRombel}
+              disabled={updateStudent.isPending || targetRombel === (student as any).rombel}
+              className="flex items-center gap-2"
+            >
+              {updateStudent.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              Pindahkan
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Latest Scores */}
       {latestProgress && (
