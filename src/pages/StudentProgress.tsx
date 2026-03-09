@@ -98,13 +98,16 @@ const StudentProgress = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!student || !form.halaman || !form.kelancaran || !form.makhraj || !form.tajwid) return;
+    const kel = parseInt(form.kelancaran);
+    const mak = parseInt(form.makhraj);
+    const taj = parseInt(form.tajwid);
     await addProgress.mutateAsync({
       student_id: student.id,
       buku: student.level,
       halaman: parseInt(form.halaman),
-      kelancaran: parseInt(form.kelancaran),
-      makhraj: parseInt(form.makhraj),
-      tajwid: parseInt(form.tajwid),
+      kelancaran: kel,
+      makhraj: mak,
+      tajwid: taj,
       catatan: form.catatan,
     });
     await updateStudent.mutateAsync({
@@ -112,6 +115,25 @@ const StudentProgress = () => {
       halaman_terakhir: parseInt(form.halaman),
       status_bacaan: form.status_bacaan,
     });
+    // Log nilai rendah jika rata-rata < 65
+    const avg = Math.round((kel + mak + taj) / 3);
+    if (avg < 65) {
+      await addActivityLog.mutateAsync({
+        student_id: student.id,
+        activity_type: "nilai_rendah",
+        judul: "Nilai progres di bawah rata-rata",
+        deskripsi: `Rata-rata nilai ${avg} (Kelancaran: ${kel}, Makhraj: ${mak}, Tajwid: ${taj}). Halaman ${form.halaman}.`,
+        metadata: { rata_rata: avg, kelancaran: kel, makhraj: mak, tajwid: taj, halaman: form.halaman },
+      });
+    } else {
+      await addActivityLog.mutateAsync({
+        student_id: student.id,
+        activity_type: "catatan_progres",
+        judul: `Progres dicatat — Hal. ${form.halaman}`,
+        deskripsi: form.catatan || `Rata-rata nilai: ${avg}. Status: ${form.status_bacaan}.`,
+        metadata: { rata_rata: avg, kelancaran: kel, makhraj: mak, tajwid: taj, halaman: form.halaman },
+      });
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     setForm({ halaman: "", kelancaran: "", makhraj: "", tajwid: "", catatan: "", status_bacaan: "Cukup" });
