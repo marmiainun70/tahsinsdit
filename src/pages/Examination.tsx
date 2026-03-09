@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useStudent, useAddExam, useUpdateStudent, LEVEL_COLORS, getNextLevel, getLevelDisplayLabel } from "@/hooks/useSupabaseData";
+import { useAddActivityLog } from "@/hooks/useActivityLog";
 import { ChevronRight, Award, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -13,6 +14,7 @@ const Examination = () => {
   const { data: student, isLoading } = useStudent(studentId ?? "");
   const addExam = useAddExam();
   const updateStudent = useUpdateStudent();
+  const addActivityLog = useAddActivityLog();
 
   const [form, setForm] = useState({
     kelancaran: 70, makhraj: 70, tajwid: 70, adab: 70,
@@ -48,7 +50,32 @@ const Examination = () => {
     });
     if (lulus && nextLevel) {
       await updateStudent.mutateAsync({ id: student.id, level: nextLevel, halaman_terakhir: 1 });
+      // Log naik level
+      await addActivityLog.mutateAsync({
+        student_id: student.id,
+        activity_type: "naik_level",
+        judul: `Naik level ke ${nextLevel}`,
+        deskripsi: `${student.nama} lulus ujian ${getLevelDisplayLabel(student.level as ReadingLevel)} dan naik ke ${getLevelDisplayLabel(nextLevel)}.`,
+        metadata: { level_sebelumnya: student.level, level_baru: nextLevel, nilai_rata: nilaiRata },
+      });
     }
+    // Log hasil ujian
+    await addActivityLog.mutateAsync({
+      student_id: student.id,
+      activity_type: lulus ? "lulus_ujian" : "tidak_lulus_ujian",
+      judul: lulus
+        ? `Lulus ujian ${getLevelDisplayLabel(student.level as ReadingLevel)}`
+        : `Belum lulus ujian ${getLevelDisplayLabel(student.level as ReadingLevel)}`,
+      deskripsi: form.catatan || undefined,
+      metadata: {
+        level_diuji: student.level,
+        nilai_rata: nilaiRata,
+        kelancaran: form.kelancaran,
+        makhraj: form.makhraj,
+        tajwid: form.tajwid,
+        adab: form.adab,
+      },
+    });
     setHasil(hasilUjian);
     setSubmitted(true);
   };

@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at: string
+          created_by: string | null
+          deskripsi: string | null
+          id: string
+          judul: string
+          metadata: Json | null
+          student_id: string
+        }
+        Insert: {
+          activity_type: Database["public"]["Enums"]["activity_type"]
+          created_at?: string
+          created_by?: string | null
+          deskripsi?: string | null
+          id?: string
+          judul: string
+          metadata?: Json | null
+          student_id: string
+        }
+        Update: {
+          activity_type?: Database["public"]["Enums"]["activity_type"]
+          created_at?: string
+          created_by?: string | null
+          deskripsi?: string | null
+          id?: string
+          judul?: string
+          metadata?: Json | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exam_records: {
         Row: {
           adab: number
@@ -274,6 +315,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      activity_type:
+        | "pindah_rombel"
+        | "lulus_ujian"
+        | "tidak_lulus_ujian"
+        | "nilai_rendah"
+        | "catatan_progres"
+        | "naik_level"
       exam_result: "Lulus" | "Tidak Lulus"
       reading_level:
         | "Iqro 1"
@@ -413,6 +461,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      activity_type: [
+        "pindah_rombel",
+        "lulus_ujian",
+        "tidak_lulus_ujian",
+        "nilai_rendah",
+        "catatan_progres",
+        "naik_level",
+      ],
       exam_result: ["Lulus", "Tidak Lulus"],
       reading_level: [
         "Iqro 1",
