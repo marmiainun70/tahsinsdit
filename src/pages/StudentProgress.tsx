@@ -63,6 +63,7 @@ const StudentProgress = () => {
   const { data: tahsinData = [] } = useTahsinAssessments(studentId ?? "");
   const addProgress = useAddProgress();
   const updateStudent = useUpdateStudent();
+  const addActivityLog = useAddActivityLog();
   const { reportRef, exporting, exportPDF } = useExportPDF();
   const { toast } = useToast();
 
