@@ -13,6 +13,7 @@ import Examination from "@/pages/Examination";
 import ExamList from "@/pages/ExamList";
 import Monitoring from "@/pages/Monitoring";
 import TahsinAssessment from "@/pages/TahsinAssessment";
+import ClassReport from "@/pages/ClassReport";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
