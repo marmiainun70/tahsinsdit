@@ -74,6 +74,16 @@ const StudentProgress = () => {
   const [showPindahRombel, setShowPindahRombel] = useState(false);
   const [targetRombel, setTargetRombel] = useState<Rombel>("A");
 
+  const handlePindahRombel = async () => {
+    if (!student || targetRombel === (student as any).rombel) return;
+    await updateStudent.mutateAsync({ id: student.id, rombel: targetRombel });
+    setShowPindahRombel(false);
+    toast({
+      title: "Rombel berhasil diubah",
+      description: `${student.nama} dipindahkan ke Rombel ${targetRombel}`,
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!student || !form.halaman || !form.kelancaran || !form.makhraj || !form.tajwid) return;
