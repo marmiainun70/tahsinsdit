@@ -6,14 +6,35 @@ import {
   useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS,
   useTahsinAssessments, getLevelDisplayLabel, isTahsinDasar,
 } from "@/hooks/useSupabaseData";
-import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle, FileDown } from "lucide-react";
+import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle, FileDown, ArrowRightLeft } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import TahsinTrendChart from "@/components/TahsinTrendChart";
 import StudentReportPDF from "@/components/StudentReportPDF";
 import { useExportPDF } from "@/hooks/useExportPDF";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 type ReadingStatus = Database["public"]["Enums"]["reading_status"];
+
+const ROMBEL_OPTIONS = ["A", "B", "C", "D"] as const;
+type Rombel = typeof ROMBEL_OPTIONS[number];
+
+const ROMBEL_COLORS: Record<Rombel, string> = {
+  A: "bg-blue-500/10 text-blue-700 border-blue-200",
+  B: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
+  C: "bg-violet-500/10 text-violet-700 border-violet-200",
+  D: "bg-orange-500/10 text-orange-700 border-orange-200",
+};
 
 const ScoreBar = ({ value, label }: { value: number; label: string }) => (
   <div>
@@ -41,12 +62,17 @@ const StudentProgress = () => {
   const addProgress = useAddProgress();
   const updateStudent = useUpdateStudent();
   const { reportRef, exporting, exportPDF } = useExportPDF();
+  const { toast } = useToast();
 
   const [form, setForm] = useState({
     halaman: "", kelancaran: "", makhraj: "", tajwid: "", catatan: "",
     status_bacaan: "Cukup" as ReadingStatus,
   });
   const [saved, setSaved] = useState(false);
+
+  // Pindah Rombel state
+  const [showPindahRombel, setShowPindahRombel] = useState(false);
+  const [targetRombel, setTargetRombel] = useState<Rombel>("A");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
