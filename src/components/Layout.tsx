@@ -15,6 +15,7 @@ interface LayoutProps {
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/monitoring", icon: BarChart3, label: "Monitoring" },
+  { to: "/report/class", icon: PieChart, label: "Rekap Nilai" },
   { to: "/exam-list", icon: ClipboardList, label: "Ujian" },
 ];
 
