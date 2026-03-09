@@ -50,7 +50,32 @@ const Examination = () => {
     });
     if (lulus && nextLevel) {
       await updateStudent.mutateAsync({ id: student.id, level: nextLevel, halaman_terakhir: 1 });
+      // Log naik level
+      await addActivityLog.mutateAsync({
+        student_id: student.id,
+        activity_type: "naik_level",
+        judul: `Naik level ke ${nextLevel}`,
+        deskripsi: `${student.nama} lulus ujian ${getLevelDisplayLabel(student.level as ReadingLevel)} dan naik ke ${getLevelDisplayLabel(nextLevel)}.`,
+        metadata: { level_sebelumnya: student.level, level_baru: nextLevel, nilai_rata: nilaiRata },
+      });
     }
+    // Log hasil ujian
+    await addActivityLog.mutateAsync({
+      student_id: student.id,
+      activity_type: lulus ? "lulus_ujian" : "tidak_lulus_ujian",
+      judul: lulus
+        ? `Lulus ujian ${getLevelDisplayLabel(student.level as ReadingLevel)}`
+        : `Belum lulus ujian ${getLevelDisplayLabel(student.level as ReadingLevel)}`,
+      deskripsi: form.catatan || undefined,
+      metadata: {
+        level_diuji: student.level,
+        nilai_rata: nilaiRata,
+        kelancaran: form.kelancaran,
+        makhraj: form.makhraj,
+        tajwid: form.tajwid,
+        adab: form.adab,
+      },
+    });
     setHasil(hasilUjian);
     setSubmitted(true);
   };
