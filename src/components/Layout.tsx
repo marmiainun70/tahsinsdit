@@ -130,6 +130,7 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
   if (pathname === "/") return <h2 className="font-semibold text-foreground text-base">Dashboard</h2>;
   if (pathname === "/monitoring") return <h2 className="font-semibold text-foreground text-base">Monitoring Seluruh Siswa</h2>;
   if (pathname === "/exam-list") return <h2 className="font-semibold text-foreground text-base">Daftar Ujian</h2>;
+  if (pathname === "/report/class") return <h2 className="font-semibold text-foreground text-base">Rekap Nilai Kelas</h2>;
   if (pathname.startsWith("/class/")) {
     const k = pathname.split("/")[2];
     return <h2 className="font-semibold text-foreground text-base">Data Siswa — Kelas {k}</h2>;
