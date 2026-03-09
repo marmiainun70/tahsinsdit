@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useStudent, useAddExam, useUpdateStudent, LEVEL_COLORS, getNextLevel, getLevelDisplayLabel } from "@/hooks/useSupabaseData";
+import { useAddActivityLog } from "@/hooks/useActivityLog";
 import { ChevronRight, Award, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 

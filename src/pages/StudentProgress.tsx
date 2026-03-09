@@ -6,6 +6,8 @@ import {
   useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS,
   useTahsinAssessments, getLevelDisplayLabel, isTahsinDasar,
 } from "@/hooks/useSupabaseData";
+import { useAddActivityLog } from "@/hooks/useActivityLog";
+import ActivityLogPanel from "@/components/ActivityLogPanel";
 import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle, FileDown, ArrowRightLeft } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import TahsinTrendChart from "@/components/TahsinTrendChart";
