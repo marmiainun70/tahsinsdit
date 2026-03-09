@@ -79,7 +79,15 @@ const StudentProgress = () => {
 
   const handlePindahRombel = async () => {
     if (!student || targetRombel === (student as any).rombel) return;
+    const rombelLama = (student as any).rombel;
     await updateStudent.mutateAsync({ id: student.id, rombel: targetRombel });
+    await addActivityLog.mutateAsync({
+      student_id: student.id,
+      activity_type: "pindah_rombel",
+      judul: `Pindah Rombel ${rombelLama} → ${targetRombel}`,
+      deskripsi: `${student.nama} dipindahkan dari Rombel ${rombelLama} ke Rombel ${targetRombel}.`,
+      metadata: { rombel_asal: rombelLama, rombel_tujuan: targetRombel },
+    });
     setShowPindahRombel(false);
     toast({
       title: "Rombel berhasil diubah",
