@@ -5,9 +5,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, Cell,
+  ResponsiveContainer, LineChart, Line,
 } from "recharts";
-import { BarChart3, ChevronRight, Loader2, TrendingUp, BookOpen, Award } from "lucide-react";
+import {
+  BarChart3, ChevronRight, Loader2, TrendingUp, BookOpen, Award,
+  LineChart as LineChartIcon,
+} from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { id as idLocale } from "date-fns/locale";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface ProgressRow {
@@ -19,18 +24,17 @@ interface ProgressRow {
   students: { kelas: number; rombel: string; nama: string } | null;
 }
 
-// ─── Hook: fetch all latest progress per student ──────────────────────────────
+// ─── Hook: fetch ALL progress for trend + latest per student for bar/table ───
 const useClassReportData = () =>
   useQuery({
     queryKey: ["class_report"],
     queryFn: async () => {
-      // Get the latest progress entry per student via a wide fetch, then deduplicate
       const { data, error } = await supabase
         .from("progress_entries")
         .select("student_id, kelancaran, makhraj, tajwid, tanggal, students(kelas, rombel, nama)")
         .order("tanggal", { ascending: false })
         .order("created_at", { ascending: false })
-        .limit(1000);
+        .limit(2000);
       if (error) throw error;
       return data as unknown as ProgressRow[];
     },
@@ -43,8 +47,15 @@ type Rombel = typeof ROMBEL_LIST[number];
 const ROMBEL_COLORS: Record<Rombel, { bar: string; bg: string; text: string; border: string }> = {
   A: { bar: "#3b82f6", bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-200"   },
   B: { bar: "#10b981", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
-  C: { bar: "#8b5cf6", bg: "bg-violet-50", text: "text-violet-700", border: "border-violet-200" },
-  D: { bar: "#f59e0b", bg: "bg-amber-50",  text: "text-amber-700",  border: "border-amber-200"  },
+  C: { bar: "#8b5cf6", bg: "bg-violet-50",  text: "text-violet-700",  border: "border-violet-200" },
+  D: { bar: "#f59e0b", bg: "bg-amber-50",   text: "text-amber-700",   border: "border-amber-200"  },
+};
+
+const ROMBEL_LINE_COLORS: Record<Rombel, string> = {
+  A: "#3b82f6",
+  B: "#10b981",
+  C: "#8b5cf6",
+  D: "#f59e0b",
 };
 
 const METRIC_COLORS = {
@@ -54,7 +65,6 @@ const METRIC_COLORS = {
 };
 
 const METRIC_LABELS = { kelancaran: "Kelancaran", makhraj: "Makhraj", tajwid: "Tajwid" };
-
 type MetricKey = keyof typeof METRIC_LABELS;
 
 const avg = (arr: number[]) =>
@@ -64,19 +74,51 @@ const scoreColor = (v: number) =>
   v >= 80 ? "text-emerald-600" : v >= 65 ? "text-yellow-600" : "text-red-500";
 
 const scoreBg = (v: number) =>
-  v >= 80 ? "bg-emerald-100 text-emerald-700" : v >= 65 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-600";
+  v >= 80
+    ? "bg-emerald-100 text-emerald-700"
+    : v >= 65
+    ? "bg-yellow-100 text-yellow-700"
+    : "bg-red-100 text-red-600";
 
-// ─── Custom tooltip ───────────────────────────────────────────────────────────
-const CustomTooltip = ({ active, payload, label }: any) => {
+// ─── Custom bar tooltip ───────────────────────────────────────────────────────
+const CustomBarTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-card border border-border rounded-xl shadow-lg p-3 text-sm">
-      <p className="font-bold text-foreground mb-1">Rombel {label}</p>
+      <p className="font-bold text-foreground mb-1">
+        {typeof label === "number" ? `Kelas ${label}` : `Rombel ${label}`}
+      </p>
       {payload.map((p: any) => (
         <p key={p.dataKey} style={{ color: p.fill }} className="flex justify-between gap-4">
           <span>{METRIC_LABELS[p.dataKey as MetricKey]}</span>
           <span className="font-bold">{p.value}</span>
         </p>
+      ))}
+    </div>
+  );
+};
+
+// ─── Custom trend tooltip ─────────────────────────────────────────────────────
+const TrendTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-card border border-border rounded-xl shadow-lg p-3 text-sm min-w-[160px]">
+      <p className="font-bold text-foreground mb-2">{label}</p>
+      {payload.map((p: any) => (
+        <div key={p.dataKey} className="flex items-center justify-between gap-3 py-0.5">
+          <div className="flex items-center gap-1.5">
+            <span
+              className="w-4 h-0.5 rounded-full inline-block"
+              style={{ backgroundColor: p.stroke }}
+            />
+            <span className="text-muted-foreground text-xs">
+              {`Rombel ${String(p.name).replace("rombel_", "")}`}
+            </span>
+          </div>
+          <span className="font-bold text-foreground">
+            {p.value != null ? p.value : "—"}
+          </span>
+        </div>
       ))}
     </div>
   );
@@ -88,7 +130,11 @@ const ClassReport = () => {
   const [selectedKelas, setSelectedKelas] = useState<number | "all">("all");
   const [selectedMetrics, setSelectedMetrics] = useState<MetricKey[]>(["kelancaran", "makhraj", "tajwid"]);
 
-  // Deduplicate: only keep the latest entry per student
+  // Trend state
+  const [trendRombel, setTrendRombel] = useState<Rombel[]>(["A", "B"]);
+  const [trendMetric, setTrendMetric] = useState<MetricKey>("kelancaran");
+
+  // Latest entry per student (for bar chart & table)
   const latest = useMemo(() => {
     const seen = new Map<string, ProgressRow>();
     for (const row of raw) {
@@ -105,9 +151,9 @@ const ClassReport = () => {
     [latest, selectedKelas]
   );
 
-  // Group by rombel → compute averages
-  const rombelStats = useMemo(() => {
-    return ROMBEL_LIST.map(rombel => {
+  // Group by rombel → averages
+  const rombelStats = useMemo(() =>
+    ROMBEL_LIST.map(rombel => {
       const group = filtered.filter(r => r.students?.rombel === rombel);
       const count = group.length;
       return {
@@ -116,33 +162,67 @@ const ClassReport = () => {
         kelancaran: avg(group.map(r => r.kelancaran)),
         makhraj:    avg(group.map(r => r.makhraj)),
         tajwid:     avg(group.map(r => r.tajwid)),
-        total:      count > 0 ? avg(group.map(r => Math.round((r.kelancaran + r.makhraj + r.tajwid) / 3))) : 0,
+        total: count > 0
+          ? avg(group.map(r => Math.round((r.kelancaran + r.makhraj + r.tajwid) / 3)))
+          : 0,
       };
-    }).filter(s => s.count > 0);
-  }, [filtered]);
+    }).filter(s => s.count > 0),
+    [filtered]
+  );
 
-  // Per-kelas summary (for "all" view)
-  const kelasStats = useMemo(() => {
-    return [1, 2, 3, 4, 5, 6].map(kelas => {
+  // Per-kelas summary
+  const kelasStats = useMemo(() =>
+    [1, 2, 3, 4, 5, 6].map(kelas => {
       const group = latest.filter(r => r.students?.kelas === kelas);
-      const count = group.length;
       return {
         kelas,
-        count,
+        count: group.length,
         kelancaran: avg(group.map(r => r.kelancaran)),
         makhraj:    avg(group.map(r => r.makhraj)),
         tajwid:     avg(group.map(r => r.tajwid)),
       };
-    }).filter(s => s.count > 0);
-  }, [latest]);
+    }).filter(s => s.count > 0),
+    [latest]
+  );
 
-  const toggleMetric = (m: MetricKey) => {
+  // ── Monthly trend data ─────────────────────────────────────────────────────
+  const trendData = useMemo(() => {
+    const monthMap = new Map<string, Record<Rombel, number[]>>();
+
+    for (const row of raw) {
+      const rombel = row.students?.rombel as Rombel | undefined;
+      if (!rombel || !ROMBEL_LIST.includes(rombel)) continue;
+      if (selectedKelas !== "all" && row.students?.kelas !== selectedKelas) continue;
+
+      const monthKey = format(parseISO(row.tanggal), "yyyy-MM");
+      if (!monthMap.has(monthKey)) {
+        monthMap.set(monthKey, { A: [], B: [], C: [], D: [] });
+      }
+      monthMap.get(monthKey)![rombel].push(row[trendMetric]);
+    }
+
+    const sorted = Array.from(monthMap.entries()).sort(([a], [b]) => a.localeCompare(b));
+    const last12 = sorted.slice(-12);
+
+    return last12.map(([monthKey, rombelValues]) => {
+      const label = format(parseISO(`${monthKey}-01`), "MMM yyyy", { locale: idLocale });
+      const entry: Record<string, string | number | null> = { month: label };
+      for (const r of ROMBEL_LIST) {
+        entry[`rombel_${r}`] = rombelValues[r].length > 0 ? avg(rombelValues[r]) : null;
+      }
+      return entry;
+    });
+  }, [raw, trendMetric, selectedKelas]);
+
+  const toggleMetric = (m: MetricKey) =>
     setSelectedMetrics(prev =>
-      prev.includes(m)
-        ? prev.length > 1 ? prev.filter(x => x !== m) : prev
-        : [...prev, m]
+      prev.includes(m) ? (prev.length > 1 ? prev.filter(x => x !== m) : prev) : [...prev, m]
     );
-  };
+
+  const toggleTrendRombel = (r: Rombel) =>
+    setTrendRombel(prev =>
+      prev.includes(r) ? (prev.length > 1 ? prev.filter(x => x !== r) : prev) : [...prev, r]
+    );
 
   const totalStudents = filtered.length;
   const overallKel = avg(filtered.map(r => r.kelancaran));
@@ -158,7 +238,7 @@ const ClassReport = () => {
         <span className="text-foreground font-medium">Rekap Nilai Kelas</span>
       </div>
 
-      {/* Header card */}
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -172,7 +252,7 @@ const ClassReport = () => {
           <div>
             <h1 className="text-xl font-bold">Rekap Nilai Per Rombel</h1>
             <p className="text-primary-foreground/70 text-sm">
-              Rata-rata Kelancaran, Makhraj & Tajwid — berdasarkan progres terakhir setiap siswa
+              Rata-rata Kelancaran, Makhraj & Tajwid — termasuk tren nilai bulanan
             </p>
           </div>
         </div>
@@ -181,7 +261,6 @@ const ClassReport = () => {
       {/* Filter bar */}
       <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
-          {/* Kelas filter */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kelas:</span>
             {(["all", 1, 2, 3, 4, 5, 6] as const).map(k => (
@@ -198,10 +277,7 @@ const ClassReport = () => {
               </button>
             ))}
           </div>
-
           <div className="w-px h-6 bg-border hidden sm:block" />
-
-          {/* Metric toggle */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tampilkan:</span>
             {(Object.keys(METRIC_LABELS) as MetricKey[]).map(m => (
@@ -237,10 +313,10 @@ const ClassReport = () => {
           {/* Summary stat cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: "Total Siswa", value: totalStudents, icon: TrendingUp, suffix: "siswa" },
-              { label: "Avg Kelancaran", value: overallKel, icon: TrendingUp, suffix: "/100", color: METRIC_COLORS.kelancaran },
-              { label: "Avg Makhraj",    value: overallMak, icon: BookOpen,   suffix: "/100", color: METRIC_COLORS.makhraj },
-              { label: "Avg Tajwid",     value: overallTaj, icon: Award,      suffix: "/100", color: METRIC_COLORS.tajwid },
+              { label: "Total Siswa",    value: totalStudents, icon: TrendingUp, suffix: "siswa" },
+              { label: "Avg Kelancaran", value: overallKel,   icon: TrendingUp, suffix: "/100", color: METRIC_COLORS.kelancaran },
+              { label: "Avg Makhraj",    value: overallMak,   icon: BookOpen,   suffix: "/100", color: METRIC_COLORS.makhraj },
+              { label: "Avg Tajwid",     value: overallTaj,   icon: Award,      suffix: "/100", color: METRIC_COLORS.tajwid },
             ].map((s, i) => (
               <motion.div
                 key={s.label}
@@ -255,9 +331,7 @@ const ClassReport = () => {
                 >
                   <s.icon className="w-5 h-5" style={{ color: s.color ?? "hsl(var(--primary))" }} />
                 </div>
-                <p
-                  className={`text-2xl font-bold ${s.color ? scoreColor(s.value) : "text-foreground"}`}
-                >
+                <p className={`text-2xl font-bold ${s.color ? scoreColor(s.value) : "text-foreground"}`}>
                   {s.value}
                 </p>
                 <p className="text-sm font-medium text-foreground">{s.label}</p>
@@ -266,7 +340,7 @@ const ClassReport = () => {
             ))}
           </div>
 
-          {/* Bar chart */}
+          {/* Bar chart per rombel */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -298,7 +372,7 @@ const ClassReport = () => {
                       tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                       tickCount={6}
                     />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomBarTooltip />} />
                     <Legend
                       formatter={(value) => METRIC_LABELS[value as MetricKey] ?? value}
                       wrapperStyle={{ fontSize: 12 }}
@@ -318,11 +392,145 @@ const ClassReport = () => {
             </div>
           </motion.div>
 
+          {/* ── Monthly trend line chart ──────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
+          >
+            {/* Header + metric selector */}
+            <div className="p-5 border-b border-border flex flex-wrap items-center gap-3">
+              <LineChartIcon className="w-5 h-5 text-primary flex-shrink-0" />
+              <h2 className="font-bold text-foreground">
+                Tren Nilai Bulanan per Rombel
+                {selectedKelas !== "all" && ` — Kelas ${selectedKelas}`}
+              </h2>
+              <div className="ml-auto flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-muted-foreground">Metrik:</span>
+                {(Object.keys(METRIC_LABELS) as MetricKey[]).map(m => (
+                  <button
+                    key={m}
+                    onClick={() => setTrendMetric(m)}
+                    className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                      trendMetric === m
+                        ? "text-white border-transparent"
+                        : "bg-muted text-muted-foreground border-border hover:bg-secondary"
+                    }`}
+                    style={
+                      trendMetric === m
+                        ? { backgroundColor: METRIC_COLORS[m], borderColor: METRIC_COLORS[m] }
+                        : {}
+                    }
+                  >
+                    {METRIC_LABELS[m]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Rombel toggle */}
+            <div className="px-5 pt-4 flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Rombel:
+              </span>
+              {ROMBEL_LIST.map(r => {
+                const active = trendRombel.includes(r);
+                const col = ROMBEL_LINE_COLORS[r];
+                return (
+                  <button
+                    key={r}
+                    onClick={() => toggleTrendRombel(r)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                      active
+                        ? "text-white border-transparent"
+                        : "bg-muted text-muted-foreground border-border hover:bg-secondary"
+                    }`}
+                    style={active ? { backgroundColor: col, borderColor: col } : {}}
+                  >
+                    <span
+                      className="w-5 h-0.5 rounded-full inline-block"
+                      style={{ backgroundColor: active ? "white" : col }}
+                    />
+                    Rombel {r}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="p-5">
+              {trendData.length === 0 ? (
+                <div className="text-center py-12">
+                  <LineChartIcon className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-foreground">Belum cukup data bulanan</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Catat progres dari beberapa bulan berbeda untuk menampilkan tren.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <ResponsiveContainer width="100%" height={320}>
+                    <LineChart
+                      data={trendData}
+                      margin={{ top: 10, right: 24, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis
+                        dataKey="month"
+                        tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        domain={[0, 100]}
+                        tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                        tickCount={6}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <Tooltip content={<TrendTooltip />} />
+                      <Legend
+                        formatter={(value) =>
+                          `Rombel ${String(value).replace("rombel_", "")}`
+                        }
+                        wrapperStyle={{ fontSize: 12 }}
+                      />
+                      {ROMBEL_LIST.filter(r => trendRombel.includes(r)).map(r => (
+                        <Line
+                          key={r}
+                          type="monotone"
+                          dataKey={`rombel_${r}`}
+                          name={`rombel_${r}`}
+                          stroke={ROMBEL_LINE_COLORS[r]}
+                          strokeWidth={2.5}
+                          dot={{
+                            r: 4,
+                            fill: ROMBEL_LINE_COLORS[r],
+                            strokeWidth: 2,
+                            stroke: "hsl(var(--card))",
+                          }}
+                          activeDot={{ r: 6, strokeWidth: 2, stroke: "hsl(var(--card))" }}
+                          connectNulls={false}
+                        />
+                      ))}
+                    </LineChart>
+                  </ResponsiveContainer>
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    Rata-rata{" "}
+                    <span className="font-semibold text-foreground">
+                      {METRIC_LABELS[trendMetric]}
+                    </span>{" "}
+                    per bulan · maks. 12 bulan terakhir
+                  </p>
+                </>
+              )}
+            </div>
+          </motion.div>
+
           {/* Detail table per rombel */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.22 }}
+            transition={{ delay: 0.25 }}
             className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
           >
             <div className="p-5 border-b border-border flex items-center gap-2">
@@ -337,7 +545,10 @@ const ClassReport = () => {
                 <thead>
                   <tr className="bg-muted/50 border-b border-border">
                     {["Rombel", "Jumlah Siswa", "Avg Kelancaran", "Avg Makhraj", "Avg Tajwid", "Rata-rata Total"].map(h => (
-                      <th key={h} className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3 px-4">
+                      <th
+                        key={h}
+                        className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3 px-4"
+                      >
                         {h}
                       </th>
                     ))}
@@ -362,8 +573,13 @@ const ClassReport = () => {
                           className="hover:bg-muted/20 transition-colors"
                         >
                           <td className="py-3.5 px-4">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${colors.bg} ${colors.text} ${colors.border}`}>
-                              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: colors.bar }} />
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${colors.bg} ${colors.text} ${colors.border}`}
+                            >
+                              <span
+                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: colors.bar }}
+                              />
                               Rombel {s.rombel}
                             </span>
                           </td>
@@ -398,12 +614,12 @@ const ClassReport = () => {
             </div>
           </motion.div>
 
-          {/* Per-kelas summary table (only shown when "all" is selected) */}
+          {/* Per-kelas comparison (only when "all" is selected) */}
           {selectedKelas === "all" && kelasStats.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.32 }}
               className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
             >
               <div className="p-5 border-b border-border flex items-center gap-2">
@@ -421,8 +637,11 @@ const ClassReport = () => {
                       tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
                     />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickCount={6} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend formatter={(value) => METRIC_LABELS[value as MetricKey] ?? value} wrapperStyle={{ fontSize: 12 }} />
+                    <Tooltip content={<CustomBarTooltip />} />
+                    <Legend
+                      formatter={(value) => METRIC_LABELS[value as MetricKey] ?? value}
+                      wrapperStyle={{ fontSize: 12 }}
+                    />
                     {selectedMetrics.includes("kelancaran") && (
                       <Bar dataKey="kelancaran" fill={METRIC_COLORS.kelancaran} radius={[5, 5, 0, 0]} maxBarSize={36}
                         onClick={(d) => setSelectedKelas(d.kelas)} className="cursor-pointer" />
@@ -437,7 +656,9 @@ const ClassReport = () => {
                     )}
                   </BarChart>
                 </ResponsiveContainer>
-                <p className="text-xs text-muted-foreground text-center mt-2">Klik batang grafik untuk filter ke kelas tersebut</p>
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Klik batang grafik untuk filter ke kelas tersebut
+                </p>
               </div>
             </motion.div>
           )}
