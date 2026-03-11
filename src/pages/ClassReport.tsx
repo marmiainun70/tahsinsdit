@@ -9,10 +9,17 @@ import {
 } from "recharts";
 import {
   BarChart3, ChevronRight, Loader2, TrendingUp, BookOpen, Award,
-  LineChart as LineChartIcon,
+  LineChart as LineChartIcon, CalendarIcon, X,
 } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import {
+  format, parseISO, startOfMonth, endOfMonth,
+  startOfYear, subMonths, isWithinInterval,
+} from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface ProgressRow {
@@ -24,7 +31,7 @@ interface ProgressRow {
   students: { kelas: number; rombel: string; nama: string } | null;
 }
 
-// ─── Hook: fetch ALL progress for trend + latest per student for bar/table ───
+// ─── Hook ────────────────────────────────────────────────────────────────────
 const useClassReportData = () =>
   useQuery({
     queryKey: ["class_report"],
@@ -80,6 +87,55 @@ const scoreBg = (v: number) =>
     ? "bg-yellow-100 text-yellow-700"
     : "bg-red-100 text-red-600";
 
+// ─── Date preset helpers ──────────────────────────────────────────────────────
+const now = new Date();
+
+type PresetId = "all" | "sem1" | "sem2" | "6m" | "3m" | "custom";
+
+interface DatePreset {
+  id: PresetId;
+  label: string;
+  range: () => { from: Date; to: Date } | null;
+}
+
+const DATE_PRESETS: DatePreset[] = [
+  { id: "all",  label: "Semua",         range: () => null },
+  {
+    id: "sem1", label: "Sem. Ganjil",
+    range: () => {
+      // Semester ganjil: Juli – Desember (tahun akademik berjalan)
+      const year = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1;
+      return { from: new Date(year, 6, 1), to: new Date(year, 11, 31) };
+    },
+  },
+  {
+    id: "sem2", label: "Sem. Genap",
+    range: () => {
+      // Semester genap: Januari – Juni
+      const year = now.getMonth() >= 6 ? now.getFullYear() + 1 : now.getFullYear();
+      return { from: new Date(year, 0, 1), to: new Date(year, 5, 30) };
+    },
+  },
+  {
+    id: "6m",   label: "6 Bulan",
+    range: () => ({ from: startOfMonth(subMonths(now, 5)), to: endOfMonth(now) }),
+  },
+  {
+    id: "3m",   label: "3 Bulan",
+    range: () => ({ from: startOfMonth(subMonths(now, 2)), to: endOfMonth(now) }),
+  },
+  { id: "custom", label: "Kustom", range: () => null },
+];
+
+const isInRange = (dateStr: string, range: { from: Date; to: Date } | null): boolean => {
+  if (!range) return true;
+  try {
+    return isWithinInterval(parseISO(dateStr), { start: range.from, end: range.to });
+  } catch {
+    return true;
+  }
+};
+
 // ─── Custom bar tooltip ───────────────────────────────────────────────────────
 const CustomBarTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -124,24 +180,107 @@ const TrendTooltip = ({ active, payload, label }: any) => {
   );
 };
 
+// ─── DateRangePicker sub-component ───────────────────────────────────────────
+interface DateRangePickerProps {
+  from: Date | undefined;
+  to: Date | undefined;
+  onChange: (from: Date | undefined, to: Date | undefined) => void;
+}
+const DateRangePicker = ({ from, to, onChange }: DateRangePickerProps) => {
+  const [open, setOpen] = useState(false);
+  const label =
+    from && to
+      ? `${format(from, "dd MMM yyyy", { locale: idLocale })} – ${format(to, "dd MMM yyyy", { locale: idLocale })}`
+      : from
+      ? `${format(from, "dd MMM yyyy", { locale: idLocale })} – ...`
+      : "Pilih rentang tanggal";
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={cn(
+            "h-8 text-xs gap-1.5 border-dashed",
+            (from || to) && "border-primary text-primary"
+          )}
+        >
+          <CalendarIcon className="w-3.5 h-3.5" />
+          {label}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="range"
+          selected={{ from, to }}
+          onSelect={(range) => onChange(range?.from, range?.to)}
+          numberOfMonths={2}
+          className={cn("p-3 pointer-events-auto")}
+        />
+        <div className="flex justify-end gap-2 p-3 border-t border-border">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs"
+            onClick={() => { onChange(undefined, undefined); setOpen(false); }}
+          >
+            Reset
+          </Button>
+          <Button size="sm" className="text-xs" onClick={() => setOpen(false)}>
+            Terapkan
+          </Button>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 const ClassReport = () => {
   const { data: raw = [], isLoading } = useClassReportData();
   const [selectedKelas, setSelectedKelas] = useState<number | "all">("all");
   const [selectedMetrics, setSelectedMetrics] = useState<MetricKey[]>(["kelancaran", "makhraj", "tajwid"]);
 
+  // Date filter state
+  const [activePreset, setActivePreset] = useState<PresetId>("all");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo,   setCustomTo]   = useState<Date | undefined>();
+
   // Trend state
   const [trendRombel, setTrendRombel] = useState<Rombel[]>(["A", "B"]);
   const [trendMetric, setTrendMetric] = useState<MetricKey>("kelancaran");
 
-  // Latest entry per student (for bar chart & table)
+  // Effective date range
+  const dateRange = useMemo((): { from: Date; to: Date } | null => {
+    if (activePreset === "custom") {
+      if (customFrom && customTo) return { from: customFrom, to: customTo };
+      if (customFrom) return { from: customFrom, to: endOfMonth(now) };
+      return null;
+    }
+    const preset = DATE_PRESETS.find(p => p.id === activePreset);
+    return preset?.range() ?? null;
+  }, [activePreset, customFrom, customTo]);
+
+  const handlePreset = (id: PresetId) => {
+    setActivePreset(id);
+    if (id !== "custom") { setCustomFrom(undefined); setCustomTo(undefined); }
+  };
+
+  // Apply date filter to raw
+  const dateFiltered = useMemo(
+    () => raw.filter(r => isInRange(r.tanggal, dateRange)),
+    [raw, dateRange]
+  );
+
+  // Latest entry per student within date range (for bar chart & table)
   const latest = useMemo(() => {
     const seen = new Map<string, ProgressRow>();
-    for (const row of raw) {
+    for (const row of dateFiltered) {
       if (!seen.has(row.student_id)) seen.set(row.student_id, row);
     }
     return Array.from(seen.values());
-  }, [raw]);
+  }, [dateFiltered]);
 
   // Filter by kelas
   const filtered = useMemo(() =>
@@ -185,11 +324,11 @@ const ClassReport = () => {
     [latest]
   );
 
-  // ── Monthly trend data ─────────────────────────────────────────────────────
+  // Monthly trend data (respects dateRange + kelas)
   const trendData = useMemo(() => {
     const monthMap = new Map<string, Record<Rombel, number[]>>();
 
-    for (const row of raw) {
+    for (const row of dateFiltered) {
       const rombel = row.students?.rombel as Rombel | undefined;
       if (!rombel || !ROMBEL_LIST.includes(rombel)) continue;
       if (selectedKelas !== "all" && row.students?.kelas !== selectedKelas) continue;
@@ -202,9 +341,8 @@ const ClassReport = () => {
     }
 
     const sorted = Array.from(monthMap.entries()).sort(([a], [b]) => a.localeCompare(b));
-    const last12 = sorted.slice(-12);
 
-    return last12.map(([monthKey, rombelValues]) => {
+    return sorted.map(([monthKey, rombelValues]) => {
       const label = format(parseISO(`${monthKey}-01`), "MMM yyyy", { locale: idLocale });
       const entry: Record<string, string | number | null> = { month: label };
       for (const r of ROMBEL_LIST) {
@@ -212,7 +350,7 @@ const ClassReport = () => {
       }
       return entry;
     });
-  }, [raw, trendMetric, selectedKelas]);
+  }, [dateFiltered, trendMetric, selectedKelas]);
 
   const toggleMetric = (m: MetricKey) =>
     setSelectedMetrics(prev =>
@@ -228,6 +366,12 @@ const ClassReport = () => {
   const overallKel = avg(filtered.map(r => r.kelancaran));
   const overallMak = avg(filtered.map(r => r.makhraj));
   const overallTaj = avg(filtered.map(r => r.tajwid));
+
+  // Period label for display
+  const periodLabel = useMemo(() => {
+    if (!dateRange) return "Semua waktu";
+    return `${format(dateRange.from, "dd MMM yyyy", { locale: idLocale })} – ${format(dateRange.to, "dd MMM yyyy", { locale: idLocale })}`;
+  }, [dateRange]);
 
   return (
     <div className="space-y-5 max-w-6xl">
@@ -252,14 +396,15 @@ const ClassReport = () => {
           <div>
             <h1 className="text-xl font-bold">Rekap Nilai Per Rombel</h1>
             <p className="text-primary-foreground/70 text-sm">
-              Rata-rata Kelancaran, Makhraj & Tajwid — termasuk tren nilai bulanan
+              Rata-rata Kelancaran, Makhraj & Tajwid · {periodLabel}
             </p>
           </div>
         </div>
       </motion.div>
 
-      {/* Filter bar */}
-      <div className="bg-card rounded-2xl border border-border p-4 shadow-sm">
+      {/* ── Filter bar ─────────────────────────────────────────────────────── */}
+      <div className="bg-card rounded-2xl border border-border p-4 shadow-sm space-y-3">
+        {/* Row 1: Kelas + Metrics */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kelas:</span>
@@ -296,6 +441,57 @@ const ClassReport = () => {
             ))}
           </div>
         </div>
+
+        {/* Row 2: Date range / semester presets */}
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border">
+          <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground" />
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Periode:</span>
+          {DATE_PRESETS.filter(p => p.id !== "custom").map(p => (
+            <button
+              key={p.id}
+              onClick={() => handlePreset(p.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                activePreset === p.id
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-muted text-muted-foreground border-border hover:border-primary/40 hover:bg-secondary"
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+          {/* Custom button */}
+          <button
+            onClick={() => handlePreset("custom")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+              activePreset === "custom"
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-muted text-muted-foreground border-border hover:border-primary/40 hover:bg-secondary"
+            }`}
+          >
+            Kustom
+          </button>
+          {/* Custom date range picker (shown when custom is active) */}
+          {activePreset === "custom" && (
+            <DateRangePicker
+              from={customFrom}
+              to={customTo}
+              onChange={(f, t) => { setCustomFrom(f); setCustomTo(t); }}
+            />
+          )}
+          {/* Active period badge */}
+          {dateRange && (
+            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+              <CalendarIcon className="w-3 h-3" />
+              {periodLabel}
+              <button
+                onClick={() => handlePreset("all")}
+                className="ml-0.5 hover:text-primary/70 transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -306,7 +502,19 @@ const ClassReport = () => {
         <div className="bg-card rounded-2xl border border-border p-12 text-center">
           <BarChart3 className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
           <p className="font-semibold text-foreground">Belum ada data progres</p>
-          <p className="text-sm text-muted-foreground mt-1">Catat progres siswa terlebih dahulu untuk melihat rekap nilai.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {dateRange
+              ? "Tidak ada data pada periode yang dipilih. Coba ubah filter tanggal."
+              : "Catat progres siswa terlebih dahulu untuk melihat rekap nilai."}
+          </p>
+          {dateRange && (
+            <button
+              onClick={() => handlePreset("all")}
+              className="mt-3 text-xs text-primary underline underline-offset-2"
+            >
+              Tampilkan semua periode
+            </button>
+          )}
         </div>
       ) : (
         <>
@@ -347,13 +555,18 @@ const ClassReport = () => {
             transition={{ delay: 0.15 }}
             className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
           >
-            <div className="p-5 border-b border-border flex items-center gap-2">
+            <div className="p-5 border-b border-border flex items-center gap-2 flex-wrap">
               <BarChart3 className="w-5 h-5 text-primary" />
               <h2 className="font-bold text-foreground">
                 Grafik Rata-rata Nilai per Rombel
                 {selectedKelas !== "all" && ` — Kelas ${selectedKelas}`}
               </h2>
               <span className="ml-auto text-xs text-muted-foreground">{rombelStats.length} rombel aktif</span>
+              {dateRange && (
+                <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                  {periodLabel}
+                </span>
+              )}
             </div>
             <div className="p-5">
               {rombelStats.length === 0 ? (
@@ -392,14 +605,13 @@ const ClassReport = () => {
             </div>
           </motion.div>
 
-          {/* ── Monthly trend line chart ──────────────────────────────────── */}
+          {/* Monthly trend line chart */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
           >
-            {/* Header + metric selector */}
             <div className="p-5 border-b border-border flex flex-wrap items-center gap-3">
               <LineChartIcon className="w-5 h-5 text-primary flex-shrink-0" />
               <h2 className="font-bold text-foreground">
@@ -464,7 +676,9 @@ const ClassReport = () => {
                   <LineChartIcon className="w-10 h-10 text-muted-foreground/30 mx-auto mb-3" />
                   <p className="text-sm font-medium text-foreground">Belum cukup data bulanan</p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Catat progres dari beberapa bulan berbeda untuk menampilkan tren.
+                    {dateRange
+                      ? "Tidak ada data pada periode ini. Coba perluas rentang tanggal."
+                      : "Catat progres dari beberapa bulan berbeda untuk menampilkan tren."}
                   </p>
                 </div>
               ) : (
@@ -519,7 +733,8 @@ const ClassReport = () => {
                     <span className="font-semibold text-foreground">
                       {METRIC_LABELS[trendMetric]}
                     </span>{" "}
-                    per bulan · maks. 12 bulan terakhir
+                    per bulan
+                    {dateRange ? ` · ${periodLabel}` : " · maks. 12 bulan terakhir"}
                   </p>
                 </>
               )}
@@ -533,12 +748,17 @@ const ClassReport = () => {
             transition={{ delay: 0.25 }}
             className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
           >
-            <div className="p-5 border-b border-border flex items-center gap-2">
+            <div className="p-5 border-b border-border flex items-center gap-2 flex-wrap">
               <TrendingUp className="w-5 h-5 text-primary" />
               <h2 className="font-bold text-foreground">
                 Tabel Rekap per Rombel
                 {selectedKelas !== "all" && ` — Kelas ${selectedKelas}`}
               </h2>
+              {dateRange && (
+                <span className="ml-auto text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                  {periodLabel}
+                </span>
+              )}
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -622,7 +842,7 @@ const ClassReport = () => {
               transition={{ delay: 0.32 }}
               className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden"
             >
-              <div className="p-5 border-b border-border flex items-center gap-2">
+              <div className="p-5 border-b border-border flex items-center gap-2 flex-wrap">
                 <BookOpen className="w-5 h-5 text-primary" />
                 <h2 className="font-bold text-foreground">Perbandingan Antar Kelas</h2>
                 <span className="ml-auto text-xs text-muted-foreground">klik kelas untuk filter</span>
