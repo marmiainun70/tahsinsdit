@@ -3,10 +3,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen, LayoutDashboard, BarChart3, ClipboardList, PieChart,
-  Menu, X, LogOut, Bell, ChevronRight, Search
+  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap
 } from "lucide-react";
 import GlobalSearch from "@/components/GlobalSearch";
 import { useAuth } from "@/contexts/AuthContext";
+import { UpcomingExamBanner } from "@/components/ExamScheduleNotification";
 
 interface LayoutProps {
   children: React.ReactNode;
