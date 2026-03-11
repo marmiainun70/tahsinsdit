@@ -63,6 +63,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <AppRoutes />
+          <ExamScheduleRealtimeProvider />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
