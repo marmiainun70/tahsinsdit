@@ -120,6 +120,45 @@ export type Database = {
           },
         ]
       }
+      exam_schedules: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          jenis_ujian: Database["public"]["Enums"]["exam_schedule_type"]
+          keterangan: string
+          lokasi: string
+          tanggal: string
+          updated_at: string
+          waktu_mulai: string
+          waktu_selesai: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          jenis_ujian: Database["public"]["Enums"]["exam_schedule_type"]
+          keterangan?: string
+          lokasi?: string
+          tanggal: string
+          updated_at?: string
+          waktu_mulai: string
+          waktu_selesai?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          jenis_ujian?: Database["public"]["Enums"]["exam_schedule_type"]
+          keterangan?: string
+          lokasi?: string
+          tanggal?: string
+          updated_at?: string
+          waktu_mulai?: string
+          waktu_selesai?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -323,6 +362,9 @@ export type Database = {
         | "catatan_progres"
         | "naik_level"
       exam_result: "Lulus" | "Tidak Lulus"
+      exam_schedule_type:
+        | "tahsin_dasar_ke_lanjutan"
+        | "tahsin_lanjutan_ke_tahfizh"
       reading_level:
         | "Iqro 1"
         | "Iqro 2"
@@ -470,6 +512,10 @@ export const Constants = {
         "naik_level",
       ],
       exam_result: ["Lulus", "Tidak Lulus"],
+      exam_schedule_type: [
+        "tahsin_dasar_ke_lanjutan",
+        "tahsin_lanjutan_ke_tahfizh",
+      ],
       reading_level: [
         "Iqro 1",
         "Iqro 2",
