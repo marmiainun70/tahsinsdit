@@ -243,7 +243,8 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-thin">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-thin space-y-4">
+          <UpcomingExamBanner />
           {children}
         </main>
       </div>
