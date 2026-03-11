@@ -318,12 +318,18 @@ const ExamSchedulePage = () => {
                     exit={{ opacity: 0, height: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border mt-1 ${EXAM_TYPE_CONFIG[form.jenis_ujian].bg} ${EXAM_TYPE_CONFIG[form.jenis_ujian].color} ${EXAM_TYPE_CONFIG[form.jenis_ujian].border}`}>
-                      <EXAM_TYPE_CONFIG[form.jenis_ujian].icon className="w-3.5 h-3.5" />
-                      {EXAM_TYPE_CONFIG[form.jenis_ujian].from}
-                      <ChevronRight className="w-3 h-3" />
-                      {EXAM_TYPE_CONFIG[form.jenis_ujian].to}
-                    </div>
+                    {(() => {
+                      const cfg = EXAM_TYPE_CONFIG[form.jenis_ujian];
+                      const TypeIcon = cfg.icon;
+                      return (
+                        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border mt-1 ${cfg.bg} ${cfg.color} ${cfg.border}`}>
+                          <TypeIcon className="w-3.5 h-3.5" />
+                          {cfg.from}
+                          <ChevronRight className="w-3 h-3" />
+                          {cfg.to}
+                        </div>
+                      );
+                    })()}
                   </motion.div>
                 )}
               </AnimatePresence>
