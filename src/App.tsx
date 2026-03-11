@@ -14,7 +14,9 @@ import ExamList from "@/pages/ExamList";
 import Monitoring from "@/pages/Monitoring";
 import TahsinAssessment from "@/pages/TahsinAssessment";
 import ClassReport from "@/pages/ClassReport";
+import ExamSchedule from "@/pages/ExamSchedule";
 import NotFound from "@/pages/NotFound";
+import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotification";
 
 const queryClient = new QueryClient();
 
