@@ -14,7 +14,9 @@ import ExamList from "@/pages/ExamList";
 import Monitoring from "@/pages/Monitoring";
 import TahsinAssessment from "@/pages/TahsinAssessment";
 import ClassReport from "@/pages/ClassReport";
+import ExamSchedule from "@/pages/ExamSchedule";
 import NotFound from "@/pages/NotFound";
+import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotification";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,7 @@ const AppRoutes = () => {
       <Route path="/monitoring" element={<ProtectedRoute><Monitoring /></ProtectedRoute>} />
       <Route path="/tahsin/:studentId" element={<ProtectedRoute><TahsinAssessment /></ProtectedRoute>} />
       <Route path="/report/class" element={<ProtectedRoute><ClassReport /></ProtectedRoute>} />
+      <Route path="/jadwal-ujian" element={<ProtectedRoute><ExamSchedule /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -60,6 +63,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <AppRoutes />
+          <ExamScheduleRealtimeProvider />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

@@ -3,10 +3,11 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen, LayoutDashboard, BarChart3, ClipboardList, PieChart,
-  Menu, X, LogOut, Bell, ChevronRight, Search
+  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap
 } from "lucide-react";
 import GlobalSearch from "@/components/GlobalSearch";
 import { useAuth } from "@/contexts/AuthContext";
+import { UpcomingExamBanner } from "@/components/ExamScheduleNotification";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,6 +18,7 @@ const navItems = [
   { to: "/monitoring", icon: BarChart3, label: "Monitoring" },
   { to: "/report/class", icon: PieChart, label: "Rekap Nilai" },
   { to: "/exam-list", icon: ClipboardList, label: "Ujian" },
+  { to: "/jadwal-ujian", icon: GraduationCap, label: "Jadwal Ujian" },
 ];
 
 interface SidebarContentProps {
@@ -131,6 +133,7 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
   if (pathname === "/monitoring") return <h2 className="font-semibold text-foreground text-base">Monitoring Seluruh Siswa</h2>;
   if (pathname === "/exam-list") return <h2 className="font-semibold text-foreground text-base">Daftar Ujian</h2>;
   if (pathname === "/report/class") return <h2 className="font-semibold text-foreground text-base">Rekap Nilai Kelas</h2>;
+  if (pathname === "/jadwal-ujian") return <h2 className="font-semibold text-foreground text-base">Jadwal Ujian Kenaikan</h2>;
   if (pathname.startsWith("/class/")) {
     const k = pathname.split("/")[2];
     return <h2 className="font-semibold text-foreground text-base">Data Siswa — Kelas {k}</h2>;
@@ -240,7 +243,8 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-thin">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-thin space-y-4">
+          <UpcomingExamBanner />
           {children}
         </main>
       </div>
