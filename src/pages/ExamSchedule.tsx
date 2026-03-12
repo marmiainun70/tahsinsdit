@@ -371,9 +371,15 @@ const ExamSchedulePage = () => {
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    type="time"
+                    type="text"
+                    placeholder="08:00"
+                    maxLength={5}
                     value={form.waktu_mulai}
-                    onChange={(e) => setForm(f => ({ ...f, waktu_mulai: e.target.value }))}
+                    onChange={(e) => {
+                      let v = e.target.value.replace(/[^0-9]/g, "");
+                      if (v.length >= 3) v = v.slice(0, 2) + ":" + v.slice(2, 4);
+                      setForm(f => ({ ...f, waktu_mulai: v }));
+                    }}
                     className="pl-9"
                   />
                 </div>
@@ -383,9 +389,15 @@ const ExamSchedulePage = () => {
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    type="time"
+                    type="text"
+                    placeholder="10:00"
+                    maxLength={5}
                     value={form.waktu_selesai}
-                    onChange={(e) => setForm(f => ({ ...f, waktu_selesai: e.target.value }))}
+                    onChange={(e) => {
+                      let v = e.target.value.replace(/[^0-9]/g, "");
+                      if (v.length >= 3) v = v.slice(0, 2) + ":" + v.slice(2, 4);
+                      setForm(f => ({ ...f, waktu_selesai: v }));
+                    }}
                     className="pl-9"
                   />
                 </div>
