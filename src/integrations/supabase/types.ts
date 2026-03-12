@@ -55,6 +55,45 @@ export type Database = {
           },
         ]
       }
+      exam_participants: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          schedule_id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          schedule_id: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          schedule_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_participants_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "exam_schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_participants_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exam_records: {
         Row: {
           adab: number
