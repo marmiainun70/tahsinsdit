@@ -6,8 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   CalendarIcon, ChevronRight, Plus, Clock, MapPin, FileText,
-  GraduationCap, Loader2, Trash2, X, CheckCircle2, BookOpen, Star
+  GraduationCap, Loader2, Trash2, X, CheckCircle2, BookOpen, Star, Users
 } from "lucide-react";
+import ExamParticipantsDialog, { ParticipantCountBadge } from "@/components/ExamParticipants";
 import { format, parseISO, isFuture, isToday } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import {
@@ -452,76 +453,110 @@ const ScheduleCard = ({ schedule: s, index, onDelete, deletingId, isUpcoming }: 
   const cfg = EXAM_TYPE_CONFIG[s.jenis_ujian];
   const dateObj = parseISO(s.tanggal);
   const isToday_ = isToday(dateObj);
+  const [participantsOpen, setParticipantsOpen] = useState(false);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06 }}
-      className={cn(
-        "bg-card rounded-2xl border shadow-sm overflow-hidden transition-all",
-        isUpcoming ? "border-border hover:shadow-md" : "border-border/60 opacity-70"
-      )}
-    >
-      <div className="flex items-start gap-4 p-5">
-        {/* Type icon */}
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 border ${cfg.bg} ${cfg.border}`}>
-          <cfg.icon className={`w-6 h-6 ${cfg.color}`} />
-        </div>
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.06 }}
+        className={cn(
+          "bg-card rounded-2xl border shadow-sm overflow-hidden transition-all",
+          isUpcoming ? "border-border hover:shadow-md" : "border-border/60 opacity-70"
+        )}
+      >
+        <div className="flex items-start gap-4 p-5">
+          {/* Type icon */}
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 border ${cfg.bg} ${cfg.border}`}>
+            <cfg.icon className={`w-6 h-6 ${cfg.color}`} />
+          </div>
 
-        <div className="flex-1 min-w-0">
-          {/* Title row */}
-          <div className="flex flex-wrap items-start gap-2 mb-2">
-            <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
-              {cfg.shortLabel}
-            </span>
-            {isToday_ && (
-              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 animate-pulse">
-                Hari ini!
+          <div className="flex-1 min-w-0">
+            {/* Title row */}
+            <div className="flex flex-wrap items-start gap-2 mb-2">
+              <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
+                {cfg.shortLabel}
               </span>
+              {isToday_ && (
+                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 border border-emerald-200 animate-pulse">
+                  Hari ini!
+                </span>
+              )}
+              {/* Participant badge */}
+              <ParticipantCountBadge
+                scheduleId={s.id}
+                color={`${cfg.bg} ${cfg.color} ${cfg.border}`}
+              />
+            </div>
+
+            {/* Info row */}
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <CalendarIcon className="w-3.5 h-3.5" />
+                <span className="font-medium text-foreground">
+                  {format(dateObj, "EEEE, dd MMMM yyyy", { locale: idLocale })}
+                </span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" />
+                {s.waktu_mulai.slice(0, 5)}
+                {s.waktu_selesai && ` – ${s.waktu_selesai.slice(0, 5)}`}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5" />
+                {s.lokasi}
+              </span>
+            </div>
+
+            {/* Keterangan */}
+            {s.keterangan && (
+              <p className="mt-2 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2 flex items-start gap-1.5">
+                <FileText className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                {s.keterangan}
+              </p>
             )}
+
+            {/* Participants button */}
+            <div className="mt-3">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setParticipantsOpen(true)}
+                className={cn(
+                  "h-8 text-xs gap-1.5 border",
+                  cfg.border,
+                  cfg.color,
+                  cfg.bg,
+                  "hover:opacity-80"
+                )}
+              >
+                <Users className="w-3.5 h-3.5" />
+                Kelola Peserta
+              </Button>
+            </div>
           </div>
 
-          {/* Info row */}
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <CalendarIcon className="w-3.5 h-3.5" />
-              <span className="font-medium text-foreground">
-                {format(dateObj, "EEEE, dd MMMM yyyy", { locale: idLocale })}
-              </span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5" />
-              {s.waktu_mulai.slice(0, 5)}
-              {s.waktu_selesai && ` – ${s.waktu_selesai.slice(0, 5)}`}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5" />
-              {s.lokasi}
-            </span>
-          </div>
-
-          {/* Keterangan */}
-          {s.keterangan && (
-            <p className="mt-2 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2 flex items-start gap-1.5">
-              <FileText className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-              {s.keterangan}
-            </p>
-          )}
+          {/* Delete */}
+          <button
+            onClick={() => onDelete(s.id)}
+            disabled={deletingId === s.id}
+            className="p-2 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all flex-shrink-0"
+          >
+            {deletingId === s.id
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <Trash2 className="w-4 h-4" />}
+          </button>
         </div>
+      </motion.div>
 
-        {/* Delete */}
-        <button
-          onClick={() => onDelete(s.id)}
-          disabled={deletingId === s.id}
-          className="p-2 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all flex-shrink-0"
-        >
-          {deletingId === s.id
-            ? <Loader2 className="w-4 h-4 animate-spin" />
-            : <Trash2 className="w-4 h-4" />}
-        </button>
-      </div>
-    </motion.div>
+      {/* Participants dialog */}
+      <ExamParticipantsDialog
+        schedule={s}
+        open={participantsOpen}
+        onOpenChange={setParticipantsOpen}
+      />
+    </>
   );
 };
 
