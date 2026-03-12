@@ -126,17 +126,12 @@ const ExamParticipantsDialog = ({
   );
 
   // Sync when participants data loads (e.g., first open)
-  const prevParticipantKey = useMemo(
-    () => currentParticipants.map((p) => p.student_id).sort().join(","),
-    [currentParticipants]
-  );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useMemo(() => {
+  useEffect(() => {
     if (!loadingParticipants) {
       setSelectedIds(new Set(currentParticipants.map((p) => p.student_id)));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prevParticipantKey]);
+  }, [loadingParticipants]);
 
   // Eligible students based on exam type
   const eligibleLevels = ELIGIBLE_LEVELS[schedule.jenis_ujian];
