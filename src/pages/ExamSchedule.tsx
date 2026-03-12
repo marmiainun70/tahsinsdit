@@ -81,7 +81,7 @@ export const useExamSchedules = () =>
     queryKey: ["exam_schedules"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("exam_schedules" as never)
+        .from("exam_schedules")
         .select("*")
         .order("tanggal", { ascending: true })
         .order("waktu_mulai", { ascending: true });
@@ -96,8 +96,8 @@ const useAddExamSchedule = () => {
   return useMutation({
     mutationFn: async (payload: Omit<ExamSchedule, "id" | "created_at" | "updated_at">) => {
       const { data, error } = await supabase
-        .from("exam_schedules" as never)
-        .insert({ ...payload, created_by: user?.id ?? null } as never)
+        .from("exam_schedules")
+        .insert({ ...payload, created_by: user?.id ?? null })
         .select()
         .single();
       if (error) throw error;
@@ -112,7 +112,7 @@ const useDeleteExamSchedule = () => {
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from("exam_schedules" as never)
+        .from("exam_schedules")
         .delete()
         .eq("id", id);
       if (error) throw error;
