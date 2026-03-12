@@ -151,6 +151,14 @@ const ExamSchedulePage = () => {
 
   const resetForm = () => setForm({ ...EMPTY_FORM });
 
+  // Normalize HH:MM format from raw digits e.g. "0800" → "08:00"
+  const normalizeTime = (t: string) => {
+    const clean = t.replace(/[^0-9]/g, "");
+    if (clean.length >= 4) return `${clean.slice(0, 2)}:${clean.slice(2, 4)}`;
+    if (clean.length >= 2) return `${clean.slice(0, 2)}:00`;
+    return t;
+  };
+
   const handleSubmit = async () => {
     if (!form.jenis_ujian || !form.tanggal || !form.waktu_mulai || !form.lokasi) {
       toast({
@@ -160,11 +168,13 @@ const ExamSchedulePage = () => {
       });
       return;
     }
+    const waktu_mulai = normalizeTime(form.waktu_mulai);
+    const waktu_selesai = form.waktu_selesai ? normalizeTime(form.waktu_selesai) : null;
     await addSchedule.mutateAsync({
       jenis_ujian: form.jenis_ujian,
       tanggal: format(form.tanggal, "yyyy-MM-dd"),
-      waktu_mulai: form.waktu_mulai,
-      waktu_selesai: form.waktu_selesai || null,
+      waktu_mulai,
+      waktu_selesai,
       lokasi: form.lokasi,
       keterangan: form.keterangan,
       created_by: null,
