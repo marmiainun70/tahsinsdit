@@ -6,8 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   CalendarIcon, ChevronRight, Plus, Clock, MapPin, FileText,
-  GraduationCap, Loader2, Trash2, X, CheckCircle2, BookOpen, Star
+  GraduationCap, Loader2, Trash2, X, CheckCircle2, BookOpen, Star, Users
 } from "lucide-react";
+import ExamParticipantsDialog, { ParticipantCountBadge } from "@/components/ExamParticipants";
 import { format, parseISO, isFuture, isToday } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import {
