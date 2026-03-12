@@ -81,7 +81,7 @@ export const useExamSchedules = () =>
     queryKey: ["exam_schedules"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("exam_schedules" as never)
+        .from("exam_schedules")
         .select("*")
         .order("tanggal", { ascending: true })
         .order("waktu_mulai", { ascending: true });
@@ -96,8 +96,8 @@ const useAddExamSchedule = () => {
   return useMutation({
     mutationFn: async (payload: Omit<ExamSchedule, "id" | "created_at" | "updated_at">) => {
       const { data, error } = await supabase
-        .from("exam_schedules" as never)
-        .insert({ ...payload, created_by: user?.id ?? null } as never)
+        .from("exam_schedules")
+        .insert({ ...payload, created_by: user?.id ?? null })
         .select()
         .single();
       if (error) throw error;
@@ -112,7 +112,7 @@ const useDeleteExamSchedule = () => {
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from("exam_schedules" as never)
+        .from("exam_schedules")
         .delete()
         .eq("id", id);
       if (error) throw error;
@@ -151,6 +151,14 @@ const ExamSchedulePage = () => {
 
   const resetForm = () => setForm({ ...EMPTY_FORM });
 
+  // Normalize HH:MM format from raw digits e.g. "0800" → "08:00"
+  const normalizeTime = (t: string) => {
+    const clean = t.replace(/[^0-9]/g, "");
+    if (clean.length >= 4) return `${clean.slice(0, 2)}:${clean.slice(2, 4)}`;
+    if (clean.length >= 2) return `${clean.slice(0, 2)}:00`;
+    return t;
+  };
+
   const handleSubmit = async () => {
     if (!form.jenis_ujian || !form.tanggal || !form.waktu_mulai || !form.lokasi) {
       toast({
@@ -160,11 +168,13 @@ const ExamSchedulePage = () => {
       });
       return;
     }
+    const waktu_mulai = normalizeTime(form.waktu_mulai);
+    const waktu_selesai = form.waktu_selesai ? normalizeTime(form.waktu_selesai) : null;
     await addSchedule.mutateAsync({
       jenis_ujian: form.jenis_ujian,
       tanggal: format(form.tanggal, "yyyy-MM-dd"),
-      waktu_mulai: form.waktu_mulai,
-      waktu_selesai: form.waktu_selesai || null,
+      waktu_mulai,
+      waktu_selesai,
       lokasi: form.lokasi,
       keterangan: form.keterangan,
       created_by: null,
@@ -371,9 +381,15 @@ const ExamSchedulePage = () => {
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    type="time"
+                    type="text"
+                    placeholder="08:00"
+                    maxLength={5}
                     value={form.waktu_mulai}
-                    onChange={(e) => setForm(f => ({ ...f, waktu_mulai: e.target.value }))}
+                    onChange={(e) => {
+                      let v = e.target.value.replace(/[^0-9]/g, "");
+                      if (v.length >= 3) v = v.slice(0, 2) + ":" + v.slice(2, 4);
+                      setForm(f => ({ ...f, waktu_mulai: v }));
+                    }}
                     className="pl-9"
                   />
                 </div>
@@ -383,9 +399,15 @@ const ExamSchedulePage = () => {
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    type="time"
+                    type="text"
+                    placeholder="10:00"
+                    maxLength={5}
                     value={form.waktu_selesai}
-                    onChange={(e) => setForm(f => ({ ...f, waktu_selesai: e.target.value }))}
+                    onChange={(e) => {
+                      let v = e.target.value.replace(/[^0-9]/g, "");
+                      if (v.length >= 3) v = v.slice(0, 2) + ":" + v.slice(2, 4);
+                      setForm(f => ({ ...f, waktu_selesai: v }));
+                    }}
                     className="pl-9"
                   />
                 </div>
