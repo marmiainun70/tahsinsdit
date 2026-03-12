@@ -111,20 +111,32 @@ const ExamParticipantsDialog = ({
   const setParticipants = useSetParticipants(schedule.id);
 
   const [search, setSearch] = useState("");
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [filterKelas, setFilterKelas] = useState<number | null>(null);
   const [showSelected, setShowSelected] = useState(false);
 
-  // Initialize selection from current participants when dialog opens
+  // Current saved participants
   const participantIds = useMemo(
     () => new Set(currentParticipants.map((p) => p.student_id)),
     [currentParticipants]
   );
 
-  // Sync selectedIds with participantIds when loaded
-  useState(() => {
-    setSelectedIds(new Set(participantIds));
-  });
+  // Local selection — initialized from saved participants
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() =>
+    new Set(currentParticipants.map((p) => p.student_id))
+  );
+
+  // Sync when participants data loads (e.g., first open)
+  const prevParticipantKey = useMemo(
+    () => currentParticipants.map((p) => p.student_id).sort().join(","),
+    [currentParticipants]
+  );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useMemo(() => {
+    if (!loadingParticipants) {
+      setSelectedIds(new Set(currentParticipants.map((p) => p.student_id)));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prevParticipantKey]);
 
   // Eligible students based on exam type
   const eligibleLevels = ELIGIBLE_LEVELS[schedule.jenis_ujian];
