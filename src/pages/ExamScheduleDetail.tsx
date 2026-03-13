@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -7,15 +7,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useExamSchedules, EXAM_TYPE_CONFIG } from "@/pages/ExamSchedule";
 import { useExamParticipants } from "@/components/ExamParticipants";
 import ExamParticipantsDialog from "@/components/ExamParticipants";
+import ExamReportPDF from "@/components/ExamReportPDF";
+import type { ParticipantRow } from "@/components/ExamReportPDF";
 import { format, parseISO, isToday, isFuture } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import {
   CalendarIcon, Clock, MapPin, FileText, GraduationCap,
   ChevronRight, Users, CheckCircle2, XCircle, Loader2,
-  ArrowLeft, Save, Search, X, ClipboardList, AlertCircle,
+  ArrowLeft, Save, Search, X, ClipboardList, AlertCircle, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
