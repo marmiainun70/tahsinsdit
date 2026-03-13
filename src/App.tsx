@@ -15,6 +15,7 @@ import Monitoring from "@/pages/Monitoring";
 import TahsinAssessment from "@/pages/TahsinAssessment";
 import ClassReport from "@/pages/ClassReport";
 import ExamSchedule from "@/pages/ExamSchedule";
+import ExamScheduleDetail from "@/pages/ExamScheduleDetail";
 import NotFound from "@/pages/NotFound";
 import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotification";
 
