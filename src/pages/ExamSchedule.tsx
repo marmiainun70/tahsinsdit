@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   CalendarIcon, ChevronRight, Plus, Clock, MapPin, FileText,
-  GraduationCap, Loader2, Trash2, X, CheckCircle2, BookOpen, Star, Users
+  GraduationCap, Loader2, Trash2, X, CheckCircle2, BookOpen, Star, Users, ExternalLink
 } from "lucide-react";
 import ExamParticipantsDialog, { ParticipantCountBadge } from "@/components/ExamParticipants";
 import { format, parseISO, isFuture, isToday } from "date-fns";
