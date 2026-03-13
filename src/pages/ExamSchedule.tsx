@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   CalendarIcon, ChevronRight, Plus, Clock, MapPin, FileText,
-  GraduationCap, Loader2, Trash2, X, CheckCircle2, BookOpen, Star, Users
+  GraduationCap, Loader2, Trash2, X, CheckCircle2, BookOpen, Star, Users, ExternalLink
 } from "lucide-react";
 import ExamParticipantsDialog, { ParticipantCountBadge } from "@/components/ExamParticipants";
 import { format, parseISO, isFuture, isToday } from "date-fns";
@@ -476,6 +476,7 @@ const ScheduleCard = ({ schedule: s, index, onDelete, deletingId, isUpcoming }: 
   const dateObj = parseISO(s.tanggal);
   const isToday_ = isToday(dateObj);
   const [participantsOpen, setParticipantsOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -539,22 +540,27 @@ const ScheduleCard = ({ schedule: s, index, onDelete, deletingId, isUpcoming }: 
               </p>
             )}
 
-            {/* Participants button */}
-            <div className="mt-3">
+            {/* Action buttons */}
+            <div className="mt-3 flex items-center gap-2 flex-wrap">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setParticipantsOpen(true)}
                 className={cn(
                   "h-8 text-xs gap-1.5 border",
-                  cfg.border,
-                  cfg.color,
-                  cfg.bg,
-                  "hover:opacity-80"
+                  cfg.border, cfg.color, cfg.bg, "hover:opacity-80"
                 )}
               >
                 <Users className="w-3.5 h-3.5" />
                 Kelola Peserta
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => navigate(`/jadwal-ujian/${s.id}`)}
+                className="h-8 text-xs gap-1.5"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Lihat Detail & Hasil
               </Button>
             </div>
           </div>
