@@ -160,7 +160,7 @@ const ExamScheduleDetailPage = () => {
     } finally {
       setExportingPDF(false);
     }
-  }, [schedule, cfg]);
+  }, [schedule]);
 
   const isLoading = loadingSchedules || loadingParticipants || loadingResults;
 
