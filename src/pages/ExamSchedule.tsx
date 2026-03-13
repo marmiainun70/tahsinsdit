@@ -476,6 +476,7 @@ const ScheduleCard = ({ schedule: s, index, onDelete, deletingId, isUpcoming }: 
   const dateObj = parseISO(s.tanggal);
   const isToday_ = isToday(dateObj);
   const [participantsOpen, setParticipantsOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
