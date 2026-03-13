@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -7,15 +7,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useExamSchedules, EXAM_TYPE_CONFIG } from "@/pages/ExamSchedule";
 import { useExamParticipants } from "@/components/ExamParticipants";
 import ExamParticipantsDialog from "@/components/ExamParticipants";
+import ExamReportPDF from "@/components/ExamReportPDF";
+import type { ParticipantRow } from "@/components/ExamReportPDF";
 import { format, parseISO, isToday, isFuture } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import {
   CalendarIcon, Clock, MapPin, FileText, GraduationCap,
   ChevronRight, Users, CheckCircle2, XCircle, Loader2,
-  ArrowLeft, Save, Search, X, ClipboardList, AlertCircle,
+  ArrowLeft, Save, Search, X, ClipboardList, AlertCircle, Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -110,6 +111,56 @@ const ExamScheduleDetailPage = () => {
   // Track pending result changes (studentId → hasil)
   const [pendingResults, setPendingResults] = useState<Map<string, ExamResult>>(new Map());
   const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+  const [exportingPDF, setExportingPDF] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
+
+  const handleExportPDF = useCallback(async () => {
+    if (!pdfRef.current || !schedule || !cfg) return;
+    setExportingPDF(true);
+    try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+      const canvas = await html2canvas(pdfRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        width: 794,
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
+      const pdfW = pdf.internal.pageSize.getWidth();
+      const pdfH = pdf.internal.pageSize.getHeight();
+      const aspect = canvas.height / canvas.width;
+      const imgH = pdfW * aspect;
+      if (imgH <= pdfH) {
+        pdf.addImage(imgData, "PNG", 0, 0, pdfW, imgH);
+      } else {
+        let yOff = 0, remaining = imgH;
+        while (remaining > 0) {
+          const slice = Math.min(pdfH, remaining);
+          const srcY = yOff * (canvas.height / imgH);
+          const srcH = slice * (canvas.height / imgH);
+          const pc = document.createElement("canvas");
+          pc.width = canvas.width; pc.height = srcH;
+          pc.getContext("2d")!.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+          if (yOff > 0) pdf.addPage();
+          pdf.addImage(pc.toDataURL("image/png"), "PNG", 0, 0, pdfW, slice);
+          yOff += slice; remaining -= slice;
+        }
+      }
+      const dateStr = schedule.tanggal.replace(/-/g, "");
+      const cfgLocal = EXAM_TYPE_CONFIG[schedule.jenis_ujian];
+      pdf.save(`BeritaAcara_${cfgLocal.shortLabel.replace(/[^a-z0-9]/gi, "_")}_${dateStr}.pdf`);
+      toast({ title: "PDF berhasil diunduh", description: "Berita acara ujian telah diekspor." });
+    } catch {
+      toast({ title: "Gagal ekspor PDF", variant: "destructive" });
+    } finally {
+      setExportingPDF(false);
+    }
+  }, [schedule]);
 
   const isLoading = loadingSchedules || loadingParticipants || loadingResults;
 
@@ -424,6 +475,19 @@ const ExamScheduleDetailPage = () => {
                   <Users className="w-3.5 h-3.5" />
                   Kelola Peserta
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleExportPDF}
+                  disabled={exportingPDF || participants.length === 0}
+                  className="h-8 text-xs gap-1.5"
+                >
+                  {exportingPDF
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <Download className="w-3.5 h-3.5" />
+                  }
+                  Export PDF
+                </Button>
               </div>
             </div>
 
@@ -653,6 +717,24 @@ const ExamScheduleDetailPage = () => {
           open={participantsOpen}
           onOpenChange={setParticipantsOpen}
         />
+      )}
+
+      {/* ── Hidden PDF template (captured by html2canvas) ────────── */}
+      {schedule && cfg && (
+        <div style={{ position: "fixed", top: -9999, left: -9999, zIndex: -1, pointerEvents: "none" }}>
+          <ExamReportPDF
+            ref={pdfRef}
+            schedule={schedule}
+            participants={participants.map((p) => ({
+              ...p,
+              hasil: (pendingResults.get(p.student_id) ?? resultsMap.get(p.student_id)?.hasil) as ExamResult | undefined,
+            }))}
+            examTypeLabel={cfg.label}
+            examTypeFrom={cfg.from}
+            examTypeTo={cfg.to}
+            primaryColor={cfg.color}
+          />
+        </div>
       )}
     </div>
   );
