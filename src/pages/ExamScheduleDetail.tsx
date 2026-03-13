@@ -718,6 +718,24 @@ const ExamScheduleDetailPage = () => {
           onOpenChange={setParticipantsOpen}
         />
       )}
+
+      {/* ── Hidden PDF template (captured by html2canvas) ────────── */}
+      {schedule && cfg && (
+        <div style={{ position: "fixed", top: -9999, left: -9999, zIndex: -1, pointerEvents: "none" }}>
+          <ExamReportPDF
+            ref={pdfRef}
+            schedule={schedule}
+            participants={participants.map((p) => ({
+              ...p,
+              hasil: (pendingResults.get(p.student_id) ?? resultsMap.get(p.student_id)?.hasil) as ExamResult | undefined,
+            }))}
+            examTypeLabel={cfg.label}
+            examTypeFrom={cfg.from}
+            examTypeTo={cfg.to}
+            primaryColor={cfg.color}
+          />
+        </div>
+      )}
     </div>
   );
 };
