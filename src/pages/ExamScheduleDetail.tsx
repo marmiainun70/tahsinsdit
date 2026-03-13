@@ -152,7 +152,8 @@ const ExamScheduleDetailPage = () => {
         }
       }
       const dateStr = schedule.tanggal.replace(/-/g, "");
-      pdf.save(`BeritaAcara_${cfg.shortLabel.replace(/[^a-z0-9]/gi, "_")}_${dateStr}.pdf`);
+      const cfgLocal = EXAM_TYPE_CONFIG[schedule.jenis_ujian];
+      pdf.save(`BeritaAcara_${cfgLocal.shortLabel.replace(/[^a-z0-9]/gi, "_")}_${dateStr}.pdf`);
       toast({ title: "PDF berhasil diunduh", description: "Berita acara ujian telah diekspor." });
     } catch {
       toast({ title: "Gagal ekspor PDF", variant: "destructive" });
