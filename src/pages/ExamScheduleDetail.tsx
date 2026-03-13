@@ -475,6 +475,19 @@ const ExamScheduleDetailPage = () => {
                   <Users className="w-3.5 h-3.5" />
                   Kelola Peserta
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleExportPDF}
+                  disabled={exportingPDF || participants.length === 0}
+                  className="h-8 text-xs gap-1.5"
+                >
+                  {exportingPDF
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <Download className="w-3.5 h-3.5" />
+                  }
+                  Export PDF
+                </Button>
               </div>
             </div>
 
