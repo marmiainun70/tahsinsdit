@@ -540,22 +540,27 @@ const ScheduleCard = ({ schedule: s, index, onDelete, deletingId, isUpcoming }: 
               </p>
             )}
 
-            {/* Participants button */}
-            <div className="mt-3">
+            {/* Action buttons */}
+            <div className="mt-3 flex items-center gap-2 flex-wrap">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setParticipantsOpen(true)}
                 className={cn(
                   "h-8 text-xs gap-1.5 border",
-                  cfg.border,
-                  cfg.color,
-                  cfg.bg,
-                  "hover:opacity-80"
+                  cfg.border, cfg.color, cfg.bg, "hover:opacity-80"
                 )}
               >
                 <Users className="w-3.5 h-3.5" />
                 Kelola Peserta
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => navigate(`/jadwal-ujian/${s.id}`)}
+                className="h-8 text-xs gap-1.5"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                Lihat Detail & Hasil
               </Button>
             </div>
           </div>
