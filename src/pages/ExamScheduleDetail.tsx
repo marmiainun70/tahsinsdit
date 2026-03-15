@@ -14,13 +14,13 @@ import { id as idLocale } from "date-fns/locale";
 import {
   CalendarIcon, Clock, MapPin, FileText, GraduationCap,
   ChevronRight, Users, CheckCircle2, XCircle, Loader2,
-  ArrowLeft, Save, Search, X, ClipboardList, AlertCircle, Download,
+  ArrowLeft, Save, Search, X, ClipboardList, AlertCircle, Download, TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { LEVEL_COLORS } from "@/hooks/useSupabaseData";
+import { LEVEL_COLORS, getNextLevel } from "@/hooks/useSupabaseData";
 import type { Database } from "@/integrations/supabase/types";
 
 type ExamResult = Database["public"]["Enums"]["exam_result"];
@@ -31,13 +31,11 @@ const useExamResults = (scheduleId: string) =>
   useQuery({
     queryKey: ["exam_results_by_schedule", scheduleId],
     queryFn: async () => {
-      // exam_records keyed by student_id — latest one per student
       const { data, error } = await supabase
         .from("exam_records")
         .select("id, student_id, hasil, tanggal, catatan, kelancaran, makhraj, tajwid, adab")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      // Return a Map: student_id → latest record
       const map = new Map<string, typeof data[0]>();
       for (const row of data ?? []) {
         if (!map.has(row.student_id)) map.set(row.student_id, row);
@@ -47,7 +45,7 @@ const useExamResults = (scheduleId: string) =>
     enabled: !!scheduleId,
   });
 
-// Upsert hasil ujian (hasil only — quick inline result)
+// Save result + auto level-up when Lulus + log activity
 const useUpsertResult = () => {
   const qc = useQueryClient();
   const { user } = useAuth();
@@ -58,15 +56,19 @@ const useUpsertResult = () => {
       hasil,
       tanggal,
       levelDiuji,
+      toLevelUp,
+      studentNama,
     }: {
       studentId: string;
       scheduleId: string;
       hasil: ExamResult;
       tanggal: string;
       levelDiuji: ReadingLevel;
+      toLevelUp: ReadingLevel | null;
+      studentNama: string;
     }) => {
-      // Insert a new exam_record marking pass/fail
-      const { error } = await supabase.from("exam_records").insert({
+      // 1. Insert exam record
+      const { error: examErr } = await supabase.from("exam_records").insert({
         student_id: studentId,
         hasil,
         tanggal,
@@ -78,10 +80,58 @@ const useUpsertResult = () => {
         catatan: `Dicatat dari jadwal ujian: ${scheduleId}`,
         created_by: user?.id ?? null,
       });
-      if (error) throw error;
+      if (examErr) throw examErr;
+
+      // 2. If Lulus → update student level + log 2 activities
+      if (hasil === "Lulus" && toLevelUp) {
+        // Update level
+        const { error: upErr } = await supabase
+          .from("students")
+          .update({ level: toLevelUp })
+          .eq("id", studentId);
+        if (upErr) throw upErr;
+
+        // Log: lulus_ujian
+        await supabase.from("activity_logs").insert({
+          student_id: studentId,
+          activity_type: "lulus_ujian",
+          judul: `Lulus Ujian Kenaikan Level`,
+          deskripsi: `${studentNama} dinyatakan lulus ujian dari level ${levelDiuji}.`,
+          metadata: { level_diuji: levelDiuji, tanggal },
+          created_by: user?.id ?? null,
+        });
+
+        // Log: naik_level
+        await supabase.from("activity_logs").insert({
+          student_id: studentId,
+          activity_type: "naik_level",
+          judul: `Naik Level: ${levelDiuji} → ${toLevelUp}`,
+          deskripsi: `Level bacaan ${studentNama} otomatis naik setelah lulus ujian kenaikan program.`,
+          metadata: { dari: levelDiuji, ke: toLevelUp, tanggal },
+          created_by: user?.id ?? null,
+        });
+
+        return { leveledUp: true, newLevel: toLevelUp };
+      }
+
+      if (hasil === "Tidak Lulus") {
+        // Log: tidak_lulus_ujian
+        await supabase.from("activity_logs").insert({
+          student_id: studentId,
+          activity_type: "tidak_lulus_ujian",
+          judul: `Tidak Lulus Ujian Kenaikan Level`,
+          deskripsi: `${studentNama} belum dinyatakan lulus ujian dari level ${levelDiuji}.`,
+          metadata: { level_diuji: levelDiuji, tanggal },
+          created_by: user?.id ?? null,
+        });
+      }
+
+      return { leveledUp: false, newLevel: null };
     },
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: ["exam_results_by_schedule", vars.scheduleId] });
+      qc.invalidateQueries({ queryKey: ["students"] });
+      qc.invalidateQueries({ queryKey: ["activity_logs", vars.studentId] });
     },
   });
 };
