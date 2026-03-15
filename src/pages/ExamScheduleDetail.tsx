@@ -270,23 +270,36 @@ const ExamScheduleDetailPage = () => {
     if (!hasil) return;
     setSavingIds((prev) => new Set(prev).add(studentId));
     const cfg = EXAM_TYPE_CONFIG[schedule.jenis_ujian];
+    const participant = participants.find((p) => p.student_id === studentId);
+    const studentNama = participant?.students.nama ?? "";
+    const currentLevel = participant?.students.level as ReadingLevel | undefined;
+    const toLevelUp = hasil === "Lulus" && currentLevel ? getNextLevel(currentLevel) : null;
     try {
-      await upsertResult.mutateAsync({
+      const res = await upsertResult.mutateAsync({
         studentId,
         scheduleId,
         hasil,
         tanggal: schedule.tanggal,
         levelDiuji: cfg.from as ReadingLevel,
+        toLevelUp,
+        studentNama,
       });
       setPendingResults((prev) => {
         const next = new Map(prev);
         next.delete(studentId);
         return next;
       });
-      toast({
-        title: hasil === "Lulus" ? "✅ Lulus dicatat" : "❌ Tidak Lulus dicatat",
-        description: `Hasil ujian siswa berhasil disimpan.`,
-      });
+      if (hasil === "Lulus" && res?.leveledUp) {
+        toast({
+          title: "🎓 Naik Level!",
+          description: `${studentNama} berhasil lulus dan naik ke level ${res.newLevel}.`,
+        });
+      } else {
+        toast({
+          title: hasil === "Lulus" ? "✅ Lulus dicatat" : "❌ Tidak Lulus dicatat",
+          description: `Hasil ujian ${studentNama} berhasil disimpan.`,
+        });
+      }
     } catch {
       toast({ title: "Gagal menyimpan", variant: "destructive" });
     } finally {
@@ -304,21 +317,31 @@ const ExamScheduleDetailPage = () => {
     const ids = [...pendingResults.keys()];
     setSavingIds(new Set(ids));
     try {
-      await Promise.all(
-        ids.map((studentId) =>
-          upsertResult.mutateAsync({
+      const results = await Promise.all(
+        ids.map((studentId) => {
+          const participant = participants.find((p) => p.student_id === studentId);
+          const studentNama = participant?.students.nama ?? "";
+          const currentLevel = participant?.students.level as ReadingLevel | undefined;
+          const hasil = pendingResults.get(studentId)!;
+          const toLevelUp = hasil === "Lulus" && currentLevel ? getNextLevel(currentLevel) : null;
+          return upsertResult.mutateAsync({
             studentId,
             scheduleId,
-            hasil: pendingResults.get(studentId)!,
+            hasil,
             tanggal: schedule.tanggal,
             levelDiuji: cfg.from as ReadingLevel,
-          })
-        )
+            toLevelUp,
+            studentNama,
+          });
+        })
       );
       setPendingResults(new Map());
+      const leveledUpCount = results.filter((r) => r?.leveledUp).length;
       toast({
         title: "Semua hasil disimpan",
-        description: `${ids.length} hasil ujian berhasil dicatat.`,
+        description: leveledUpCount > 0
+          ? `${ids.length} hasil dicatat · ${leveledUpCount} siswa naik level 🎓`
+          : `${ids.length} hasil ujian berhasil dicatat.`,
       });
     } catch {
       toast({ title: "Gagal menyimpan sebagian", variant: "destructive" });
