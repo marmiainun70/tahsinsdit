@@ -41,6 +41,8 @@ const BarTooltip = ({ active, payload, label }: any) => {
 const ExamStats = () => {
   const { data: exams = [], isLoading: loadingExams } = useAllExamRecords();
   const { data: students = [], isLoading: loadingStudents } = useStudents();
+  const pdfRef = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState(false);
 
   const isLoading = loadingExams || loadingStudents;
 
