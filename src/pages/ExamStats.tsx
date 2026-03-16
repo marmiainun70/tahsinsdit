@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -6,8 +6,9 @@ import {
   LineChart, Line, Legend, Cell,
 } from "recharts";
 import { useAllExamRecords, useStudents } from "@/hooks/useSupabaseData";
-import { Award, CheckCircle, XCircle, Users, TrendingUp, AlertTriangle, Eye } from "lucide-react";
+import { Award, CheckCircle, XCircle, Users, TrendingUp, AlertTriangle, Eye, Download, Loader2 as LoaderIcon } from "lucide-react";
 import { Loader2 } from "lucide-react";
+import ExamStatsPDF from "@/components/ExamStatsPDF";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Ags","Sep","Okt","Nov","Des"];
