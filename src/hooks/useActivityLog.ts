@@ -2,6 +2,33 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
+export const useRecentLevelUpsByClass = (kelas: number) =>
+  useQuery({
+    queryKey: ["activity_logs", "naik_level", "class", kelas],
+    queryFn: async () => {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from("activity_logs" as never)
+        .select("student_id, metadata, created_at")
+        .eq("activity_type", "naik_level")
+        .gte("created_at", sevenDaysAgo)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      // Return a map: studentId → most recent naik_level metadata
+      const map: Record<string, { new_level: string; created_at: string }> = {};
+      (data as Array<{ student_id: string; metadata: Record<string, unknown>; created_at: string }>).forEach(row => {
+        if (!map[row.student_id]) {
+          map[row.student_id] = {
+            new_level: String(row.metadata?.new_level ?? ""),
+            created_at: row.created_at,
+          };
+        }
+      });
+      return map;
+    },
+    staleTime: 60_000,
+  });
+
 export type ActivityType =
   | "pindah_rombel"
   | "lulus_ujian"
