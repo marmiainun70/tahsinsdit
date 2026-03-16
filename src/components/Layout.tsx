@@ -19,6 +19,7 @@ const navItems = [
   { to: "/report/class", icon: PieChart, label: "Rekap Nilai" },
   { to: "/exam-list", icon: ClipboardList, label: "Ujian" },
   { to: "/jadwal-ujian", icon: GraduationCap, label: "Jadwal Ujian" },
+  { to: "/statistik-ujian", icon: BarChart2, label: "Statistik Ujian" },
 ];
 
 interface SidebarContentProps {
