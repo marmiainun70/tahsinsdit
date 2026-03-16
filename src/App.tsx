@@ -16,6 +16,7 @@ import TahsinAssessment from "@/pages/TahsinAssessment";
 import ClassReport from "@/pages/ClassReport";
 import ExamSchedule from "@/pages/ExamSchedule";
 import ExamScheduleDetail from "@/pages/ExamScheduleDetail";
+import ExamStats from "@/pages/ExamStats";
 import NotFound from "@/pages/NotFound";
 import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotification";
 
@@ -52,6 +53,7 @@ const AppRoutes = () => {
       <Route path="/report/class" element={<ProtectedRoute><ClassReport /></ProtectedRoute>} />
       <Route path="/jadwal-ujian" element={<ProtectedRoute><ExamSchedule /></ProtectedRoute>} />
       <Route path="/jadwal-ujian/:scheduleId" element={<ProtectedRoute><ExamScheduleDetail /></ProtectedRoute>} />
+      <Route path="/statistik-ujian" element={<ProtectedRoute><ExamStats /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
