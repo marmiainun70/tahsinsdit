@@ -38,6 +38,7 @@ const ClassStudents = () => {
   const navigate = useNavigate();
   const kelas = parseInt(classId || "1");
   const { data: students = [], isLoading } = useStudentsByClass(kelas);
+  const { data: levelUps = {} } = useRecentLevelUpsByClass(kelas);
   const addStudent = useAddStudent();
   const deleteStudent = useDeleteStudent();
 
