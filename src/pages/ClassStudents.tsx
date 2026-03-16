@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStudentsByClass, useAddStudent, useDeleteStudent, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
+import { useRecentLevelUpsByClass } from "@/hooks/useActivityLog";
 import { ChevronRight, Search, UserPlus, FileText, Eye, Trash2, Loader2, X, AlertTriangle, Upload } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import BulkImportStudents from "@/components/BulkImportStudents";
@@ -37,6 +38,7 @@ const ClassStudents = () => {
   const navigate = useNavigate();
   const kelas = parseInt(classId || "1");
   const { data: students = [], isLoading } = useStudentsByClass(kelas);
+  const { data: levelUps = {} } = useRecentLevelUpsByClass(kelas);
   const addStudent = useAddStudent();
   const deleteStudent = useDeleteStudent();
 
@@ -280,12 +282,23 @@ const ClassStudents = () => {
                             <span className="text-white text-xs font-bold">{s.nama.charAt(0)}</span>
                           </div>
                           <div>
-                            <span className="text-sm font-medium text-foreground">{s.nama}</span>
-                            {flagged && (
-                              <span className="ml-2 inline-flex items-center gap-1 text-xs text-destructive">
-                                <AlertTriangle className="w-3 h-3" /> Perlu Perhatian
-                              </span>
-                            )}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-medium text-foreground">{s.nama}</span>
+                              {flagged && (
+                                <span className="inline-flex items-center gap-1 text-xs text-destructive">
+                                  <AlertTriangle className="w-3 h-3" /> Perlu Perhatian
+                                </span>
+                              )}
+                              {levelUps[s.id] && (
+                                <motion.span
+                                  initial={{ scale: 0.7, opacity: 0 }}
+                                  animate={{ scale: 1, opacity: 1 }}
+                                  className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap"
+                                >
+                                  🎓 {levelUps[s.id].new_level}
+                                </motion.span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
