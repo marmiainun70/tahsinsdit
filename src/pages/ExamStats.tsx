@@ -105,6 +105,55 @@ const ExamStats = () => {
     { label: "Belum Ujian", value: neverExamined.length, icon: AlertTriangle, color: "bg-destructive", sub: "siswa aktif" },
   ];
 
+  // ── Export PDF ─────────────────────────────────────────────────────────────
+  const handleExportPDF = useCallback(async () => {
+    if (!pdfRef.current) return;
+    setExporting(true);
+    try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+      const canvas = await html2canvas(pdfRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        width: 794,
+      });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgHeight = pdfWidth * (canvas.height / canvas.width);
+
+      if (imgHeight <= pdfHeight) {
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, imgHeight);
+      } else {
+        let yOffset = 0;
+        let remaining = imgHeight;
+        while (remaining > 0) {
+          const sliceH = Math.min(pdfHeight, remaining);
+          const srcY = yOffset * (canvas.height / imgHeight);
+          const srcH = sliceH * (canvas.height / imgHeight);
+          const pageCanvas = document.createElement("canvas");
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = srcH;
+          const ctx = pageCanvas.getContext("2d")!;
+          ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+          if (yOffset > 0) pdf.addPage();
+          pdf.addImage(pageCanvas.toDataURL("image/png"), "PNG", 0, 0, pdfWidth, sliceH);
+          yOffset += sliceH;
+          remaining -= sliceH;
+        }
+      }
+      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+      pdf.save(`Statistik_Ujian_${dateStr}.pdf`);
+    } finally {
+      setExporting(false);
+    }
+  }, []);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -115,10 +164,36 @@ const ExamStats = () => {
 
   return (
     <div className="space-y-6">
+      {/* Hidden PDF template */}
+      <div style={{ position: "fixed", top: 0, left: "-9999px", zIndex: -1 }}>
+        <ExamStatsPDF
+          ref={pdfRef}
+          byClass={byClass}
+          totalExams={exams.length}
+          totalLulus={totalLulus}
+          totalTidak={totalTidak}
+          neverExamined={neverExamined}
+        />
+      </div>
+
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Statistik Ujian Kenaikan Level</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">Ringkasan kelulusan, tren bulanan, dan siswa yang belum diujikan</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Statistik Ujian Kenaikan Level</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">Ringkasan kelulusan, tren bulanan, dan siswa yang belum diujikan</p>
+        </div>
+        <button
+          onClick={handleExportPDF}
+          disabled={exporting || exams.length === 0}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+        >
+          {exporting ? (
+            <LoaderIcon className="w-4 h-4 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4" />
+          )}
+          {exporting ? "Menyiapkan PDF…" : "Export PDF"}
+        </button>
       </div>
 
       {/* Summary Cards */}
