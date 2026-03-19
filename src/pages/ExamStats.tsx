@@ -6,9 +6,16 @@ import {
   LineChart, Line, Legend, Cell,
 } from "recharts";
 import { useAllExamRecords, useStudents } from "@/hooks/useSupabaseData";
-import { Award, CheckCircle, XCircle, Users, TrendingUp, AlertTriangle, Eye, Download, Loader2 as LoaderIcon } from "lucide-react";
+import {
+  Award, CheckCircle, XCircle, Users, TrendingUp, AlertTriangle,
+  Eye, Download, Loader2 as LoaderIcon, CalendarDays, ChevronDown,
+} from "lucide-react";
 import { Loader2 } from "lucide-react";
 import ExamStatsPDF from "@/components/ExamStatsPDF";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Ags","Sep","Okt","Nov","Des"];
@@ -18,8 +25,27 @@ const formatMonth = (yyyy_mm: string) => {
   return `${MONTH_NAMES[parseInt(m) - 1]} '${y.slice(2)}`;
 };
 
-// Colour per class
 const CLASS_COLORS = ["#16a34a","#0ea5e9","#a855f7","#f59e0b","#ef4444","#ec4899"];
+
+// ─── Period helpers ────────────────────────────────────────────────────────────
+/** Returns the academic year string, e.g. "2024/2025".
+ *  Academic year starts in July: Jul-Dec → first half, Jan-Jun → second half of prev year.
+ */
+const getAcademicYear = (dateStr: string): string => {
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const m = d.getMonth() + 1; // 1-based
+  if (m >= 7) return `${y}/${y + 1}`;
+  return `${y - 1}/${y}`;
+};
+
+/** Returns "Ganjil" (Jul-Dec) or "Genap" (Jan-Jun) for a date string */
+const getSemester = (dateStr: string): "Ganjil" | "Genap" => {
+  const m = new Date(dateStr).getMonth() + 1;
+  return m >= 7 ? "Ganjil" : "Genap";
+};
+
+type PeriodOption = { label: string; value: string };
 
 // ─── custom tooltip ────────────────────────────────────────────────────────────
 const BarTooltip = ({ active, payload, label }: any) => {
@@ -43,13 +69,41 @@ const ExamStats = () => {
   const { data: students = [], isLoading: loadingStudents } = useStudents();
   const pdfRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("all");
 
   const isLoading = loadingExams || loadingStudents;
+
+  // ── Build period options from real data ─────────────────────────────────────
+  const periodOptions = useMemo<PeriodOption[]>(() => {
+    const set = new Set<string>();
+    exams.forEach(e => {
+      const ay = getAcademicYear(e.tanggal);
+      const sem = getSemester(e.tanggal);
+      set.add(`${ay}__${sem}`);
+    });
+    const sorted = Array.from(set).sort((a, b) => b.localeCompare(a));
+    return [
+      { label: "Semua Periode", value: "all" },
+      ...sorted.map(v => {
+        const [ay, sem] = v.split("__");
+        return { label: `Semester ${sem} ${ay}`, value: v };
+      }),
+    ];
+  }, [exams]);
+
+  const selectedLabel = periodOptions.find(o => o.value === selectedPeriod)?.label ?? "Semua Periode";
+
+  // ── Filter exams by selected period ─────────────────────────────────────────
+  const filteredExams = useMemo(() => {
+    if (selectedPeriod === "all") return exams;
+    const [ay, sem] = selectedPeriod.split("__");
+    return exams.filter(e => getAcademicYear(e.tanggal) === ay && getSemester(e.tanggal) === sem);
+  }, [exams, selectedPeriod]);
 
   // ── 1. Kelulusan per kelas ─────────────────────────────────────────────────
   const byClass = useMemo(() => {
     const map: Record<number, { total: number; lulus: number }> = {};
-    exams.forEach(e => {
+    filteredExams.forEach(e => {
       const k = (e as any).students?.kelas as number;
       if (!k) return;
       if (!map[k]) map[k] = { total: 0, lulus: 0 };
@@ -62,13 +116,13 @@ const ExamStats = () => {
       lulus: map[k]?.lulus ?? 0,
       total: map[k]?.total ?? 0,
     }));
-  }, [exams]);
+  }, [filteredExams]);
 
   // ── 2. Tren kelulusan per bulan, dibagi per jenis ujian ────────────────────
   const monthlyTrend = useMemo(() => {
     const map: Record<string, { dasar: { t: number; l: number }; lanjutan: { t: number; l: number } }> = {};
-    exams.forEach(e => {
-      const ym = e.tanggal.slice(0, 7); // "yyyy-mm"
+    filteredExams.forEach(e => {
+      const ym = e.tanggal.slice(0, 7);
       if (!map[ym]) map[ym] = { dasar: { t: 0, l: 0 }, lanjutan: { t: 0, l: 0 } };
       const isDasar = ["Iqro 1","Iqro 2","Iqro 3","Iqro 4","Iqro 5","Iqro 6","Tahsin Dasar"].includes(e.level_diuji);
       const bucket = isDasar ? map[ym].dasar : map[ym].lanjutan;
@@ -77,29 +131,29 @@ const ExamStats = () => {
     });
     return Object.entries(map)
       .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-12) // last 12 months
+      .slice(-12)
       .map(([ym, v]) => ({
         bulan: formatMonth(ym),
         "Tahsin Dasar": v.dasar.t ? Math.round((v.dasar.l / v.dasar.t) * 100) : null,
         "Tahsin Lanjutan": v.lanjutan.t ? Math.round((v.lanjutan.l / v.lanjutan.t) * 100) : null,
       }));
-  }, [exams]);
+  }, [filteredExams]);
 
   // ── 3. Siswa yang belum pernah ujian kenaikan level ───────────────────────
   const neverExamined = useMemo(() => {
-    const examStudentIds = new Set(exams.map(e => e.student_id));
+    const examStudentIds = new Set(filteredExams.map(e => e.student_id));
     return students
       .filter(s => !examStudentIds.has(s.id))
       .sort((a, b) => a.kelas - b.kelas || a.nama.localeCompare(b.nama));
-  }, [exams, students]);
+  }, [filteredExams, students]);
 
   // ── Summary stats ──────────────────────────────────────────────────────────
-  const totalLulus = exams.filter(e => e.hasil === "Lulus").length;
-  const totalTidak = exams.filter(e => e.hasil === "Tidak Lulus").length;
-  const pctLulus = exams.length ? Math.round((totalLulus / exams.length) * 100) : 0;
+  const totalLulus = filteredExams.filter(e => e.hasil === "Lulus").length;
+  const totalTidak = filteredExams.filter(e => e.hasil === "Tidak Lulus").length;
+  const pctLulus = filteredExams.length ? Math.round((totalLulus / filteredExams.length) * 100) : 0;
 
   const summaryCards = [
-    { label: "Total Ujian", value: exams.length, icon: Award, color: "bg-primary", sub: "seluruh periode" },
+    { label: "Total Ujian", value: filteredExams.length, icon: Award, color: "bg-primary", sub: "periode ini" },
     { label: "Lulus", value: totalLulus, icon: CheckCircle, color: "bg-emerald-600", sub: `${pctLulus}% dari total` },
     { label: "Tidak Lulus", value: totalTidak, icon: XCircle, color: "bg-amber-500", sub: `${100 - pctLulus}% dari total` },
     { label: "Belum Ujian", value: neverExamined.length, icon: AlertTriangle, color: "bg-destructive", sub: "siswa aktif" },
@@ -169,7 +223,7 @@ const ExamStats = () => {
         <ExamStatsPDF
           ref={pdfRef}
           byClass={byClass}
-          totalExams={exams.length}
+          totalExams={filteredExams.length}
           totalLulus={totalLulus}
           totalTidak={totalTidak}
           neverExamined={neverExamined}
@@ -177,24 +231,73 @@ const ExamStats = () => {
       </div>
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-3 justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Statistik Ujian Kenaikan Level</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">Ringkasan kelulusan, tren bulanan, dan siswa yang belum diujikan</p>
+          <p className="text-muted-foreground text-sm mt-0.5">
+            Ringkasan kelulusan, tren bulanan, dan siswa yang belum diujikan
+          </p>
         </div>
-        <button
-          onClick={handleExportPDF}
-          disabled={exporting || exams.length === 0}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-        >
-          {exporting ? (
-            <LoaderIcon className="w-4 h-4 animate-spin" />
-          ) : (
-            <Download className="w-4 h-4" />
-          )}
-          {exporting ? "Menyiapkan PDF…" : "Export PDF"}
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Period Filter */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary text-secondary-foreground text-sm font-medium shadow-sm hover:bg-secondary/80 transition-colors border border-border">
+                <CalendarDays className="w-4 h-4 text-primary" />
+                <span className="max-w-[160px] truncate">{selectedLabel}</span>
+                <ChevronDown className="w-3.5 h-3.5 opacity-50" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Filter Periode</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {periodOptions.map(opt => (
+                <DropdownMenuItem
+                  key={opt.value}
+                  onSelect={() => setSelectedPeriod(opt.value)}
+                  className={`text-sm cursor-pointer ${selectedPeriod === opt.value ? "font-semibold text-primary bg-primary/5" : ""}`}
+                >
+                  {opt.value !== "all" && (
+                    <span className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${
+                      opt.value.includes("Ganjil") ? "bg-amber-500" : "bg-blue-500"
+                    }`} />
+                  )}
+                  {opt.label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Export PDF */}
+          <button
+            onClick={handleExportPDF}
+            disabled={exporting || filteredExams.length === 0}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {exporting ? <LoaderIcon className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            {exporting ? "Menyiapkan…" : "Export PDF"}
+          </button>
+        </div>
       </div>
+
+      {/* Period badge */}
+      {selectedPeriod !== "all" && (
+        <motion.div
+          key={selectedPeriod}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-2 px-4 py-2.5 bg-primary/5 border border-primary/20 rounded-xl w-fit"
+        >
+          <CalendarDays className="w-3.5 h-3.5 text-primary" />
+          <span className="text-sm font-medium text-primary">Menampilkan data: {selectedLabel}</span>
+          <button
+            onClick={() => setSelectedPeriod("all")}
+            className="ml-1 text-primary/60 hover:text-primary text-xs font-semibold underline underline-offset-2 transition-colors"
+          >
+            Hapus filter
+          </button>
+        </motion.div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -247,7 +350,6 @@ const ExamStats = () => {
               </BarChart>
             </ResponsiveContainer>
           )}
-          {/* mini legend table */}
           <div className="mt-3 grid grid-cols-3 gap-2">
             {byClass.map((d, i) => (
               <div key={d.kelas} className="flex items-center gap-1.5 text-xs">
@@ -270,7 +372,7 @@ const ExamStats = () => {
             <TrendingUp className="w-4 h-4 text-primary" />
             <h2 className="font-bold text-foreground text-sm">Tren Kelulusan Bulanan</h2>
           </div>
-          <p className="text-xs text-muted-foreground mb-4">% lulus per jenis ujian selama 12 bulan terakhir</p>
+          <p className="text-xs text-muted-foreground mb-4">% lulus per jenis ujian selama periode terpilih</p>
           {monthlyTrend.length === 0 ? (
             <div className="h-52 flex items-center justify-center text-muted-foreground text-sm">Belum ada data ujian</div>
           ) : (
@@ -284,22 +386,8 @@ const ExamStats = () => {
                   wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
                   formatter={(val) => <span style={{ color: "hsl(var(--foreground))" }}>{val}</span>}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="Tahsin Dasar"
-                  stroke="#16a34a"
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: "#16a34a" }}
-                  connectNulls
-                />
-                <Line
-                  type="monotone"
-                  dataKey="Tahsin Lanjutan"
-                  stroke="#a855f7"
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: "#a855f7" }}
-                  connectNulls
-                />
+                <Line type="monotone" dataKey="Tahsin Dasar" stroke="#16a34a" strokeWidth={2.5} dot={{ r: 4, fill: "#16a34a" }} connectNulls />
+                <Line type="monotone" dataKey="Tahsin Lanjutan" stroke="#a855f7" strokeWidth={2.5} dot={{ r: 4, fill: "#a855f7" }} connectNulls />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -319,7 +407,11 @@ const ExamStats = () => {
           </div>
           <div className="flex-1">
             <h2 className="font-bold text-foreground text-sm">Siswa Belum Mengikuti Ujian Kenaikan Level</h2>
-            <p className="text-xs text-muted-foreground">Belum pernah tercatat dalam ujian kenaikan program apapun</p>
+            <p className="text-xs text-muted-foreground">
+              {selectedPeriod === "all"
+                ? "Belum pernah tercatat dalam ujian kenaikan program apapun"
+                : `Belum tercatat ujian pada ${selectedLabel}`}
+            </p>
           </div>
           <span className="bg-destructive/10 text-destructive text-xs font-bold px-3 py-1 rounded-full">
             {neverExamined.length} siswa
