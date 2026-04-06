@@ -55,6 +55,53 @@ export type Database = {
           },
         ]
       }
+      attendance: {
+        Row: {
+          absent: number
+          created_at: string
+          created_by: string | null
+          id: string
+          month: number
+          permission: number
+          present: number
+          sick: number
+          student_id: string
+          year: number
+        }
+        Insert: {
+          absent?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month: number
+          permission?: number
+          present?: number
+          sick?: number
+          student_id: string
+          year: number
+        }
+        Update: {
+          absent?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month?: number
+          permission?: number
+          present?: number
+          sick?: number
+          student_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exam_participants: {
         Row: {
           created_at: string
@@ -197,6 +244,97 @@ export type Database = {
           waktu_selesai?: string | null
         }
         Relationships: []
+      }
+      monthly_reports: {
+        Row: {
+          achievement_status: string
+          created_at: string
+          created_by: string | null
+          end_page: number
+          id: string
+          iqra_level: string | null
+          month: number
+          notes: string | null
+          pages_read: number
+          program_type: string
+          start_page: number
+          student_id: string
+          target_pages: number
+          year: number
+        }
+        Insert: {
+          achievement_status?: string
+          created_at?: string
+          created_by?: string | null
+          end_page?: number
+          id?: string
+          iqra_level?: string | null
+          month: number
+          notes?: string | null
+          pages_read?: number
+          program_type?: string
+          start_page?: number
+          student_id: string
+          target_pages?: number
+          year: number
+        }
+        Update: {
+          achievement_status?: string
+          created_at?: string
+          created_by?: string | null
+          end_page?: number
+          id?: string
+          iqra_level?: string | null
+          month?: number
+          notes?: string | null
+          pages_read?: number
+          program_type?: string
+          start_page?: number
+          student_id?: string
+          target_pages?: number
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_reports_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parents: {
+        Row: {
+          created_at: string
+          id: string
+          phone: string | null
+          student_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phone?: string | null
+          student_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phone?: string | null
+          student_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -385,12 +523,36 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       activity_type:
@@ -400,6 +562,7 @@ export type Database = {
         | "nilai_rendah"
         | "catatan_progres"
         | "naik_level"
+      app_role: "admin" | "guru" | "parent"
       exam_result: "Lulus" | "Tidak Lulus"
       exam_schedule_type:
         | "tahsin_dasar_ke_lanjutan"
@@ -550,6 +713,7 @@ export const Constants = {
         "catatan_progres",
         "naik_level",
       ],
+      app_role: ["admin", "guru", "parent"],
       exam_result: ["Lulus", "Tidak Lulus"],
       exam_schedule_type: [
         "tahsin_dasar_ke_lanjutan",
