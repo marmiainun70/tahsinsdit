@@ -45,11 +45,11 @@ export const useMonthlyReports = (studentId?: string) =>
   useQuery({
     queryKey: ["monthly_reports", studentId ?? "all"],
     queryFn: async () => {
-      let query = supabase.from("monthly_reports" as any).select("*").order("year", { ascending: false }).order("month", { ascending: false });
+      let query = (supabase as any).from("monthly_reports").select("*").order("year", { ascending: false }).order("month", { ascending: false });
       if (studentId) query = query.eq("student_id", studentId);
       const { data, error } = await query;
       if (error) throw error;
-      return data as MonthlyReport[];
+      return (data ?? []) as unknown as MonthlyReport[];
     },
   });
 
@@ -57,13 +57,13 @@ export const useAllMonthlyReports = () =>
   useQuery({
     queryKey: ["monthly_reports", "all"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("monthly_reports" as any)
+      const { data, error } = await (supabase as any)
+        .from("monthly_reports")
         .select("*, students(nama, kelas, rombel, level)")
         .order("year", { ascending: false })
         .order("month", { ascending: false });
       if (error) throw error;
-      return data as (MonthlyReport & { students: { nama: string; kelas: number; rombel: string; level: string } })[];
+      return (data ?? []) as unknown as (MonthlyReport & { students: { nama: string; kelas: number; rombel: string; level: string } })[];
     },
   });
 
@@ -72,13 +72,13 @@ export const useAddMonthlyReport = () => {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (report: Omit<MonthlyReport, "id" | "created_at" | "created_by">) => {
-      const { data, error } = await supabase
-        .from("monthly_reports" as any)
-        .insert({ ...report, created_by: user?.id ?? null } as any)
+      const { data, error } = await (supabase as any)
+        .from("monthly_reports")
+        .insert({ ...report, created_by: user?.id ?? null })
         .select()
         .single();
       if (error) throw error;
-      return data as MonthlyReport;
+      return data as unknown as MonthlyReport;
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ["monthly_reports"] });
@@ -90,14 +90,14 @@ export const useUpdateMonthlyReport = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<MonthlyReport> & { id: string }) => {
-      const { data, error } = await supabase
-        .from("monthly_reports" as any)
-        .update(updates as any)
+      const { data, error } = await (supabase as any)
+        .from("monthly_reports")
+        .update(updates)
         .eq("id", id)
         .select()
         .single();
       if (error) throw error;
-      return data as MonthlyReport;
+      return data as unknown as MonthlyReport;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["monthly_reports"] });
@@ -109,7 +109,7 @@ export const useDeleteMonthlyReport = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("monthly_reports" as any).delete().eq("id", id);
+      const { error } = await (supabase as any).from("monthly_reports").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
