@@ -21,8 +21,6 @@ import BulkMonthlyReportForm from "@/components/BulkMonthlyReportForm";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
-const IQRO_LEVELS_LIST = ["Iqro 1", "Iqro 2", "Iqro 3", "Iqro 4", "Iqro 5", "Iqro 6"];
-
 const MonthlyReport = () => {
   const { data: students = [], isLoading: loadingStudents } = useStudents();
   const { data: reports = [], isLoading: loadingReports } = useAllMonthlyReports();
