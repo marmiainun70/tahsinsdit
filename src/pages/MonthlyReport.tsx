@@ -37,6 +37,7 @@ const MonthlyReport = () => {
   const [startPage, setStartPage] = useState(1);
   const [endPage, setEndPage] = useState(1);
   const [notes, setNotes] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState<string>("");
 
   // Filters
   const [filterKelas, setFilterKelas] = useState<string>("all");
@@ -44,11 +45,9 @@ const MonthlyReport = () => {
   const [filterLevel, setFilterLevel] = useState<string>("all");
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
-  const programType = selectedStudent
-    ? isTahsinDasar(selectedStudent.level as ReadingLevel) ? "iqra" : "tahsin"
-    : "iqra";
-  const iqraLevel = selectedStudent && IQRO_LEVELS_LIST.includes(selectedStudent.level)
-    ? selectedStudent.level : null;
+  const effectiveLevel = (selectedLevel || selectedStudent?.level || "Iqro 1") as ReadingLevel;
+  const programType = isTahsinDasar(effectiveLevel) ? "iqra" : "tahsin";
+  const iqraLevel = IQRO_LEVELS.includes(effectiveLevel) ? effectiveLevel : null;
   const target = getTarget(programType);
 
   const validStart = programType === "iqra" ? getValidIqraPage(startPage) : startPage;
