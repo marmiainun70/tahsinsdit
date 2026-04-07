@@ -113,6 +113,7 @@ const MonthlyReport = () => {
 
   const resetForm = () => {
     setSelectedStudentId("");
+    setSelectedLevel("");
     setStartPage(1);
     setEndPage(1);
     setNotes("");
