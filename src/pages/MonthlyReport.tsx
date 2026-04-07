@@ -168,7 +168,7 @@ const MonthlyReport = () => {
               <div className="space-y-4">
                 <div>
                   <Label>Pilih Siswa</Label>
-                  <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                  <Select value={selectedStudentId} onValueChange={v => { setSelectedStudentId(v); setSelectedLevel(""); }}>
                     <SelectTrigger><SelectValue placeholder="Pilih siswa..." /></SelectTrigger>
                     <SelectContent>
                       {students.map(s => (
@@ -179,6 +179,22 @@ const MonthlyReport = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {selectedStudent && (
+                  <div>
+                    <Label>Level / Program <span className="text-xs text-muted-foreground">(bisa diubah)</span></Label>
+                    <Select value={effectiveLevel} onValueChange={v => setSelectedLevel(v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {LEVELS.map(l => (
+                          <SelectItem key={l} value={l}>
+                            {l} {l === selectedStudent.level ? "(asal)" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
