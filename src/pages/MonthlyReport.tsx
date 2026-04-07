@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useStudents, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
+import { useStudents, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
 import {
   useAllMonthlyReports, useAddMonthlyReport, useDeleteMonthlyReport,
   getTarget, getAchievementStatus, getValidIqraPage, MONTH_NAMES
