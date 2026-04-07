@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useStudents, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
+import { useStudents, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
 import {
   useAllMonthlyReports, useAddMonthlyReport, useDeleteMonthlyReport,
   getTarget, getAchievementStatus, getValidIqraPage, MONTH_NAMES
@@ -21,8 +21,6 @@ import BulkMonthlyReportForm from "@/components/BulkMonthlyReportForm";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
-const IQRO_LEVELS_LIST = ["Iqro 1", "Iqro 2", "Iqro 3", "Iqro 4", "Iqro 5", "Iqro 6"];
-
 const MonthlyReport = () => {
   const { data: students = [], isLoading: loadingStudents } = useStudents();
   const { data: reports = [], isLoading: loadingReports } = useAllMonthlyReports();
@@ -37,6 +35,7 @@ const MonthlyReport = () => {
   const [startPage, setStartPage] = useState(1);
   const [endPage, setEndPage] = useState(1);
   const [notes, setNotes] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState<string>("");
 
   // Filters
   const [filterKelas, setFilterKelas] = useState<string>("all");
@@ -44,11 +43,9 @@ const MonthlyReport = () => {
   const [filterLevel, setFilterLevel] = useState<string>("all");
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
-  const programType = selectedStudent
-    ? isTahsinDasar(selectedStudent.level as ReadingLevel) ? "iqra" : "tahsin"
-    : "iqra";
-  const iqraLevel = selectedStudent && IQRO_LEVELS_LIST.includes(selectedStudent.level)
-    ? selectedStudent.level : null;
+  const effectiveLevel = (selectedLevel || selectedStudent?.level || "Iqro 1") as ReadingLevel;
+  const programType = isTahsinDasar(effectiveLevel) ? "iqra" : "tahsin";
+  const iqraLevel = IQRO_LEVELS.includes(effectiveLevel) ? effectiveLevel : null;
   const target = getTarget(programType);
 
   const validStart = programType === "iqra" ? getValidIqraPage(startPage) : startPage;
@@ -114,6 +111,7 @@ const MonthlyReport = () => {
 
   const resetForm = () => {
     setSelectedStudentId("");
+    setSelectedLevel("");
     setStartPage(1);
     setEndPage(1);
     setNotes("");
@@ -168,7 +166,7 @@ const MonthlyReport = () => {
               <div className="space-y-4">
                 <div>
                   <Label>Pilih Siswa</Label>
-                  <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                  <Select value={selectedStudentId} onValueChange={v => { setSelectedStudentId(v); setSelectedLevel(""); }}>
                     <SelectTrigger><SelectValue placeholder="Pilih siswa..." /></SelectTrigger>
                     <SelectContent>
                       {students.map(s => (
@@ -179,6 +177,22 @@ const MonthlyReport = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {selectedStudent && (
+                  <div>
+                    <Label>Level / Program <span className="text-xs text-muted-foreground">(bisa diubah)</span></Label>
+                    <Select value={effectiveLevel} onValueChange={v => setSelectedLevel(v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {LEVELS.map(l => (
+                          <SelectItem key={l} value={l}>
+                            {l} {l === selectedStudent.level ? "(asal)" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>

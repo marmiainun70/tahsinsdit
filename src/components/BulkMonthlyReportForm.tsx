@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useStudents, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
+import { useStudents, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
 import { useAddMonthlyReport, getTarget, getAchievementStatus, getValidIqraPage, MONTH_NAMES } from "@/hooks/useMonthlyReports";
 import type { Database } from "@/integrations/supabase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
@@ -21,7 +20,10 @@ interface StudentEntry {
   startPage: number;
   endPage: number;
   notes: string;
+  levelOverride: string | null; // null = use student's default level
 }
+
+const ALL_LEVELS: ReadingLevel[] = LEVELS;
 
 const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
   const { data: students = [] } = useStudents();
@@ -43,7 +45,7 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
   const [entries, setEntries] = useState<Record<string, StudentEntry>>({});
 
   const getEntry = (id: string): StudentEntry =>
-    entries[id] ?? { studentId: id, selected: false, startPage: 1, endPage: 1, notes: "" };
+    entries[id] ?? { studentId: id, selected: false, startPage: 1, endPage: 1, notes: "", levelOverride: null };
 
   const updateEntry = (id: string, patch: Partial<StudentEntry>) => {
     setEntries(prev => ({
@@ -61,6 +63,11 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
   };
 
   const selectedCount = filteredStudents.filter(s => getEntry(s.id).selected).length;
+
+  const getEffectiveLevel = (student: typeof students[0]): ReadingLevel => {
+    const entry = getEntry(student.id);
+    return (entry.levelOverride ?? student.level) as ReadingLevel;
+  };
 
   const getProgramType = (level: ReadingLevel) =>
     isTahsinDasar(level) ? "iqra" : "tahsin";
@@ -85,8 +92,9 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
 
     for (const student of toSave) {
       const entry = getEntry(student.id);
-      const programType = getProgramType(student.level as ReadingLevel);
-      const iqraLevel = IQRO_LEVELS.includes(student.level as ReadingLevel) ? student.level : null;
+      const effectiveLevel = getEffectiveLevel(student);
+      const programType = getProgramType(effectiveLevel);
+      const iqraLevel = IQRO_LEVELS.includes(effectiveLevel) ? effectiveLevel : null;
       const target = getTarget(programType);
       const validStart = programType === "iqra" ? getValidIqraPage(entry.startPage) : entry.startPage;
       const validEnd = programType === "iqra" ? getValidIqraPage(entry.endPage) : entry.endPage;
@@ -175,11 +183,9 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
             <SelectTrigger className="w-36"><SelectValue placeholder="Semua" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Level</SelectItem>
-              {IQRO_LEVELS.map(l => (
+              {ALL_LEVELS.map(l => (
                 <SelectItem key={l} value={l}>{l}</SelectItem>
               ))}
-              <SelectItem value="Tahsin Lanjutan">Tahsin Lanjutan</SelectItem>
-              <SelectItem value="Tahfizh">Tahfizh</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -217,7 +223,7 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
                     <th className="w-10 px-3 py-2"></th>
                     <th className="text-left px-3 py-2 font-medium">Nama Siswa</th>
                     <th className="text-left px-3 py-2 font-medium">Program</th>
-                    <th className="text-left px-3 py-2 font-medium">Level</th>
+                    <th className="text-left px-3 py-2 font-medium min-w-[140px]">Level</th>
                     <th className="text-center px-3 py-2 font-medium w-20">Hal. Awal</th>
                     <th className="text-center px-3 py-2 font-medium w-20">Hal. Akhir</th>
                     <th className="text-center px-3 py-2 font-medium w-16">Total</th>
@@ -229,13 +235,15 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
                 <tbody>
                   {groupStudents.map(student => {
                     const entry = getEntry(student.id);
-                    const programType = getProgramType(student.level as ReadingLevel);
+                    const effectiveLevel = getEffectiveLevel(student);
+                    const programType = getProgramType(effectiveLevel);
                     const target = getTarget(programType);
                     const validStart = programType === "iqra" ? getValidIqraPage(entry.startPage) : entry.startPage;
                     const validEnd = programType === "iqra" ? getValidIqraPage(entry.endPage) : entry.endPage;
                     const pagesRead = Math.max(0, validEnd - validStart);
                     const status = getAchievementStatus(pagesRead, target);
-                    const levelColor = LEVEL_COLORS[student.level as ReadingLevel] ?? "";
+                    const levelColor = LEVEL_COLORS[effectiveLevel] ?? "";
+                    const isOverridden = entry.levelOverride !== null && entry.levelOverride !== student.level;
 
                     return (
                       <tr key={student.id} className={`border-b transition-colors ${entry.selected ? "bg-primary/5" : "hover:bg-muted/20"}`}>
@@ -248,11 +256,28 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
                         <td className="px-3 py-2 font-medium whitespace-nowrap">{student.nama}</td>
                         <td className="px-3 py-2">
                           <Badge variant="outline" className="text-xs whitespace-nowrap">
-                            {getProgramLabel(student.level as ReadingLevel)}
+                            {getProgramLabel(effectiveLevel)}
                           </Badge>
                         </td>
                         <td className="px-3 py-2">
-                          <Badge className={`text-xs ${levelColor}`}>{student.level}</Badge>
+                          <Select
+                            value={entry.levelOverride ?? student.level}
+                            onValueChange={v => updateEntry(student.id, { levelOverride: v, selected: true })}
+                          >
+                            <SelectTrigger className={`h-8 text-xs w-[140px] ${isOverridden ? "ring-2 ring-primary/50" : ""}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ALL_LEVELS.map(l => (
+                                <SelectItem key={l} value={l}>
+                                  <span className="flex items-center gap-1">
+                                    {l}
+                                    {l === student.level && <span className="text-muted-foreground text-[10px]">(asal)</span>}
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </td>
                         <td className="px-3 py-2">
                           <Input
