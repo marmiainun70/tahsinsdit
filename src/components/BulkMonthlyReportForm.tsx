@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useStudents, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
+import { useStudents, useUpdateStudent, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
 import { useAddMonthlyReport, getTarget, getAchievementStatus, getValidIqraPage, MONTH_NAMES } from "@/hooks/useMonthlyReports";
 import type { Database } from "@/integrations/supabase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Save, Users, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, Save, Users, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -20,7 +21,7 @@ interface StudentEntry {
   startPage: number;
   endPage: number;
   notes: string;
-  levelOverride: string | null; // null = use student's default level
+  levelOverride: string | null;
 }
 
 const ALL_LEVELS: ReadingLevel[] = LEVELS;
@@ -28,12 +29,14 @@ const ALL_LEVELS: ReadingLevel[] = LEVELS;
 const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
   const { data: students = [] } = useStudents();
   const addReport = useAddMonthlyReport();
+  const updateStudent = useUpdateStudent();
 
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
   const [filterKelas, setFilterKelas] = useState<string>("all");
   const [filterLevel, setFilterLevel] = useState<string>("all");
   const [saving, setSaving] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState(false);
 
   const filteredStudents = useMemo(() => {
     let s = students;
@@ -79,14 +82,31 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
     return "Tahfizh";
   };
 
-  const handleSaveAll = async () => {
+  // Students with level overrides
+  const studentsWithLevelChange = useMemo(() => {
+    return filteredStudents.filter(s => {
+      const entry = getEntry(s.id);
+      return entry.selected && entry.levelOverride !== null && entry.levelOverride !== s.level;
+    });
+  }, [filteredStudents, entries]);
+
+  const handlePreSave = () => {
     const toSave = filteredStudents.filter(s => getEntry(s.id).selected);
     if (toSave.length === 0) {
       toast({ title: "Pilih minimal 1 siswa", variant: "destructive" });
       return;
     }
+    if (studentsWithLevelChange.length > 0) {
+      setConfirmDialog(true);
+    } else {
+      doSave(false);
+    }
+  };
 
+  const doSave = async (updateLevels: boolean) => {
+    setConfirmDialog(false);
     setSaving(true);
+    const toSave = filteredStudents.filter(s => getEntry(s.id).selected);
     let success = 0;
     let failed = 0;
 
@@ -115,6 +135,15 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
           achievement_status: status,
           notes: entry.notes,
         });
+
+        // Update student level permanently if confirmed
+        if (updateLevels && entry.levelOverride && entry.levelOverride !== student.level) {
+          await updateStudent.mutateAsync({
+            id: student.id,
+            level: entry.levelOverride as ReadingLevel,
+          });
+        }
+
         success++;
       } catch {
         failed++;
@@ -202,8 +231,14 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
             <Users className="inline w-4 h-4 mr-1" />
             {selectedCount} dari {filteredStudents.length} siswa dipilih
           </span>
+          {studentsWithLevelChange.length > 0 && (
+            <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              {studentsWithLevelChange.length} perubahan level
+            </Badge>
+          )}
         </div>
-        <Button onClick={handleSaveAll} disabled={saving || selectedCount === 0} className="gap-2">
+        <Button onClick={handlePreSave} disabled={saving || selectedCount === 0} className="gap-2">
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Simpan {selectedCount} Laporan
         </Button>
@@ -242,7 +277,6 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
                     const validEnd = programType === "iqra" ? getValidIqraPage(entry.endPage) : entry.endPage;
                     const pagesRead = Math.max(0, validEnd - validStart);
                     const status = getAchievementStatus(pagesRead, target);
-                    const levelColor = LEVEL_COLORS[effectiveLevel] ?? "";
                     const isOverridden = entry.levelOverride !== null && entry.levelOverride !== student.level;
 
                     return (
@@ -264,7 +298,7 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
                             value={entry.levelOverride ?? student.level}
                             onValueChange={v => updateEntry(student.id, { levelOverride: v, selected: true })}
                           >
-                            <SelectTrigger className={`h-8 text-xs w-[140px] ${isOverridden ? "ring-2 ring-primary/50" : ""}`}>
+                            <SelectTrigger className={`h-8 text-xs w-[140px] ${isOverridden ? "ring-2 ring-amber-400 bg-amber-50" : ""}`}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -331,6 +365,47 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
       {filteredStudents.length === 0 && (
         <p className="text-center text-muted-foreground py-8">Tidak ada siswa sesuai filter</p>
       )}
+
+      {/* Confirmation Dialog for Level Changes */}
+      <Dialog open={confirmDialog} onOpenChange={setConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Konfirmasi Perubahan Level
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Berikut siswa yang levelnya akan diubah secara <strong>permanen</strong> di database:
+            </p>
+            <div className="max-h-48 overflow-y-auto rounded-lg border divide-y">
+              {studentsWithLevelChange.map(s => {
+                const entry = getEntry(s.id);
+                return (
+                  <div key={s.id} className="flex items-center justify-between px-3 py-2 text-sm">
+                    <span className="font-medium">{s.nama}</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">{s.level}</Badge>
+                      <span className="text-muted-foreground">→</span>
+                      <Badge className="text-xs bg-amber-100 text-amber-800">{entry.levelOverride}</Badge>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => doSave(false)}>
+              Simpan Tanpa Ubah Level
+            </Button>
+            <Button onClick={() => doSave(true)} className="gap-2 bg-amber-600 hover:bg-amber-700">
+              <CheckCircle2 className="w-4 h-4" />
+              Simpan & Ubah Level Permanen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
