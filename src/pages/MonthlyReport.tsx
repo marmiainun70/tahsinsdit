@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { Plus, FileText, Loader2, Trash2, CheckCircle2, XCircle, Filter, Users, Pencil, Save, X, AlertTriangle } from "lucide-react";
 import BulkMonthlyReportForm from "@/components/BulkMonthlyReportForm";
+import MonthlyReportExport from "@/components/MonthlyReportExport";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -213,6 +214,7 @@ const MonthlyReport = () => {
           <p className="text-sm text-muted-foreground">Catat progres bacaan siswa setiap bulan</p>
         </div>
         <div className="flex gap-2">
+          <MonthlyReportExport reports={reports as any} />
           <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2">
