@@ -214,6 +214,7 @@ const MonthlyReport = () => {
           <p className="text-sm text-muted-foreground">Catat progres bacaan siswa setiap bulan</p>
         </div>
         <div className="flex gap-2">
+          <MonthlyReportExport reports={reports as any} />
           <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2">
