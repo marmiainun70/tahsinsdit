@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
-import { useStudents, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
+import { useState, useMemo, useCallback } from "react";
+import { useStudents, useUpdateStudent, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
 import {
-  useAllMonthlyReports, useAddMonthlyReport, useDeleteMonthlyReport,
+  useAllMonthlyReports, useAddMonthlyReport, useDeleteMonthlyReport, useUpdateMonthlyReport,
   getTarget, getAchievementStatus, getValidIqraPage, MONTH_NAMES
 } from "@/hooks/useMonthlyReports";
 import type { Database } from "@/integrations/supabase/types";
@@ -11,12 +11,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { Plus, FileText, Loader2, Trash2, CheckCircle2, XCircle, Filter, Users } from "lucide-react";
+import { Plus, FileText, Loader2, Trash2, CheckCircle2, XCircle, Filter, Users, Pencil, Save, X, AlertTriangle } from "lucide-react";
 import BulkMonthlyReportForm from "@/components/BulkMonthlyReportForm";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -26,6 +25,8 @@ const MonthlyReport = () => {
   const { data: reports = [], isLoading: loadingReports } = useAllMonthlyReports();
   const addReport = useAddMonthlyReport();
   const deleteReport = useDeleteMonthlyReport();
+  const updateReport = useUpdateMonthlyReport();
+  const updateStudent = useUpdateStudent();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
@@ -36,6 +37,16 @@ const MonthlyReport = () => {
   const [endPage, setEndPage] = useState(1);
   const [notes, setNotes] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
+
+  // Level change confirmation for single form
+  const [levelConfirmOpen, setLevelConfirmOpen] = useState(false);
+  const [pendingLevelChange, setPendingLevelChange] = useState<{ studentId: string; oldLevel: string; newLevel: string } | null>(null);
+
+  // Inline editing
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editData, setEditData] = useState<{
+    start_page: number; end_page: number; notes: string;
+  }>({ start_page: 1, end_page: 1, notes: "" });
 
   // Filters
   const [filterKelas, setFilterKelas] = useState<string>("all");
@@ -78,16 +89,14 @@ const MonthlyReport = () => {
       toast({ title: "Halaman akhir tidak boleh lebih kecil dari halaman awal", variant: "destructive" });
       return;
     }
-    if (programType === "iqra" && validEnd > 32) {
-      toast({ title: "Halaman Iqra maksimal 32", variant: "destructive" });
-      return;
-    }
+
+    // Check if level was changed
+    const hasLevelChange = selectedStudent && selectedLevel && selectedLevel !== selectedStudent.level;
 
     try {
       await addReport.mutateAsync({
         student_id: selectedStudentId,
-        month,
-        year,
+        month, year,
         program_type: programType,
         iqra_level: iqraLevel,
         start_page: validStart,
@@ -97,6 +106,16 @@ const MonthlyReport = () => {
         achievement_status: status,
         notes,
       });
+
+      if (hasLevelChange && selectedStudent) {
+        setPendingLevelChange({
+          studentId: selectedStudent.id,
+          oldLevel: selectedStudent.level,
+          newLevel: selectedLevel,
+        });
+        setLevelConfirmOpen(true);
+      }
+
       toast({ title: "Laporan berhasil disimpan ✅" });
       setDialogOpen(false);
       resetForm();
@@ -107,6 +126,21 @@ const MonthlyReport = () => {
         toast({ title: "Gagal menyimpan", description: e.message, variant: "destructive" });
       }
     }
+  };
+
+  const confirmLevelUpdate = async () => {
+    if (!pendingLevelChange) return;
+    try {
+      await updateStudent.mutateAsync({
+        id: pendingLevelChange.studentId,
+        level: pendingLevelChange.newLevel as ReadingLevel,
+      });
+      toast({ title: `Level siswa berhasil diubah ke ${pendingLevelChange.newLevel} ✅` });
+    } catch {
+      toast({ title: "Gagal mengubah level", variant: "destructive" });
+    }
+    setLevelConfirmOpen(false);
+    setPendingLevelChange(null);
   };
 
   const resetForm = () => {
@@ -121,6 +155,45 @@ const MonthlyReport = () => {
     if (!confirm("Hapus laporan ini?")) return;
     await deleteReport.mutateAsync(id);
     toast({ title: "Laporan dihapus" });
+  };
+
+  // Inline edit handlers
+  const startEdit = (report: any) => {
+    setEditingId(report.id);
+    setEditData({
+      start_page: report.start_page,
+      end_page: report.end_page,
+      notes: report.notes || "",
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+  };
+
+  const saveEdit = async (report: any) => {
+    const pt = report.program_type;
+    const isIqra = pt === "iqra";
+    const vs = isIqra ? getValidIqraPage(editData.start_page) : editData.start_page;
+    const ve = isIqra ? getValidIqraPage(editData.end_page) : editData.end_page;
+    const pr = Math.max(0, ve - vs);
+    const tgt = report.target_pages;
+    const st = getAchievementStatus(pr, tgt);
+
+    try {
+      await updateReport.mutateAsync({
+        id: report.id,
+        start_page: vs,
+        end_page: ve,
+        pages_read: pr,
+        achievement_status: st,
+        notes: editData.notes,
+      });
+      toast({ title: "Laporan diperbarui ✅" });
+      setEditingId(null);
+    } catch (e: any) {
+      toast({ title: "Gagal memperbarui", description: e.message, variant: "destructive" });
+    }
   };
 
   if (loadingStudents || loadingReports) {
@@ -180,9 +253,11 @@ const MonthlyReport = () => {
 
                 {selectedStudent && (
                   <div>
-                    <Label>Level / Program <span className="text-xs text-muted-foreground">(bisa diubah)</span></Label>
+                    <Label>Level / Program <span className="text-xs text-muted-foreground">(bisa diubah — akan dikonfirmasi)</span></Label>
                     <Select value={effectiveLevel} onValueChange={v => setSelectedLevel(v)}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger className={selectedLevel && selectedLevel !== selectedStudent.level ? "ring-2 ring-amber-400 bg-amber-50" : ""}>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
                         {LEVELS.map(l => (
                           <SelectItem key={l} value={l}>
@@ -191,6 +266,12 @@ const MonthlyReport = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {selectedLevel && selectedLevel !== selectedStudent.level && (
+                      <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        Level akan diubah permanen setelah konfirmasi
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -221,8 +302,8 @@ const MonthlyReport = () => {
 
                 {selectedStudent && (
                   <div className="p-3 bg-muted rounded-xl space-y-1 text-sm">
-                    <p><span className="font-medium">Program:</span> {getProgramLabel(selectedStudent.level)}</p>
-                    <p><span className="font-medium">Level:</span> {selectedStudent.level}</p>
+                    <p><span className="font-medium">Program:</span> {getProgramLabel(effectiveLevel)}</p>
+                    <p><span className="font-medium">Level:</span> {effectiveLevel}</p>
                     <p><span className="font-medium">Target:</span> {target} {programType === "iqra" ? "halaman" : "baris"}/bulan</p>
                   </div>
                 )}
@@ -310,10 +391,13 @@ const MonthlyReport = () => {
         </Select>
       </div>
 
-      {/* Reports Table */}
+      {/* Reports Table with Inline Edit */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Riwayat Laporan ({filteredReports.length})</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">
+            Riwayat Laporan ({filteredReports.length})
+            <span className="text-xs font-normal text-muted-foreground">— klik ✏️ untuk edit langsung</span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {filteredReports.length === 0 ? (
@@ -334,13 +418,74 @@ const MonthlyReport = () => {
                     <TableHead className="text-center">Target</TableHead>
                     <TableHead className="text-center">Status</TableHead>
                     <TableHead>Catatan</TableHead>
-                    <TableHead></TableHead>
+                    <TableHead className="w-24">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredReports.map(r => {
                     const st = (r as any).students;
                     const levelColor = st?.level ? (LEVEL_COLORS[st.level as ReadingLevel] ?? "") : "";
+                    const isEditing = editingId === r.id;
+
+                    if (isEditing) {
+                      const isIqra = r.program_type === "iqra";
+                      const vs = isIqra ? getValidIqraPage(editData.start_page) : editData.start_page;
+                      const ve = isIqra ? getValidIqraPage(editData.end_page) : editData.end_page;
+                      const pr = Math.max(0, ve - vs);
+                      const editStatus = getAchievementStatus(pr, r.target_pages);
+
+                      return (
+                        <TableRow key={r.id} className="bg-primary/5">
+                          <TableCell className="font-medium">{st?.nama ?? "-"}</TableCell>
+                          <TableCell>{st?.kelas ?? "-"}{st?.rombel ?? ""}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs">{st?.level ? getProgramLabel(st.level) : r.program_type}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={`text-xs ${levelColor}`}>{st?.level ?? r.iqra_level ?? r.program_type}</Badge>
+                          </TableCell>
+                          <TableCell>{MONTH_NAMES[r.month - 1]} {r.year}</TableCell>
+                          <TableCell>
+                            <Input type="number" className="h-8 w-20 text-center text-sm"
+                              min={1} max={isIqra ? 32 : 999}
+                              value={editData.start_page}
+                              onChange={e => setEditData(d => ({ ...d, start_page: Number(e.target.value) }))}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" className="h-8 w-20 text-center text-sm"
+                              min={1} max={isIqra ? 32 : 999}
+                              value={editData.end_page}
+                              onChange={e => setEditData(d => ({ ...d, end_page: Number(e.target.value) }))}
+                            />
+                          </TableCell>
+                          <TableCell className="text-center font-bold">{pr}</TableCell>
+                          <TableCell className="text-center">{r.target_pages}</TableCell>
+                          <TableCell className="text-center">
+                            {editStatus === "achieved"
+                              ? <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" />
+                              : <XCircle className="w-5 h-5 text-destructive mx-auto" />}
+                          </TableCell>
+                          <TableCell>
+                            <Input className="h-8 text-sm min-w-[100px]"
+                              value={editData.notes}
+                              onChange={e => setEditData(d => ({ ...d, notes: e.target.value }))}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => saveEdit(r)}>
+                                <Save className="w-4 h-4 text-emerald-600" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={cancelEdit}>
+                                <X className="w-4 h-4 text-muted-foreground" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    }
+
                     return (
                       <TableRow key={r.id}>
                         <TableCell className="font-medium">{st?.nama ?? "-"}</TableCell>
@@ -369,9 +514,14 @@ const MonthlyReport = () => {
                         </TableCell>
                         <TableCell className="max-w-[150px] truncate text-xs text-muted-foreground">{r.notes || "-"}</TableCell>
                         <TableCell>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)}>
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(r)}>
+                              <Pencil className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(r.id)}>
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -382,6 +532,39 @@ const MonthlyReport = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Level Change Confirmation Dialog (Single form) */}
+      <Dialog open={levelConfirmOpen} onOpenChange={setLevelConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Ubah Level Siswa?
+            </DialogTitle>
+          </DialogHeader>
+          {pendingLevelChange && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Anda telah mengubah level siswa pada laporan ini. Apakah ingin mengubah level secara <strong>permanen</strong> di database?
+              </p>
+              <div className="flex items-center justify-center gap-3 py-2">
+                <Badge variant="outline" className="text-sm">{pendingLevelChange.oldLevel}</Badge>
+                <span className="text-muted-foreground">→</span>
+                <Badge className="text-sm bg-amber-100 text-amber-800">{pendingLevelChange.newLevel}</Badge>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => { setLevelConfirmOpen(false); setPendingLevelChange(null); }}>
+              Tidak, Biarkan Level Asal
+            </Button>
+            <Button onClick={confirmLevelUpdate} className="gap-2 bg-amber-600 hover:bg-amber-700">
+              <CheckCircle2 className="w-4 h-4" />
+              Ya, Ubah Level Permanen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
