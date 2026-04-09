@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useStudents } from "@/hooks/useSupabaseData";
 import { useAllAttendance, useUpsertAttendance } from "@/hooks/useAttendance";
+import { useProfileMap } from "@/hooks/useProfiles";
 import { MONTH_NAMES } from "@/hooks/useMonthlyReports";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ const AttendancePage = () => {
   const { data: students = [], isLoading: loadingStudents } = useStudents();
   const { data: attendance = [], isLoading: loadingAtt } = useAllAttendance();
   const upsert = useUpsertAttendance();
+  const profileMap = useProfileMap();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState("");
@@ -205,10 +207,11 @@ const AttendancePage = () => {
                     <TableHead>Bulan</TableHead>
                     <TableHead className="text-center">Hadir</TableHead>
                     <TableHead className="text-center">Sakit</TableHead>
-                    <TableHead className="text-center">Izin</TableHead>
-                    <TableHead className="text-center">Alfa</TableHead>
-                  </TableRow>
-                </TableHeader>
+                     <TableHead className="text-center">Izin</TableHead>
+                     <TableHead className="text-center">Alfa</TableHead>
+                     <TableHead>Dicatat oleh</TableHead>
+                   </TableRow>
+                 </TableHeader>
                 <TableBody>
                   {filtered.map(a => {
                     const st = (a as any).students;
@@ -221,6 +224,11 @@ const AttendancePage = () => {
                         <TableCell className="text-center text-amber-600 font-bold">{a.sick}</TableCell>
                         <TableCell className="text-center text-blue-600 font-bold">{a.permission}</TableCell>
                         <TableCell className="text-center text-red-600 font-bold">{a.absent}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {a.created_by && profileMap.get(a.created_by) ? (
+                            <span>👤 {profileMap.get(a.created_by)}</span>
+                          ) : "-"}
+                        </TableCell>
                       </TableRow>
                     );
                   })}
