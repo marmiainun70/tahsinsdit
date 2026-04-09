@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { useStudents, useUpdateStudent, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
+import { useProfileMap } from "@/hooks/useProfiles";
 import {
   useAllMonthlyReports, useAddMonthlyReport, useDeleteMonthlyReport, useUpdateMonthlyReport,
   getTarget, getAchievementStatus, getValidIqraPage, MONTH_NAMES
@@ -28,6 +29,7 @@ const MonthlyReport = () => {
   const deleteReport = useDeleteMonthlyReport();
   const updateReport = useUpdateMonthlyReport();
   const updateStudent = useUpdateStudent();
+  const profileMap = useProfileMap();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
@@ -514,7 +516,12 @@ const MonthlyReport = () => {
                             <XCircle className="w-5 h-5 text-destructive mx-auto" />
                           )}
                         </TableCell>
-                        <TableCell className="max-w-[150px] truncate text-xs text-muted-foreground">{r.notes || "-"}</TableCell>
+                        <TableCell className="max-w-[150px] text-xs text-muted-foreground">
+                          <div className="truncate">{r.notes || "-"}</div>
+                          {r.created_by && profileMap.get(r.created_by) && (
+                            <div className="text-[10px] text-primary/70 mt-0.5">👤 Dinilai oleh: {profileMap.get(r.created_by)}</div>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(r)}>
