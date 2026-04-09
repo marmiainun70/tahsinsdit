@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfileMap } from "@/hooks/useProfiles";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExamSchedules, EXAM_TYPE_CONFIG } from "@/pages/ExamSchedule";
 import { useExamParticipants } from "@/components/ExamParticipants";
@@ -33,7 +34,7 @@ const useExamResults = (scheduleId: string) =>
     queryFn: async () => {
       const { data, error } = await supabase
         .from("exam_records")
-        .select("id, student_id, hasil, tanggal, catatan, kelancaran, makhraj, tajwid, adab")
+        .select("id, student_id, hasil, tanggal, catatan, kelancaran, makhraj, tajwid, adab, created_by")
         .order("created_at", { ascending: false });
       if (error) throw error;
       const map = new Map<string, typeof data[0]>();
@@ -154,6 +155,7 @@ const ExamScheduleDetailPage = () => {
   } = useExamResults(scheduleId ?? "");
 
   const upsertResult = useUpsertResult();
+  const profileMap = useProfileMap();
 
   const [search, setSearch] = useState("");
   const [filterHasil, setFilterHasil] = useState<"all" | "Lulus" | "Tidak Lulus" | "belum">("all");
@@ -692,6 +694,9 @@ const ExamScheduleDetailPage = () => {
                               {p.students.level}
                             </span>
                           </div>
+                          {savedResult?.created_by && profileMap.get(savedResult.created_by) && (
+                            <div className="text-[10px] text-primary/70 mt-0.5">👤 Dinilai oleh: {profileMap.get(savedResult.created_by)}</div>
+                          )}
                         </div>
 
                         {/* Result buttons */}
