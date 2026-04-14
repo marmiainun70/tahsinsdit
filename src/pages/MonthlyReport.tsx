@@ -662,10 +662,15 @@ const MonthlyReport = () => {
                           <TableRow key={r.id}>
                             <TableCell className="font-medium">{st?.nama ?? "-"}</TableCell>
                             <TableCell>{st?.kelas ?? "-"}{st?.rombel ?? ""}</TableCell>
-                            <TableCell><Badge className={`text-xs ${levelColor}`}>{st?.level ?? (r.iqra_level || r.program_type)}</Badge></TableCell>
+                            <TableCell>
+                              <Badge className={`text-xs ${levelColor}`}>
+                                {r.iqra_level || r.program_type}
+                                {(r as any).end_iqra_level && (r as any).end_iqra_level !== r.iqra_level && ` → ${(r as any).end_iqra_level}`}
+                              </Badge>
+                            </TableCell>
                             <TableCell>{MONTH_NAMES[r.month - 1]} {r.year}</TableCell>
-                            <TableCell className="text-center">{r.start_page}</TableCell>
-                            <TableCell className="text-center">{r.end_page}</TableCell>
+                            <TableCell className="text-center">{r.iqra_level ? `${r.iqra_level} hal.${r.start_page}` : r.start_page}</TableCell>
+                            <TableCell className="text-center">{(r as any).end_iqra_level ? `${(r as any).end_iqra_level} hal.${r.end_page}` : r.end_page}</TableCell>
                             <TableCell className="text-center font-bold">{r.pages_read}</TableCell>
                             <TableCell className="text-center">{r.target_pages}</TableCell>
                             <TableCell className="text-center">
