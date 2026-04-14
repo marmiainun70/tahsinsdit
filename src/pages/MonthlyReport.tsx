@@ -52,7 +52,8 @@ const MonthlyReport = () => {
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(2026);
-  const [iqraLevel, setIqraLevel] = useState("1");
+  const [startIqraLevel, setStartIqraLevel] = useState("1");
+  const [endIqraLevel, setEndIqraLevel] = useState("1");
   const [startPage, setStartPage] = useState("1");
   const [endPage, setEndPage] = useState("1");
   const [notes, setNotes] = useState("");
