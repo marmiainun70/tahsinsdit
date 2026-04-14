@@ -29,7 +29,7 @@ export const getValidIqraPage = (page: number): number => {
 };
 
 export const getTarget = (programType: string): number => {
-  return programType === "tahsin" ? 100 : 20;
+  return programType === "tahsin" ? 100 : 15;
 };
 
 export const getAchievementStatus = (pagesRead: number, target: number): string => {
