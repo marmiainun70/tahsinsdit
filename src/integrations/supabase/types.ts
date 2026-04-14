@@ -250,6 +250,7 @@ export type Database = {
           achievement_status: string
           created_at: string
           created_by: string | null
+          end_iqra_level: string | null
           end_page: number
           id: string
           iqra_level: string | null
@@ -266,6 +267,7 @@ export type Database = {
           achievement_status?: string
           created_at?: string
           created_by?: string | null
+          end_iqra_level?: string | null
           end_page?: number
           id?: string
           iqra_level?: string | null
@@ -282,6 +284,7 @@ export type Database = {
           achievement_status?: string
           created_at?: string
           created_by?: string | null
+          end_iqra_level?: string | null
           end_page?: number
           id?: string
           iqra_level?: string | null
