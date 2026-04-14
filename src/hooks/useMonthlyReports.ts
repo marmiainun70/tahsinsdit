@@ -9,6 +9,7 @@ export interface MonthlyReport {
   year: number;
   program_type: string;
   iqra_level: string | null;
+  end_iqra_level: string | null;
   start_page: number;
   end_page: number;
   pages_read: number;
@@ -18,6 +19,25 @@ export interface MonthlyReport {
   created_by: string | null;
   created_at: string;
 }
+
+// Calculate pages read across Iqra levels
+export const IQRA_PAGES_LIST = [1, ...Array.from({ length: 29 }, (_, i) => i + 4)]; // 30 valid pages per level
+
+export const calcIqraPagesRead = (
+  startLevel: number, startPage: number,
+  endLevel: number, endPage: number
+): number => {
+  const startIdx = IQRA_PAGES_LIST.indexOf(getValidIqraPage(startPage));
+  const endIdx = IQRA_PAGES_LIST.indexOf(getValidIqraPage(endPage));
+  if (startLevel === endLevel) {
+    return Math.max(0, endIdx - startIdx);
+  }
+  // Cross-level: remaining in start level + full levels in between + pages in end level
+  const remainingInStart = (IQRA_PAGES_LIST.length - 1) - startIdx; // pages left in start level
+  const fullLevelsBetween = Math.max(0, endLevel - startLevel - 1);
+  const pagesInEnd = endIdx + 1; // pages read in end level (from page index 0)
+  return remainingInStart + (fullLevelsBetween * IQRA_PAGES_LIST.length) + pagesInEnd;
+};
 
 // Iqra: halaman 1, 4-32 (skip 2 & 3)
 export const IQRA_VALID_PAGES = [1, ...Array.from({ length: 29 }, (_, i) => i + 4)]; // 1, 4..32

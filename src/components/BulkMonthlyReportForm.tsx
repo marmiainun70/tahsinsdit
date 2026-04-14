@@ -128,6 +128,7 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
           year,
           program_type: programType,
           iqra_level: iqraLevel,
+          end_iqra_level: iqraLevel,
           start_page: validStart,
           end_page: validEnd,
           pages_read: pagesRead,

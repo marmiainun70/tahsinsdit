@@ -1,0 +1,1 @@
+ALTER TABLE public.monthly_reports ADD COLUMN end_iqra_level text DEFAULT NULL;

@@ -3,7 +3,7 @@ import { useStudents, useUpdateStudent, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS
 import { useProfileMap } from "@/hooks/useProfiles";
 import {
   useAllMonthlyReports, useAddMonthlyReport, useDeleteMonthlyReport, useUpdateMonthlyReport,
-  getAchievementStatus, getValidIqraPage, MONTH_NAMES
+  getAchievementStatus, getValidIqraPage, MONTH_NAMES, calcIqraPagesRead
 } from "@/hooks/useMonthlyReports";
 import { useAllAttendance, useUpsertAttendance } from "@/hooks/useAttendance";
 import type { Database } from "@/integrations/supabase/types";
@@ -52,7 +52,8 @@ const MonthlyReport = () => {
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(2026);
-  const [iqraLevel, setIqraLevel] = useState("1");
+  const [startIqraLevel, setStartIqraLevel] = useState("1");
+  const [endIqraLevel, setEndIqraLevel] = useState("1");
   const [startPage, setStartPage] = useState("1");
   const [endPage, setEndPage] = useState("1");
   const [notes, setNotes] = useState("");
@@ -98,7 +99,9 @@ const MonthlyReport = () => {
 
   const validStart = isIqra ? getValidIqraPage(Number(startPage)) : Number(startPage);
   const validEnd = isIqra ? getValidIqraPage(Number(endPage)) : Number(endPage);
-  const pagesRead = Math.max(0, validEnd - validStart);
+  const pagesRead = isIqra
+    ? calcIqraPagesRead(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
+    : Math.max(0, validEnd - validStart);
   const status = getAchievementStatus(pagesRead, target);
 
   const getProgramLabel = (level: string) => {
@@ -131,7 +134,8 @@ const MonthlyReport = () => {
     setStartPage("1");
     setEndPage("1");
     setNotes("");
-    setIqraLevel("1");
+    setStartIqraLevel("1");
+    setEndIqraLevel("1");
     setAttPresent(0);
     setAttSick(0);
     setAttPermission(0);
@@ -144,7 +148,8 @@ const MonthlyReport = () => {
     const st = students.find(s => s.id === id);
     if (st && IQRO_LEVELS.includes(st.level as ReadingLevel)) {
       const num = st.level.replace("Iqro ", "");
-      setIqraLevel(num);
+      setStartIqraLevel(num);
+      setEndIqraLevel(num);
     }
   };
 
@@ -153,8 +158,16 @@ const MonthlyReport = () => {
       toast({ title: "Pilih siswa terlebih dahulu", variant: "destructive" });
       return;
     }
-    if (validEnd < validStart) {
+    if (isIqra && Number(endIqraLevel) < Number(startIqraLevel)) {
+      toast({ title: "Level akhir tidak boleh lebih rendah dari level awal", variant: "destructive" });
+      return;
+    }
+    if (!isIqra && validEnd < validStart) {
       toast({ title: "Halaman akhir tidak boleh lebih kecil dari halaman awal", variant: "destructive" });
+      return;
+    }
+    if (isIqra && Number(endIqraLevel) === Number(startIqraLevel) && validEnd < validStart) {
+      toast({ title: "Halaman akhir tidak boleh lebih kecil dari halaman awal pada level yang sama", variant: "destructive" });
       return;
     }
 
@@ -166,7 +179,8 @@ const MonthlyReport = () => {
         student_id: selectedStudentId,
         month, year,
         program_type: programType,
-        iqra_level: isIqra ? `Iqro ${iqraLevel}` : null,
+        iqra_level: isIqra ? `Iqro ${startIqraLevel}` : null,
+        end_iqra_level: isIqra ? `Iqro ${endIqraLevel}` : null,
         start_page: validStart,
         end_page: validEnd,
         pages_read: pagesRead,
@@ -409,54 +423,101 @@ const MonthlyReport = () => {
 
                 {/* Iqra Level + Page Selection */}
                 {isIqra && (
-                  <div>
-                    <Label className="text-xs">Tingkatan Iqra</Label>
-                    <div className="flex gap-2 mt-1">
-                      {[1,2,3,4,5,6].map(lv => (
-                        <button
-                          key={lv}
-                          onClick={() => setIqraLevel(String(lv))}
-                          className={`w-10 h-10 rounded-lg text-sm font-bold transition-all ${
-                            iqraLevel === String(lv)
-                              ? "bg-primary text-primary-foreground shadow-md"
-                              : "bg-muted text-muted-foreground hover:bg-accent"
-                          }`}
-                        >
-                          {lv}
-                        </button>
-                      ))}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Start: Level + Page */}
+                      <div className="space-y-2 p-3 border rounded-lg bg-muted/30">
+                        <Label className="text-xs font-semibold text-muted-foreground">📖 Halaman Awal</Label>
+                        <div>
+                          <Label className="text-xs">Tingkatan Iqra Awal</Label>
+                          <div className="flex gap-1 mt-1">
+                            {[1,2,3,4,5,6].map(lv => (
+                              <button
+                                key={lv}
+                                onClick={() => {
+                                  setStartIqraLevel(String(lv));
+                                  if (Number(endIqraLevel) < lv) setEndIqraLevel(String(lv));
+                                }}
+                                className={`w-9 h-9 rounded-lg text-sm font-bold transition-all ${
+                                  startIqraLevel === String(lv)
+                                    ? "bg-primary text-primary-foreground shadow-md"
+                                    : "bg-muted text-muted-foreground hover:bg-accent"
+                                }`}
+                              >
+                                {lv}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Halaman</Label>
+                          <Select value={startPage} onValueChange={setStartPage}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {IQRA_PAGES.map(p => <SelectItem key={p} value={String(p)}>Halaman {p}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* End: Level + Page */}
+                      <div className="space-y-2 p-3 border rounded-lg bg-muted/30">
+                        <Label className="text-xs font-semibold text-muted-foreground">📕 Halaman Akhir</Label>
+                        <div>
+                          <Label className="text-xs">Tingkatan Iqra Akhir</Label>
+                          <div className="flex gap-1 mt-1">
+                            {[1,2,3,4,5,6].map(lv => (
+                              <button
+                                key={lv}
+                                onClick={() => setEndIqraLevel(String(lv))}
+                                disabled={lv < Number(startIqraLevel)}
+                                className={`w-9 h-9 rounded-lg text-sm font-bold transition-all ${
+                                  endIqraLevel === String(lv)
+                                    ? "bg-primary text-primary-foreground shadow-md"
+                                    : lv < Number(startIqraLevel)
+                                    ? "bg-muted/50 text-muted-foreground/30 cursor-not-allowed"
+                                    : "bg-muted text-muted-foreground hover:bg-accent"
+                                }`}
+                              >
+                                {lv}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Halaman</Label>
+                          <Select value={endPage} onValueChange={setEndPage}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {IQRA_PAGES.map(p => <SelectItem key={p} value={String(p)}>Halaman {p}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
+
+                    {startIqraLevel !== endIqraLevel && (
+                      <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                        <span>Siswa naik level dari <strong>Iqro {startIqraLevel}</strong> ke <strong>Iqro {endIqraLevel}</strong> dalam bulan ini</span>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs">Halaman Awal</Label>
-                    {isIqra ? (
-                      <Select value={startPage} onValueChange={setStartPage}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {IQRA_PAGES.map(p => <SelectItem key={p} value={String(p)}>Halaman {p}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    ) : (
+                {/* Non-Iqra page inputs */}
+                {!isIqra && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs">Halaman Awal</Label>
                       <Input type="number" min={1} value={startPage} onChange={e => setStartPage(e.target.value)} />
-                    )}
-                  </div>
-                  <div>
-                    <Label className="text-xs">Halaman Akhir</Label>
-                    {isIqra ? (
-                      <Select value={endPage} onValueChange={setEndPage}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {IQRA_PAGES.map(p => <SelectItem key={p} value={String(p)}>Halaman {p}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    ) : (
+                    </div>
+                    <div>
+                      <Label className="text-xs">Halaman Akhir</Label>
                       <Input type="number" min={1} value={endPage} onChange={e => setEndPage(e.target.value)} />
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Summary */}
                 <div className="p-3 bg-muted rounded-xl grid grid-cols-3 gap-3 text-center text-sm">
@@ -609,10 +670,15 @@ const MonthlyReport = () => {
                           <TableRow key={r.id}>
                             <TableCell className="font-medium">{st?.nama ?? "-"}</TableCell>
                             <TableCell>{st?.kelas ?? "-"}{st?.rombel ?? ""}</TableCell>
-                            <TableCell><Badge className={`text-xs ${levelColor}`}>{st?.level ?? (r.iqra_level || r.program_type)}</Badge></TableCell>
+                            <TableCell>
+                              <Badge className={`text-xs ${levelColor}`}>
+                                {r.iqra_level || r.program_type}
+                                {(r as any).end_iqra_level && (r as any).end_iqra_level !== r.iqra_level && ` → ${(r as any).end_iqra_level}`}
+                              </Badge>
+                            </TableCell>
                             <TableCell>{MONTH_NAMES[r.month - 1]} {r.year}</TableCell>
-                            <TableCell className="text-center">{r.start_page}</TableCell>
-                            <TableCell className="text-center">{r.end_page}</TableCell>
+                            <TableCell className="text-center">{r.iqra_level ? `${r.iqra_level} hal.${r.start_page}` : r.start_page}</TableCell>
+                            <TableCell className="text-center">{(r as any).end_iqra_level ? `${(r as any).end_iqra_level} hal.${r.end_page}` : r.end_page}</TableCell>
                             <TableCell className="text-center font-bold">{r.pages_read}</TableCell>
                             <TableCell className="text-center">{r.target_pages}</TableCell>
                             <TableCell className="text-center">
