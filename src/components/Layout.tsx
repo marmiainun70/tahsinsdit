@@ -16,8 +16,7 @@ interface LayoutProps {
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/laporan-bulanan", icon: FileText, label: "Laporan Bulanan" },
-  { to: "/absensi", icon: CalendarCheck, label: "Absensi" },
+  { to: "/laporan-bulanan", icon: FileText, label: "Laporan & Absensi" },
   { to: "/monitoring", icon: BarChart3, label: "Monitoring" },
   { to: "/report/class", icon: PieChart, label: "Rekap Nilai" },
   { to: "/exam-list", icon: ClipboardList, label: "Ujian" },
@@ -139,8 +138,7 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
   if (pathname === "/report/class") return <h2 className="font-semibold text-foreground text-base">Rekap Nilai Kelas</h2>;
   if (pathname === "/jadwal-ujian") return <h2 className="font-semibold text-foreground text-base">Jadwal Ujian Kenaikan</h2>;
   if (pathname === "/statistik-ujian") return <h2 className="font-semibold text-foreground text-base">Statistik Ujian</h2>;
-  if (pathname === "/laporan-bulanan") return <h2 className="font-semibold text-foreground text-base">Laporan Bulanan</h2>;
-  if (pathname === "/absensi") return <h2 className="font-semibold text-foreground text-base">Absensi Bulanan</h2>;
+  if (pathname === "/laporan-bulanan") return <h2 className="font-semibold text-foreground text-base">Laporan & Absensi</h2>;
   if (pathname.startsWith("/class/")) {
     const k = pathname.split("/")[2];
     return <h2 className="font-semibold text-foreground text-base">Data Siswa — Kelas {k}</h2>;
