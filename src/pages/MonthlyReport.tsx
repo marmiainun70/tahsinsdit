@@ -158,8 +158,16 @@ const MonthlyReport = () => {
       toast({ title: "Pilih siswa terlebih dahulu", variant: "destructive" });
       return;
     }
-    if (validEnd < validStart) {
+    if (isIqra && Number(endIqraLevel) < Number(startIqraLevel)) {
+      toast({ title: "Level akhir tidak boleh lebih rendah dari level awal", variant: "destructive" });
+      return;
+    }
+    if (!isIqra && validEnd < validStart) {
       toast({ title: "Halaman akhir tidak boleh lebih kecil dari halaman awal", variant: "destructive" });
+      return;
+    }
+    if (isIqra && Number(endIqraLevel) === Number(startIqraLevel) && validEnd < validStart) {
+      toast({ title: "Halaman akhir tidak boleh lebih kecil dari halaman awal pada level yang sama", variant: "destructive" });
       return;
     }
 
