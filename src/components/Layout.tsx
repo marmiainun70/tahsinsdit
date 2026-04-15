@@ -19,6 +19,8 @@ const navItems = [
   { to: "/monitoring", icon: BarChart3, label: "Monitoring" },
   { to: "/report/class", icon: PieChart, label: "Rekap Nilai" },
   { to: "/exam-list", icon: ClipboardList, label: "Ujian" },
+  { to: "/ujian-tahsin-dasar", icon: BookOpen, label: "Ujian Tahsin Dasar" },
+  { to: "/ujian-tahsin-lanjutan", icon: BookOpen, label: "Ujian Tahsin Lanjutan" },
   { to: "/jadwal-ujian", icon: GraduationCap, label: "Jadwal Ujian" },
   { to: "/statistik-ujian", icon: BarChart2, label: "Statistik Ujian" },
 ];
