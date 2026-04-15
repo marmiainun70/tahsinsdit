@@ -19,6 +19,8 @@ const navItems = [
   { to: "/monitoring", icon: BarChart3, label: "Monitoring" },
   { to: "/report/class", icon: PieChart, label: "Rekap Nilai" },
   { to: "/exam-list", icon: ClipboardList, label: "Ujian" },
+  { to: "/ujian-tahsin-dasar", icon: BookOpen, label: "Ujian Tahsin Dasar" },
+  { to: "/ujian-tahsin-lanjutan", icon: BookOpen, label: "Ujian Tahsin Lanjutan" },
   { to: "/jadwal-ujian", icon: GraduationCap, label: "Jadwal Ujian" },
   { to: "/statistik-ujian", icon: BarChart2, label: "Statistik Ujian" },
 ];
@@ -137,6 +139,8 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
   if (pathname === "/report/class") return <h2 className="font-semibold text-foreground text-base">Rekap Nilai Kelas</h2>;
   if (pathname === "/jadwal-ujian") return <h2 className="font-semibold text-foreground text-base">Jadwal Ujian Kenaikan</h2>;
   if (pathname === "/statistik-ujian") return <h2 className="font-semibold text-foreground text-base">Statistik Ujian</h2>;
+  if (pathname === "/ujian-tahsin-dasar") return <h2 className="font-semibold text-foreground text-base">Ujian Tahsin Dasar</h2>;
+  if (pathname === "/ujian-tahsin-lanjutan") return <h2 className="font-semibold text-foreground text-base">Ujian Tahsin Lanjutan</h2>;
   if (pathname === "/laporan-bulanan") return <h2 className="font-semibold text-foreground text-base">Laporan & Absensi</h2>;
   if (pathname.startsWith("/class/")) {
     const k = pathname.split("/")[2];
