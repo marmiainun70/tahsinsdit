@@ -201,6 +201,23 @@ const MonthlyReport = () => {
         });
       }
 
+      // Auto-update student level if end Iqra level is higher
+      if (isIqra && selectedStudent) {
+        const endLevelStr = `Iqro ${endIqraLevel}` as ReadingLevel;
+        const currentLevelIdx = LEVELS.indexOf(selectedStudent.level);
+        const endLevelIdx = LEVELS.indexOf(endLevelStr);
+        if (endLevelIdx > currentLevelIdx) {
+          await updateStudent.mutateAsync({
+            id: selectedStudent.id,
+            level: endLevelStr,
+          });
+          toast({ title: `Laporan disimpan ✅ Level siswa otomatis naik ke ${endLevelStr}`, description: `${selectedStudent.nama}: ${selectedStudent.level} → ${endLevelStr}` });
+          resetForm();
+          return;
+        }
+      }
+
+      // Manual level override confirmation
       if (hasLevelChange && selectedStudent) {
         setPendingLevelChange({
           studentId: selectedStudent.id,
