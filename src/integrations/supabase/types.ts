@@ -526,6 +526,127 @@ export type Database = {
           },
         ]
       }
+      tahsin_dasar_exams: {
+        Row: {
+          catatan: string | null
+          created_at: string
+          created_by: string | null
+          ebta_scores: Json
+          hasil: string
+          id: string
+          kelancaran_bobot: number
+          lahn_jali_penalty: number
+          lahn_khofi_penalty: number
+          nilai_akhir: number
+          student_id: string
+          tanggal: string
+          waktu: string
+        }
+        Insert: {
+          catatan?: string | null
+          created_at?: string
+          created_by?: string | null
+          ebta_scores?: Json
+          hasil?: string
+          id?: string
+          kelancaran_bobot?: number
+          lahn_jali_penalty?: number
+          lahn_khofi_penalty?: number
+          nilai_akhir?: number
+          student_id: string
+          tanggal?: string
+          waktu?: string
+        }
+        Update: {
+          catatan?: string | null
+          created_at?: string
+          created_by?: string | null
+          ebta_scores?: Json
+          hasil?: string
+          id?: string
+          kelancaran_bobot?: number
+          lahn_jali_penalty?: number
+          lahn_khofi_penalty?: number
+          nilai_akhir?: number
+          student_id?: string
+          tanggal?: string
+          waktu?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tahsin_dasar_exams_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tahsin_lanjutan_exams: {
+        Row: {
+          catatan: string | null
+          created_at: string
+          created_by: string | null
+          hasil: string
+          id: string
+          kelancaran_bobot: number
+          lahn_jali_penalty: number
+          lahn_khofi_penalty: number
+          nilai_akhir: number
+          soal: Json
+          student_id: string
+          tanggal: string
+          waktu: string
+          waqaf_ibtida_penalty: number
+          waqaf_lulus: boolean
+          waqaf_symbols: Json
+        }
+        Insert: {
+          catatan?: string | null
+          created_at?: string
+          created_by?: string | null
+          hasil?: string
+          id?: string
+          kelancaran_bobot?: number
+          lahn_jali_penalty?: number
+          lahn_khofi_penalty?: number
+          nilai_akhir?: number
+          soal?: Json
+          student_id: string
+          tanggal?: string
+          waktu?: string
+          waqaf_ibtida_penalty?: number
+          waqaf_lulus?: boolean
+          waqaf_symbols?: Json
+        }
+        Update: {
+          catatan?: string | null
+          created_at?: string
+          created_by?: string | null
+          hasil?: string
+          id?: string
+          kelancaran_bobot?: number
+          lahn_jali_penalty?: number
+          lahn_khofi_penalty?: number
+          nilai_akhir?: number
+          soal?: Json
+          student_id?: string
+          tanggal?: string
+          waktu?: string
+          waqaf_ibtida_penalty?: number
+          waqaf_lulus?: boolean
+          waqaf_symbols?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tahsin_lanjutan_exams_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
