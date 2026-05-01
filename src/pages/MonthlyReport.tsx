@@ -164,6 +164,10 @@ const MonthlyReport = () => {
     setNotes("");
     setStartIqraLevel("1");
     setEndIqraLevel("1");
+    setStartJuz("30");
+    setEndJuz("30");
+    setStartJuzPage("1");
+    setEndJuzPage("1");
     setAttPresent(0);
     setAttSick(0);
     setAttPermission(0);
@@ -181,6 +185,40 @@ const MonthlyReport = () => {
     }
   };
 
+  // === AUTO CARRY-OVER: prefill awal bulan dari akhir bulan lalu ===
+  useEffect(() => {
+    if (!selectedStudentId || !prevReport) return;
+    if (prevReport.program_type === "iqra") {
+      const prevEndLevel = ((prevReport as any).end_iqra_level || prevReport.iqra_level || "Iqro 1").replace("Iqro ", "");
+      const prevEndPage = prevReport.end_page;
+      // lanjut ke halaman berikutnya
+      let nextLevel = prevEndLevel;
+      let nextPage = prevEndPage + 1;
+      // skip halaman 2,3 → 4
+      if (nextPage === 2 || nextPage === 3) nextPage = 4;
+      // jika sudah halaman > 32, lanjut ke level berikutnya
+      if (nextPage > 32) {
+        const lvNum = Number(prevEndLevel);
+        if (lvNum < 6) { nextLevel = String(lvNum + 1); nextPage = 1; }
+        else { nextPage = 32; }
+      }
+      setStartIqraLevel(nextLevel);
+      setStartPage(String(nextPage));
+      setEndIqraLevel(nextLevel);
+      setEndPage(String(nextPage));
+    } else if (prevReport.program_type === "tahfizh") {
+      // Tidak ada juz tersimpan terpisah → pakai end_page sebagai posisi
+      // Heuristik sederhana: lanjut 1 halaman
+      const np = Math.min(20, prevReport.end_page + 1);
+      setStartJuzPage(String(np));
+      setEndJuzPage(String(np));
+    } else {
+      const np = prevReport.end_page + 1;
+      setStartPage(String(np));
+      setEndPage(String(np));
+    }
+  }, [selectedStudentId, prevReport]);
+
   const handleSubmit = async () => {
     if (!selectedStudentId) {
       toast({ title: "Pilih siswa terlebih dahulu", variant: "destructive" });
@@ -190,7 +228,7 @@ const MonthlyReport = () => {
       toast({ title: "Level akhir tidak boleh lebih rendah dari level awal", variant: "destructive" });
       return;
     }
-    if (!isIqra && validEnd < validStart) {
+    if (!isIqra && !isTahfizh && validEnd < validStart) {
       toast({ title: "Halaman akhir tidak boleh lebih kecil dari halaman awal", variant: "destructive" });
       return;
     }
@@ -201,20 +239,25 @@ const MonthlyReport = () => {
 
     const hasLevelChange = selectedStudent && selectedLevel && selectedLevel !== selectedStudent.level;
 
+    // Jika terdeteksi penurunan, sisipkan catatan otomatis (tanpa hapus catatan guru)
+    const finalNotes = isDecline
+      ? (notes ? `${notes}\n\n${DECLINE_AUTO_NOTE}` : DECLINE_AUTO_NOTE)
+      : notes;
+
     try {
       // Save monthly report
       await addReport.mutateAsync({
         student_id: selectedStudentId,
         month, year,
         program_type: programType,
-        iqra_level: isIqra ? `Iqro ${startIqraLevel}` : null,
-        end_iqra_level: isIqra ? `Iqro ${endIqraLevel}` : null,
-        start_page: validStart,
-        end_page: validEnd,
+        iqra_level: isIqra ? `Iqro ${startIqraLevel}` : (isTahfizh ? `Juz ${startJuz}` : null),
+        end_iqra_level: isIqra ? `Iqro ${endIqraLevel}` : (isTahfizh ? `Juz ${endJuz}` : null),
+        start_page: isTahfizh ? Number(startJuzPage) : validStart,
+        end_page: isTahfizh ? Number(endJuzPage) : validEnd,
         pages_read: pagesRead,
         target_pages: target,
         achievement_status: status,
-        notes,
+        notes: finalNotes,
       });
 
       // Save attendance if any value > 0
