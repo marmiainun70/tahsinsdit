@@ -1,11 +1,13 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useStudents, useUpdateStudent, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
 import { useProfileMap } from "@/hooks/useProfiles";
 import {
   useAllMonthlyReports, useAddMonthlyReport, useDeleteMonthlyReport, useUpdateMonthlyReport,
-  getAchievementStatus, getValidIqraPage, MONTH_NAMES, calcIqraPagesRead
+  getAchievementStatus, getValidIqraPage, MONTH_NAMES, calcIqraPagesRead,
+  getTarget, detectDecline, DECLINE_AUTO_NOTE
 } from "@/hooks/useMonthlyReports";
 import { useAllAttendance, useUpsertAttendance } from "@/hooks/useAttendance";
+import { JUZ_LIST, JUZ_PAGE_LIST, JUZ_DATA, calcHafalanPages } from "@/lib/juzData";
 import type { Database } from "@/integrations/supabase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,16 +22,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import {
   Plus, FileText, Loader2, Trash2, CheckCircle2, XCircle, Filter, Users, Pencil, Save, X,
-  AlertTriangle, Search, UserCheck, Thermometer, HandHeart, UserX, CalendarCheck
+  AlertTriangle, Search, UserCheck, Thermometer, HandHeart, UserX, CalendarCheck, BookOpen, TrendingDown
 } from "lucide-react";
 import BulkMonthlyReportForm from "@/components/BulkMonthlyReportForm";
 import MonthlyReportExport from "@/components/MonthlyReportExport";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
-
-const TARGET_IQRA = 15;
-const TARGET_TAHSIN = 100;
-const getTarget = (programType: string) => programType === "tahsin" ? TARGET_TAHSIN : TARGET_IQRA;
 
 const IQRA_PAGES = [1, ...Array.from({ length: 29 }, (_, i) => i + 4)]; // 1, 4-32
 
@@ -56,6 +54,11 @@ const MonthlyReport = () => {
   const [endIqraLevel, setEndIqraLevel] = useState("1");
   const [startPage, setStartPage] = useState("1");
   const [endPage, setEndPage] = useState("1");
+  // Tahfizh state
+  const [startJuz, setStartJuz] = useState("30");
+  const [endJuz, setEndJuz] = useState("30");
+  const [startJuzPage, setStartJuzPage] = useState("1");
+  const [endJuzPage, setEndJuzPage] = useState("1");
   const [notes, setNotes] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
 
@@ -93,16 +96,41 @@ const MonthlyReport = () => {
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
   const effectiveLevel = (selectedLevel || selectedStudent?.level || "Iqro 1") as ReadingLevel;
-  const programType = isTahsinDasar(effectiveLevel) ? "iqra" : "tahsin";
+  const isTahfizh = effectiveLevel === "Tahfizh";
+  const programType: "iqra" | "tahsin" | "tahfizh" = isTahfizh
+    ? "tahfizh"
+    : (isTahsinDasar(effectiveLevel) ? "iqra" : "tahsin");
   const isIqra = programType === "iqra";
   const target = getTarget(programType);
 
+  // Page calculations per program
   const validStart = isIqra ? getValidIqraPage(Number(startPage)) : Number(startPage);
   const validEnd = isIqra ? getValidIqraPage(Number(endPage)) : Number(endPage);
-  const pagesRead = isIqra
-    ? calcIqraPagesRead(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
-    : Math.max(0, validEnd - validStart);
+  const pagesRead = isTahfizh
+    ? calcHafalanPages(Number(startJuz), Number(startJuzPage), Number(endJuz), Number(endJuzPage))
+    : isIqra
+      ? calcIqraPagesRead(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
+      : Math.max(0, validEnd - validStart);
   const status = getAchievementStatus(pagesRead, target);
+
+  // Find previous month report for this student (for carry-over & decline detection)
+  const prevReport = useMemo(() => {
+    if (!selectedStudentId) return null;
+    let pm = month - 1, py = year;
+    if (pm < 1) { pm = 12; py = year - 1; }
+    return reports.find(r => r.student_id === selectedStudentId && r.month === pm && r.year === py) || null;
+  }, [reports, selectedStudentId, month, year]);
+
+  // Detect decline (compared to previous month)
+  const isDecline = useMemo(() => detectDecline(
+    prevReport ? { program_type: prevReport.program_type, iqra_level: prevReport.iqra_level, end_iqra_level: (prevReport as any).end_iqra_level, end_page: prevReport.end_page } : null,
+    {
+      program_type: programType,
+      iqra_level: isIqra ? `Iqro ${startIqraLevel}` : effectiveLevel,
+      end_iqra_level: isIqra ? `Iqro ${endIqraLevel}` : effectiveLevel,
+      end_page: isTahfizh ? (Number(endJuz) - 1) * 20 + Number(endJuzPage) : validEnd,
+    }
+  ), [prevReport, programType, isIqra, isTahfizh, startIqraLevel, endIqraLevel, effectiveLevel, validEnd, endJuz, endJuzPage]);
 
   const getProgramLabel = (level: string) => {
     if (IQRO_LEVELS.includes(level as ReadingLevel)) return "Tahsin Dasar (Iqra)";
@@ -136,6 +164,10 @@ const MonthlyReport = () => {
     setNotes("");
     setStartIqraLevel("1");
     setEndIqraLevel("1");
+    setStartJuz("30");
+    setEndJuz("30");
+    setStartJuzPage("1");
+    setEndJuzPage("1");
     setAttPresent(0);
     setAttSick(0);
     setAttPermission(0);
@@ -153,6 +185,40 @@ const MonthlyReport = () => {
     }
   };
 
+  // === AUTO CARRY-OVER: prefill awal bulan dari akhir bulan lalu ===
+  useEffect(() => {
+    if (!selectedStudentId || !prevReport) return;
+    if (prevReport.program_type === "iqra") {
+      const prevEndLevel = ((prevReport as any).end_iqra_level || prevReport.iqra_level || "Iqro 1").replace("Iqro ", "");
+      const prevEndPage = prevReport.end_page;
+      // lanjut ke halaman berikutnya
+      let nextLevel = prevEndLevel;
+      let nextPage = prevEndPage + 1;
+      // skip halaman 2,3 → 4
+      if (nextPage === 2 || nextPage === 3) nextPage = 4;
+      // jika sudah halaman > 32, lanjut ke level berikutnya
+      if (nextPage > 32) {
+        const lvNum = Number(prevEndLevel);
+        if (lvNum < 6) { nextLevel = String(lvNum + 1); nextPage = 1; }
+        else { nextPage = 32; }
+      }
+      setStartIqraLevel(nextLevel);
+      setStartPage(String(nextPage));
+      setEndIqraLevel(nextLevel);
+      setEndPage(String(nextPage));
+    } else if (prevReport.program_type === "tahfizh") {
+      // Tidak ada juz tersimpan terpisah → pakai end_page sebagai posisi
+      // Heuristik sederhana: lanjut 1 halaman
+      const np = Math.min(20, prevReport.end_page + 1);
+      setStartJuzPage(String(np));
+      setEndJuzPage(String(np));
+    } else {
+      const np = prevReport.end_page + 1;
+      setStartPage(String(np));
+      setEndPage(String(np));
+    }
+  }, [selectedStudentId, prevReport]);
+
   const handleSubmit = async () => {
     if (!selectedStudentId) {
       toast({ title: "Pilih siswa terlebih dahulu", variant: "destructive" });
@@ -162,7 +228,7 @@ const MonthlyReport = () => {
       toast({ title: "Level akhir tidak boleh lebih rendah dari level awal", variant: "destructive" });
       return;
     }
-    if (!isIqra && validEnd < validStart) {
+    if (!isIqra && !isTahfizh && validEnd < validStart) {
       toast({ title: "Halaman akhir tidak boleh lebih kecil dari halaman awal", variant: "destructive" });
       return;
     }
@@ -173,20 +239,25 @@ const MonthlyReport = () => {
 
     const hasLevelChange = selectedStudent && selectedLevel && selectedLevel !== selectedStudent.level;
 
+    // Jika terdeteksi penurunan, sisipkan catatan otomatis (tanpa hapus catatan guru)
+    const finalNotes = isDecline
+      ? (notes ? `${notes}\n\n${DECLINE_AUTO_NOTE}` : DECLINE_AUTO_NOTE)
+      : notes;
+
     try {
       // Save monthly report
       await addReport.mutateAsync({
         student_id: selectedStudentId,
         month, year,
         program_type: programType,
-        iqra_level: isIqra ? `Iqro ${startIqraLevel}` : null,
-        end_iqra_level: isIqra ? `Iqro ${endIqraLevel}` : null,
-        start_page: validStart,
-        end_page: validEnd,
+        iqra_level: isIqra ? `Iqro ${startIqraLevel}` : (isTahfizh ? `Juz ${startJuz}` : null),
+        end_iqra_level: isIqra ? `Iqro ${endIqraLevel}` : (isTahfizh ? `Juz ${endJuz}` : null),
+        start_page: isTahfizh ? Number(startJuzPage) : validStart,
+        end_page: isTahfizh ? Number(endJuzPage) : validEnd,
         pages_read: pagesRead,
         target_pages: target,
         achievement_status: status,
-        notes,
+        notes: finalNotes,
       });
 
       // Save attendance if any value > 0
@@ -522,8 +593,8 @@ const MonthlyReport = () => {
                   </div>
                 )}
 
-                {/* Non-Iqra page inputs */}
-                {!isIqra && (
+                {/* Tahsin (non-Iqra, non-Tahfizh) page inputs */}
+                {!isIqra && !isTahfizh && (
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs">Halaman Awal</Label>
@@ -535,6 +606,89 @@ const MonthlyReport = () => {
                     </div>
                   </div>
                 )}
+
+                {/* TAHFIZH: Hafalan Awal & Hafalan Terakhir (Juz + Halaman 1-20) */}
+                {isTahfizh && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Hafalan Awal */}
+                      <div className="space-y-2 p-3 border-2 border-purple-200 rounded-lg bg-purple-50/50">
+                        <Label className="text-xs font-semibold text-purple-700 flex items-center gap-1">
+                          <BookOpen className="w-3 h-3" /> 📖 Hafalan Awal
+                        </Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs">Juz</Label>
+                            <Select value={startJuz} onValueChange={setStartJuz}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent className="max-h-60">
+                                {JUZ_LIST.map(j => <SelectItem key={j} value={String(j)}>Juz {j}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label className="text-xs">Halaman</Label>
+                            <Select value={startJuzPage} onValueChange={setStartJuzPage}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent className="max-h-60">
+                                {JUZ_PAGE_LIST.map(p => <SelectItem key={p} value={String(p)}>Hal {p}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Hafalan Terakhir */}
+                      <div className="space-y-2 p-3 border-2 border-purple-200 rounded-lg bg-purple-50/50">
+                        <Label className="text-xs font-semibold text-purple-700 flex items-center gap-1">
+                          <BookOpen className="w-3 h-3" /> 📕 Hafalan Terakhir
+                        </Label>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <Label className="text-xs">Juz</Label>
+                            <Select value={endJuz} onValueChange={setEndJuz}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent className="max-h-60">
+                                {JUZ_LIST.map(j => <SelectItem key={j} value={String(j)}>Juz {j}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label className="text-xs">Halaman</Label>
+                            <Select value={endJuzPage} onValueChange={setEndJuzPage}>
+                              <SelectTrigger><SelectValue /></SelectTrigger>
+                              <SelectContent className="max-h-60">
+                                {JUZ_PAGE_LIST.map(p => <SelectItem key={p} value={String(p)}>Hal {p}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Daftar surah otomatis */}
+                    <div className="rounded-lg border border-purple-200 bg-white p-3">
+                      <p className="text-xs font-semibold text-purple-700 mb-2">📚 Surah dalam Juz {endJuz}</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(JUZ_DATA[Number(endJuz)] || []).map((s, i) => (
+                          <span key={i} className="text-xs bg-purple-100 text-purple-700 rounded px-2 py-0.5">{s.label}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Banner Penurunan */}
+                {isDecline && (
+                  <div className="flex items-start gap-2 text-sm bg-red-50 border-2 border-red-200 rounded-lg px-3 py-2">
+                    <TrendingDown className="w-5 h-5 flex-shrink-0 text-red-600 mt-0.5" />
+                    <div className="text-red-700">
+                      <p className="font-semibold">⚠️ Perhatian: Terjadi penurunan progres bacaan siswa pada bulan ini.</p>
+                      <p className="text-xs mt-1">Catatan otomatis akan ditambahkan pada laporan ini.</p>
+                    </div>
+                  </div>
+                )}
+
 
                 {/* Summary */}
                 <div className="p-3 bg-muted rounded-xl grid grid-cols-3 gap-3 text-center text-sm">
