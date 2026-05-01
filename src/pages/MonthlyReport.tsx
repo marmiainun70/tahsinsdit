@@ -54,6 +54,11 @@ const MonthlyReport = () => {
   const [endIqraLevel, setEndIqraLevel] = useState("1");
   const [startPage, setStartPage] = useState("1");
   const [endPage, setEndPage] = useState("1");
+  // Tahfizh state
+  const [startJuz, setStartJuz] = useState("30");
+  const [endJuz, setEndJuz] = useState("30");
+  const [startJuzPage, setStartJuzPage] = useState("1");
+  const [endJuzPage, setEndJuzPage] = useState("1");
   const [notes, setNotes] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string>("");
 
