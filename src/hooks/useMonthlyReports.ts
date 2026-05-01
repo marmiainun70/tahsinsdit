@@ -48,13 +48,46 @@ export const getValidIqraPage = (page: number): number => {
   return Math.min(page, 32);
 };
 
+export const TARGET_TAHFIZH = 3;
+export const TARGET_TAHSIN = 15;
+export const TARGET_IQRA = 15;
+
 export const getTarget = (programType: string): number => {
-  return programType === "tahsin" ? 100 : 15;
+  if (programType === "tahfizh") return TARGET_TAHFIZH;
+  if (programType === "tahsin") return TARGET_TAHSIN;
+  return TARGET_IQRA;
 };
 
 export const getAchievementStatus = (pagesRead: number, target: number): string => {
   return pagesRead >= target ? "achieved" : "not_achieved";
 };
+
+/**
+ * Deteksi penurunan progres antara laporan bulan lalu & laporan saat ini.
+ * Iqra/Tahsin: level + halaman. Tahfizh: juz + halaman (semakin tinggi juz = semakin awal mushaf).
+ */
+export const detectDecline = (
+  prev: { program_type: string; iqra_level?: string | null; end_iqra_level?: string | null; end_page: number } | null,
+  curr: { program_type: string; iqra_level?: string | null; end_iqra_level?: string | null; end_page: number },
+): boolean => {
+  if (!prev) return false;
+  if (prev.program_type !== curr.program_type) return false;
+
+  const levelOrder = ["Iqro 1", "Iqro 2", "Iqro 3", "Iqro 4", "Iqro 5", "Iqro 6", "Tahsin Dasar", "Tahsin Lanjutan", "Tahfizh"];
+  const prevLvl = prev.end_iqra_level || prev.iqra_level || "";
+  const currLvl = curr.end_iqra_level || curr.iqra_level || "";
+  const pIdx = levelOrder.indexOf(prevLvl);
+  const cIdx = levelOrder.indexOf(currLvl);
+
+  if (pIdx >= 0 && cIdx >= 0) {
+    if (cIdx < pIdx) return true;
+    if (cIdx === pIdx && curr.end_page < prev.end_page) return true;
+  }
+  return false;
+};
+
+export const DECLINE_AUTO_NOTE =
+  "⚠️ Siswa mengalami penurunan progres bacaan. Disarankan meningkatkan murojaah dan latihan membaca di rumah dengan pendampingan orang tua.";
 
 export const MONTH_NAMES = [
   "Januari", "Februari", "Maret", "April", "Mei", "Juni",
