@@ -96,16 +96,41 @@ const MonthlyReport = () => {
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
   const effectiveLevel = (selectedLevel || selectedStudent?.level || "Iqro 1") as ReadingLevel;
-  const programType = isTahsinDasar(effectiveLevel) ? "iqra" : "tahsin";
+  const isTahfizh = effectiveLevel === "Tahfizh";
+  const programType: "iqra" | "tahsin" | "tahfizh" = isTahfizh
+    ? "tahfizh"
+    : (isTahsinDasar(effectiveLevel) ? "iqra" : "tahsin");
   const isIqra = programType === "iqra";
   const target = getTarget(programType);
 
+  // Page calculations per program
   const validStart = isIqra ? getValidIqraPage(Number(startPage)) : Number(startPage);
   const validEnd = isIqra ? getValidIqraPage(Number(endPage)) : Number(endPage);
-  const pagesRead = isIqra
-    ? calcIqraPagesRead(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
-    : Math.max(0, validEnd - validStart);
+  const pagesRead = isTahfizh
+    ? calcHafalanPages(Number(startJuz), Number(startJuzPage), Number(endJuz), Number(endJuzPage))
+    : isIqra
+      ? calcIqraPagesRead(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
+      : Math.max(0, validEnd - validStart);
   const status = getAchievementStatus(pagesRead, target);
+
+  // Find previous month report for this student (for carry-over & decline detection)
+  const prevReport = useMemo(() => {
+    if (!selectedStudentId) return null;
+    let pm = month - 1, py = year;
+    if (pm < 1) { pm = 12; py = year - 1; }
+    return reports.find(r => r.student_id === selectedStudentId && r.month === pm && r.year === py) || null;
+  }, [reports, selectedStudentId, month, year]);
+
+  // Detect decline (compared to previous month)
+  const isDecline = useMemo(() => detectDecline(
+    prevReport ? { program_type: prevReport.program_type, iqra_level: prevReport.iqra_level, end_iqra_level: (prevReport as any).end_iqra_level, end_page: prevReport.end_page } : null,
+    {
+      program_type: programType,
+      iqra_level: isIqra ? `Iqro ${startIqraLevel}` : effectiveLevel,
+      end_iqra_level: isIqra ? `Iqro ${endIqraLevel}` : effectiveLevel,
+      end_page: isTahfizh ? (Number(endJuz) - 1) * 20 + Number(endJuzPage) : validEnd,
+    }
+  ), [prevReport, programType, isIqra, isTahfizh, startIqraLevel, endIqraLevel, effectiveLevel, validEnd, endJuz, endJuzPage]);
 
   const getProgramLabel = (level: string) => {
     if (IQRO_LEVELS.includes(level as ReadingLevel)) return "Tahsin Dasar (Iqra)";
