@@ -1,11 +1,13 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useStudents, useUpdateStudent, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
 import { useProfileMap } from "@/hooks/useProfiles";
 import {
   useAllMonthlyReports, useAddMonthlyReport, useDeleteMonthlyReport, useUpdateMonthlyReport,
-  getAchievementStatus, getValidIqraPage, MONTH_NAMES, calcIqraPagesRead
+  getAchievementStatus, getValidIqraPage, MONTH_NAMES, calcIqraPagesRead,
+  getTarget, detectDecline, DECLINE_AUTO_NOTE
 } from "@/hooks/useMonthlyReports";
 import { useAllAttendance, useUpsertAttendance } from "@/hooks/useAttendance";
+import { JUZ_LIST, JUZ_PAGE_LIST, JUZ_DATA, calcHafalanPages } from "@/lib/juzData";
 import type { Database } from "@/integrations/supabase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,16 +22,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import {
   Plus, FileText, Loader2, Trash2, CheckCircle2, XCircle, Filter, Users, Pencil, Save, X,
-  AlertTriangle, Search, UserCheck, Thermometer, HandHeart, UserX, CalendarCheck
+  AlertTriangle, Search, UserCheck, Thermometer, HandHeart, UserX, CalendarCheck, BookOpen, TrendingDown
 } from "lucide-react";
 import BulkMonthlyReportForm from "@/components/BulkMonthlyReportForm";
 import MonthlyReportExport from "@/components/MonthlyReportExport";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
-
-const TARGET_IQRA = 15;
-const TARGET_TAHSIN = 100;
-const getTarget = (programType: string) => programType === "tahsin" ? TARGET_TAHSIN : TARGET_IQRA;
 
 const IQRA_PAGES = [1, ...Array.from({ length: 29 }, (_, i) => i + 4)]; // 1, 4-32
 
