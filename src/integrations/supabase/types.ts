@@ -245,6 +245,45 @@ export type Database = {
         }
         Relationships: []
       }
+      institution_settings: {
+        Row: {
+          alamat: string
+          id: string
+          kepsek_nama: string
+          kepsek_ttd_url: string | null
+          koordinator_nama: string
+          koordinator_ttd_url: string | null
+          logo_url: string | null
+          nama_lembaga: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          alamat?: string
+          id?: string
+          kepsek_nama?: string
+          kepsek_ttd_url?: string | null
+          koordinator_nama?: string
+          koordinator_ttd_url?: string | null
+          logo_url?: string | null
+          nama_lembaga?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          alamat?: string
+          id?: string
+          kepsek_nama?: string
+          kepsek_ttd_url?: string | null
+          koordinator_nama?: string
+          koordinator_ttd_url?: string | null
+          logo_url?: string | null
+          nama_lembaga?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       monthly_reports: {
         Row: {
           achievement_status: string
