@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen, LayoutDashboard, BarChart3, ClipboardList, PieChart,
-  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText
+  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings
 } from "lucide-react";
 import GlobalSearch from "@/components/GlobalSearch";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,13 +16,10 @@ interface LayoutProps {
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/laporan-bulanan", icon: FileText, label: "Laporan & Absensi" },
+  { to: "/rekap-laporan", icon: FileSpreadsheet, label: "Rekap Laporan" },
   { to: "/monitoring", icon: BarChart3, label: "Monitoring" },
-  { to: "/report/class", icon: PieChart, label: "Rekap Nilai" },
-  { to: "/exam-list", icon: ClipboardList, label: "Ujian" },
-  { to: "/ujian-tahsin-dasar", icon: BookOpen, label: "Ujian Tahsin Dasar" },
-  { to: "/ujian-tahsin-lanjutan", icon: BookOpen, label: "Ujian Tahsin Lanjutan" },
   { to: "/jadwal-ujian", icon: GraduationCap, label: "Jadwal Ujian" },
-  { to: "/statistik-ujian", icon: BarChart2, label: "Statistik Ujian" },
+  { to: "/pengaturan-lembaga", icon: Settings, label: "Pengaturan Lembaga" },
 ];
 
 interface SidebarContentProps {
@@ -142,6 +139,8 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
   if (pathname === "/ujian-tahsin-dasar") return <h2 className="font-semibold text-foreground text-base">Ujian Tahsin Dasar</h2>;
   if (pathname === "/ujian-tahsin-lanjutan") return <h2 className="font-semibold text-foreground text-base">Ujian Tahsin Lanjutan</h2>;
   if (pathname === "/laporan-bulanan") return <h2 className="font-semibold text-foreground text-base">Laporan & Absensi</h2>;
+  if (pathname === "/rekap-laporan") return <h2 className="font-semibold text-foreground text-base">Rekap Laporan Bulanan</h2>;
+  if (pathname === "/pengaturan-lembaga") return <h2 className="font-semibold text-foreground text-base">Pengaturan Lembaga</h2>;
   if (pathname.startsWith("/class/")) {
     const k = pathname.split("/")[2];
     return <h2 className="font-semibold text-foreground text-base">Data Siswa — Kelas {k}</h2>;
