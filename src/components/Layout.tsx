@@ -6,6 +6,7 @@ import {
   Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings
 } from "lucide-react";
 import GlobalSearch from "@/components/GlobalSearch";
+import ScrollFab from "@/components/ScrollFab";
 import { useAuth } from "@/contexts/AuthContext";
 import { UpcomingExamBanner } from "@/components/ExamScheduleNotification";
 
@@ -257,6 +258,7 @@ const Layout = ({ children }: LayoutProps) => {
       </div>
 
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
+      <ScrollFab />
     </div>
   );
 };

@@ -12,10 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import {
-  Search, Filter, Loader2, FileText, Eye, Download, CheckCircle2, XCircle,
-  Users, ListChecks, AlertCircle, Percent, FileWarning
+  Search, Loader2, Eye, Download, CheckCircle2,
+  Users, ListChecks, AlertCircle, Percent, FileWarning, FileSpreadsheet
 } from "lucide-react";
 import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -60,6 +61,7 @@ const RecapReport = () => {
   const [filterMonth, setFilterMonth] = useState<string>(String(now.getMonth() + 1));
   const [filterYear, setFilterYear] = useState<string>(String(now.getFullYear()));
   const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "filled" | "empty">("all");
   const [previewOpen, setPreviewOpen] = useState(false);
 
   // Filter siswa sesuai kelas/rombel/search
@@ -136,7 +138,21 @@ const RecapReport = () => {
     return Array.from(map.values()).sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
   }, [filteredStudents, reports, filterMonth, filterYear, profileMap]);
 
-  // Statistik
+  // Apply status filter (sudah/belum diisi) and renumber per rombel
+  const displayGroups = useMemo(() => {
+    return groups
+      .map(g => {
+        const filtered = g.rows.filter(r => {
+          if (filterStatus === "filled") return r.status !== "empty";
+          if (filterStatus === "empty") return r.status === "empty";
+          return true;
+        }).map((r, i) => ({ ...r, no: i + 1 }));
+        return { ...g, rows: filtered };
+      })
+      .filter(g => g.rows.length > 0);
+  }, [groups, filterStatus]);
+
+  // Statistik (selalu dari groups penuh, tidak dipengaruhi filterStatus)
   const stats = useMemo(() => {
     const all = groups.flatMap(g => g.rows);
     const total = all.length;
@@ -167,7 +183,7 @@ const RecapReport = () => {
     });
 
   const exportPDF = async () => {
-    if (groups.length === 0) {
+    if (displayGroups.length === 0) {
       toast({ title: "Tidak ada data untuk dicetak", variant: "destructive" });
       return;
     }
@@ -230,7 +246,7 @@ const RecapReport = () => {
       }
     };
 
-    groups.forEach(grp => {
+    displayGroups.forEach(grp => {
       ensureSpace(12);
       doc.setFillColor(232, 245, 233);
       doc.rect(margin, y, pageW - 2 * margin, 6, "F");
@@ -322,6 +338,104 @@ const RecapReport = () => {
     toast({ title: "PDF berhasil diunduh ✅" });
   };
 
+  const exportExcel = () => {
+    if (displayGroups.length === 0) {
+      toast({ title: "Tidak ada data untuk diexport", variant: "destructive" });
+      return;
+    }
+    const wb = XLSX.utils.book_new();
+    const periode = `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
+    const headers = ["No", "Nama", "Kelas", "Rombel", "Program", "Level", "Awal", "Akhir", "Total", "Target", "Status", "Guru Pengisi", "Catatan"];
+
+    // Sheet utama: semua rombel digabung dengan baris pemisah
+    const aoa: any[][] = [];
+    aoa.push([(settings?.nama_lembaga || "Lembaga").toUpperCase()]);
+    if (settings?.alamat) aoa.push([settings.alamat]);
+    aoa.push(["REKAP LAPORAN BULANAN TAHSIN & TAHFIZH"]);
+    aoa.push([`Periode: ${periode}`]);
+    aoa.push([]);
+
+    displayGroups.forEach(grp => {
+      aoa.push([`Kelas ${grp.kelas} — Rombel ${grp.rombel}`]);
+      aoa.push(headers);
+      grp.rows.forEach(r => {
+        aoa.push([
+          r.no, r.nama, r.kelas, r.rombel, r.program, r.level,
+          r.awal, r.akhir,
+          r.status === "empty" ? "" : r.total,
+          r.status === "empty" ? "" : r.target,
+          r.status === "achieved" ? "Tercapai" : r.status === "not_achieved" ? "Belum Tercapai" : "BELUM DIISI",
+          r.guru, r.catatan || "",
+        ]);
+      });
+      aoa.push([]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    // Auto width
+    const colWidths = headers.map((h, ci) => {
+      let max = h.length;
+      aoa.forEach(row => {
+        const v = row[ci];
+        if (v != null) max = Math.max(max, String(v).length);
+      });
+      return { wch: Math.min(Math.max(max + 2, 8), 50) };
+    });
+    ws["!cols"] = colWidths;
+
+    // Bold headers (cells matching headers row content)
+    const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      const cellA = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
+      const isGroupHeader = cellA && typeof cellA.v === "string" && cellA.v.startsWith("Kelas ");
+      const isHeaderRow = cellA && cellA.v === "No";
+      const isTitle = R < 4;
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[addr];
+        if (!cell) continue;
+        cell.s = cell.s || {};
+        if (isTitle) {
+          cell.s = { font: { bold: true, sz: R === 2 ? 12 : 11 }, alignment: { horizontal: "left" } };
+        } else if (isGroupHeader) {
+          cell.s = { font: { bold: true, color: { rgb: "1B5E20" } }, fill: { fgColor: { rgb: "E8F5E9" } } };
+        } else if (isHeaderRow) {
+          cell.s = {
+            font: { bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: "22577A" } },
+            alignment: { horizontal: "center", wrapText: true },
+            border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } },
+          };
+        } else {
+          cell.s = {
+            alignment: { wrapText: true, vertical: "top" },
+            border: { top: { style: "thin", color: { rgb: "CCCCCC" } }, bottom: { style: "thin", color: { rgb: "CCCCCC" } }, left: { style: "thin", color: { rgb: "CCCCCC" } }, right: { style: "thin", color: { rgb: "CCCCCC" } } },
+          };
+        }
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, "Rekap");
+
+    // Sheet tanda tangan
+    const sigAoa: any[][] = [
+      ["Tanda Tangan Resmi"],
+      [],
+      ["Koordinator Tahfizh", "", "", "Kepala Sekolah"],
+      ["", "", "", ""],
+      ["", "", "", ""],
+      ["", "", "", ""],
+      [settings?.koordinator_nama || "(.....................)", "", "", settings?.kepsek_nama || "(.....................)"],
+    ];
+    const sigWs = XLSX.utils.aoa_to_sheet(sigAoa);
+    sigWs["!cols"] = [{ wch: 30 }, { wch: 5 }, { wch: 5 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, sigWs, "Tanda Tangan");
+
+    const fname = `Rekap_Laporan_${MONTH_NAMES[Number(filterMonth) - 1]}_${filterYear}.xlsx`;
+    XLSX.writeFile(wb, fname);
+    toast({ title: "Excel berhasil diunduh ✅" });
+  };
+
   if (ls || lr) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>;
 
   return (
@@ -332,9 +446,12 @@ const RecapReport = () => {
           <h1 className="text-xl font-bold text-foreground">Rekap Laporan Bulanan</h1>
           <p className="text-sm text-muted-foreground">Tahsin Dasar, Tahsin Lanjutan & Tahfizh — siap export PDF resmi</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" className="gap-2" onClick={() => setPreviewOpen(true)}>
-            <Eye className="w-4 h-4" /> Preview Laporan
+            <Eye className="w-4 h-4" /> Preview
+          </Button>
+          <Button variant="outline" className="gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50" onClick={exportExcel}>
+            <FileSpreadsheet className="w-4 h-4" /> Download Excel
           </Button>
           <Button className="gap-2" onClick={exportPDF}>
             <Download className="w-4 h-4" /> Export PDF
@@ -360,7 +477,7 @@ const RecapReport = () => {
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-3 grid grid-cols-2 md:grid-cols-6 gap-2">
+        <CardContent className="p-3 grid grid-cols-2 md:grid-cols-7 gap-2">
           <div className="col-span-2">
             <Label className="text-xs">Cari Siswa</Label>
             <div className="relative">
@@ -406,14 +523,27 @@ const RecapReport = () => {
               </SelectContent>
             </Select>
           </div>
+          <div>
+            <Label className="text-xs">Status Isi</Label>
+            <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as any)}>
+              <SelectTrigger className={`h-9 ${filterStatus === "empty" ? "border-rose-400 text-rose-700" : filterStatus === "filled" ? "border-emerald-400 text-emerald-700" : ""}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                <SelectItem value="filled">✅ Sudah Diisi</SelectItem>
+                <SelectItem value="empty">⚠️ Belum Diisi</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardContent>
       </Card>
 
       {/* Tables grouped per rombel */}
-      {groups.length === 0 && (
+      {displayGroups.length === 0 && (
         <Card><CardContent className="p-8 text-center text-muted-foreground">Tidak ada siswa pada filter ini.</CardContent></Card>
       )}
-      {groups.map(grp => (
+      {displayGroups.map(grp => (
         <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
           <CardHeader className="bg-emerald-50 py-3">
             <CardTitle className="text-sm text-emerald-900">
@@ -484,7 +614,7 @@ const RecapReport = () => {
                 <p className="text-xs">Periode: {MONTH_NAMES[Number(filterMonth) - 1]} {filterYear}</p>
               </div>
             </div>
-            {groups.map(grp => (
+            {displayGroups.map(grp => (
               <div key={`p-${grp.kelas}-${grp.rombel}`} className="mb-4">
                 <div className="bg-emerald-100 px-2 py-1 font-bold text-xs">Kelas {grp.kelas} — Rombel {grp.rombel}</div>
                 <table className="w-full text-[10px] border border-gray-300">
