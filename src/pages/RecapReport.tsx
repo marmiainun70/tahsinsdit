@@ -246,7 +246,7 @@ const RecapReport = () => {
       }
     };
 
-    groups.forEach(grp => {
+    displayGroups.forEach(grp => {
       ensureSpace(12);
       doc.setFillColor(232, 245, 233);
       doc.rect(margin, y, pageW - 2 * margin, 6, "F");
@@ -426,10 +426,10 @@ const RecapReport = () => {
       </Card>
 
       {/* Tables grouped per rombel */}
-      {groups.length === 0 && (
+      {displayGroups.length === 0 && (
         <Card><CardContent className="p-8 text-center text-muted-foreground">Tidak ada siswa pada filter ini.</CardContent></Card>
       )}
-      {groups.map(grp => (
+      {displayGroups.map(grp => (
         <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
           <CardHeader className="bg-emerald-50 py-3">
             <CardTitle className="text-sm text-emerald-900">
@@ -500,7 +500,7 @@ const RecapReport = () => {
                 <p className="text-xs">Periode: {MONTH_NAMES[Number(filterMonth) - 1]} {filterYear}</p>
               </div>
             </div>
-            {groups.map(grp => (
+            {displayGroups.map(grp => (
               <div key={`p-${grp.kelas}-${grp.rombel}`} className="mb-4">
                 <div className="bg-emerald-100 px-2 py-1 font-bold text-xs">Kelas {grp.kelas} — Rombel {grp.rombel}</div>
                 <table className="w-full text-[10px] border border-gray-300">
