@@ -12,10 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import {
-  Search, Filter, Loader2, FileText, Eye, Download, CheckCircle2, XCircle,
-  Users, ListChecks, AlertCircle, Percent, FileWarning
+  Search, Loader2, Eye, Download, CheckCircle2,
+  Users, ListChecks, AlertCircle, Percent, FileWarning, FileSpreadsheet
 } from "lucide-react";
 import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -60,6 +61,7 @@ const RecapReport = () => {
   const [filterMonth, setFilterMonth] = useState<string>(String(now.getMonth() + 1));
   const [filterYear, setFilterYear] = useState<string>(String(now.getFullYear()));
   const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState<"all" | "filled" | "empty">("all");
   const [previewOpen, setPreviewOpen] = useState(false);
 
   // Filter siswa sesuai kelas/rombel/search
