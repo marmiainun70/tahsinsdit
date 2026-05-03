@@ -425,6 +425,19 @@ const RecapReport = () => {
               </SelectContent>
             </Select>
           </div>
+          <div>
+            <Label className="text-xs">Status Isi</Label>
+            <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as any)}>
+              <SelectTrigger className={`h-9 ${filterStatus === "empty" ? "border-rose-400 text-rose-700" : filterStatus === "filled" ? "border-emerald-400 text-emerald-700" : ""}`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                <SelectItem value="filled">✅ Sudah Diisi</SelectItem>
+                <SelectItem value="empty">⚠️ Belum Diisi</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardContent>
       </Card>
 
