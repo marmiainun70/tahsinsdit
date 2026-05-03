@@ -348,9 +348,12 @@ const RecapReport = () => {
           <h1 className="text-xl font-bold text-foreground">Rekap Laporan Bulanan</h1>
           <p className="text-sm text-muted-foreground">Tahsin Dasar, Tahsin Lanjutan & Tahfizh — siap export PDF resmi</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" className="gap-2" onClick={() => setPreviewOpen(true)}>
-            <Eye className="w-4 h-4" /> Preview Laporan
+            <Eye className="w-4 h-4" /> Preview
+          </Button>
+          <Button variant="outline" className="gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50" onClick={exportExcel}>
+            <FileSpreadsheet className="w-4 h-4" /> Download Excel
           </Button>
           <Button className="gap-2" onClick={exportPDF}>
             <Download className="w-4 h-4" /> Export PDF
@@ -376,7 +379,7 @@ const RecapReport = () => {
 
       {/* Filters */}
       <Card>
-        <CardContent className="p-3 grid grid-cols-2 md:grid-cols-6 gap-2">
+        <CardContent className="p-3 grid grid-cols-2 md:grid-cols-7 gap-2">
           <div className="col-span-2">
             <Label className="text-xs">Cari Siswa</Label>
             <div className="relative">
