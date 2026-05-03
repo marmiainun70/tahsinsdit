@@ -338,6 +338,104 @@ const RecapReport = () => {
     toast({ title: "PDF berhasil diunduh ✅" });
   };
 
+  const exportExcel = () => {
+    if (displayGroups.length === 0) {
+      toast({ title: "Tidak ada data untuk diexport", variant: "destructive" });
+      return;
+    }
+    const wb = XLSX.utils.book_new();
+    const periode = `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
+    const headers = ["No", "Nama", "Kelas", "Rombel", "Program", "Level", "Awal", "Akhir", "Total", "Target", "Status", "Guru Pengisi", "Catatan"];
+
+    // Sheet utama: semua rombel digabung dengan baris pemisah
+    const aoa: any[][] = [];
+    aoa.push([(settings?.nama_lembaga || "Lembaga").toUpperCase()]);
+    if (settings?.alamat) aoa.push([settings.alamat]);
+    aoa.push(["REKAP LAPORAN BULANAN TAHSIN & TAHFIZH"]);
+    aoa.push([`Periode: ${periode}`]);
+    aoa.push([]);
+
+    displayGroups.forEach(grp => {
+      aoa.push([`Kelas ${grp.kelas} — Rombel ${grp.rombel}`]);
+      aoa.push(headers);
+      grp.rows.forEach(r => {
+        aoa.push([
+          r.no, r.nama, r.kelas, r.rombel, r.program, r.level,
+          r.awal, r.akhir,
+          r.status === "empty" ? "" : r.total,
+          r.status === "empty" ? "" : r.target,
+          r.status === "achieved" ? "Tercapai" : r.status === "not_achieved" ? "Belum Tercapai" : "BELUM DIISI",
+          r.guru, r.catatan || "",
+        ]);
+      });
+      aoa.push([]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    // Auto width
+    const colWidths = headers.map((h, ci) => {
+      let max = h.length;
+      aoa.forEach(row => {
+        const v = row[ci];
+        if (v != null) max = Math.max(max, String(v).length);
+      });
+      return { wch: Math.min(Math.max(max + 2, 8), 50) };
+    });
+    ws["!cols"] = colWidths;
+
+    // Bold headers (cells matching headers row content)
+    const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      const cellA = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
+      const isGroupHeader = cellA && typeof cellA.v === "string" && cellA.v.startsWith("Kelas ");
+      const isHeaderRow = cellA && cellA.v === "No";
+      const isTitle = R < 4;
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = ws[addr];
+        if (!cell) continue;
+        cell.s = cell.s || {};
+        if (isTitle) {
+          cell.s = { font: { bold: true, sz: R === 2 ? 12 : 11 }, alignment: { horizontal: "left" } };
+        } else if (isGroupHeader) {
+          cell.s = { font: { bold: true, color: { rgb: "1B5E20" } }, fill: { fgColor: { rgb: "E8F5E9" } } };
+        } else if (isHeaderRow) {
+          cell.s = {
+            font: { bold: true, color: { rgb: "FFFFFF" } },
+            fill: { fgColor: { rgb: "22577A" } },
+            alignment: { horizontal: "center", wrapText: true },
+            border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } },
+          };
+        } else {
+          cell.s = {
+            alignment: { wrapText: true, vertical: "top" },
+            border: { top: { style: "thin", color: { rgb: "CCCCCC" } }, bottom: { style: "thin", color: { rgb: "CCCCCC" } }, left: { style: "thin", color: { rgb: "CCCCCC" } }, right: { style: "thin", color: { rgb: "CCCCCC" } } },
+          };
+        }
+      }
+    }
+
+    XLSX.utils.book_append_sheet(wb, ws, "Rekap");
+
+    // Sheet tanda tangan
+    const sigAoa: any[][] = [
+      ["Tanda Tangan Resmi"],
+      [],
+      ["Koordinator Tahfizh", "", "", "Kepala Sekolah"],
+      ["", "", "", ""],
+      ["", "", "", ""],
+      ["", "", "", ""],
+      [settings?.koordinator_nama || "(.....................)", "", "", settings?.kepsek_nama || "(.....................)"],
+    ];
+    const sigWs = XLSX.utils.aoa_to_sheet(sigAoa);
+    sigWs["!cols"] = [{ wch: 30 }, { wch: 5 }, { wch: 5 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, sigWs, "Tanda Tangan");
+
+    const fname = `Rekap_Laporan_${MONTH_NAMES[Number(filterMonth) - 1]}_${filterYear}.xlsx`;
+    XLSX.writeFile(wb, fname);
+    toast({ title: "Excel berhasil diunduh ✅" });
+  };
+
   if (ls || lr) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>;
 
   return (
