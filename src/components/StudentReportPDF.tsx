@@ -133,9 +133,8 @@ const StudentReportPDF = React.forwardRef<HTMLDivElement, Props>(
     return (
       <div
         ref={ref}
+        className="print-area"
         style={{
-          width: 794,
-          background: "#ffffff",
           fontFamily: "'Segoe UI', system-ui, sans-serif",
           color: "#111827",
           padding: 0,

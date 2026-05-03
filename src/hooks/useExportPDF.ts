@@ -11,63 +11,131 @@ export const useExportPDF = () => {
   const [exporting, setExporting] = useState(false);
 
   const exportPDF = useCallback(
-    async (student: Student, _progres: ProgressEntry[], _ujian: ExamRecord[], _tahsinData: TahsinAssessment[]) => {
+    async (
+      student: Student,
+      _progres: ProgressEntry[],
+      _ujian: ExamRecord[],
+      _tahsinData: TahsinAssessment[]
+    ) => {
       if (!reportRef.current) return;
       setExporting(true);
+
       try {
         const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
           import("html2canvas"),
           import("jspdf"),
         ]);
 
-        const canvas = await html2canvas(reportRef.current, {
+        const element = reportRef.current;
+
+        // Tunggu render selesai
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        // Ukuran A4 (px) & margin
+        const A4_WIDTH = 794;
+        const A4_HEIGHT = 1123;
+        const MARGIN = 24;
+
+        const canvas = await html2canvas(element, {
           scale: 2,
           useCORS: true,
+          allowTaint: true,
           backgroundColor: "#ffffff",
           logging: false,
-          width: 794,
+          scrollX: 0,
+          scrollY: -window.scrollY,
+          width: element.scrollWidth,
+          height: element.scrollHeight,
+          windowWidth: element.scrollWidth,
+          windowHeight: element.scrollHeight,
         });
 
-        const imgData = canvas.toDataURL("image/png");
         const pdf = new jsPDF({
           orientation: "portrait",
           unit: "px",
           format: "a4",
+          compress: true,
         });
 
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const canvasAspect = canvas.height / canvas.width;
-        const imgHeight = pdfWidth * canvasAspect;
+        const printableWidth = A4_WIDTH - MARGIN * 2;
+        const printableHeight = A4_HEIGHT - MARGIN * 2;
 
-        // Multi-page support
-        if (imgHeight <= pdfHeight) {
-          pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, imgHeight);
+        const finalImageHeight =
+          (canvas.height * printableWidth) / canvas.width;
+
+        if (finalImageHeight <= printableHeight) {
+          const imageData = canvas.toDataURL("image/jpeg", 1.0);
+          pdf.addImage(
+            imageData,
+            "JPEG",
+            MARGIN,
+            MARGIN,
+            printableWidth,
+            finalImageHeight,
+            undefined,
+            "FAST"
+          );
         } else {
-          let yOffset = 0;
-          let remaining = imgHeight;
-          while (remaining > 0) {
-            const sliceHeight = Math.min(pdfHeight, remaining);
-            const srcY = yOffset * (canvas.height / imgHeight);
-            const srcHeight = sliceHeight * (canvas.height / imgHeight);
+          // Multi page
+          const pageCanvas = document.createElement("canvas");
+          const pageContext = pageCanvas.getContext("2d");
+          if (!pageContext) throw new Error("Canvas context tidak tersedia");
 
-            const pageCanvas = document.createElement("canvas");
+          const pageHeightInCanvas =
+            (printableHeight * canvas.width) / printableWidth;
+
+          let renderedHeight = 0;
+          let pageIndex = 0;
+
+          while (renderedHeight < canvas.height) {
             pageCanvas.width = canvas.width;
-            pageCanvas.height = srcHeight;
-            const ctx = pageCanvas.getContext("2d")!;
-            ctx.drawImage(canvas, 0, srcY, canvas.width, srcHeight, 0, 0, canvas.width, srcHeight);
+            pageCanvas.height = Math.min(
+              pageHeightInCanvas,
+              canvas.height - renderedHeight
+            );
 
-            const pageImg = pageCanvas.toDataURL("image/png");
-            if (yOffset > 0) pdf.addPage();
-            pdf.addImage(pageImg, "PNG", 0, 0, pdfWidth, sliceHeight);
+            pageContext.clearRect(0, 0, pageCanvas.width, pageCanvas.height);
+            pageContext.drawImage(
+              canvas,
+              0,
+              renderedHeight,
+              canvas.width,
+              pageCanvas.height,
+              0,
+              0,
+              canvas.width,
+              pageCanvas.height
+            );
 
-            yOffset += sliceHeight;
-            remaining -= sliceHeight;
+            const pageData = pageCanvas.toDataURL("image/jpeg", 1.0);
+            const pageImageHeight =
+              (pageCanvas.height * printableWidth) / pageCanvas.width;
+
+            if (pageIndex > 0) pdf.addPage();
+
+            pdf.addImage(
+              pageData,
+              "JPEG",
+              MARGIN,
+              MARGIN,
+              printableWidth,
+              pageImageHeight,
+              undefined,
+              "FAST"
+            );
+
+            renderedHeight += pageHeightInCanvas;
+            pageIndex++;
           }
         }
 
-        const safeName = student.nama.replace(/[^a-z0-9]/gi, "_");
-        pdf.save(`Laporan_${safeName}_Kelas${student.kelas}.pdf`);
+        const safeName = student.nama
+          .replace(/[^a-z0-9]/gi, "_")
+          .toLowerCase();
+
+        pdf.save(`Laporan_${safeName}_Kelas_${student.kelas}.pdf`);
+      } catch (error) {
+        console.error("Gagal export PDF:", error);
       } finally {
         setExporting(false);
       }
