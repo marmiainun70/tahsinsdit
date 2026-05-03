@@ -183,7 +183,7 @@ const RecapReport = () => {
     });
 
   const exportPDF = async () => {
-    if (groups.length === 0) {
+    if (displayGroups.length === 0) {
       toast({ title: "Tidak ada data untuk dicetak", variant: "destructive" });
       return;
     }
