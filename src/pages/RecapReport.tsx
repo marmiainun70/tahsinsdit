@@ -138,7 +138,21 @@ const RecapReport = () => {
     return Array.from(map.values()).sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
   }, [filteredStudents, reports, filterMonth, filterYear, profileMap]);
 
-  // Statistik
+  // Apply status filter (sudah/belum diisi) and renumber per rombel
+  const displayGroups = useMemo(() => {
+    return groups
+      .map(g => {
+        const filtered = g.rows.filter(r => {
+          if (filterStatus === "filled") return r.status !== "empty";
+          if (filterStatus === "empty") return r.status === "empty";
+          return true;
+        }).map((r, i) => ({ ...r, no: i + 1 }));
+        return { ...g, rows: filtered };
+      })
+      .filter(g => g.rows.length > 0);
+  }, [groups, filterStatus]);
+
+  // Statistik (selalu dari groups penuh, tidak dipengaruhi filterStatus)
   const stats = useMemo(() => {
     const all = groups.flatMap(g => g.rows);
     const total = all.length;
