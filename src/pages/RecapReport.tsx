@@ -16,6 +16,7 @@ import {
   Users, ListChecks, AlertCircle, Percent, FileWarning, FileSpreadsheet
 } from "lucide-react";
 import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -111,12 +112,16 @@ const RecapReport = () => {
           catatan: "",
         });
       } else {
+        const fmtTahfizh = (lvl: string | null | undefined, page: number) => {
+          const j = Number(String(lvl || "").replace(/\D/g, "")) || null;
+          return j ? `Juz ${j} hal.${page}` : `hal.${page}`;
+        };
         const awal = rep.iqra_level
-          ? `${rep.iqra_level} hal.${rep.start_page}`
-          : (rep.program_type === "tahfizh" ? `Juz ? hal.${rep.start_page}` : String(rep.start_page));
+          ? (rep.program_type === "tahfizh" ? fmtTahfizh(rep.iqra_level, rep.start_page) : `${rep.iqra_level} hal.${rep.start_page}`)
+          : String(rep.start_page);
         const akhir = (rep as any).end_iqra_level
-          ? `${(rep as any).end_iqra_level} hal.${rep.end_page}`
-          : (rep.program_type === "tahfizh" ? `Juz ? hal.${rep.end_page}` : String(rep.end_page));
+          ? (rep.program_type === "tahfizh" ? fmtTahfizh((rep as any).end_iqra_level, rep.end_page) : `${(rep as any).end_iqra_level} hal.${rep.end_page}`)
+          : String(rep.end_page);
         grp.rows.push({
           no: grp.rows.length + 1,
           studentId: st.id,
@@ -203,134 +208,116 @@ const RecapReport = () => {
     const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
-    const margin = 10;
+    const M = 12;
+    const periodeStr = `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
 
     const drawHeader = () => {
-      let cursorY = margin;
+      let y = M;
       if (logoB64) {
-        try { doc.addImage(logoB64, "PNG", margin, cursorY, 18, 18); } catch {}
+        try { doc.addImage(logoB64, "PNG", M, y, 16, 16); } catch {}
       }
-      doc.setFont("helvetica", "bold"); doc.setFontSize(13);
-      doc.text((settings?.nama_lembaga || "Lembaga").toUpperCase(), pageW / 2, cursorY + 6, { align: "center" });
-      doc.setFont("helvetica", "normal"); doc.setFontSize(9);
-      if (settings?.alamat) doc.text(settings.alamat, pageW / 2, cursorY + 11, { align: "center" });
-      doc.setFont("helvetica", "bold"); doc.setFontSize(11);
-      doc.text("REKAP LAPORAN BULANAN TAHSIN & TAHFIZH", pageW / 2, cursorY + 18, { align: "center" });
-      doc.setFont("helvetica", "normal"); doc.setFontSize(9);
-      doc.text(`Periode: ${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`, pageW / 2, cursorY + 23, { align: "center" });
-      doc.setDrawColor(180); doc.line(margin, cursorY + 27, pageW - margin, cursorY + 27);
-      return cursorY + 30;
+      doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(22, 101, 52);
+      doc.text((settings?.nama_lembaga || "Lembaga").toUpperCase(), pageW / 2, y + 5, { align: "center" });
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(80);
+      if (settings?.alamat) doc.text(settings.alamat, pageW / 2, y + 10, { align: "center" });
+      doc.setDrawColor(217, 119, 6); doc.setLineWidth(0.6);
+      doc.line(M, y + 18, pageW - M, y + 18);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(20);
+      doc.text("REKAP LAPORAN BULANAN TAHSIN & TAHFIZH", pageW / 2, y + 23, { align: "center" });
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(80);
+      doc.text(`Periode: ${periodeStr}`, pageW / 2, y + 28, { align: "center" });
     };
 
-    let y = drawHeader();
-    const headers = ["No", "Nama", "Program", "Level", "Awal", "Akhir", "Total", "Target", "Status", "Guru", "Catatan"];
-    const colW = [8, 38, 26, 22, 22, 22, 12, 12, 18, 26, pageW - 2 * margin - 206];
-    const rowH = 6;
-    const headerH = 7;
+    drawHeader();
+    let cursorY = M + 32;
 
-    const drawTableHeader = () => {
-      doc.setFillColor(34, 87, 122);
-      doc.rect(margin, y, pageW - 2 * margin, headerH, "F");
-      doc.setTextColor(255); doc.setFontSize(7); doc.setFont("helvetica", "bold");
-      let x = margin;
-      headers.forEach((h, i) => { doc.text(h, x + 1.5, y + 5); x += colW[i]; });
-      y += headerH;
-      doc.setTextColor(0); doc.setFont("helvetica", "normal");
-    };
-
-    const ensureSpace = (need: number) => {
-      if (y + need > pageH - 18) {
-        doc.setFontSize(7); doc.setTextColor(150);
-        doc.text(`Hal. ${doc.getNumberOfPages()}`, pageW - margin, pageH - 5, { align: "right" });
-        doc.addPage(); y = drawHeader(); doc.setTextColor(0);
-      }
-    };
-
-    displayGroups.forEach(grp => {
-      ensureSpace(12);
+    displayGroups.forEach((grp) => {
+      // Group header
+      if (cursorY > pageH - 40) { doc.addPage(); drawHeader(); cursorY = M + 32; }
       doc.setFillColor(232, 245, 233);
-      doc.rect(margin, y, pageW - 2 * margin, 6, "F");
+      doc.rect(M, cursorY, pageW - 2 * M, 6, "F");
       doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(27, 94, 32);
-      doc.text(`Kelas ${grp.kelas} — Rombel ${grp.rombel}`, margin + 2, y + 4.2);
-      doc.setTextColor(0); y += 7;
-      drawTableHeader();
+      doc.text(`Kelas ${grp.kelas} — Rombel ${grp.rombel}  (${grp.rows.length} siswa)`, M + 2, cursorY + 4.2);
+      cursorY += 7;
 
-      grp.rows.forEach((row, idx) => {
-        // Estimate height by catatan length
-        const catatanLines = doc.splitTextToSize(row.catatan || "-", colW[10] - 2);
-        const dynH = Math.max(rowH, catatanLines.length * 3.2 + 2.5);
-        ensureSpace(dynH);
-
-        if (row.status === "empty") {
-          doc.setFillColor(255, 235, 238);
-          doc.rect(margin, y, pageW - 2 * margin, dynH, "F");
-        } else if (idx % 2 === 0) {
-          doc.setFillColor(245, 247, 250);
-          doc.rect(margin, y, pageW - 2 * margin, dynH, "F");
-        }
-
-        doc.setFontSize(7); doc.setFont("helvetica", "normal");
-        let x = margin;
-        const vals = [
-          String(row.no), row.nama, row.program, row.level,
-          row.awal, row.akhir, String(row.total || "-"), String(row.target || "-"),
-          row.status === "achieved" ? "Tercapai" : row.status === "not_achieved" ? "Belum" : "BELUM DIISI",
-          row.guru, "",
-        ];
-        vals.forEach((v, i) => {
-          if (i === 8) {
-            if (row.status === "achieved") doc.setTextColor(16, 124, 65);
-            else if (row.status === "not_achieved") doc.setTextColor(185, 28, 28);
-            else doc.setTextColor(220, 38, 38);
-            doc.setFont("helvetica", "bold");
+      autoTable(doc, {
+        startY: cursorY,
+        head: [["No", "Nama", "Program", "Level", "Awal", "Akhir", "Total", "Target", "Status", "Guru", "Catatan"]],
+        body: grp.rows.map((r) => [
+          String(r.no),
+          r.nama,
+          r.program,
+          r.level,
+          r.awal,
+          r.akhir,
+          r.status === "empty" ? "-" : String(r.total),
+          r.status === "empty" ? "-" : String(r.target),
+          r.status === "achieved" ? "Tercapai" : r.status === "not_achieved" ? "Belum" : "BELUM DIISI",
+          r.guru,
+          r.catatan || "-",
+        ]),
+        styles: { fontSize: 8, cellPadding: 1.6, overflow: "linebreak", valign: "middle", lineColor: [220, 220, 220], lineWidth: 0.1, textColor: [30, 30, 30] },
+        headStyles: { fillColor: [34, 87, 122], textColor: [255, 255, 255], fontStyle: "bold", halign: "center", fontSize: 8 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: {
+          0: { cellWidth: 8, halign: "center" },
+          1: { cellWidth: 38 },
+          2: { cellWidth: 26 },
+          3: { cellWidth: 22 },
+          4: { cellWidth: 22 },
+          5: { cellWidth: 22 },
+          6: { cellWidth: 12, halign: "center", fontStyle: "bold" },
+          7: { cellWidth: 12, halign: "center" },
+          8: { cellWidth: 20, halign: "center", fontStyle: "bold" },
+          9: { cellWidth: 24 },
+          10: { cellWidth: "auto" },
+        },
+        didParseCell: (data) => {
+          if (data.section === "body" && data.column.index === 8) {
+            const v = String(data.cell.raw);
+            if (v === "Tercapai") data.cell.styles.textColor = [16, 124, 65];
+            else if (v === "Belum") data.cell.styles.textColor = [185, 28, 28];
+            else if (v === "BELUM DIISI") {
+              data.cell.styles.textColor = [220, 38, 38];
+              data.row.cells && Object.values(data.row.cells).forEach((c: any) => { c.styles.fillColor = [255, 235, 238]; });
+            }
           }
-          const truncated = i === 1 || i === 9 ? v.substring(0, 28) : v;
-          doc.text(truncated, x + 1.5, y + 4);
-          if (i === 8) { doc.setTextColor(0); doc.setFont("helvetica", "normal"); }
-          x += colW[i];
-        });
-        // Catatan multi-line
-        doc.text(catatanLines, margin + colW.slice(0, 10).reduce((a, b) => a + b, 0) + 1.5, y + 4);
-        y += dynH;
+        },
+        margin: { left: M, right: M, bottom: 22 },
+        didDrawPage: () => { /* header re-draw handled below */ },
       });
-      y += 2;
+      cursorY = (doc as any).lastAutoTable.finalY + 4;
     });
 
-    // Footer signatures (last page)
-    ensureSpace(40);
-    y += 5;
-    doc.setFontSize(8); doc.setTextColor(80);
-    const dateStr = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
-    doc.text(`Dicetak: ${dateStr}`, margin, y);
-    y += 8;
-    doc.setTextColor(0); doc.setFontSize(9);
+    // Tanda tangan di halaman terakhir
+    const sigBlockH = 40;
+    if (cursorY + sigBlockH > pageH - 14) { doc.addPage(); drawHeader(); cursorY = M + 34; }
+    cursorY += 4;
+    const colW = (pageW - M * 2) / 2;
+    const sigY = cursorY;
 
-    const sigW = 70;
-    const sigKoordX = margin + 10;
-    const sigKepsekX = pageW - margin - sigW - 10;
-    doc.text("Koordinator Tahfizh,", sigKoordX, y);
-    doc.text("Mengetahui, Kepala Sekolah,", sigKepsekX, y);
+    const drawSig = (xCenter: number, label: string, nama: string, ttd: string | null) => {
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(40);
+      doc.text(label, xCenter, sigY, { align: "center" });
+      if (ttd) { try { doc.addImage(ttd, "PNG", xCenter - 18, sigY + 3, 36, 16); } catch {} }
+      doc.setLineWidth(0.2); doc.setDrawColor(120);
+      doc.line(xCenter - 30, sigY + 22, xCenter + 30, sigY + 22);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(9);
+      doc.text(nama || "(.....................)", xCenter, sigY + 27, { align: "center" });
+    };
+    drawSig(M + colW / 2, "Koordinator Tahfizh,", settings?.koordinator_nama || "", koordTtdB64);
+    drawSig(M + colW + colW / 2, "Mengetahui, Kepala Sekolah,", settings?.kepsek_nama || "", kepsekTtdB64);
 
-    if (koordTtdB64) {
-      try { doc.addImage(koordTtdB64, "PNG", sigKoordX, y + 2, 32, 18); } catch {}
-    }
-    if (kepsekTtdB64) {
-      try { doc.addImage(kepsekTtdB64, "PNG", sigKepsekX, y + 2, 32, 18); } catch {}
-    }
-
-    doc.line(sigKoordX, y + 22, sigKoordX + sigW, y + 22);
-    doc.line(sigKepsekX, y + 22, sigKepsekX + sigW, y + 22);
-    doc.setFont("helvetica", "bold");
-    doc.text(settings?.koordinator_nama || "(.....................)", sigKoordX, y + 27);
-    doc.text(settings?.kepsek_nama || "(.....................)", sigKepsekX, y + 27);
-    doc.setFont("helvetica", "normal");
-
-    // Page numbers
+    // Footer semua halaman
     const totalPages = doc.getNumberOfPages();
+    const today = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
-      doc.setFontSize(7); doc.setTextColor(150);
-      doc.text(`Hal. ${p} / ${totalPages}`, pageW - margin, pageH - 5, { align: "right" });
+      doc.setDrawColor(220); doc.setLineWidth(0.2);
+      doc.line(M, pageH - 10, pageW - M, pageH - 10);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(120);
+      doc.text(`Dicetak: ${today}`, M, pageH - 6);
+      doc.text(`Halaman ${p} dari ${totalPages}`, pageW - M, pageH - 6, { align: "right" });
     }
 
     const fname = `Rekap_Laporan_${MONTH_NAMES[Number(filterMonth) - 1]}_${filterYear}.pdf`;
