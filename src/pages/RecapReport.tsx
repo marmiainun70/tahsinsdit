@@ -112,12 +112,16 @@ const RecapReport = () => {
           catatan: "",
         });
       } else {
+        const fmtTahfizh = (lvl: string | null | undefined, page: number) => {
+          const j = Number(String(lvl || "").replace(/\D/g, "")) || null;
+          return j ? `Juz ${j} hal.${page}` : `hal.${page}`;
+        };
         const awal = rep.iqra_level
-          ? `${rep.iqra_level} hal.${rep.start_page}`
-          : (rep.program_type === "tahfizh" ? `Juz ? hal.${rep.start_page}` : String(rep.start_page));
+          ? (rep.program_type === "tahfizh" ? fmtTahfizh(rep.iqra_level, rep.start_page) : `${rep.iqra_level} hal.${rep.start_page}`)
+          : String(rep.start_page);
         const akhir = (rep as any).end_iqra_level
-          ? `${(rep as any).end_iqra_level} hal.${rep.end_page}`
-          : (rep.program_type === "tahfizh" ? `Juz ? hal.${rep.end_page}` : String(rep.end_page));
+          ? (rep.program_type === "tahfizh" ? fmtTahfizh((rep as any).end_iqra_level, rep.end_page) : `${(rep as any).end_iqra_level} hal.${rep.end_page}`)
+          : String(rep.end_page);
         grp.rows.push({
           no: grp.rows.length + 1,
           studentId: st.id,
