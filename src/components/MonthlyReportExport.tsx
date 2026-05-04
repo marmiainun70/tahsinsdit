@@ -6,10 +6,12 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { Download, FileSpreadsheet, FileText, Loader2 } from "lucide-react";
 import { MONTH_NAMES } from "@/hooks/useMonthlyReports";
-import { LEVEL_COLORS, IQRO_LEVELS } from "@/hooks/useSupabaseData";
+import { IQRO_LEVELS } from "@/hooks/useSupabaseData";
+import { useInstitutionSettings } from "@/hooks/useInstitutionSettings";
 import type { Database } from "@/integrations/supabase/types";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -37,11 +39,29 @@ const getProgramLabel = (level: string) => {
   return level;
 };
 
+const loadImg = (url: string): Promise<string | null> =>
+  new Promise((resolve) => {
+    if (!url) return resolve(null);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = img.width; c.height = img.height;
+      const ctx = c.getContext("2d");
+      if (!ctx) return resolve(null);
+      ctx.drawImage(img, 0, 0);
+      try { resolve(c.toDataURL("image/png")); } catch { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+
 interface Props {
   reports: ReportWithStudent[];
 }
 
 const MonthlyReportExport = ({ reports }: Props) => {
+  const { data: settings } = useInstitutionSettings();
   const [open, setOpen] = useState(false);
   const [exportMonth, setExportMonth] = useState<string>("all");
   const [exportYear, setExportYear] = useState<string>(String(new Date().getFullYear()));
@@ -59,8 +79,8 @@ const MonthlyReportExport = ({ reports }: Props) => {
 
   const years = [...new Set(reports.map(r => r.year))].sort((a, b) => b - a);
 
-  const buildRows = () => {
-    return filteredData
+  const buildRows = () =>
+    filteredData
       .sort((a, b) => {
         const sa = a.students, sb = b.students;
         return sa.kelas - sb.kelas || sa.rombel.localeCompare(sb.rombel) || sa.nama.localeCompare(sb.nama);
@@ -74,179 +94,120 @@ const MonthlyReportExport = ({ reports }: Props) => {
           Program: getProgramLabel(st.level),
           Level: st.level,
           Bulan: `${MONTH_NAMES[r.month - 1]} ${r.year}`,
-          "Hal. Awal": r.start_page,
-          "Hal. Akhir": r.end_page,
-          "Total Halaman": r.pages_read,
+          Awal: r.start_page,
+          Akhir: r.end_page,
+          Total: r.pages_read,
           Target: r.target_pages,
           Status: r.achievement_status === "achieved" ? "Tercapai" : "Belum Tercapai",
           Catatan: r.notes || "-",
         };
       });
-  };
 
   const exportExcel = () => {
     setExporting(true);
     try {
       const rows = buildRows();
-      if (rows.length === 0) {
-        toast({ title: "Tidak ada data untuk di-export", variant: "destructive" });
-        setExporting(false);
-        return;
-      }
-
+      if (rows.length === 0) { toast({ title: "Tidak ada data untuk di-export", variant: "destructive" }); setExporting(false); return; }
       const ws = XLSX.utils.json_to_sheet(rows);
-
-      // Set column widths
-      ws["!cols"] = [
-        { wch: 4 }, { wch: 25 }, { wch: 8 }, { wch: 18 }, { wch: 14 },
-        { wch: 16 }, { wch: 10 }, { wch: 10 }, { wch: 13 }, { wch: 8 },
-        { wch: 15 }, { wch: 25 },
-      ];
-
+      ws["!cols"] = [{ wch: 4 }, { wch: 25 }, { wch: 8 }, { wch: 18 }, { wch: 14 }, { wch: 16 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 16 }, { wch: 30 }];
       const wb = XLSX.utils.book_new();
       const periodLabel = exportMonth !== "all" ? MONTH_NAMES[Number(exportMonth) - 1] : "Semua Bulan";
       const kelasLabel = exportKelas !== "all" ? `Kelas ${exportKelas}` : "Semua Kelas";
       XLSX.utils.book_append_sheet(wb, ws, "Rekap Laporan");
-
-      const fileName = `Rekap_Laporan_Bulanan_${kelasLabel}_${periodLabel}_${exportYear}.xlsx`;
-      XLSX.writeFile(wb, fileName);
-      toast({ title: `File Excel berhasil di-download ✅` });
+      XLSX.writeFile(wb, `Rekap_Laporan_${kelasLabel}_${periodLabel}_${exportYear}.xlsx`);
+      toast({ title: "File Excel berhasil di-download ✅" });
     } catch (e: any) {
       toast({ title: "Gagal export Excel", description: e.message, variant: "destructive" });
     }
     setExporting(false);
   };
 
-  const exportPDF = () => {
+  const exportPDF = async () => {
     setExporting(true);
     try {
       const rows = buildRows();
-      if (rows.length === 0) {
-        toast({ title: "Tidak ada data untuk di-export", variant: "destructive" });
-        setExporting(false);
-        return;
-      }
+      if (rows.length === 0) { toast({ title: "Tidak ada data untuk di-export", variant: "destructive" }); setExporting(false); return; }
+
+      const [logo, ttdKoor, ttdKepsek] = await Promise.all([
+        loadImg(settings?.logo_url || ""), loadImg(settings?.koordinator_ttd_url || ""), loadImg(settings?.kepsek_ttd_url || ""),
+      ]);
 
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const pageW = doc.internal.pageSize.getWidth();
       const pageH = doc.internal.pageSize.getHeight();
-      const margin = 10;
-
+      const M = 12;
       const periodLabel = exportMonth !== "all" ? MONTH_NAMES[Number(exportMonth) - 1] : "Semua Bulan";
       const kelasLabel = exportKelas !== "all" ? `Kelas ${exportKelas}` : "Semua Kelas";
       const yearLabel = exportYear !== "all" ? exportYear : "Semua Tahun";
 
-      // Title
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text("REKAP LAPORAN BULANAN BACAAN AL-QUR'AN", pageW / 2, margin + 5, { align: "center" });
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
-      doc.text(`${kelasLabel} — ${periodLabel} ${yearLabel}`, pageW / 2, margin + 12, { align: "center" });
+      // Header
+      if (logo) { try { doc.addImage(logo, "PNG", M, M, 16, 16); } catch {} }
+      doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(22, 101, 52);
+      doc.text((settings?.nama_lembaga || "Lembaga").toUpperCase(), pageW / 2, M + 5, { align: "center" });
+      if (settings?.alamat) {
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(80);
+        doc.text(settings.alamat, pageW / 2, M + 10, { align: "center" });
+      }
+      doc.setDrawColor(217, 119, 6); doc.setLineWidth(0.6);
+      doc.line(M, M + 18, pageW - M, M + 18);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(20);
+      doc.text("REKAP LAPORAN BULANAN BACAAN AL-QUR'AN", pageW / 2, M + 23, { align: "center" });
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(80);
+      doc.text(`${kelasLabel} — ${periodLabel} ${yearLabel}`, pageW / 2, M + 28, { align: "center" });
 
-      // Stats summary
       const achieved = rows.filter(r => r.Status === "Tercapai").length;
-      const notAchieved = rows.length - achieved;
       const pct = rows.length > 0 ? Math.round((achieved / rows.length) * 100) : 0;
-      doc.setFontSize(9);
-      doc.text(`Total Siswa: ${rows.length}   |   Tercapai: ${achieved} (${pct}%)   |   Belum Tercapai: ${notAchieved}`, pageW / 2, margin + 18, { align: "center" });
+      doc.text(`Total: ${rows.length}  •  Tercapai: ${achieved} (${pct}%)  •  Belum: ${rows.length - achieved}`, pageW / 2, M + 33, { align: "center" });
 
-      // Table
-      const headers = ["No", "Nama", "Kelas", "Program", "Level", "Bulan", "Awal", "Akhir", "Total", "Target", "Status", "Catatan"];
-      const colWidths = [8, 38, 12, 28, 22, 26, 12, 12, 12, 12, 22, pageW - 2 * margin - 204];
-
-      let y = margin + 24;
-      const rowH = 7;
-      const headerH = 8;
-
-      const drawHeader = () => {
-        doc.setFillColor(34, 87, 122);
-        doc.rect(margin, y, pageW - 2 * margin, headerH, "F");
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(7);
-        doc.setFont("helvetica", "bold");
-        let x = margin;
-        headers.forEach((h, i) => {
-          doc.text(h, x + 1.5, y + 5.5);
-          x += colWidths[i];
-        });
-        y += headerH;
-        doc.setTextColor(0, 0, 0);
-        doc.setFont("helvetica", "normal");
-      };
-
-      drawHeader();
-
-      rows.forEach((row, idx) => {
-        if (y + rowH > pageH - 15) {
-          // Footer
-          doc.setFontSize(7);
-          doc.setTextColor(150, 150, 150);
-          doc.text(`Halaman ${doc.getNumberOfPages()}`, pageW - margin, pageH - 5, { align: "right" });
-          doc.addPage();
-          y = margin + 5;
-          doc.setTextColor(0, 0, 0);
-          drawHeader();
-        }
-
-        // Alternate row bg
-        if (idx % 2 === 0) {
-          doc.setFillColor(245, 247, 250);
-          doc.rect(margin, y, pageW - 2 * margin, rowH, "F");
-        }
-
-        // Status color
-        const isAchieved = row.Status === "Tercapai";
-
-        doc.setFontSize(7);
-        let x = margin;
-        const vals = [
-          String(row.No), row.Nama, row.Kelas, row.Program, row.Level,
-          row.Bulan, String(row["Hal. Awal"]), String(row["Hal. Akhir"]),
-          String(row["Total Halaman"]), String(row.Target), row.Status,
-          (row.Catatan || "").substring(0, 30),
-        ];
-
-        vals.forEach((v, i) => {
-          if (i === 10) {
-            doc.setTextColor(isAchieved ? 16 : 185, isAchieved ? 124 : 28, isAchieved ? 65 : 28);
-            doc.setFont("helvetica", "bold");
+      autoTable(doc, {
+        startY: M + 37,
+        head: [["No", "Nama", "Kelas", "Program", "Level", "Bulan", "Awal", "Akhir", "Total", "Target", "Status", "Catatan"]],
+        body: rows.map(r => [r.No, r.Nama, r.Kelas, r.Program, r.Level, r.Bulan, r.Awal, r.Akhir, r.Total, r.Target, r.Status, r.Catatan]),
+        styles: { fontSize: 8, cellPadding: 1.6, overflow: "linebreak", valign: "middle", lineColor: [220, 220, 220], lineWidth: 0.1 },
+        headStyles: { fillColor: [34, 87, 122], textColor: [255, 255, 255], fontStyle: "bold", halign: "center", fontSize: 8 },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: {
+          0: { cellWidth: 8, halign: "center" }, 1: { cellWidth: 38 }, 2: { cellWidth: 12, halign: "center" },
+          3: { cellWidth: 26 }, 4: { cellWidth: 22 }, 5: { cellWidth: 24 },
+          6: { cellWidth: 12, halign: "center" }, 7: { cellWidth: 12, halign: "center" },
+          8: { cellWidth: 12, halign: "center", fontStyle: "bold" }, 9: { cellWidth: 12, halign: "center" },
+          10: { cellWidth: 22, halign: "center", fontStyle: "bold" }, 11: { cellWidth: "auto" },
+        },
+        didParseCell: (data) => {
+          if (data.section === "body" && data.column.index === 10) {
+            data.cell.styles.textColor = data.cell.raw === "Tercapai" ? [16, 124, 65] : [185, 28, 28];
           }
-          doc.text(v, x + 1.5, y + 5);
-          if (i === 10) {
-            doc.setTextColor(0, 0, 0);
-            doc.setFont("helvetica", "normal");
-          }
-          x += colWidths[i];
-        });
-
-        y += rowH;
+        },
+        margin: { left: M, right: M, bottom: 22 },
       });
 
-      // Final footer
-      doc.setFontSize(7);
-      doc.setTextColor(150, 150, 150);
-      doc.text(`Halaman ${doc.getNumberOfPages()}`, pageW - margin, pageH - 5, { align: "right" });
-      doc.text(`Dicetak: ${new Date().toLocaleDateString("id-ID")}`, margin, pageH - 5);
+      let cursorY = (doc as any).lastAutoTable.finalY + 6;
+      const sigBlockH = 40;
+      if (cursorY + sigBlockH > pageH - 14) { doc.addPage(); cursorY = M + 5; }
+      const colW = (pageW - M * 2) / 2;
+      const drawSig = (xC: number, label: string, nama: string, ttd: string | null) => {
+        doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(40);
+        doc.text(label, xC, cursorY, { align: "center" });
+        if (ttd) { try { doc.addImage(ttd, "PNG", xC - 18, cursorY + 3, 36, 16); } catch {} }
+        doc.setDrawColor(120); doc.setLineWidth(0.2);
+        doc.line(xC - 30, cursorY + 22, xC + 30, cursorY + 22);
+        doc.setFont("helvetica", "bold"); doc.text(nama || "(.....................)", xC, cursorY + 27, { align: "center" });
+      };
+      drawSig(M + colW / 2, "Koordinator Tahfizh,", settings?.koordinator_nama || "", ttdKoor);
+      drawSig(M + colW + colW / 2, "Mengetahui, Kepala Sekolah,", settings?.kepsek_nama || "", ttdKepsek);
 
-      // Signature area
-      y += 10;
-      if (y + 30 > pageH - 15) {
-        doc.addPage();
-        y = margin + 10;
+      const totalPages = doc.getNumberOfPages();
+      const today = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+      for (let p = 1; p <= totalPages; p++) {
+        doc.setPage(p);
+        doc.setDrawColor(220); doc.line(M, pageH - 10, pageW - M, pageH - 10);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(120);
+        doc.text(`Dicetak: ${today}`, M, pageH - 6);
+        doc.text(`Halaman ${p} dari ${totalPages}`, pageW - M, pageH - 6, { align: "right" });
       }
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(9);
-      doc.text("Mengetahui,", pageW - margin - 60, y);
-      doc.text("Kepala Sekolah", pageW - margin - 60, y + 5);
-      doc.text("_____________________", pageW - margin - 60, y + 25);
 
-      doc.text("Guru Tahsin", margin + 10, y);
-      doc.text("_____________________", margin + 10, y + 25);
-
-      const fileName = `Rekap_Laporan_Bulanan_${kelasLabel}_${periodLabel}_${yearLabel}.pdf`;
-      doc.save(fileName);
-      toast({ title: `File PDF berhasil di-download ✅` });
+      doc.save(`Rekap_Laporan_${kelasLabel}_${periodLabel}_${yearLabel}.pdf`);
+      toast({ title: "File PDF berhasil di-download ✅" });
     } catch (e: any) {
       toast({ title: "Gagal export PDF", description: e.message, variant: "destructive" });
     }
@@ -256,14 +217,10 @@ const MonthlyReportExport = ({ reports }: Props) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <Download className="w-4 h-4" /> Export
-        </Button>
+        <Button variant="outline" className="gap-2"><Download className="w-4 h-4" /> Export</Button>
       </DialogTrigger>
       <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Export Rekap Laporan Bulanan</DialogTitle>
-        </DialogHeader>
+        <DialogHeader><DialogTitle>Export Rekap Laporan Bulanan</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div>
             <Label className="text-xs">Kelas</Label>
@@ -271,9 +228,7 @@ const MonthlyReportExport = ({ reports }: Props) => {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua Kelas</SelectItem>
-                {[1, 2, 3, 4, 5, 6].map(k => (
-                  <SelectItem key={k} value={String(k)}>Kelas {k}</SelectItem>
-                ))}
+                {[1,2,3,4,5,6].map(k => <SelectItem key={k} value={String(k)}>Kelas {k}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -284,9 +239,7 @@ const MonthlyReportExport = ({ reports }: Props) => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua Bulan</SelectItem>
-                  {MONTH_NAMES.map((m, i) => (
-                    <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>
-                  ))}
+                  {MONTH_NAMES.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -296,36 +249,21 @@ const MonthlyReportExport = ({ reports }: Props) => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua</SelectItem>
-                  {(years.length > 0 ? years : [2024, 2025, 2026]).map(y => (
-                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                  ))}
+                  {(years.length > 0 ? years : [2024,2025,2026]).map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
           </div>
-
           <div className="p-3 bg-muted rounded-lg text-sm text-muted-foreground">
-            Data yang akan di-export: <strong className="text-foreground">{filteredData.length}</strong> laporan
+            Data: <strong className="text-foreground">{filteredData.length}</strong> laporan
           </div>
         </div>
         <DialogFooter className="gap-2 sm:gap-2">
-          <Button
-            variant="outline"
-            onClick={exportExcel}
-            disabled={exporting || filteredData.length === 0}
-            className="gap-2 flex-1"
-          >
-            {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 text-emerald-600" />}
-            Excel
+          <Button variant="outline" onClick={exportExcel} disabled={exporting || filteredData.length === 0} className="gap-2 flex-1">
+            {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 text-emerald-600" />} Excel
           </Button>
-          <Button
-            variant="outline"
-            onClick={exportPDF}
-            disabled={exporting || filteredData.length === 0}
-            className="gap-2 flex-1"
-          >
-            {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4 text-red-600" />}
-            PDF
+          <Button variant="outline" onClick={exportPDF} disabled={exporting || filteredData.length === 0} className="gap-2 flex-1">
+            {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4 text-red-600" />} PDF
           </Button>
         </DialogFooter>
       </DialogContent>
