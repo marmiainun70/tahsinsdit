@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import BulkMonthlyReportForm from "@/components/BulkMonthlyReportForm";
 import MonthlyReportExport from "@/components/MonthlyReportExport";
+import AttendanceExport from "@/components/AttendanceExport";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -779,8 +780,9 @@ const MonthlyReport = () => {
 
           {/* Reports Table */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
               <CardTitle className="text-base">Riwayat Laporan ({filteredReports.length})</CardTitle>
+              <MonthlyReportExport reports={filteredReports as any} />
             </CardHeader>
             <CardContent>
               {filteredReports.length === 0 ? (
@@ -879,10 +881,11 @@ const MonthlyReport = () => {
 
           {/* Attendance Table */}
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
               <CardTitle className="text-base flex items-center gap-2">
                 <CalendarCheck className="w-4 h-4" /> Riwayat Absensi ({filteredAttendance.length})
               </CardTitle>
+              <AttendanceExport attendance={filteredAttendance as any} />
             </CardHeader>
             <CardContent>
               {filteredAttendance.length === 0 ? (
