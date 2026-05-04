@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Loader2, Filter, UserCheck, Thermometer, HandHeart, UserX } from "lucide-react";
+import AttendanceExport from "@/components/AttendanceExport";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
 const COLORS = ["#22c55e", "#f59e0b", "#3b82f6", "#ef4444"];
@@ -193,7 +194,10 @@ const AttendancePage = () => {
 
       {/* Table */}
       <Card>
-        <CardHeader><CardTitle className="text-base">Data Absensi ({filtered.length})</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between gap-2">
+          <CardTitle className="text-base">Data Absensi ({filtered.length})</CardTitle>
+          <AttendanceExport attendance={filtered as any} />
+        </CardHeader>
         <CardContent>
           {filtered.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">Belum ada data absensi</p>
