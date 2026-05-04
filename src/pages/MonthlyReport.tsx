@@ -208,11 +208,22 @@ const MonthlyReport = () => {
       setEndIqraLevel(nextLevel);
       setEndPage(String(nextPage));
     } else if (prevReport.program_type === "tahfizh") {
-      // Tidak ada juz tersimpan terpisah → pakai end_page sebagai posisi
-      // Heuristik sederhana: lanjut 1 halaman
-      const np = Math.min(20, prevReport.end_page + 1);
-      setStartJuzPage(String(np));
-      setEndJuzPage(String(np));
+      // Ambil juz akhir & halaman akhir dari laporan sebelumnya
+      const prevEndJuzStr = (prevReport as any).end_iqra_level || prevReport.iqra_level || "Juz 30";
+      const prevEndJuz = Number(String(prevEndJuzStr).replace(/\D/g, "")) || 30;
+      const prevEndPage = Math.max(1, Math.min(20, prevReport.end_page || 1));
+      // Lanjut ke posisi linear berikutnya (naik = juz menurun atau halaman menurun dlm 1 juz)
+      // Default: lanjut +1 halaman dlm juz yang sama; jika sudah hal 20, pindah ke juz berikutnya (juz - 1)
+      let nextJuz = prevEndJuz;
+      let nextPage = prevEndPage + 1;
+      if (nextPage > 20) {
+        if (nextJuz > 1) { nextJuz = nextJuz - 1; nextPage = 1; }
+        else { nextPage = 20; }
+      }
+      setStartJuz(String(nextJuz));
+      setStartJuzPage(String(nextPage));
+      setEndJuz(String(nextJuz));
+      setEndJuzPage(String(nextPage));
     } else {
       const np = prevReport.end_page + 1;
       setStartPage(String(np));
