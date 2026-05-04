@@ -117,6 +117,38 @@
     background: hsl(var(--primary) / 0.4);
     border-radius: 10px;
   }
+  /* Wrapper untuk konten lebar (tabel, card group) — auto horizontal scroll */
+  .h-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .h-scroll::-webkit-scrollbar {
+    height: 8px;
+  }
+  .h-scroll::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 8px;
+  }
+  .h-scroll::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.45);
+    border-radius: 8px;
+  }
+}
+
+/* Global: izinkan halaman scroll horizontal jika ada konten yang lebih lebar
+   dari viewport, supaya tabel/card tidak kepotong di layar kecil. */
+html, body {
+  overflow-x: auto;
+}
+main {
+  overflow-x: auto;
+}
+/* Auto-wrap tabel di dalam Card bila terlalu lebar */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ========== Print Area (PDF Export) ========== */
