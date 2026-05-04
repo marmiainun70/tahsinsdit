@@ -16,6 +16,7 @@ import {
   Users, ListChecks, AlertCircle, Percent, FileWarning, FileSpreadsheet
 } from "lucide-react";
 import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import type { Database } from "@/integrations/supabase/types";
 
