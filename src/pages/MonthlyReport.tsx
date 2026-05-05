@@ -702,23 +702,46 @@ const MonthlyReport = () => {
                   </div>
                 )}
 
-                {/* Banner Penurunan */}
-                {isDecline && (
-                  <div className="flex items-start gap-2 text-sm bg-red-50 border-2 border-red-200 rounded-lg px-3 py-2">
+                {/* Banner MUNDUR (input awal vs akhir) */}
+                {isFormDecline && (
+                  <div className="flex items-start gap-2 text-sm bg-red-50 border-2 border-red-300 rounded-lg px-3 py-2">
                     <TrendingDown className="w-5 h-5 flex-shrink-0 text-red-600 mt-0.5" />
                     <div className="text-red-700">
-                      <p className="font-semibold">⚠️ Perhatian: Terjadi penurunan progres bacaan siswa pada bulan ini.</p>
+                      <p className="font-semibold">⚠️ Hafalan/Bacaan akhir lebih rendah dari awal (MUNDUR).</p>
+                      <p className="text-xs mt-1">Data tetap bisa disimpan. Catatan otomatis akan ditambahkan.</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Banner Penurunan antar bulan */}
+                {!isFormDecline && isDecline && (
+                  <div className="flex items-start gap-2 text-sm bg-amber-50 border-2 border-amber-200 rounded-lg px-3 py-2">
+                    <TrendingDown className="w-5 h-5 flex-shrink-0 text-amber-600 mt-0.5" />
+                    <div className="text-amber-700">
+                      <p className="font-semibold">⚠️ Penurunan progres dibanding bulan sebelumnya.</p>
                       <p className="text-xs mt-1">Catatan otomatis akan ditambahkan pada laporan ini.</p>
                     </div>
                   </div>
                 )}
 
+                {/* Banner NAIK LEVEL (Iqra selesai jilid 6 hal 32) */}
+                {isLevelGraduated && (
+                  <div className="flex items-start gap-2 text-sm bg-emerald-50 border-2 border-emerald-300 rounded-lg px-3 py-2">
+                    <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600 mt-0.5" />
+                    <div className="text-emerald-700">
+                      <p className="font-semibold">🎉 Selamat! Siswa telah menyelesaikan Tahsin Dasar (Iqra 6).</p>
+                      <p className="text-xs mt-1">Naik ke level selanjutnya: Tahsin Lanjutan / Tahfizh.</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Summary */}
                 <div className="p-3 bg-muted rounded-xl grid grid-cols-3 gap-3 text-center text-sm">
                   <div>
                     <p className="text-muted-foreground text-xs">Total Halaman</p>
-                    <p className="text-lg font-bold text-foreground">{pagesRead}</p>
+                    <p className={`text-lg font-bold ${pagesSigned < 0 ? "text-red-600" : "text-foreground"}`}>
+                      {pagesSigned > 0 ? `+${pagesSigned}` : pagesSigned}
+                    </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground text-xs">Target</p>
@@ -726,9 +749,18 @@ const MonthlyReport = () => {
                   </div>
                   <div>
                     <p className="text-muted-foreground text-xs">Status</p>
-                    <Badge variant={status === "achieved" ? "default" : "destructive"} className="mt-1">
-                      {status === "achieved" ? "Tercapai ✅" : "Belum Tercapai"}
-                    </Badge>
+                    {progressStatus === "achieved" && (
+                      <Badge className="mt-1 bg-emerald-600 hover:bg-emerald-700">Tercapai ✅</Badge>
+                    )}
+                    {progressStatus === "not_achieved" && (
+                      <Badge className="mt-1 bg-amber-500 hover:bg-amber-600 text-white">Belum Tercapai</Badge>
+                    )}
+                    {progressStatus === "stagnant" && (
+                      <Badge variant="secondary" className="mt-1">Tetap</Badge>
+                    )}
+                    {progressStatus === "decline" && (
+                      <Badge variant="destructive" className="mt-1">MUNDUR ⚠️</Badge>
+                    )}
                   </div>
                 </div>
 
