@@ -3,11 +3,12 @@ import { useStudents, useUpdateStudent, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS
 import { useProfileMap } from "@/hooks/useProfiles";
 import {
   useAllMonthlyReports, useAddMonthlyReport, useDeleteMonthlyReport, useUpdateMonthlyReport,
-  getAchievementStatus, getValidIqraPage, MONTH_NAMES, calcIqraPagesRead,
-  getTarget, detectDecline, DECLINE_AUTO_NOTE
+  getAchievementStatus, getValidIqraPage, MONTH_NAMES, calcIqraPagesRead, calcIqraPagesSigned,
+  isIqraDecline, isIqraGraduated, getProgressStatus, buildIqraDeclineNote, buildTahfizhDeclineNote,
+  getTarget, detectDecline, DECLINE_AUTO_NOTE,
 } from "@/hooks/useMonthlyReports";
 import { useAllAttendance, useUpsertAttendance } from "@/hooks/useAttendance";
-import { JUZ_LIST, JUZ_PAGE_LIST, JUZ_DATA, calcHafalanPages } from "@/lib/juzData";
+import { JUZ_LIST, JUZ_PAGE_LIST, JUZ_DATA, calcHafalanPages, calcHafalanPagesSigned, isTahfizhDecline } from "@/lib/juzData";
 import type { Database } from "@/integrations/supabase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
