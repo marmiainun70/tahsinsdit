@@ -48,6 +48,26 @@ export const getValidIqraPage = (page: number): number => {
   return Math.min(page, 32);
 };
 
+/** Rumus baru Tahsin Dasar (Iqra) — signed: total bisa negatif (TURUN) */
+export const IQRA_PAGES_PER_LEVEL = 30;
+export const calcIqraPagesSigned = (
+  startLevel: number, startPage: number,
+  endLevel: number, endPage: number,
+): number => (endLevel - startLevel) * IQRA_PAGES_PER_LEVEL + (endPage - startPage);
+
+/** Deteksi TURUN khusus Tahsin Dasar (Iqra) */
+export const isIqraDecline = (
+  startLevel: number, startPage: number, endLevel: number, endPage: number,
+): boolean => {
+  if (endLevel < startLevel) return true;
+  if (endLevel === startLevel && endPage < startPage) return true;
+  return false;
+};
+
+/** Notif: siswa selesai Tahsin Dasar (Jilid 6 hal 32) */
+export const isIqraGraduated = (endLevel: number, endPage: number): boolean =>
+  endLevel === 6 && endPage >= 32;
+
 export const TARGET_TAHFIZH = 3;
 export const TARGET_TAHSIN = 15;
 export const TARGET_IQRA = 15;
@@ -58,9 +78,32 @@ export const getTarget = (programType: string): number => {
   return TARGET_IQRA;
 };
 
+/** Status 4-state berbasis nilai signed */
+export type ProgressStatus = "achieved" | "not_achieved" | "stagnant" | "decline";
+export const getProgressStatus = (pagesSigned: number, target: number): ProgressStatus => {
+  if (pagesSigned < 0) return "decline";
+  if (pagesSigned === 0) return "stagnant";
+  if (pagesSigned >= target) return "achieved";
+  return "not_achieved";
+};
+
 export const getAchievementStatus = (pagesRead: number, target: number): string => {
   return pagesRead >= target ? "achieved" : "not_achieved";
 };
+
+export const buildIqraDeclineNote = (
+  startLevel: number, startPage: number, endLevel: number, endPage: number,
+): string => {
+  const total = calcIqraPagesSigned(startLevel, startPage, endLevel, endPage);
+  if (endLevel < startLevel) {
+    return `Siswa mengalami penurunan dari Jilid ${startLevel} ke Jilid ${endLevel} dengan selisih ${total} halaman. Disarankan untuk mengulang materi sebelumnya guna memperkuat pemahaman dan kelancaran membaca sebelum melanjutkan ke jilid berikutnya.`;
+  }
+  return `Siswa mengalami penurunan progres pada Jilid ${startLevel} (selisih ${total} halaman). Disarankan untuk murojaah dan memperkuat pemahaman halaman sebelumnya.`;
+};
+
+export const buildTahfizhDeclineNote = (
+  startJuz: number, startPage: number, endJuz: number, endPage: number,
+): string => `Hafalan akhir (Juz ${endJuz} hal.${endPage}) lebih rendah dari hafalan awal (Juz ${startJuz} hal.${startPage}). Disarankan memperkuat murojaah sebelum melanjutkan ke target berikutnya.`;
 
 /**
  * Deteksi penurunan progres antara laporan bulan lalu & laporan saat ini.

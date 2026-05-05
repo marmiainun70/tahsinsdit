@@ -3,11 +3,12 @@ import { useStudents, useUpdateStudent, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS
 import { useProfileMap } from "@/hooks/useProfiles";
 import {
   useAllMonthlyReports, useAddMonthlyReport, useDeleteMonthlyReport, useUpdateMonthlyReport,
-  getAchievementStatus, getValidIqraPage, MONTH_NAMES, calcIqraPagesRead,
-  getTarget, detectDecline, DECLINE_AUTO_NOTE
+  getAchievementStatus, getValidIqraPage, MONTH_NAMES, calcIqraPagesRead, calcIqraPagesSigned,
+  isIqraDecline, isIqraGraduated, getProgressStatus, buildIqraDeclineNote, buildTahfizhDeclineNote,
+  getTarget, detectDecline, DECLINE_AUTO_NOTE,
 } from "@/hooks/useMonthlyReports";
 import { useAllAttendance, useUpsertAttendance } from "@/hooks/useAttendance";
-import { JUZ_LIST, JUZ_PAGE_LIST, JUZ_DATA, calcHafalanPages } from "@/lib/juzData";
+import { JUZ_LIST, JUZ_PAGE_LIST, JUZ_DATA, calcHafalanPages, calcHafalanPagesSigned, isTahfizhDecline } from "@/lib/juzData";
 import type { Database } from "@/integrations/supabase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -104,15 +105,27 @@ const MonthlyReport = () => {
   const isIqra = programType === "iqra";
   const target = getTarget(programType);
 
-  // Page calculations per program
+  // Page calculations per program — SIGNED (bisa negatif = TURUN)
   const validStart = isIqra ? getValidIqraPage(Number(startPage)) : Number(startPage);
   const validEnd = isIqra ? getValidIqraPage(Number(endPage)) : Number(endPage);
-  const pagesRead = isTahfizh
-    ? calcHafalanPages(Number(startJuz), Number(startJuzPage), Number(endJuz), Number(endJuzPage))
+  const pagesSigned = isTahfizh
+    ? calcHafalanPagesSigned(Number(startJuz), Number(startJuzPage), Number(endJuz), Number(endJuzPage))
     : isIqra
-      ? calcIqraPagesRead(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
-      : Math.max(0, validEnd - validStart);
-  const status = getAchievementStatus(pagesRead, target);
+      ? calcIqraPagesSigned(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
+      : (validEnd - validStart);
+  const pagesRead = pagesSigned; // simpan signed agar status TURUN tercatat
+  const progressStatus = getProgressStatus(pagesSigned, target); // achieved | not_achieved | stagnant | decline
+  const status = pagesSigned >= target ? "achieved" : pagesSigned < 0 ? "decline" : pagesSigned === 0 ? "stagnant" : "not_achieved";
+
+  // Form-level decline detection (berdasarkan input awal vs akhir)
+  const isFormDecline = isTahfizh
+    ? isTahfizhDecline(Number(startJuz), Number(startJuzPage), Number(endJuz), Number(endJuzPage))
+    : isIqra
+      ? isIqraDecline(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
+      : (validEnd < validStart);
+
+  // Notif kenaikan level (Iqra hanya)
+  const isLevelGraduated = isIqra && isIqraGraduated(Number(endIqraLevel), validEnd);
 
   // Find previous month report for this student (for carry-over & decline detection)
   const prevReport = useMemo(() => {
@@ -236,25 +249,27 @@ const MonthlyReport = () => {
       toast({ title: "Pilih siswa terlebih dahulu", variant: "destructive" });
       return;
     }
-    if (isIqra && Number(endIqraLevel) < Number(startIqraLevel)) {
-      toast({ title: "Level akhir tidak boleh lebih rendah dari level awal", variant: "destructive" });
-      return;
-    }
-    if (!isIqra && !isTahfizh && validEnd < validStart) {
-      toast({ title: "Halaman akhir tidak boleh lebih kecil dari halaman awal", variant: "destructive" });
-      return;
-    }
-    if (isIqra && Number(endIqraLevel) === Number(startIqraLevel) && validEnd < validStart) {
-      toast({ title: "Halaman akhir tidak boleh lebih kecil dari halaman awal pada level yang sama", variant: "destructive" });
-      return;
-    }
+    // CATATAN: data TURUN tetap boleh disimpan (sesuai aturan baru), hanya ditandai.
+    // Validasi keras dihapus untuk semua program; cukup tampilkan warning visual.
 
     const hasLevelChange = selectedStudent && selectedLevel && selectedLevel !== selectedStudent.level;
 
-    // Jika terdeteksi penurunan, sisipkan catatan otomatis (tanpa hapus catatan guru)
-    const finalNotes = isDecline
-      ? (notes ? `${notes}\n\n${DECLINE_AUTO_NOTE}` : DECLINE_AUTO_NOTE)
-      : notes;
+    // Susun catatan otomatis: penurunan vs antar bulan
+    let autoNote = "";
+    if (isFormDecline) {
+      autoNote = isTahfizh
+        ? buildTahfizhDeclineNote(Number(startJuz), Number(startJuzPage), Number(endJuz), Number(endJuzPage))
+        : isIqra
+          ? buildIqraDeclineNote(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
+          : DECLINE_AUTO_NOTE;
+    } else if (isDecline) {
+      autoNote = DECLINE_AUTO_NOTE;
+    }
+    if (isLevelGraduated) {
+      const grad = "🎉 Selamat! Siswa telah menyelesaikan Tahsin Dasar (Iqra 6) dan naik ke level selanjutnya: Tahsin Lanjutan / Tahfizh.";
+      autoNote = autoNote ? `${autoNote}\n\n${grad}` : grad;
+    }
+    const finalNotes = autoNote ? (notes ? `${notes}\n\n${autoNote}` : autoNote) : notes;
 
     try {
       // Save monthly report
@@ -570,12 +585,9 @@ const MonthlyReport = () => {
                               <button
                                 key={lv}
                                 onClick={() => setEndIqraLevel(String(lv))}
-                                disabled={lv < Number(startIqraLevel)}
                                 className={`w-9 h-9 rounded-lg text-sm font-bold transition-all ${
                                   endIqraLevel === String(lv)
                                     ? "bg-primary text-primary-foreground shadow-md"
-                                    : lv < Number(startIqraLevel)
-                                    ? "bg-muted/50 text-muted-foreground/30 cursor-not-allowed"
                                     : "bg-muted text-muted-foreground hover:bg-accent"
                                 }`}
                               >
@@ -690,23 +702,46 @@ const MonthlyReport = () => {
                   </div>
                 )}
 
-                {/* Banner Penurunan */}
-                {isDecline && (
-                  <div className="flex items-start gap-2 text-sm bg-red-50 border-2 border-red-200 rounded-lg px-3 py-2">
+                {/* Banner MUNDUR (input awal vs akhir) */}
+                {isFormDecline && (
+                  <div className="flex items-start gap-2 text-sm bg-red-50 border-2 border-red-300 rounded-lg px-3 py-2">
                     <TrendingDown className="w-5 h-5 flex-shrink-0 text-red-600 mt-0.5" />
                     <div className="text-red-700">
-                      <p className="font-semibold">⚠️ Perhatian: Terjadi penurunan progres bacaan siswa pada bulan ini.</p>
+                      <p className="font-semibold">⚠️ Hafalan/Bacaan akhir lebih rendah dari awal (MUNDUR).</p>
+                      <p className="text-xs mt-1">Data tetap bisa disimpan. Catatan otomatis akan ditambahkan.</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Banner Penurunan antar bulan */}
+                {!isFormDecline && isDecline && (
+                  <div className="flex items-start gap-2 text-sm bg-amber-50 border-2 border-amber-200 rounded-lg px-3 py-2">
+                    <TrendingDown className="w-5 h-5 flex-shrink-0 text-amber-600 mt-0.5" />
+                    <div className="text-amber-700">
+                      <p className="font-semibold">⚠️ Penurunan progres dibanding bulan sebelumnya.</p>
                       <p className="text-xs mt-1">Catatan otomatis akan ditambahkan pada laporan ini.</p>
                     </div>
                   </div>
                 )}
 
+                {/* Banner NAIK LEVEL (Iqra selesai jilid 6 hal 32) */}
+                {isLevelGraduated && (
+                  <div className="flex items-start gap-2 text-sm bg-emerald-50 border-2 border-emerald-300 rounded-lg px-3 py-2">
+                    <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600 mt-0.5" />
+                    <div className="text-emerald-700">
+                      <p className="font-semibold">🎉 Selamat! Siswa telah menyelesaikan Tahsin Dasar (Iqra 6).</p>
+                      <p className="text-xs mt-1">Naik ke level selanjutnya: Tahsin Lanjutan / Tahfizh.</p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Summary */}
                 <div className="p-3 bg-muted rounded-xl grid grid-cols-3 gap-3 text-center text-sm">
                   <div>
                     <p className="text-muted-foreground text-xs">Total Halaman</p>
-                    <p className="text-lg font-bold text-foreground">{pagesRead}</p>
+                    <p className={`text-lg font-bold ${pagesSigned < 0 ? "text-red-600" : "text-foreground"}`}>
+                      {pagesSigned > 0 ? `+${pagesSigned}` : pagesSigned}
+                    </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground text-xs">Target</p>
@@ -714,9 +749,18 @@ const MonthlyReport = () => {
                   </div>
                   <div>
                     <p className="text-muted-foreground text-xs">Status</p>
-                    <Badge variant={status === "achieved" ? "default" : "destructive"} className="mt-1">
-                      {status === "achieved" ? "Tercapai ✅" : "Belum Tercapai"}
-                    </Badge>
+                    {progressStatus === "achieved" && (
+                      <Badge className="mt-1 bg-emerald-600 hover:bg-emerald-700">Tercapai ✅</Badge>
+                    )}
+                    {progressStatus === "not_achieved" && (
+                      <Badge className="mt-1 bg-amber-500 hover:bg-amber-600 text-white">Belum Tercapai</Badge>
+                    )}
+                    {progressStatus === "stagnant" && (
+                      <Badge variant="secondary" className="mt-1">Tetap</Badge>
+                    )}
+                    {progressStatus === "decline" && (
+                      <Badge variant="destructive" className="mt-1">MUNDUR ⚠️</Badge>
+                    )}
                   </div>
                 </div>
 
@@ -866,7 +910,10 @@ const MonthlyReport = () => {
                             <TableCell className="text-center font-bold">{r.pages_read}</TableCell>
                             <TableCell className="text-center">{r.target_pages}</TableCell>
                             <TableCell className="text-center">
-                              {r.achievement_status === "achieved" ? <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" /> : <XCircle className="w-5 h-5 text-destructive mx-auto" />}
+                              {r.achievement_status === "achieved" && <Badge className="bg-emerald-600 hover:bg-emerald-700 text-xs">Tercapai</Badge>}
+                              {r.achievement_status === "not_achieved" && <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">Belum</Badge>}
+                              {r.achievement_status === "stagnant" && <Badge variant="secondary" className="text-xs">Tetap</Badge>}
+                              {r.achievement_status === "decline" && <Badge variant="destructive" className="text-xs">MUNDUR</Badge>}
                             </TableCell>
                             <TableCell className="max-w-[150px] text-xs text-muted-foreground">
                               <div className="truncate">{r.notes || "-"}</div>
