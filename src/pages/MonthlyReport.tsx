@@ -105,15 +105,27 @@ const MonthlyReport = () => {
   const isIqra = programType === "iqra";
   const target = getTarget(programType);
 
-  // Page calculations per program
+  // Page calculations per program — SIGNED (bisa negatif = TURUN)
   const validStart = isIqra ? getValidIqraPage(Number(startPage)) : Number(startPage);
   const validEnd = isIqra ? getValidIqraPage(Number(endPage)) : Number(endPage);
-  const pagesRead = isTahfizh
-    ? calcHafalanPages(Number(startJuz), Number(startJuzPage), Number(endJuz), Number(endJuzPage))
+  const pagesSigned = isTahfizh
+    ? calcHafalanPagesSigned(Number(startJuz), Number(startJuzPage), Number(endJuz), Number(endJuzPage))
     : isIqra
-      ? calcIqraPagesRead(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
-      : Math.max(0, validEnd - validStart);
-  const status = getAchievementStatus(pagesRead, target);
+      ? calcIqraPagesSigned(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
+      : (validEnd - validStart);
+  const pagesRead = pagesSigned; // simpan signed agar status TURUN tercatat
+  const progressStatus = getProgressStatus(pagesSigned, target); // achieved | not_achieved | stagnant | decline
+  const status = pagesSigned >= target ? "achieved" : pagesSigned < 0 ? "decline" : pagesSigned === 0 ? "stagnant" : "not_achieved";
+
+  // Form-level decline detection (berdasarkan input awal vs akhir)
+  const isFormDecline = isTahfizh
+    ? isTahfizhDecline(Number(startJuz), Number(startJuzPage), Number(endJuz), Number(endJuzPage))
+    : isIqra
+      ? isIqraDecline(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
+      : (validEnd < validStart);
+
+  // Notif kenaikan level (Iqra hanya)
+  const isLevelGraduated = isIqra && isIqraGraduated(Number(endIqraLevel), validEnd);
 
   // Find previous month report for this student (for carry-over & decline detection)
   const prevReport = useMemo(() => {
