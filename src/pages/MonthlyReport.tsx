@@ -585,12 +585,9 @@ const MonthlyReport = () => {
                               <button
                                 key={lv}
                                 onClick={() => setEndIqraLevel(String(lv))}
-                                disabled={lv < Number(startIqraLevel)}
                                 className={`w-9 h-9 rounded-lg text-sm font-bold transition-all ${
                                   endIqraLevel === String(lv)
                                     ? "bg-primary text-primary-foreground shadow-md"
-                                    : lv < Number(startIqraLevel)
-                                    ? "bg-muted/50 text-muted-foreground/30 cursor-not-allowed"
                                     : "bg-muted text-muted-foreground hover:bg-accent"
                                 }`}
                               >
