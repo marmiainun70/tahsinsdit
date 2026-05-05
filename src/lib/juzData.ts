@@ -203,14 +203,35 @@ export const JUZ_PAGE_LIST = Array.from({ length: JUZ_PAGES_PER_JUZ }, (_, i) =>
  *   → akhir lebih dulu (lebih awal dalam mushaf), pencapaian = 5 halaman
  *     (sisa juz 30 hal 18..1 = mundur, lalu ke juz 29 hal 20..3)
  */
-export const calcHafalanPages = (
+/**
+ * Hitung penambahan hafalan (signed) berdasarkan rumus baru:
+ *   total = (juzAwal - juzAkhir) * 20 + (halamanAkhir - halamanAwal)
+ *
+ * Hafalan bergerak Juz 30 → Juz 1, jadi juzAkhir < juzAwal saat maju.
+ * Hasil positif = bertambah, 0 = tetap, negatif = MUNDUR.
+ */
+export const calcHafalanPagesSigned = (
   startJuz: number,
   startPage: number,
   endJuz: number,
   endPage: number,
 ): number => {
-  // Posisi linear dari awal Mushaf (juz 1 hal 1 = 0)
-  const startPos = (startJuz - 1) * JUZ_PAGES_PER_JUZ + (startPage - 1);
-  const endPos = (endJuz - 1) * JUZ_PAGES_PER_JUZ + (endPage - 1);
-  return Math.abs(endPos - startPos);
+  return (startJuz - endJuz) * JUZ_PAGES_PER_JUZ + (endPage - startPage);
+};
+
+/** Backward-compat: nilai absolut (dipakai komponen lama). */
+export const calcHafalanPages = (
+  startJuz: number,
+  startPage: number,
+  endJuz: number,
+  endPage: number,
+): number => Math.abs(calcHafalanPagesSigned(startJuz, startPage, endJuz, endPage));
+
+/** Deteksi MUNDUR khusus Tahfizh */
+export const isTahfizhDecline = (
+  startJuz: number, startPage: number, endJuz: number, endPage: number,
+): boolean => {
+  if (endJuz > startJuz) return true;
+  if (endJuz === startJuz && endPage < startPage) return true;
+  return false;
 };
