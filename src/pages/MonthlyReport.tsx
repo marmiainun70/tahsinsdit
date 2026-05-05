@@ -910,7 +910,10 @@ const MonthlyReport = () => {
                             <TableCell className="text-center font-bold">{r.pages_read}</TableCell>
                             <TableCell className="text-center">{r.target_pages}</TableCell>
                             <TableCell className="text-center">
-                              {r.achievement_status === "achieved" ? <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" /> : <XCircle className="w-5 h-5 text-destructive mx-auto" />}
+                              {r.achievement_status === "achieved" && <Badge className="bg-emerald-600 hover:bg-emerald-700 text-xs">Tercapai</Badge>}
+                              {r.achievement_status === "not_achieved" && <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">Belum</Badge>}
+                              {r.achievement_status === "stagnant" && <Badge variant="secondary" className="text-xs">Tetap</Badge>}
+                              {r.achievement_status === "decline" && <Badge variant="destructive" className="text-xs">MUNDUR</Badge>}
                             </TableCell>
                             <TableCell className="max-w-[150px] text-xs text-muted-foreground">
                               <div className="truncate">{r.notes || "-"}</div>
