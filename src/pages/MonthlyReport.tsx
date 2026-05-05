@@ -249,25 +249,27 @@ const MonthlyReport = () => {
       toast({ title: "Pilih siswa terlebih dahulu", variant: "destructive" });
       return;
     }
-    if (isIqra && Number(endIqraLevel) < Number(startIqraLevel)) {
-      toast({ title: "Level akhir tidak boleh lebih rendah dari level awal", variant: "destructive" });
-      return;
-    }
-    if (!isIqra && !isTahfizh && validEnd < validStart) {
-      toast({ title: "Halaman akhir tidak boleh lebih kecil dari halaman awal", variant: "destructive" });
-      return;
-    }
-    if (isIqra && Number(endIqraLevel) === Number(startIqraLevel) && validEnd < validStart) {
-      toast({ title: "Halaman akhir tidak boleh lebih kecil dari halaman awal pada level yang sama", variant: "destructive" });
-      return;
-    }
+    // CATATAN: data TURUN tetap boleh disimpan (sesuai aturan baru), hanya ditandai.
+    // Validasi keras dihapus untuk semua program; cukup tampilkan warning visual.
 
     const hasLevelChange = selectedStudent && selectedLevel && selectedLevel !== selectedStudent.level;
 
-    // Jika terdeteksi penurunan, sisipkan catatan otomatis (tanpa hapus catatan guru)
-    const finalNotes = isDecline
-      ? (notes ? `${notes}\n\n${DECLINE_AUTO_NOTE}` : DECLINE_AUTO_NOTE)
-      : notes;
+    // Susun catatan otomatis: penurunan vs antar bulan
+    let autoNote = "";
+    if (isFormDecline) {
+      autoNote = isTahfizh
+        ? buildTahfizhDeclineNote(Number(startJuz), Number(startJuzPage), Number(endJuz), Number(endJuzPage))
+        : isIqra
+          ? buildIqraDeclineNote(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
+          : DECLINE_AUTO_NOTE;
+    } else if (isDecline) {
+      autoNote = DECLINE_AUTO_NOTE;
+    }
+    if (isLevelGraduated) {
+      const grad = "🎉 Selamat! Siswa telah menyelesaikan Tahsin Dasar (Iqra 6) dan naik ke level selanjutnya: Tahsin Lanjutan / Tahfizh.";
+      autoNote = autoNote ? `${autoNote}\n\n${grad}` : grad;
+    }
+    const finalNotes = autoNote ? (notes ? `${notes}\n\n${autoNote}` : autoNote) : notes;
 
     try {
       // Save monthly report
