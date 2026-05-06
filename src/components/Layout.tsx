@@ -17,7 +17,7 @@ interface LayoutProps {
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/laporan-bulanan", icon: FileText, label: "Laporan & Absensi" },
-  { to: "/input-cepat", icon: FileSpreadsheet, label: "Input Cepat (Spreadsheet)" },
+  { to: "/input-cepat", icon: FileSpreadsheet, label: "Input Laporan Bulanan & Absensi (Spreadsheet)" },
   { to: "/rekap-laporan", icon: FileSpreadsheet, label: "Rekap Laporan" },
   { to: "/monitoring", icon: BarChart3, label: "Monitoring" },
   { to: "/jadwal-ujian", icon: GraduationCap, label: "Jadwal Ujian" },
