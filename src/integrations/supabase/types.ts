@@ -346,6 +346,45 @@ export type Database = {
           },
         ]
       }
+      monthly_targets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_days: number
+          id: string
+          month: number
+          notes: string | null
+          program_type: string
+          target_pages: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_days?: number
+          id?: string
+          month: number
+          notes?: string | null
+          program_type: string
+          target_pages?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_days?: number
+          id?: string
+          month?: number
+          notes?: string | null
+          program_type?: string
+          target_pages?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       parents: {
         Row: {
           created_at: string
@@ -685,6 +724,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      teacher_classes: {
+        Row: {
+          created_at: string
+          id: string
+          kelas: number
+          rombel: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kelas: number
+          rombel: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kelas?: number
+          rombel?: string
+          teacher_id?: string
+        }
+        Relationships: []
+      }
+      teacher_students: {
+        Row: {
+          created_at: string
+          id: string
+          student_id: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          student_id: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          student_id?: string
+          teacher_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
