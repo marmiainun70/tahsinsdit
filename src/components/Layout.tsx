@@ -17,7 +17,7 @@ interface LayoutProps {
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/laporan-bulanan", icon: FileText, label: "Laporan & Absensi" },
-  { to: "/input-cepat", icon: FileSpreadsheet, label: "Input Cepat (Spreadsheet)" },
+  { to: "/input-cepat", icon: FileSpreadsheet, label: "Input Laporan Bulanan & Absensi (Spreadsheet)" },
   { to: "/rekap-laporan", icon: FileSpreadsheet, label: "Rekap Laporan" },
   { to: "/monitoring", icon: BarChart3, label: "Monitoring" },
   { to: "/jadwal-ujian", icon: GraduationCap, label: "Jadwal Ujian" },
@@ -142,7 +142,7 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
   if (pathname === "/ujian-tahsin-lanjutan") return <h2 className="font-semibold text-foreground text-base">Ujian Tahsin Lanjutan</h2>;
   if (pathname === "/laporan-bulanan") return <h2 className="font-semibold text-foreground text-base">Laporan & Absensi</h2>;
   if (pathname === "/rekap-laporan") return <h2 className="font-semibold text-foreground text-base">Rekap Laporan Bulanan</h2>;
-  if (pathname === "/input-cepat") return <h2 className="font-semibold text-foreground text-base">Input Cepat — Spreadsheet</h2>;
+  if (pathname === "/input-cepat") return <h2 className="font-semibold text-foreground text-base">Input Laporan Bulanan & Absensi (Spreadsheet)</h2>;
   if (pathname === "/pengaturan-lembaga") return <h2 className="font-semibold text-foreground text-base">Pengaturan Lembaga</h2>;
   if (pathname.startsWith("/class/")) {
     const k = pathname.split("/")[2];
