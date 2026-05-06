@@ -21,6 +21,7 @@ import MonthlyReport from "@/pages/MonthlyReport";
 import TahsinDasarExam from "@/pages/TahsinDasarExam";
 import TahsinLanjutanExam from "@/pages/TahsinLanjutanExam";
 import RecapReport from "@/pages/RecapReport";
+import SpreadsheetReport from "@/pages/SpreadsheetReport";
 import InstitutionSettings from "@/pages/InstitutionSettings";
 
 import NotFound from "@/pages/NotFound";
