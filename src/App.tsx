@@ -65,6 +65,7 @@ const AppRoutes = () => {
       <Route path="/ujian-tahsin-dasar" element={<ProtectedRoute><TahsinDasarExam /></ProtectedRoute>} />
       <Route path="/ujian-tahsin-lanjutan" element={<ProtectedRoute><TahsinLanjutanExam /></ProtectedRoute>} />
       <Route path="/rekap-laporan" element={<ProtectedRoute><RecapReport /></ProtectedRoute>} />
+      <Route path="/input-cepat" element={<ProtectedRoute><SpreadsheetReport /></ProtectedRoute>} />
       <Route path="/pengaturan-lembaga" element={<ProtectedRoute><InstitutionSettings /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
