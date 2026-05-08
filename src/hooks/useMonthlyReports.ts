@@ -68,9 +68,9 @@ export const isIqraDecline = (
 export const isIqraGraduated = (endLevel: number, endPage: number): boolean =>
   endLevel === 6 && endPage >= 32;
 
-export const TARGET_TAHFIZH = 3;
-export const TARGET_TAHSIN = 15;
-export const TARGET_IQRA = 15;
+export const TARGET_TAHFIZH = 1;
+export const TARGET_TAHSIN = 4;
+export const TARGET_IQRA = 4;
 
 export const getTarget = (programType: string): number => {
   if (programType === "tahfizh") return TARGET_TAHFIZH;
