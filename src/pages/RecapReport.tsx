@@ -80,6 +80,9 @@ const cleanPdfText = (value: unknown) => {
     .trim();
 };
 
+const hasArabicText = (value: unknown) =>
+  /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/u.test(String(value ?? ""));
+
 const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
   const bytes = new Uint8Array(buffer);
   let binary = "";
@@ -550,7 +553,6 @@ const RecapReport = () => {
     const margin = 12;
     const isLegal = paperSize === "legal";
     const hasAmiriFont = await loadAmiriFont(doc);
-    const noteFont = hasAmiriFont ? "Amiri" : "helvetica";
 
     const drawHeader = () => {
       const y = margin;
@@ -668,7 +670,7 @@ const RecapReport = () => {
               7: { cellWidth: 12, halign: "center" },
               8: { cellWidth: 24, halign: "center", fontStyle: "bold" },
               9: { cellWidth: 28 },
-              10: { cellWidth: "auto", overflow: "linebreak", valign: "top", font: noteFont },
+              10: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
             }
           : {
               0: { cellWidth: 8, halign: "center" },
@@ -681,13 +683,13 @@ const RecapReport = () => {
               7: { cellWidth: 11, halign: "center" },
               8: { cellWidth: 20, halign: "center", fontStyle: "bold" },
               9: { cellWidth: 22 },
-              10: { cellWidth: "auto", overflow: "linebreak", valign: "top", font: noteFont },
+              10: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
             },
         didParseCell: data => {
           if (data.section === "body" && data.column.index === 10) {
             data.cell.styles.overflow = "linebreak";
             data.cell.styles.valign = "top";
-            data.cell.styles.font = noteFont;
+            data.cell.styles.font = hasAmiriFont && hasArabicText(data.cell.raw) ? "Amiri" : "helvetica";
             data.cell.styles.fontStyle = "normal";
           }
 
