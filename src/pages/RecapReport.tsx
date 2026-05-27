@@ -75,7 +75,7 @@ const getProgramLabel = (level: string) => {
   return level || "-";
 };
 
-const truncatePdfNote = (text: string, maxLength = 180) => {
+const truncatePdfNote = (text: string, maxLength = 120) => {
   const normalized = (text || "").replace(/\s+/g, " ").trim();
   if (normalized.length <= maxLength) return normalized;
   return `${normalized.slice(0, maxLength).trim()}...`;
@@ -104,7 +104,8 @@ const loadImageAsBase64 = (url: string): Promise<string | null> =>
 
 const waitForUiFrame = () => new Promise(resolve => window.setTimeout(resolve, 0));
 
-const shouldRenderNoteAsImage = (note: string) => /[^\u0000-\u024F]/u.test(note);
+const shouldRenderNoteAsImage = (note: string) =>
+  /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\u2600-\u27BF\u{1F000}-\u{1FAFF}]/u.test(note);
 
 const renderNoteImage = async (note: string, widthPx: number): Promise<NoteImage | null> => {
   const text = truncatePdfNote(note);
@@ -134,7 +135,7 @@ const renderNoteImage = async (note: string, widthPx: number): Promise<NoteImage
       useCORS: true,
     });
     return {
-      dataUrl: canvas.toDataURL("image/jpeg", 0.82),
+      dataUrl: canvas.toDataURL("image/jpeg", 0.72),
       format: "JPEG",
       width: canvas.width,
       height: canvas.height,
@@ -222,6 +223,7 @@ const RecapReport = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewTitle, setPreviewTitle] = useState("");
+  const [previewDownloadName, setPreviewDownloadName] = useState("");
   const [pdfLoading, setPdfLoading] = useState<string | null>(null);
   
   // Multi-month export state
@@ -469,6 +471,7 @@ const RecapReport = () => {
       if (current) URL.revokeObjectURL(current);
       return null;
     });
+    setPreviewDownloadName("");
   }, []);
 
   useEffect(() => cleanupPreviewUrl, [cleanupPreviewUrl]);
@@ -543,13 +546,19 @@ const RecapReport = () => {
       exportSettings.kepsek_ttd_url ? loadImageAsBase64(exportSettings.kepsek_ttd_url) : Promise.resolve(null),
     ]);
 
-    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format });
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format,
+      compress: true,
+      putOnlyUsedFonts: true,
+    });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
     const margin = 12;
     const isLegal = format === "legal";
     const noteColumnWidth = isLegal ? 66 : 44;
-    const noteImageWidthPx = isLegal ? 320 : 240;
+    const noteImageWidthPx = isLegal ? 260 : 210;
     const noteImages = new Map<string, NoteImage>();
 
     let renderedNoteCount = 0;
@@ -632,9 +641,9 @@ const RecapReport = () => {
           noteImages.has(row.studentId) ? "" : (truncatePdfNote(row.catatan) || "-"),
         ]),
         styles: {
-          fontSize: isLegal ? 7 : 6.5,
-          cellPadding: 1.1,
-          overflow: "linebreak",
+          fontSize: isLegal ? 6.2 : 5.8,
+          cellPadding: 0.8,
+          overflow: "ellipsize",
           valign: "middle",
           lineColor: [220, 220, 220],
           lineWidth: 0.1,
@@ -645,23 +654,23 @@ const RecapReport = () => {
           textColor: [255, 255, 255],
           fontStyle: "bold",
           halign: "center",
-          fontSize: isLegal ? 7 : 6.4,
+          fontSize: isLegal ? 6.4 : 6,
         },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: {
-          0: { cellWidth: 8, halign: "center" },
-          1: { cellWidth: isLegal ? 35 : 30 },
-          2: { cellWidth: isLegal ? 26 : 22 },
-          3: { cellWidth: isLegal ? 20 : 17 },
-          4: { cellWidth: isLegal ? 34 : 24 },
-          5: { cellWidth: isLegal ? 22 : 18 },
-          6: { cellWidth: isLegal ? 22 : 18 },
-          7: { cellWidth: 12, halign: "center", fontStyle: "bold" },
-          8: { cellWidth: 12, halign: "center" },
-          9: { cellWidth: 13, halign: "center" },
-          10: { cellWidth: isLegal ? 18 : 16, halign: "center", fontStyle: "bold" },
-          11: { cellWidth: isLegal ? 30 : 22 },
-          12: { cellWidth: noteColumnWidth, fontSize: isLegal ? 6.8 : 6.2 },
+          0: { cellWidth: 7, halign: "center" },
+          1: { cellWidth: isLegal ? 34 : 29 },
+          2: { cellWidth: isLegal ? 25 : 21 },
+          3: { cellWidth: isLegal ? 19 : 16 },
+          4: { cellWidth: isLegal ? 32 : 23 },
+          5: { cellWidth: isLegal ? 20 : 17 },
+          6: { cellWidth: isLegal ? 20 : 17 },
+          7: { cellWidth: 11, halign: "center", fontStyle: "bold" },
+          8: { cellWidth: 11, halign: "center" },
+          9: { cellWidth: 12, halign: "center" },
+          10: { cellWidth: isLegal ? 17 : 15, halign: "center", fontStyle: "bold" },
+          11: { cellWidth: isLegal ? 28 : 20 },
+          12: { cellWidth: noteColumnWidth, fontSize: isLegal ? 6.6 : 6, overflow: "ellipsize" },
         },
         didParseCell: data => {
           if (data.section === "body" && data.column.index === 12) {
@@ -669,7 +678,7 @@ const RecapReport = () => {
             const image = row ? noteImages.get(row.studentId) : null;
             if (image) {
               const textLength = truncatePdfNote(row.catatan).length;
-              const estimatedHeight = Math.min(Math.max(9, Math.ceil(textLength / (isLegal ? 45 : 32)) * 4.6 + 3), 24);
+              const estimatedHeight = Math.min(Math.max(8, Math.ceil(textLength / (isLegal ? 48 : 36)) * 4 + 2), 14);
               data.cell.styles.minCellHeight = estimatedHeight;
               data.cell.text = [""];
             }
@@ -795,16 +804,19 @@ const RecapReport = () => {
       const doc = await buildRecapPdf(format);
       const fileName = `Rekap_Laporan_${activePeriodLabel.replace(/\s+/g, "_")}_${format.toUpperCase()}_Landscape.pdf`;
 
-      if (mode === "preview") {
-        const blob = doc.output("blob");
-        const url = URL.createObjectURL(blob);
-        cleanupPreviewUrl();
-        setPreviewTitle(`Preview PDF ${format.toUpperCase()} Landscape`);
-        setPreviewUrl(url);
-        setPreviewOpen(true);
-      } else {
-        doc.save(fileName);
-        toast({ title: `PDF ${format.toUpperCase()} berhasil diunduh` });
+      const blob = doc.output("blob");
+      const url = URL.createObjectURL(blob);
+      cleanupPreviewUrl();
+      setPreviewTitle(
+        mode === "preview"
+          ? `Preview PDF ${format.toUpperCase()} Landscape`
+          : `PDF ${format.toUpperCase()} Landscape Siap Diunduh`
+      );
+      setPreviewDownloadName(fileName);
+      setPreviewUrl(url);
+      setPreviewOpen(true);
+      if (mode === "download") {
+        toast({ title: `PDF ${format.toUpperCase()} siap. Klik tombol Download di modal.` });
       }
     } catch (error) {
       console.error(error);
@@ -1400,16 +1412,28 @@ const RecapReport = () => {
       >
         <DialogContent className="w-[96vw] max-w-6xl h-[90vh] p-0 overflow-hidden">
           <DialogHeader className="px-4 py-3 border-b">
-            <DialogTitle className="text-base flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              {previewTitle}
-            </DialogTitle>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <DialogTitle className="text-base flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                {previewTitle}
+              </DialogTitle>
+              {previewUrl && (
+                <a
+                  href={previewUrl}
+                  download={previewDownloadName}
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  <Download className="w-4 h-4" />
+                  Download PDF
+                </a>
+              )}
+            </div>
           </DialogHeader>
           {previewUrl && (
             <iframe
               title={previewTitle}
               src={previewUrl}
-              className="w-full h-[calc(90vh-58px)] border-0 bg-white"
+              className="w-full h-[calc(90vh-76px)] border-0 bg-white"
             />
           )}
         </DialogContent>
