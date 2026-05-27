@@ -69,11 +69,10 @@ const getProgramLabel = (level: string) => {
 };
 
 const cleanPdfText = (value: unknown) => {
-  return String(value ?? "")
+  return removeBlockedNoteEmoticons(String(value ?? ""))
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
-    .replace(/[\u{1F300}-\u{1FAFF}]/gu, "")
-    .replace(/[\u{2600}-\u{27BF}]/gu, "")
+    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, "")
     .split("\n")
     .map(line => line.replace(/[ \t]+/g, " ").trim())
     .join("\n")
