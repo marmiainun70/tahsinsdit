@@ -5,6 +5,8 @@ import { useStudent, useAddExam, useUpdateStudent, LEVEL_COLORS, getNextLevel, g
 import { useAddActivityLog } from "@/hooks/useActivityLog";
 import { ChevronRight, Award, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { toast } from "@/hooks/use-toast";
+import { NOTE_EMOTICON_WARNING, hasBlockedNoteEmoticon, removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -23,6 +25,15 @@ const Examination = () => {
   });
   const [submitted, setSubmitted] = useState(false);
   const [hasil, setHasil] = useState<"Lulus" | "Tidak Lulus" | null>(null);
+
+  const handleCatatanChange = (value: string) => {
+    if (hasBlockedNoteEmoticon(value)) {
+      toast({ title: NOTE_EMOTICON_WARNING, variant: "destructive" });
+      setForm(f => ({ ...f, catatan: removeBlockedNoteEmoticons(value) }));
+      return;
+    }
+    setForm(f => ({ ...f, catatan: value }));
+  };
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>;
   if (!student) return <div className="flex items-center justify-center h-64 text-muted-foreground">Siswa tidak ditemukan.</div>;
@@ -151,7 +162,7 @@ const Examination = () => {
                 <motion.div animate={{ width: `${nilaiRata}%` }} className={`h-full rounded-full ${nilaiRata >= 80 ? "bg-emerald-500" : nilaiRata >= 65 ? "bg-yellow-500" : "bg-red-400"}`} />
               </div>
               <p className={`mt-2 text-xs font-medium ${nilaiRata >= 80 ? "text-emerald-600" : "text-yellow-600"}`}>
-                {nilaiRata >= 80 ? "✓ Memenuhi syarat kenaikan level (≥80)" : "⚠ Belum memenuhi syarat kenaikan level (<80)"}
+                {nilaiRata >= 80 ? "Memenuhi syarat kenaikan level (>=80)" : "Belum memenuhi syarat kenaikan level (<80)"}
               </p>
             </div>
           </div>
@@ -176,7 +187,7 @@ const Examination = () => {
               <span className="w-6 h-6 rounded-lg bg-gold flex items-center justify-center text-white text-xs font-bold">3</span>
               Catatan Penguji
             </h2>
-            <textarea value={form.catatan} onChange={e => setForm(f => ({ ...f, catatan: e.target.value }))} placeholder="Contoh: Bacaan cukup baik namun masih perlu latihan makhraj..." rows={3} className="w-full px-4 py-3 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm resize-none" />
+            <textarea value={form.catatan} onChange={e => handleCatatanChange(e.target.value)} placeholder="Contoh: Bacaan cukup baik namun masih perlu latihan makhraj..." rows={3} className="w-full px-4 py-3 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm resize-none" />
           </div>
 
           <button type="submit" disabled={addExam.isPending || updateStudent.isPending} className="w-full py-3.5 bg-gradient-hero text-primary-foreground font-semibold rounded-xl hover:opacity-90 transition-opacity shadow-green text-base disabled:opacity-60 flex items-center justify-center gap-2">
@@ -191,7 +202,7 @@ const Examination = () => {
               <div className="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="w-10 h-10 text-emerald-600" />
               </div>
-              <h2 className="text-2xl font-bold text-emerald-600 mb-2">LULUS! 🎉</h2>
+              <h2 className="text-2xl font-bold text-emerald-600 mb-2">LULUS</h2>
               <p className="text-muted-foreground mb-4"><span className="font-semibold text-foreground">{student.nama}</span> berhasil lulus ujian {getLevelDisplayLabel(student.level as ReadingLevel)}</p>
               {nextLevel && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">

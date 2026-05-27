@@ -96,14 +96,14 @@ export const buildIqraDeclineNote = (
 ): string => {
   const total = calcIqraPagesSigned(startLevel, startPage, endLevel, endPage);
   if (endLevel < startLevel) {
-    return `Siswa mengalami penurunan dari Jilid ${startLevel} ke Jilid ${endLevel} dengan selisih ${total} halaman. Disarankan untuk mengulang materi sebelumnya guna memperkuat pemahaman dan kelancaran membaca sebelum melanjutkan ke jilid berikutnya.`;
+    return `Bacaan siswa perlu kembali dikuatkan dari Jilid ${startLevel} ke Jilid ${endLevel}. Selisih progres tercatat ${Math.abs(total)} halaman. Sebaiknya siswa mengulang materi sebelumnya dengan pendampingan agar bacaan lebih mantap sebelum melanjutkan.`;
   }
-  return `Siswa mengalami penurunan progres pada Jilid ${startLevel} (selisih ${total} halaman). Disarankan untuk murojaah dan memperkuat pemahaman halaman sebelumnya.`;
+  return `Progres bacaan siswa pada Jilid ${startLevel} menurun ${Math.abs(total)} halaman. Siswa perlu mengulang halaman sebelumnya secara bertahap agar kelancaran dan ketepatan bacaannya kembali stabil.`;
 };
 
 export const buildTahfizhDeclineNote = (
   startJuz: number, startPage: number, endJuz: number, endPage: number,
-): string => `Hafalan akhir (Juz ${endJuz} hal.${endPage}) lebih rendah dari hafalan awal (Juz ${startJuz} hal.${startPage}). Disarankan memperkuat murojaah sebelum melanjutkan ke target berikutnya.`;
+): string => `Hafalan siswa perlu dikuatkan kembali. Catatan akhir berada di Juz ${endJuz} hal.${endPage}, sedangkan awal laporan berada di Juz ${startJuz} hal.${startPage}. Sebaiknya siswa fokus murojaah terlebih dahulu sebelum mengejar target berikutnya.`;
 
 /**
  * Deteksi penurunan progres antara laporan bulan lalu & laporan saat ini.
@@ -130,7 +130,7 @@ export const detectDecline = (
 };
 
 export const DECLINE_AUTO_NOTE =
-  "⚠️ Siswa mengalami penurunan progres bacaan. Disarankan meningkatkan murojaah dan latihan membaca di rumah dengan pendampingan orang tua.";
+  "Progres bacaan siswa menurun dibanding laporan sebelumnya. Siswa perlu lebih sering murojaah dan berlatih membaca di rumah dengan pendampingan orang tua.";
 
 export const MONTH_NAMES = [
   "Januari", "Februari", "Maret", "April", "Mei", "Juni",

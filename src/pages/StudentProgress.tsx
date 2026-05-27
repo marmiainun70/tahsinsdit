@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { NOTE_EMOTICON_WARNING, hasBlockedNoteEmoticon, removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 type ReadingStatus = Database["public"]["Enums"]["reading_status"];
@@ -71,6 +72,15 @@ const StudentProgress = () => {
     halaman: "", kelancaran: "", makhraj: "", tajwid: "", catatan: "",
     status_bacaan: "Cukup" as ReadingStatus,
   });
+
+  const handleCatatanChange = (value: string) => {
+    if (hasBlockedNoteEmoticon(value)) {
+      toast({ title: NOTE_EMOTICON_WARNING, variant: "destructive" });
+      setForm(f => ({ ...f, catatan: removeBlockedNoteEmoticons(value) }));
+      return;
+    }
+    setForm(f => ({ ...f, catatan: value }));
+  };
   const [saved, setSaved] = useState(false);
 
   // Pindah Rombel state
@@ -380,7 +390,7 @@ const StudentProgress = () => {
           </div>
           <div className="sm:col-span-2 lg:col-span-1">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block mb-1.5">Catatan Guru</label>
-            <input type="text" value={form.catatan} onChange={e => setForm(f => ({ ...f, catatan: e.target.value }))} placeholder="Catatan..." className="w-full px-3 py-2.5 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm" />
+            <input type="text" value={form.catatan} onChange={e => handleCatatanChange(e.target.value)} placeholder="Catatan..." className="w-full px-3 py-2.5 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm" />
           </div>
           <div className="flex items-end sm:col-span-full lg:col-span-1">
             <button type="submit" disabled={addProgress.isPending} className="w-full py-2.5 bg-gradient-hero text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity shadow-green disabled:opacity-60 flex items-center justify-center gap-2">
