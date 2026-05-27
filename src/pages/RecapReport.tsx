@@ -72,7 +72,7 @@ const cleanPdfText = (value: unknown) => {
   return removeBlockedNoteEmoticons(String(value ?? ""))
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
-    .replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, "")
+    .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, "")
     .split("\n")
     .map(line => line.replace(/[ \t]+/g, " ").trim())
     .join("\n")
@@ -443,7 +443,7 @@ const RecapReport = () => {
         selectedYear,
         settings || {}
       );
-      toast({ title: "Excel berhasil diunduh ✅" });
+      toast({ title: "Excel berhasil diunduh" });
     } catch (error) {
       console.error(error);
       toast({ title: "Error mengekspor Excel", variant: "destructive" });
@@ -1258,7 +1258,7 @@ const RecapReport = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Semua</SelectItem>
-                    <SelectItem value="filled">✅ Sudah Diisi</SelectItem>
+                    <SelectItem value="filled">Sudah Diisi</SelectItem>
                     <SelectItem value="empty">Belum Diisi</SelectItem>
                   </SelectContent>
                 </Select>
