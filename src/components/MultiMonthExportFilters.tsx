@@ -88,8 +88,17 @@ export const MultiMonthExportFilters = ({
                       const isDisabled = selectedMonths.length >= MAX_MONTHS && !isSelected;
 
                       return (
-                        <label
+                        <div
+                          role="button"
+                          tabIndex={isDisabled ? -1 : 0}
                           key={monthNum}
+                          onClick={() => !isDisabled && toggleMonth(monthNum)}
+                          onKeyDown={(e) => {
+                            if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) {
+                              e.preventDefault();
+                              toggleMonth(monthNum);
+                            }
+                          }}
                           className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
                             isDisabled
                               ? 'opacity-50 cursor-not-allowed'
@@ -101,15 +110,14 @@ export const MultiMonthExportFilters = ({
                           <Checkbox
                             checked={isSelected}
                             disabled={isDisabled}
-                            onChange={() => toggleMonth(monthNum)}
-                            className="w-4 h-4"
+                            className="w-4 h-4 pointer-events-none"
                           />
                           <span className={`text-xs sm:text-sm font-medium ${
                             isSelected ? 'text-blue-700' : 'text-gray-700'
                           }`}>
                             {month.substring(0, 3)}
                           </span>
-                        </label>
+                        </div>
                       );
                     })}
                   </div>
