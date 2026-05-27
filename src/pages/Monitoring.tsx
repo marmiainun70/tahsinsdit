@@ -257,7 +257,7 @@ const Monitoring = () => {
                         <td className="py-3 px-4">
                           {flagged && (
                             <Link to={`/tahsin/${s.id}`}>
-                              <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/20 whitespace-nowrap">⚠ Perlu Perhatian</span>
+                              <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/20 whitespace-nowrap">Perlu Perhatian</span>
                             </Link>
                           )}
                         </td>

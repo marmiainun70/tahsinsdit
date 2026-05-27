@@ -28,6 +28,7 @@ import {
 import BulkMonthlyReportForm from "@/components/BulkMonthlyReportForm";
 import MonthlyReportExport from "@/components/MonthlyReportExport";
 import AttendanceExport from "@/components/AttendanceExport";
+import { NOTE_EMOTICON_WARNING, hasBlockedNoteEmoticon, removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -77,6 +78,28 @@ const MonthlyReport = () => {
   // Inline editing
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<{ start_page: number; end_page: number; notes: string }>({ start_page: 1, end_page: 1, notes: "" });
+
+  const showNoteEmoticonWarning = () => {
+    toast({ title: NOTE_EMOTICON_WARNING, variant: "destructive" });
+  };
+
+  const handleNotesChange = (value: string) => {
+    if (hasBlockedNoteEmoticon(value)) {
+      showNoteEmoticonWarning();
+      setNotes(removeBlockedNoteEmoticons(value));
+      return;
+    }
+    setNotes(value);
+  };
+
+  const handleEditNotesChange = (value: string) => {
+    if (hasBlockedNoteEmoticon(value)) {
+      showNoteEmoticonWarning();
+      setEditData(d => ({ ...d, notes: removeBlockedNoteEmoticons(value) }));
+      return;
+    }
+    setEditData(d => ({ ...d, notes: value }));
+  };
 
   // Filters for history
   const [filterKelas, setFilterKelas] = useState<string>("all");
@@ -266,7 +289,7 @@ const MonthlyReport = () => {
       autoNote = DECLINE_AUTO_NOTE;
     }
     if (isLevelGraduated) {
-      const grad = "🎉 Selamat! Siswa telah menyelesaikan Tahsin Dasar (Iqra 6) dan naik ke level selanjutnya: Tahsin Lanjutan / Tahfizh.";
+      const grad = "Siswa sudah menyelesaikan Tahsin Dasar (Iqra 6). Bacaan dapat diarahkan ke tahap berikutnya, yaitu Tahsin Lanjutan atau Tahfizh, sesuai kesiapan siswa.";
       autoNote = autoNote ? `${autoNote}\n\n${grad}` : grad;
     }
     const finalNotes = autoNote ? (notes ? `${notes}\n\n${autoNote}` : autoNote) : notes;
@@ -309,7 +332,7 @@ const MonthlyReport = () => {
             id: selectedStudent.id,
             level: endLevelStr,
           });
-          toast({ title: `Laporan disimpan ✅ Level siswa otomatis naik ke ${endLevelStr}`, description: `${selectedStudent.nama}: ${selectedStudent.level} → ${endLevelStr}` });
+          toast({ title: `Laporan disimpan. Level siswa otomatis naik ke ${endLevelStr}`, description: `${selectedStudent.nama}: ${selectedStudent.level} ke ${endLevelStr}` });
           resetForm();
           return;
         }
@@ -325,7 +348,7 @@ const MonthlyReport = () => {
         setLevelConfirmOpen(true);
       }
 
-      toast({ title: "Laporan & Absensi berhasil disimpan ✅" });
+      toast({ title: "Laporan dan absensi berhasil disimpan" });
       resetForm();
     } catch (e: any) {
       if (e.message?.includes("duplicate") || e.message?.includes("unique")) {
@@ -343,7 +366,7 @@ const MonthlyReport = () => {
         id: pendingLevelChange.studentId,
         level: pendingLevelChange.newLevel as ReadingLevel,
       });
-      toast({ title: `Level siswa berhasil diubah ke ${pendingLevelChange.newLevel} ✅` });
+      toast({ title: `Level siswa berhasil diubah ke ${pendingLevelChange.newLevel}` });
     } catch {
       toast({ title: "Gagal mengubah level", variant: "destructive" });
     }
@@ -371,7 +394,7 @@ const MonthlyReport = () => {
     const st = getAchievementStatus(pr, report.target_pages);
     try {
       await updateReport.mutateAsync({ id: report.id, start_page: vs, end_page: ve, pages_read: pr, achievement_status: st, notes: editData.notes });
-      toast({ title: "Laporan diperbarui ✅" });
+      toast({ title: "Laporan diperbarui" });
       setEditingId(null);
     } catch (e: any) {
       toast({ title: "Gagal memperbarui", description: e.message, variant: "destructive" });
@@ -707,7 +730,7 @@ const MonthlyReport = () => {
                   <div className="flex items-start gap-2 text-sm bg-red-50 border-2 border-red-300 rounded-lg px-3 py-2">
                     <TrendingDown className="w-5 h-5 flex-shrink-0 text-red-600 mt-0.5" />
                     <div className="text-red-700">
-                      <p className="font-semibold">⚠️ Hafalan/Bacaan akhir lebih rendah dari awal (MUNDUR).</p>
+                      <p className="font-semibold">Hafalan/Bacaan akhir lebih rendah dari awal (MUNDUR).</p>
                       <p className="text-xs mt-1">Data tetap bisa disimpan. Catatan otomatis akan ditambahkan.</p>
                     </div>
                   </div>
@@ -718,7 +741,7 @@ const MonthlyReport = () => {
                   <div className="flex items-start gap-2 text-sm bg-amber-50 border-2 border-amber-200 rounded-lg px-3 py-2">
                     <TrendingDown className="w-5 h-5 flex-shrink-0 text-amber-600 mt-0.5" />
                     <div className="text-amber-700">
-                      <p className="font-semibold">⚠️ Penurunan progres dibanding bulan sebelumnya.</p>
+                      <p className="font-semibold">Penurunan progres dibanding bulan sebelumnya.</p>
                       <p className="text-xs mt-1">Catatan otomatis akan ditambahkan pada laporan ini.</p>
                     </div>
                   </div>
@@ -729,7 +752,7 @@ const MonthlyReport = () => {
                   <div className="flex items-start gap-2 text-sm bg-emerald-50 border-2 border-emerald-300 rounded-lg px-3 py-2">
                     <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600 mt-0.5" />
                     <div className="text-emerald-700">
-                      <p className="font-semibold">🎉 Selamat! Siswa telah menyelesaikan Tahsin Dasar (Iqra 6).</p>
+                      <p className="font-semibold">Siswa telah menyelesaikan Tahsin Dasar (Iqra 6).</p>
                       <p className="text-xs mt-1">Naik ke level selanjutnya: Tahsin Lanjutan / Tahfizh.</p>
                     </div>
                   </div>
@@ -750,7 +773,7 @@ const MonthlyReport = () => {
                   <div>
                     <p className="text-muted-foreground text-xs">Status</p>
                     {progressStatus === "achieved" && (
-                      <Badge className="mt-1 bg-emerald-600 hover:bg-emerald-700">Tercapai ✅</Badge>
+                      <Badge className="mt-1 bg-emerald-600 hover:bg-emerald-700">Tercapai</Badge>
                     )}
                     {progressStatus === "not_achieved" && (
                       <Badge className="mt-1 bg-amber-500 hover:bg-amber-600 text-white">Belum Tercapai</Badge>
@@ -759,14 +782,14 @@ const MonthlyReport = () => {
                       <Badge variant="secondary" className="mt-1">Tetap</Badge>
                     )}
                     {progressStatus === "decline" && (
-                      <Badge variant="destructive" className="mt-1">MUNDUR ⚠️</Badge>
+                      <Badge variant="destructive" className="mt-1">MUNDUR</Badge>
                     )}
                   </div>
                 </div>
 
                 <div>
                   <Label className="text-xs">Catatan Guru</Label>
-                  <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Catatan perkembangan siswa..." rows={2} />
+                  <Textarea value={notes} onChange={e => handleNotesChange(e.target.value)} placeholder="Catatan perkembangan siswa..." rows={2} />
                 </div>
               </CardContent>
             </Card>
@@ -883,7 +906,7 @@ const MonthlyReport = () => {
                               <TableCell className="text-center font-bold">{pr}</TableCell>
                               <TableCell className="text-center">{r.target_pages}</TableCell>
                               <TableCell className="text-center">{editStatus === "achieved" ? <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" /> : <XCircle className="w-5 h-5 text-destructive mx-auto" />}</TableCell>
-                              <TableCell><Input className="h-8 text-sm min-w-[80px]" value={editData.notes} onChange={e => setEditData(d => ({...d, notes: e.target.value}))} /></TableCell>
+                              <TableCell><Input className="h-8 text-sm min-w-[80px]" value={editData.notes} onChange={e => handleEditNotesChange(e.target.value)} /></TableCell>
                               <TableCell>
                                 <div className="flex gap-1">
                                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => saveEdit(r)}><Save className="w-4 h-4 text-emerald-600" /></Button>

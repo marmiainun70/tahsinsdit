@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Loader2, Search, Settings2, Save, Users, CheckCircle, XCircle } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { NOTE_EMOTICON_WARNING, hasBlockedNoteEmoticon, removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 
 interface EbtaScore {
   jilid: number;
@@ -62,6 +63,15 @@ const TahsinDasarExam = () => {
   // Per-student EBTA scores
   const [studentScores, setStudentScores] = useState<Record<string, EbtaScore[]>>({});
   const [catatan, setCatatan] = useState<Record<string, string>>({});
+
+  const handleCatatanChange = (sid: string, value: string) => {
+    if (hasBlockedNoteEmoticon(value)) {
+      toast.error(NOTE_EMOTICON_WARNING);
+      setCatatan(p => ({ ...p, [sid]: removeBlockedNoteEmoticons(value) }));
+      return;
+    }
+    setCatatan(p => ({ ...p, [sid]: value }));
+  };
   const [saving, setSaving] = useState(false);
 
   // History
@@ -333,7 +343,7 @@ const TahsinDasarExam = () => {
                   </table>
                 </div>
 
-                <Textarea placeholder="Catatan (opsional)..." value={catatan[sid] || ""} onChange={e => setCatatan(p => ({ ...p, [sid]: e.target.value }))} className="text-xs min-h-[50px]" />
+                <Textarea placeholder="Catatan (opsional)..." value={catatan[sid] || ""} onChange={e => handleCatatanChange(sid, e.target.value)} className="text-xs min-h-[50px]" />
               </motion.div>
             );
           })}

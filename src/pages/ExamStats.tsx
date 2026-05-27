@@ -421,7 +421,7 @@ const ExamStats = () => {
         {neverExamined.length === 0 ? (
           <div className="py-14 text-center">
             <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-foreground">Semua siswa sudah pernah diujikan! 🎉</p>
+            <p className="text-sm font-semibold text-foreground">Semua siswa sudah pernah diujikan.</p>
             <p className="text-xs text-muted-foreground mt-1">Tidak ada siswa yang belum tercatat dalam ujian kenaikan level.</p>
           </div>
         ) : (

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { NOTE_EMOTICON_WARNING, hasBlockedNoteEmoticon, removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 import { Loader2, Save, Users, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -55,6 +56,15 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
       ...prev,
       [id]: { ...getEntry(id), ...patch },
     }));
+  };
+
+  const updateEntryNotes = (id: string, value: string) => {
+    if (hasBlockedNoteEmoticon(value)) {
+      toast({ title: NOTE_EMOTICON_WARNING, variant: "destructive" });
+      updateEntry(id, { notes: removeBlockedNoteEmoticons(value), selected: true });
+      return;
+    }
+    updateEntry(id, { notes: value, selected: true });
   };
 
   const toggleAll = (checked: boolean) => {
@@ -350,7 +360,7 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
                             className="h-8 text-sm min-w-[120px]"
                             placeholder="Catatan..."
                             value={entry.notes}
-                            onChange={e => updateEntry(student.id, { notes: e.target.value, selected: true })}
+                            onChange={e => updateEntryNotes(student.id, e.target.value)}
                           />
                         </td>
                       </tr>

@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import TahsinTrendChart from "@/components/TahsinTrendChart";
+import { toast } from "@/hooks/use-toast";
+import { NOTE_EMOTICON_WARNING, hasBlockedNoteEmoticon, removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -75,11 +77,11 @@ const MATERI = [
 ];
 
 const PREDIKAT_CONFIG = [
-  { min: 90, label: "Mumtaz", color: "text-emerald-700", bg: "bg-emerald-100", border: "border-emerald-300", emoji: "🌟" },
-  { min: 80, label: "Jayyid Jiddan", color: "text-blue-700", bg: "bg-blue-100", border: "border-blue-300", emoji: "✨" },
-  { min: 70, label: "Jayyid", color: "text-sky-700", bg: "bg-sky-100", border: "border-sky-300", emoji: "👍" },
-  { min: 60, label: "Maqbul", color: "text-yellow-700", bg: "bg-yellow-100", border: "border-yellow-300", emoji: "📝" },
-  { min: 0, label: "Rajih", color: "text-red-700", bg: "bg-red-100", border: "border-red-300", emoji: "⚠️" },
+  { min: 90, label: "Mumtaz", color: "text-emerald-700", bg: "bg-emerald-100", border: "border-emerald-300", code: "A" },
+  { min: 80, label: "Jayyid Jiddan", color: "text-blue-700", bg: "bg-blue-100", border: "border-blue-300", code: "B" },
+  { min: 70, label: "Jayyid", color: "text-sky-700", bg: "bg-sky-100", border: "border-sky-300", code: "C" },
+  { min: 60, label: "Maqbul", color: "text-yellow-700", bg: "bg-yellow-100", border: "border-yellow-300", code: "D" },
+  { min: 0, label: "Rajih", color: "text-red-700", bg: "bg-red-100", border: "border-red-300", code: "E" },
 ];
 
 const getPredikat = (nilai: number) =>
@@ -197,6 +199,15 @@ const TahsinAssessment = () => {
     makhraj_huruf: "", hukum_nun_mati: "", hukum_mim_mati: "", mad: "", tartil: "",
   });
   const [catatan, setCatatan] = useState("");
+
+  const handleCatatanChange = (value: string) => {
+    if (hasBlockedNoteEmoticon(value)) {
+      toast({ title: NOTE_EMOTICON_WARNING, variant: "destructive" });
+      setCatatan(removeBlockedNoteEmoticons(value));
+      return;
+    }
+    setCatatan(value);
+  };
   const [submitted, setSubmitted] = useState(false);
   const [showRiwayat, setShowRiwayat] = useState(false);
   const [result, setResult] = useState<{ total: number; predikat: string } | null>(null);
@@ -315,7 +326,7 @@ const TahsinAssessment = () => {
                               <div className="flex items-center gap-2">
                                 <span className="text-xl font-bold text-foreground">{r.nilai_total}</span>
                                 <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${p.color} ${p.bg} ${p.border}`}>
-                                  {p.emoji} {p.label}
+                                  {p.code} - {p.label}
                                 </span>
                               </div>
                             </div>
@@ -351,7 +362,7 @@ const TahsinAssessment = () => {
                 Nilai Akhir (Otomatis)
               </h2>
               <span className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${predikat.color} ${predikat.bg} ${predikat.border}`}>
-                {predikat.emoji} {predikat.label}
+                {predikat.code} - {predikat.label}
               </span>
             </div>
             <div className="flex items-end gap-4">
@@ -412,7 +423,7 @@ const TahsinAssessment = () => {
             </h2>
             <textarea
               value={catatan}
-              onChange={e => setCatatan(e.target.value)}
+              onChange={e => handleCatatanChange(e.target.value)}
               placeholder="Contoh: Bacaan tartil sudah bagus, namun perlu latihan lebih pada bacaan ikhfa..."
               rows={4}
               className="w-full px-4 py-3 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm resize-none text-foreground placeholder:text-muted-foreground"
@@ -440,7 +451,7 @@ const TahsinAssessment = () => {
             return (
               <>
                 <div className={`w-24 h-24 rounded-full border-2 flex items-center justify-center mx-auto mb-4 ${p.bg} ${p.border}`}>
-                  <span className="text-4xl">{p.emoji}</span>
+                  <span className="text-4xl font-bold">{p.code}</span>
                 </div>
                 <h2 className={`text-3xl font-bold ${p.color} mb-1`}>{p.label}</h2>
                 <p className="text-5xl font-black text-foreground my-3">{result?.total}</p>

@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "@/hooks/use-toast";
+import { NOTE_EMOTICON_WARNING, hasBlockedNoteEmoticon, removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 import { Save, Plus, Minus, Loader2, FileSpreadsheet, MessageSquarePlus, CheckCircle2, AlertTriangle, TrendingDown, Pause } from "lucide-react";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -214,6 +215,15 @@ const SpreadsheetReport = () => {
     }));
   }, []);
 
+  const updateRowNotes = useCallback((idx: number, value: string) => {
+    if (hasBlockedNoteEmoticon(value)) {
+      toast({ title: NOTE_EMOTICON_WARNING, variant: "destructive" });
+      updateRow(idx, { notes: removeBlockedNoteEmoticons(value) });
+      return;
+    }
+    updateRow(idx, { notes: value });
+  }, [updateRow]);
+
   const filledCount = rows.filter(r => r.reportId).length;
   const totalRows = rows.length;
   const progressPct = totalRows ? Math.round((filledCount / totalRows) * 100) : 0;
@@ -226,7 +236,7 @@ const SpreadsheetReport = () => {
     if (r.program === "tahfizh" && isTahfizhDecline(parseInt(r.startLevel), r.startPage, parseInt(r.endLevel), r.endPage)) {
       return buildTahfizhDeclineNote(parseInt(r.startLevel), r.startPage, parseInt(r.endLevel), r.endPage);
     }
-    if (signed === 0) return "Belum ada penambahan progres pada bulan ini. Disarankan menambah intensitas latihan membaca/menghafal.";
+    if (signed === 0) return "Pada bulan ini progres siswa masih sama seperti sebelumnya. Siswa perlu latihan yang lebih rutin dan pendampingan agar mulai ada peningkatan pada laporan berikutnya.";
     return "";
   };
 
@@ -448,8 +458,8 @@ const SpreadsheetReport = () => {
                       <div className="flex items-start gap-1">
                         <Textarea
                           value={r.notes}
-                          onChange={e => updateRow(idx, { notes: e.target.value })}
-                          placeholder="Catatan…"
+                          onChange={e => updateRowNotes(idx, e.target.value)}
+                          placeholder="Catatan..."
                           className="min-h-[40px] text-xs"
                           rows={2}
                         />
@@ -464,17 +474,17 @@ const SpreadsheetReport = () => {
                             {TEMPLATE_NOTES.map((t, i) => (
                               <button
                                 key={i}
-                                onClick={() => updateRow(idx, { notes: t })}
+                                onClick={() => updateRowNotes(idx, t)}
                                 className="block w-full text-left text-xs p-2 rounded hover:bg-accent"
                               >
                                 {t}
                               </button>
                             ))}
                             <button
-                              onClick={() => updateRow(idx, { notes: buildAutoNote(r) || r.notes })}
+                              onClick={() => updateRowNotes(idx, buildAutoNote(r) || r.notes)}
                               className="block w-full text-left text-xs p-2 rounded bg-primary/10 hover:bg-primary/20 font-medium"
                             >
-                              ⚙️ Catatan otomatis (berdasarkan progres)
+                              Catatan otomatis berdasarkan progres
                             </button>
                           </PopoverContent>
                         </Popover>

@@ -216,7 +216,7 @@ const StudentReportPDF = React.forwardRef<HTMLDivElement, Props>(
                 gap: 8,
               }}
             >
-              <span style={{ fontSize: 14 }}>⚠️</span>
+              <span style={{ fontSize: 14 }}>!</span>
               <div>
                 <p style={{ fontSize: 11, fontWeight: 700, margin: 0 }}>Perlu Perhatian Khusus</p>
                 {(student as any).catatan_perhatian && (

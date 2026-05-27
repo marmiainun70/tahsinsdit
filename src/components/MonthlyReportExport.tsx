@@ -12,6 +12,7 @@ import type { Database } from "@/integrations/supabase/types";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -99,7 +100,7 @@ const MonthlyReportExport = ({ reports }: Props) => {
           Total: r.pages_read,
           Target: r.target_pages,
           Status: r.achievement_status === "achieved" ? "Tercapai" : "Belum Tercapai",
-          Catatan: r.notes || "-",
+          Catatan: removeBlockedNoteEmoticons(r.notes || "") || "-",
         };
       });
 

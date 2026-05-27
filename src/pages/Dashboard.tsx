@@ -132,7 +132,7 @@ const Dashboard = () => {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-destructive/10 text-destructive border border-destructive/20">
-                        ⚠ Perlu Perhatian
+                        Perlu Perhatian
                       </span>
                       <ChevronRight className="w-4 h-4 text-destructive/50" />
                     </div>
