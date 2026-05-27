@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo } from "react";
 import { useStudents, IQRO_LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
 import { useAllMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
 import { useProfileMap } from "@/hooks/useProfiles";
@@ -11,13 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { MultiMonthExportFilters } from "@/components/MultiMonthExportFilters";
+import { generateMultiMonthPDF, generateMultiMonthExcel, type ExportGroup, aggregateMultiMonthData } from "@/utils/multiMonthExportUtils";
 import {
   Search, Loader2, Eye, Download, CheckCircle2,
-  Users, ListChecks, AlertCircle, Percent, FileWarning, FileSpreadsheet
+  Users, ListChecks, AlertCircle, Percent, FileWarning, FileSpreadsheet, Calendar
 } from "lucide-react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -50,6 +49,24 @@ interface RowData {
   catatan: string;
 }
 
+interface AggregatedReport {
+  studentId: string;
+  nama: string;
+  kelas: number;
+  rombel: string;
+  level: string;
+  program: string;
+  months: string[];
+  startPage: number;
+  endPage: number;
+  totalPages: number;
+  totalTarget: number;
+  averageAttendance: number;
+  status: 'achieved' | 'not_achieved' | 'partial' | 'empty';
+  guru: string;
+  catatan: string;
+}
+
 const RecapReport = () => {
   const { data: students = [], isLoading: ls } = useStudents();
   const { data: reports = [], isLoading: lr } = useAllMonthlyReports();
@@ -64,6 +81,11 @@ const RecapReport = () => {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "filled" | "empty">("all");
   const [previewOpen, setPreviewOpen] = useState(false);
+  
+  // Multi-month export state
+  const [multiMonthMode, setMultiMonthMode] = useState(false);
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
+  const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
 
   // Filter siswa sesuai kelas/rombel/search
   const filteredStudents = useMemo(() => {
@@ -77,7 +99,7 @@ const RecapReport = () => {
     return s.sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel) || a.nama.localeCompare(b.nama));
   }, [students, filterKelas, filterRombel, search]);
 
-  // Group per rombel: kelas-rombel
+  // Group per rombel: kelas-rombel (single month mode)
   const groups = useMemo(() => {
     const map = new Map<string, { kelas: number; rombel: string; rows: RowData[] }>();
     filteredStudents.forEach(st => {
@@ -170,257 +192,153 @@ const RecapReport = () => {
     return { total, filled, empty, achieved, notAchieved, completion, achievementRate };
   }, [groups]);
 
-  // Preload TTD/logo as base64 for PDF
-  const loadImageAsBase64 = (url: string): Promise<string | null> =>
-    new Promise(resolve => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width; canvas.height = img.height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return resolve(null);
-        ctx.drawImage(img, 0, 0);
-        try { resolve(canvas.toDataURL("image/png")); } catch { resolve(null); }
+  // Multi-month data aggregation
+  const multiMonthExportGroups = useMemo(() => {
+    if (!multiMonthMode || selectedMonths.length === 0) return [];
+
+    const map = new Map<string, ExportGroup>();
+    
+    filteredStudents.forEach(st => {
+      const key = `${st.kelas}-${st.rombel}`;
+      if (!map.has(key)) {
+        map.set(key, { kelas: st.kelas, rombel: st.rombel, reports: [] });
+      }
+
+      const studentReports = reports.filter(
+        r => r.student_id === st.id && 
+             selectedMonths.includes(r.month) && 
+             r.year === selectedYear
+      );
+
+      const monthlyData = selectedMonths
+        .map(m => {
+          const rep = studentReports.find(r => r.month === m);
+          return {
+            month: MONTH_NAMES[m - 1],
+            year: selectedYear,
+            startPage: rep?.start_page || 0,
+            endPage: rep?.end_page || 0,
+            pagesRead: rep?.pages_read || 0,
+            targetPages: rep?.target_pages || 0,
+            iqraLevel: rep?.iqra_level || null,
+            endIqraLevel: (rep as any)?.end_iqra_level || null,
+            attendancePercentage: rep?.attendance_percentage || 0,
+            achievementStatus: rep?.achievement_status || 'empty',
+            notes: rep?.notes || '',
+          };
+        })
+        .sort((a, b) => MONTH_NAMES.indexOf(a.month) - MONTH_NAMES.indexOf(b.month));
+
+      const filledMonths = monthlyData.filter(m => m.pagesRead > 0);
+      const totalPages = filledMonths.reduce((sum, m) => sum + m.pagesRead, 0);
+      const totalTarget = filledMonths.reduce((sum, m) => sum + m.targetPages, 0);
+      const avgAttendance =
+        filledMonths.length > 0
+          ? Math.round(
+              filledMonths.reduce((sum, m) => sum + m.attendancePercentage, 0) /
+                filledMonths.length
+            )
+          : 0;
+
+      const achievedCount = filledMonths.filter(
+        m => m.achievementStatus === 'achieved'
+      ).length;
+      let status: 'achieved' | 'not_achieved' | 'partial' | 'empty';
+      if (filledMonths.length === 0) {
+        status = 'empty';
+      } else if (achievedCount === filledMonths.length) {
+        status = 'achieved';
+      } else if (achievedCount > 0) {
+        status = 'partial';
+      } else {
+        status = 'not_achieved';
+      }
+
+      const aggregated: AggregatedReport = {
+        studentId: st.id,
+        nama: st.nama,
+        kelas: st.kelas,
+        rombel: st.rombel,
+        level: st.level,
+        program: getProgramLabel(st.level),
+        months: monthlyData.map(m => m.month),
+        startPage: monthlyData[0]?.startPage || 0,
+        endPage: monthlyData[monthlyData.length - 1]?.endPage || 0,
+        totalPages,
+        totalTarget,
+        averageAttendance: avgAttendance,
+        status,
+        guru: studentReports[0]?.created_by ? `${studentReports[0].created_by}`.substring(0, 50) : '-',
+        catatan: monthlyData.map(m => m.notes).filter(Boolean).join(' | '),
       };
-      img.onerror = () => resolve(null);
-      img.src = url;
+
+      map.get(key)!.reports.push(aggregated);
     });
 
-  const exportPDF = async () => {
-    if (displayGroups.length === 0) {
+    return Array.from(map.values())
+      .map(g => ({
+        ...g,
+        reports: g.reports.sort((a, b) => a.nama.localeCompare(b.nama))
+      }))
+      .sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
+  }, [multiMonthMode, selectedMonths, selectedYear, filteredStudents, reports]);
+
+  // Multi-month stats
+  const multiMonthStats = useMemo(() => {
+    if (!multiMonthExportGroups.length) return null;
+
+    const all = multiMonthExportGroups.flatMap(g => g.reports);
+    const total = all.length;
+    const filled = all.filter(r => r.status !== "empty").length;
+    const empty = total - filled;
+    const achieved = all.filter(r => r.status === "achieved").length;
+    const partial = all.filter(r => r.status === "partial").length;
+    const totalPages = all.reduce((sum, r) => sum + r.totalPages, 0);
+    const avgAttendance = filled > 0 
+      ? Math.round(all.reduce((sum, r) => sum + r.averageAttendance, 0) / filled)
+      : 0;
+
+    return { total, filled, empty, achieved, partial, totalPages, avgAttendance };
+  }, [multiMonthExportGroups]);
+
+  const exportMultiMonthPDF = async () => {
+    if (multiMonthExportGroups.length === 0) {
       toast({ title: "Tidak ada data untuk dicetak", variant: "destructive" });
       return;
     }
-    if (stats.empty > 0) {
-      toast({
-        title: `⚠️ ${stats.empty} siswa belum diisi laporannya`,
-        description: "PDF tetap akan diunduh, baris kosong tetap ditampilkan."
-      });
+
+    try {
+      await generateMultiMonthPDF(
+        multiMonthExportGroups,
+        selectedMonths,
+        selectedYear,
+        settings || {}
+      );
+      toast({ title: "PDF berhasil diunduh ✅" });
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Error mengekspor PDF", variant: "destructive" });
     }
-
-    const [logoB64, koordTtdB64, kepsekTtdB64] = await Promise.all([
-      settings?.logo_url ? loadImageAsBase64(settings.logo_url) : Promise.resolve(null),
-      settings?.koordinator_ttd_url ? loadImageAsBase64(settings.koordinator_ttd_url) : Promise.resolve(null),
-      settings?.kepsek_ttd_url ? loadImageAsBase64(settings.kepsek_ttd_url) : Promise.resolve(null),
-    ]);
-
-    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
-    const pageW = doc.internal.pageSize.getWidth();
-    const pageH = doc.internal.pageSize.getHeight();
-    const M = 12;
-    const periodeStr = `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
-
-    const drawHeader = () => {
-      let y = M;
-      if (logoB64) {
-        try { doc.addImage(logoB64, "PNG", M, y, 16, 16); } catch {}
-      }
-      doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(22, 101, 52);
-      doc.text((settings?.nama_lembaga || "Lembaga").toUpperCase(), pageW / 2, y + 5, { align: "center" });
-      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(80);
-      if (settings?.alamat) doc.text(settings.alamat, pageW / 2, y + 10, { align: "center" });
-      doc.setDrawColor(217, 119, 6); doc.setLineWidth(0.6);
-      doc.line(M, y + 18, pageW - M, y + 18);
-      doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(20);
-      doc.text("REKAP LAPORAN BULANAN TAHSIN & TAHFIZH", pageW / 2, y + 23, { align: "center" });
-      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(80);
-      doc.text(`Periode: ${periodeStr}`, pageW / 2, y + 28, { align: "center" });
-    };
-
-    drawHeader();
-    let cursorY = M + 32;
-
-    displayGroups.forEach((grp) => {
-      // Group header
-      if (cursorY > pageH - 40) { doc.addPage(); drawHeader(); cursorY = M + 32; }
-      doc.setFillColor(232, 245, 233);
-      doc.rect(M, cursorY, pageW - 2 * M, 6, "F");
-      doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(27, 94, 32);
-      doc.text(`Kelas ${grp.kelas} — Rombel ${grp.rombel}  (${grp.rows.length} siswa)`, M + 2, cursorY + 4.2);
-      cursorY += 7;
-
-      autoTable(doc, {
-        startY: cursorY,
-        head: [["No", "Nama", "Program", "Level", "Awal", "Akhir", "Total", "Target", "Status", "Guru", "Catatan"]],
-        body: grp.rows.map((r) => [
-          String(r.no),
-          r.nama,
-          r.program,
-          r.level,
-          r.awal,
-          r.akhir,
-          r.status === "empty" ? "-" : String(r.total),
-          r.status === "empty" ? "-" : String(r.target),
-          r.status === "achieved" ? "Tercapai" : r.status === "not_achieved" ? "Belum" : "BELUM DIISI",
-          r.guru,
-          r.catatan || "-",
-        ]),
-        styles: { fontSize: 8, cellPadding: 1.6, overflow: "linebreak", valign: "middle", lineColor: [220, 220, 220], lineWidth: 0.1, textColor: [30, 30, 30] },
-        headStyles: { fillColor: [34, 87, 122], textColor: [255, 255, 255], fontStyle: "bold", halign: "center", fontSize: 8 },
-        alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: {
-          0: { cellWidth: 8, halign: "center" },
-          1: { cellWidth: 38 },
-          2: { cellWidth: 26 },
-          3: { cellWidth: 22 },
-          4: { cellWidth: 22 },
-          5: { cellWidth: 22 },
-          6: { cellWidth: 12, halign: "center", fontStyle: "bold" },
-          7: { cellWidth: 12, halign: "center" },
-          8: { cellWidth: 20, halign: "center", fontStyle: "bold" },
-          9: { cellWidth: 24 },
-          10: { cellWidth: "auto" },
-        },
-        didParseCell: (data) => {
-          if (data.section === "body" && data.column.index === 8) {
-            const v = String(data.cell.raw);
-            if (v === "Tercapai") data.cell.styles.textColor = [16, 124, 65];
-            else if (v === "Belum") data.cell.styles.textColor = [185, 28, 28];
-            else if (v === "BELUM DIISI") {
-              data.cell.styles.textColor = [220, 38, 38];
-              data.row.cells && Object.values(data.row.cells).forEach((c: any) => { c.styles.fillColor = [255, 235, 238]; });
-            }
-          }
-        },
-        margin: { left: M, right: M, bottom: 22 },
-        didDrawPage: () => { /* header re-draw handled below */ },
-      });
-      cursorY = (doc as any).lastAutoTable.finalY + 4;
-    });
-
-    // Tanda tangan di halaman terakhir
-    const sigBlockH = 40;
-    if (cursorY + sigBlockH > pageH - 14) { doc.addPage(); drawHeader(); cursorY = M + 34; }
-    cursorY += 4;
-    const colW = (pageW - M * 2) / 2;
-    const sigY = cursorY;
-
-    const drawSig = (xCenter: number, label: string, nama: string, ttd: string | null) => {
-      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(40);
-      doc.text(label, xCenter, sigY, { align: "center" });
-      if (ttd) { try { doc.addImage(ttd, "PNG", xCenter - 18, sigY + 3, 36, 16); } catch {} }
-      doc.setLineWidth(0.2); doc.setDrawColor(120);
-      doc.line(xCenter - 30, sigY + 22, xCenter + 30, sigY + 22);
-      doc.setFont("helvetica", "bold"); doc.setFontSize(9);
-      doc.text(nama || "(.....................)", xCenter, sigY + 27, { align: "center" });
-    };
-    drawSig(M + colW / 2, "Koordinator Tahfizh,", settings?.koordinator_nama || "", koordTtdB64);
-    drawSig(M + colW + colW / 2, "Mengetahui, Kepala Sekolah,", settings?.kepsek_nama || "", kepsekTtdB64);
-
-    // Footer semua halaman
-    const totalPages = doc.getNumberOfPages();
-    const today = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
-    for (let p = 1; p <= totalPages; p++) {
-      doc.setPage(p);
-      doc.setDrawColor(220); doc.setLineWidth(0.2);
-      doc.line(M, pageH - 10, pageW - M, pageH - 10);
-      doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(120);
-      doc.text(`Dicetak: ${today}`, M, pageH - 6);
-      doc.text(`Halaman ${p} dari ${totalPages}`, pageW - M, pageH - 6, { align: "right" });
-    }
-
-    const fname = `Rekap_Laporan_${MONTH_NAMES[Number(filterMonth) - 1]}_${filterYear}.pdf`;
-    doc.save(fname);
-    toast({ title: "PDF berhasil diunduh ✅" });
   };
 
-  const exportExcel = () => {
-    if (displayGroups.length === 0) {
+  const exportMultiMonthExcel = () => {
+    if (multiMonthExportGroups.length === 0) {
       toast({ title: "Tidak ada data untuk diexport", variant: "destructive" });
       return;
     }
-    const wb = XLSX.utils.book_new();
-    const periode = `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
-    const headers = ["No", "Nama", "Kelas", "Rombel", "Program", "Level", "Awal", "Akhir", "Total", "Target", "Status", "Guru Pengisi", "Catatan"];
 
-    // Sheet utama: semua rombel digabung dengan baris pemisah
-    const aoa: any[][] = [];
-    aoa.push([(settings?.nama_lembaga || "Lembaga").toUpperCase()]);
-    if (settings?.alamat) aoa.push([settings.alamat]);
-    aoa.push(["REKAP LAPORAN BULANAN TAHSIN & TAHFIZH"]);
-    aoa.push([`Periode: ${periode}`]);
-    aoa.push([]);
-
-    displayGroups.forEach(grp => {
-      aoa.push([`Kelas ${grp.kelas} — Rombel ${grp.rombel}`]);
-      aoa.push(headers);
-      grp.rows.forEach(r => {
-        aoa.push([
-          r.no, r.nama, r.kelas, r.rombel, r.program, r.level,
-          r.awal, r.akhir,
-          r.status === "empty" ? "" : r.total,
-          r.status === "empty" ? "" : r.target,
-          r.status === "achieved" ? "Tercapai" : r.status === "not_achieved" ? "Belum Tercapai" : "BELUM DIISI",
-          r.guru, r.catatan || "",
-        ]);
-      });
-      aoa.push([]);
-    });
-
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-    // Auto width
-    const colWidths = headers.map((h, ci) => {
-      let max = h.length;
-      aoa.forEach(row => {
-        const v = row[ci];
-        if (v != null) max = Math.max(max, String(v).length);
-      });
-      return { wch: Math.min(Math.max(max + 2, 8), 50) };
-    });
-    ws["!cols"] = colWidths;
-
-    // Bold headers (cells matching headers row content)
-    const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      const cellA = ws[XLSX.utils.encode_cell({ r: R, c: 0 })];
-      const isGroupHeader = cellA && typeof cellA.v === "string" && cellA.v.startsWith("Kelas ");
-      const isHeaderRow = cellA && cellA.v === "No";
-      const isTitle = R < 4;
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const addr = XLSX.utils.encode_cell({ r: R, c: C });
-        const cell = ws[addr];
-        if (!cell) continue;
-        cell.s = cell.s || {};
-        if (isTitle) {
-          cell.s = { font: { bold: true, sz: R === 2 ? 12 : 11 }, alignment: { horizontal: "left" } };
-        } else if (isGroupHeader) {
-          cell.s = { font: { bold: true, color: { rgb: "1B5E20" } }, fill: { fgColor: { rgb: "E8F5E9" } } };
-        } else if (isHeaderRow) {
-          cell.s = {
-            font: { bold: true, color: { rgb: "FFFFFF" } },
-            fill: { fgColor: { rgb: "22577A" } },
-            alignment: { horizontal: "center", wrapText: true },
-            border: { top: { style: "thin" }, bottom: { style: "thin" }, left: { style: "thin" }, right: { style: "thin" } },
-          };
-        } else {
-          cell.s = {
-            alignment: { wrapText: true, vertical: "top" },
-            border: { top: { style: "thin", color: { rgb: "CCCCCC" } }, bottom: { style: "thin", color: { rgb: "CCCCCC" } }, left: { style: "thin", color: { rgb: "CCCCCC" } }, right: { style: "thin", color: { rgb: "CCCCCC" } } },
-          };
-        }
-      }
+    try {
+      generateMultiMonthExcel(
+        multiMonthExportGroups,
+        selectedMonths,
+        selectedYear,
+        settings || {}
+      );
+      toast({ title: "Excel berhasil diunduh ✅" });
+    } catch (error) {
+      console.error(error);
+      toast({ title: "Error mengekspor Excel", variant: "destructive" });
     }
-
-    XLSX.utils.book_append_sheet(wb, ws, "Rekap");
-
-    // Sheet tanda tangan
-    const sigAoa: any[][] = [
-      ["Tanda Tangan Resmi"],
-      [],
-      ["Koordinator Tahfizh", "", "", "Kepala Sekolah"],
-      ["", "", "", ""],
-      ["", "", "", ""],
-      ["", "", "", ""],
-      [settings?.koordinator_nama || "(.....................)", "", "", settings?.kepsek_nama || "(.....................)"],
-    ];
-    const sigWs = XLSX.utils.aoa_to_sheet(sigAoa);
-    sigWs["!cols"] = [{ wch: 30 }, { wch: 5 }, { wch: 5 }, { wch: 30 }];
-    XLSX.utils.book_append_sheet(wb, sigWs, "Tanda Tangan");
-
-    const fname = `Rekap_Laporan_${MONTH_NAMES[Number(filterMonth) - 1]}_${filterYear}.xlsx`;
-    XLSX.writeFile(wb, fname);
-    toast({ title: "Excel berhasil diunduh ✅" });
   };
 
   if (ls || lr) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>;
@@ -428,240 +346,477 @@ const RecapReport = () => {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Rekap Laporan Bulanan</h1>
-          <p className="text-sm text-muted-foreground">Tahsin Dasar, Tahsin Lanjutan & Tahfizh — siap export PDF resmi</p>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+            <Calendar className="w-6 h-6" />
+            Rekap Laporan Bulanan
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Tahsin Dasar, Tahsin Lanjutan & Tahfizh — siap export PDF & Excel
+          </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="gap-2" onClick={() => setPreviewOpen(true)}>
-            <Eye className="w-4 h-4" /> Preview
-          </Button>
-          <Button variant="outline" className="gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50" onClick={exportExcel}>
-            <FileSpreadsheet className="w-4 h-4" /> Download Excel
-          </Button>
-          <Button className="gap-2" onClick={exportPDF}>
-            <Download className="w-4 h-4" /> Export PDF
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Button
+            variant={multiMonthMode ? "default" : "outline"}
+            className="gap-2 text-xs sm:text-sm"
+            onClick={() => {
+              setMultiMonthMode(!multiMonthMode);
+              if (!multiMonthMode) {
+                setSelectedMonths([]);
+              }
+            }}
+          >
+            <Calendar className="w-4 h-4" />
+            {multiMonthMode ? "Mode Multi-Bulan" : "Multi-Bulan"}
           </Button>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <StatCard icon={<Users className="w-4 h-4" />} label="Total Siswa" value={stats.total} color="bg-blue-50 text-blue-700" />
-        <StatCard icon={<ListChecks className="w-4 h-4" />} label="Sudah Diisi" value={stats.filled} color="bg-emerald-50 text-emerald-700" />
-        <StatCard icon={<FileWarning className="w-4 h-4" />} label="Belum Diisi" value={stats.empty} color="bg-rose-50 text-rose-700" />
-        <StatCard icon={<Percent className="w-4 h-4" />} label="Kelengkapan" value={`${stats.completion}%`} color="bg-amber-50 text-amber-700" />
-        <StatCard icon={<CheckCircle2 className="w-4 h-4" />} label="Target Tercapai" value={`${stats.achievementRate}%`} color="bg-violet-50 text-violet-700" />
-      </div>
+      {/* Multi-Month Mode */}
+      {multiMonthMode && (
+        <div className="space-y-4">
+          <MultiMonthExportFilters
+            onMonthsChange={setSelectedMonths}
+            onYearChange={setSelectedYear}
+            selectedMonths={selectedMonths}
+            selectedYear={selectedYear}
+          />
 
-      {stats.empty > 0 && (
-        <div className="flex items-start gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-800">
-          <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-          <span>Masih ada <strong>{stats.empty} siswa</strong> yang belum diisi laporannya untuk periode ini.</span>
-        </div>
-      )}
+          {selectedMonths.length > 0 && multiMonthExportGroups.length > 0 && (
+            <>
+              {/* Multi-Month Stats */}
+              {multiMonthStats && (
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                  <StatCard
+                    icon={<Users className="w-4 h-4" />}
+                    label="Total Siswa"
+                    value={multiMonthStats.total}
+                    color="bg-blue-50 text-blue-700"
+                  />
+                  <StatCard
+                    icon={<CheckCircle2 className="w-4 h-4" />}
+                    label="Tercapai"
+                    value={multiMonthStats.achieved}
+                    color="bg-emerald-50 text-emerald-700"
+                  />
+                  <StatCard
+                    icon={<AlertCircle className="w-4 h-4" />}
+                    label="Sebagian"
+                    value={multiMonthStats.partial}
+                    color="bg-amber-50 text-amber-700"
+                  />
+                  <StatCard
+                    icon={<FileWarning className="w-4 h-4" />}
+                    label="Belum Diisi"
+                    value={multiMonthStats.empty}
+                    color="bg-rose-50 text-rose-700"
+                  />
+                  <StatCard
+                    icon={<Percent className="w-4 h-4" />}
+                    label="Kehadiran"
+                    value={`${multiMonthStats.avgAttendance}%`}
+                    color="bg-violet-50 text-violet-700"
+                  />
+                  <StatCard
+                    icon={<ListChecks className="w-4 h-4" />}
+                    label="Total Hal."
+                    value={multiMonthStats.totalPages}
+                    color="bg-indigo-50 text-indigo-700"
+                  />
+                </div>
+              )}
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="p-3 grid grid-cols-2 md:grid-cols-7 gap-2">
-          <div className="col-span-2">
-            <Label className="text-xs">Cari Siswa</Label>
-            <div className="relative">
-              <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input className="pl-7 h-9" placeholder="Nama siswa..." value={search} onChange={e => setSearch(e.target.value)} />
-            </div>
-          </div>
-          <div>
-            <Label className="text-xs">Kelas</Label>
-            <Select value={filterKelas} onValueChange={setFilterKelas}>
-              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua</SelectItem>
-                {[1,2,3,4,5,6].map(k => <SelectItem key={k} value={String(k)}>Kelas {k}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Rombel</Label>
-            <Select value={filterRombel} onValueChange={setFilterRombel}>
-              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua</SelectItem>
-                {["A","B","C","D"].map(r => <SelectItem key={r} value={r}>Rombel {r}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Bulan</Label>
-            <Select value={filterMonth} onValueChange={setFilterMonth}>
-              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {MONTH_NAMES.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Tahun</Label>
-            <Select value={filterYear} onValueChange={setFilterYear}>
-              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {YEARS.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Status Isi</Label>
-            <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as any)}>
-              <SelectTrigger className={`h-9 ${filterStatus === "empty" ? "border-rose-400 text-rose-700" : filterStatus === "filled" ? "border-emerald-400 text-emerald-700" : ""}`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua</SelectItem>
-                <SelectItem value="filled">✅ Sudah Diisi</SelectItem>
-                <SelectItem value="empty">⚠️ Belum Diisi</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tables grouped per rombel */}
-      {displayGroups.length === 0 && (
-        <Card><CardContent className="p-8 text-center text-muted-foreground">Tidak ada siswa pada filter ini.</CardContent></Card>
-      )}
-      {displayGroups.map(grp => (
-        <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
-          <CardHeader className="bg-emerald-50 py-3">
-            <CardTitle className="text-sm text-emerald-900">
-              Kelas {grp.kelas} — Rombel {grp.rombel}{" "}
-              <Badge variant="outline" className="ml-2 bg-white">{grp.rows.length} siswa</Badge>
-              <Badge variant="outline" className="ml-1 bg-white text-rose-700 border-rose-200">{grp.rows.filter(r => r.status === "empty").length} belum diisi</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs border-collapse">
-                <thead className="sticky top-0 bg-muted/80">
-                  <tr className="text-left">
-                    <th className="px-2 py-2 w-8">No</th>
-                    <th className="px-2 py-2 min-w-[140px]">Nama</th>
-                    <th className="px-2 py-2">Program</th>
-                    <th className="px-2 py-2">Level</th>
-                    <th className="px-2 py-2 text-center">Awal</th>
-                    <th className="px-2 py-2 text-center">Akhir</th>
-                    <th className="px-2 py-2 text-center">Total</th>
-                    <th className="px-2 py-2 text-center">Target</th>
-                    <th className="px-2 py-2 text-center">Status</th>
-                    <th className="px-2 py-2">Guru</th>
-                    <th className="px-2 py-2 min-w-[200px]">Catatan</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {grp.rows.map(row => {
-                    const empty = row.status === "empty";
-                    return (
-                      <tr key={row.studentId} className={`border-t ${empty ? "bg-rose-50/60" : "hover:bg-muted/40"}`}>
-                        <td className="px-2 py-2">{row.no}</td>
-                        <td className="px-2 py-2 font-medium">{highlight(row.nama, search)}</td>
-                        <td className="px-2 py-2">{row.program}</td>
-                        <td className="px-2 py-2"><Badge className={`text-[10px] ${LEVEL_COLORS[row.level as ReadingLevel] || ""}`}>{row.level}</Badge></td>
-                        <td className="px-2 py-2 text-center">{row.awal}</td>
-                        <td className="px-2 py-2 text-center">{row.akhir}</td>
-                        <td className="px-2 py-2 text-center font-bold">{empty ? "-" : row.total}</td>
-                        <td className="px-2 py-2 text-center">{empty ? "-" : row.target}</td>
-                        <td className="px-2 py-2 text-center">
-                          {row.status === "achieved" && <Badge className="bg-emerald-100 text-emerald-800">Tercapai</Badge>}
-                          {row.status === "not_achieved" && <Badge variant="destructive">Belum</Badge>}
-                          {empty && <Badge className="bg-rose-200 text-rose-900">Belum diisi</Badge>}
-                        </td>
-                        <td className="px-2 py-2 text-muted-foreground">{row.guru}</td>
-                        <td className="px-2 py-2 whitespace-pre-wrap text-muted-foreground">{row.catatan || "-"}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-
-      {/* Preview Modal */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="text-base">Preview Rekap Laporan</DialogTitle></DialogHeader>
-          <div className="bg-white text-black p-6 border rounded-lg">
-            <div className="flex items-center gap-3 border-b pb-3 mb-3">
-              {settings?.logo_url && <img src={settings.logo_url} className="w-14 h-14 object-contain" />}
-              <div className="flex-1 text-center">
-                <h2 className="font-bold text-lg uppercase">{settings?.nama_lembaga || "Lembaga"}</h2>
-                {settings?.alamat && <p className="text-xs">{settings.alamat}</p>}
-                <p className="font-bold text-sm mt-2">REKAP LAPORAN BULANAN TAHSIN & TAHFIZH</p>
-                <p className="text-xs">Periode: {MONTH_NAMES[Number(filterMonth) - 1]} {filterYear}</p>
+              {/* Export Buttons */}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  className="gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 text-xs sm:text-sm"
+                  onClick={exportMultiMonthExcel}
+                >
+                  <FileSpreadsheet className="w-4 h-4" /> Excel
+                </Button>
+                <Button
+                  className="gap-2 text-xs sm:text-sm"
+                  onClick={exportMultiMonthPDF}
+                >
+                  <Download className="w-4 h-4" /> PDF
+                </Button>
               </div>
+
+              {/* Multi-Month Tables */}
+              {multiMonthExportGroups.map(grp => (
+                <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
+                  <CardHeader className="bg-blue-50 py-3">
+                    <CardTitle className="text-sm text-blue-900">
+                      Kelas {grp.kelas} — Rombel {grp.rombel}{" "}
+                      <Badge variant="outline" className="ml-2 bg-white">
+                        {grp.reports.length} siswa
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs border-collapse">
+                        <thead className="sticky top-0 bg-muted/80">
+                          <tr className="text-left">
+                            <th className="px-2 py-2 w-8">No</th>
+                            <th className="px-2 py-2 min-w-[120px]">Nama</th>
+                            <th className="px-2 py-2">Program</th>
+                            <th className="px-2 py-2">Bulan</th>
+                            <th className="px-2 py-2 text-center">Total Hal</th>
+                            <th className="px-2 py-2 text-center">Target</th>
+                            <th className="px-2 py-2 text-center">Kehadiran %</th>
+                            <th className="px-2 py-2 text-center">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {grp.reports.map((row, idx) => {
+                            const empty = row.status === "empty";
+                            return (
+                              <tr
+                                key={row.studentId}
+                                className={`border-t ${empty ? "bg-rose-50/60" : "hover:bg-muted/40"}`}
+                              >
+                                <td className="px-2 py-2">{idx + 1}</td>
+                                <td className="px-2 py-2 font-medium">
+                                  {highlight(row.nama, search)}
+                                </td>
+                                <td className="px-2 py-2">{row.program}</td>
+                                <td className="px-2 py-2 text-xs">
+                                  {row.months.join(" / ")}
+                                </td>
+                                <td className="px-2 py-2 text-center font-bold">
+                                  {empty ? "-" : row.totalPages}
+                                </td>
+                                <td className="px-2 py-2 text-center">
+                                  {empty ? "-" : row.totalTarget}
+                                </td>
+                                <td className="px-2 py-2 text-center">
+                                  {empty ? "-" : `${row.averageAttendance}%`}
+                                </td>
+                                <td className="px-2 py-2 text-center">
+                                  {row.status === "achieved" && (
+                                    <Badge className="bg-emerald-100 text-emerald-800 text-[10px]">
+                                      Tercapai
+                                    </Badge>
+                                  )}
+                                  {row.status === "partial" && (
+                                    <Badge className="bg-amber-100 text-amber-800 text-[10px]">
+                                      Sebagian
+                                    </Badge>
+                                  )}
+                                  {row.status === "not_achieved" && (
+                                    <Badge variant="destructive" className="text-[10px]">
+                                      Belum
+                                    </Badge>
+                                  )}
+                                  {empty && (
+                                    <Badge className="bg-rose-200 text-rose-900 text-[10px]">
+                                      Belum diisi
+                                    </Badge>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </>
+          )}
+
+          {selectedMonths.length === 0 && (
+            <Card>
+              <CardContent className="p-8 text-center text-muted-foreground">
+                Silakan pilih bulan untuk menampilkan data
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Single Month Mode */}
+      {!multiMonthMode && (
+        <>
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <StatCard
+              icon={<Users className="w-4 h-4" />}
+              label="Total Siswa"
+              value={stats.total}
+              color="bg-blue-50 text-blue-700"
+            />
+            <StatCard
+              icon={<ListChecks className="w-4 h-4" />}
+              label="Sudah Diisi"
+              value={stats.filled}
+              color="bg-emerald-50 text-emerald-700"
+            />
+            <StatCard
+              icon={<FileWarning className="w-4 h-4" />}
+              label="Belum Diisi"
+              value={stats.empty}
+              color="bg-rose-50 text-rose-700"
+            />
+            <StatCard
+              icon={<Percent className="w-4 h-4" />}
+              label="Kelengkapan"
+              value={`${stats.completion}%`}
+              color="bg-amber-50 text-amber-700"
+            />
+            <StatCard
+              icon={<CheckCircle2 className="w-4 h-4" />}
+              label="Target Tercapai"
+              value={`${stats.achievementRate}%`}
+              color="bg-violet-50 text-violet-700"
+            />
+          </div>
+
+          {stats.empty > 0 && (
+            <div className="flex items-start gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-800">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>
+                Masih ada <strong>{stats.empty} siswa</strong> yang belum diisi laporannya untuk periode ini.
+              </span>
             </div>
-            {displayGroups.map(grp => (
-              <div key={`p-${grp.kelas}-${grp.rombel}`} className="mb-4">
-                <div className="bg-emerald-100 px-2 py-1 font-bold text-xs">Kelas {grp.kelas} — Rombel {grp.rombel}</div>
-                <table className="w-full text-[10px] border border-gray-300">
-                  <thead className="bg-gray-200">
-                    <tr>
-                      {["No","Nama","Program","Level","Awal","Akhir","Total","Target","Status","Guru","Catatan"].map(h => (
-                        <th key={h} className="border border-gray-300 px-1 py-1 text-left">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {grp.rows.map(r => (
-                      <tr key={r.studentId} className={r.status === "empty" ? "bg-rose-50" : ""}>
-                        <td className="border border-gray-300 px-1 py-1">{r.no}</td>
-                        <td className="border border-gray-300 px-1 py-1">{r.nama}</td>
-                        <td className="border border-gray-300 px-1 py-1">{r.program}</td>
-                        <td className="border border-gray-300 px-1 py-1">{r.level}</td>
-                        <td className="border border-gray-300 px-1 py-1">{r.awal}</td>
-                        <td className="border border-gray-300 px-1 py-1">{r.akhir}</td>
-                        <td className="border border-gray-300 px-1 py-1 text-center">{r.status === "empty" ? "-" : r.total}</td>
-                        <td className="border border-gray-300 px-1 py-1 text-center">{r.status === "empty" ? "-" : r.target}</td>
-                        <td className={`border border-gray-300 px-1 py-1 font-bold ${r.status === "achieved" ? "text-emerald-700" : "text-rose-700"}`}>
-                          {r.status === "achieved" ? "Tercapai" : r.status === "not_achieved" ? "Belum" : "BELUM DIISI"}
-                        </td>
-                        <td className="border border-gray-300 px-1 py-1">{r.guru}</td>
-                        <td className="border border-gray-300 px-1 py-1 whitespace-pre-wrap">{r.catatan || "-"}</td>
-                      </tr>
+          )}
+
+          {/* Filters */}
+          <Card>
+            <CardContent className="p-3 grid grid-cols-2 md:grid-cols-6 gap-2">
+              <div className="col-span-2">
+                <Label className="text-xs">Cari Siswa</Label>
+                <div className="relative">
+                  <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    className="pl-7 h-9"
+                    placeholder="Nama siswa..."
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Kelas</Label>
+                <Select value={filterKelas} onValueChange={setFilterKelas}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua</SelectItem>
+                    {[1, 2, 3, 4, 5, 6].map(k => (
+                      <SelectItem key={k} value={String(k)}>
+                        Kelas {k}
+                      </SelectItem>
                     ))}
-                  </tbody>
-                </table>
+                  </SelectContent>
+                </Select>
               </div>
-            ))}
-            <div className="grid grid-cols-2 gap-6 mt-8 text-xs">
-              <div className="text-center">
-                <p>Koordinator Tahfizh,</p>
-                {settings?.koordinator_ttd_url && <img src={settings.koordinator_ttd_url} className="h-12 mx-auto my-1" />}
-                {!settings?.koordinator_ttd_url && <div className="h-14"></div>}
-                <p className="border-t border-gray-400 pt-1 font-bold">{settings?.koordinator_nama || "(.....................)"}</p>
+              <div>
+                <Label className="text-xs">Rombel</Label>
+                <Select value={filterRombel} onValueChange={setFilterRombel}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua</SelectItem>
+                    {["A", "B", "C", "D"].map(r => (
+                      <SelectItem key={r} value={r}>
+                        Rombel {r}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="text-center">
-                <p>Mengetahui, Kepala Sekolah,</p>
-                {settings?.kepsek_ttd_url && <img src={settings.kepsek_ttd_url} className="h-12 mx-auto my-1" />}
-                {!settings?.kepsek_ttd_url && <div className="h-14"></div>}
-                <p className="border-t border-gray-400 pt-1 font-bold">{settings?.kepsek_nama || "(.....................)"}</p>
+              <div>
+                <Label className="text-xs">Bulan</Label>
+                <Select value={filterMonth} onValueChange={setFilterMonth}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTH_NAMES.map((m, i) => (
+                      <SelectItem key={i} value={String(i + 1)}>
+                        {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            </div>
-          </div>
-          <Button onClick={exportPDF} className="gap-2 w-full mt-3">
-            <Download className="w-4 h-4" /> Download PDF
-          </Button>
-        </DialogContent>
-      </Dialog>
+              <div>
+                <Label className="text-xs">Tahun</Label>
+                <Select value={filterYear} onValueChange={setFilterYear}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEARS.map(y => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Status Isi</Label>
+                <Select
+                  value={filterStatus}
+                  onValueChange={(v) => setFilterStatus(v as any)}
+                >
+                  <SelectTrigger
+                    className={`h-9 ${
+                      filterStatus === "empty"
+                        ? "border-rose-400 text-rose-700"
+                        : filterStatus === "filled"
+                        ? "border-emerald-400 text-emerald-700"
+                        : ""
+                    }`}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua</SelectItem>
+                    <SelectItem value="filled">✅ Sudah Diisi</SelectItem>
+                    <SelectItem value="empty">⚠️ Belum Diisi</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tables grouped per rombel */}
+          {displayGroups.length === 0 && (
+            <Card>
+              <CardContent className="p-8 text-center text-muted-foreground">
+                Tidak ada siswa pada filter ini.
+              </CardContent>
+            </Card>
+          )}
+          {displayGroups.map(grp => (
+            <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
+              <CardHeader className="bg-emerald-50 py-3">
+                <CardTitle className="text-sm text-emerald-900">
+                  Kelas {grp.kelas} — Rombel {grp.rombel}{" "}
+                  <Badge variant="outline" className="ml-2 bg-white">
+                    {grp.rows.length} siswa
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className="ml-1 bg-white text-rose-700 border-rose-200"
+                  >
+                    {grp.rows.filter(r => r.status === "empty").length} belum diisi
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs border-collapse">
+                    <thead className="sticky top-0 bg-muted/80">
+                      <tr className="text-left">
+                        <th className="px-2 py-2 w-8">No</th>
+                        <th className="px-2 py-2 min-w-[140px]">Nama</th>
+                        <th className="px-2 py-2">Program</th>
+                        <th className="px-2 py-2">Level</th>
+                        <th className="px-2 py-2 text-center">Awal</th>
+                        <th className="px-2 py-2 text-center">Akhir</th>
+                        <th className="px-2 py-2 text-center">Total</th>
+                        <th className="px-2 py-2 text-center">Target</th>
+                        <th className="px-2 py-2 text-center">Status</th>
+                        <th className="px-2 py-2">Guru</th>
+                        <th className="px-2 py-2 min-w-[200px]">Catatan</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {grp.rows.map(row => {
+                        const empty = row.status === "empty";
+                        return (
+                          <tr
+                            key={row.studentId}
+                            className={`border-t ${
+                              empty
+                                ? "bg-rose-50/60"
+                                : "hover:bg-muted/40"
+                            }`}
+                          >
+                            <td className="px-2 py-2">{row.no}</td>
+                            <td className="px-2 py-2 font-medium">
+                              {highlight(row.nama, search)}
+                            </td>
+                            <td className="px-2 py-2">{row.program}</td>
+                            <td className="px-2 py-2">
+                              <Badge
+                                className={`text-[10px] ${
+                                  LEVEL_COLORS[row.level as ReadingLevel] || ""
+                                }`}
+                              >
+                                {row.level}
+                              </Badge>
+                            </td>
+                            <td className="px-2 py-2 text-center">{row.awal}</td>
+                            <td className="px-2 py-2 text-center">{row.akhir}</td>
+                            <td className="px-2 py-2 text-center font-bold">
+                              {empty ? "-" : row.total}
+                            </td>
+                            <td className="px-2 py-2 text-center">
+                              {empty ? "-" : row.target}
+                            </td>
+                            <td className="px-2 py-2 text-center">
+                              {row.status === "achieved" && (
+                                <Badge className="bg-emerald-100 text-emerald-800">
+                                  Tercapai
+                                </Badge>
+                              )}
+                              {row.status === "not_achieved" && (
+                                <Badge variant="destructive">Belum</Badge>
+                              )}
+                              {empty && (
+                                <Badge className="bg-rose-200 text-rose-900">
+                                  Belum diisi
+                                </Badge>
+                              )}
+                            </td>
+                            <td className="px-2 py-2 text-muted-foreground">
+                              {row.guru}
+                            </td>
+                            <td className="px-2 py-2 whitespace-pre-wrap text-muted-foreground">
+                              {row.catatan || "-"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </>
+      )}
     </div>
   );
 };
 
-const StatCard = ({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: number | string; color: string }) => (
+const StatCard = ({
+  icon,
+  label,
+  value,
+  color,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number | string;
+  color: string;
+}) => (
   <Card>
     <CardContent className="p-3">
-      <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg ${color} mb-2`}>{icon}</div>
+      <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg ${color} mb-2`}>
+        {icon}
+      </div>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="text-xl font-bold text-foreground">{value}</p>
     </CardContent>
@@ -672,7 +827,15 @@ const highlight = (text: string, q: string) => {
   if (!q.trim()) return text;
   const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
   const parts = text.split(re);
-  return parts.map((p, i) => re.test(p) ? <mark key={i} className="bg-yellow-200 px-0.5 rounded">{p}</mark> : <span key={i}>{p}</span>);
+  return parts.map((p, i) =>
+    re.test(p) ? (
+      <mark key={i} className="bg-yellow-200 px-0.5 rounded">
+        {p}
+      </mark>
+    ) : (
+      <span key={i}>{p}</span>
+    )
+  );
 };
 
 export default RecapReport;
