@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -60,6 +61,13 @@ interface ExportSettings {
   kepsek_ttd_url?: string;
 }
 
+interface RombelOption {
+  key: string;
+  kelas: number;
+  rombel: string;
+  label: string;
+}
+
 const getProgramLabel = (level: string) => {
   if (IQRO_LEVELS.includes(level as ReadingLevel)) return "Tahsin Dasar (Iqra)";
   if (level === "Tahsin Dasar") return "Tahsin Dasar";
@@ -81,6 +89,9 @@ const cleanPdfText = (value: unknown) => {
 
 const hasArabicText = (value: unknown) =>
   /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/u.test(String(value ?? ""));
+
+const safeFilePart = (value: string) =>
+  value.replace(/[\\/:*?"<>|]+/g, "-").replace(/\s+/g, "_");
 
 const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
   const bytes = new Uint8Array(buffer);
@@ -209,6 +220,9 @@ const RecapReport = () => {
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [pdfPreviewSize, setPdfPreviewSize] = useState<PdfPaperSize>("a4");
   const [pdfLoading, setPdfLoading] = useState<string | null>(null);
+  const [downloadMonths, setDownloadMonths] = useState<number[]>([Number(filterMonth)]);
+  const [selectedRombelKeys, setSelectedRombelKeys] = useState<string[]>([]);
+  const [multiDownloadProgress, setMultiDownloadProgress] = useState("");
   
   // Multi-month export state
   const [multiMonthMode, setMultiMonthMode] = useState(false);
@@ -226,6 +240,67 @@ const RecapReport = () => {
     }
     return s.sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel) || a.nama.localeCompare(b.nama));
   }, [students, filterKelas, filterRombel, search]);
+
+  const availableRombels = useMemo<RombelOption[]>(() => {
+    const map = new Map<string, RombelOption>();
+    filteredStudents.forEach(student => {
+      const key = `${student.kelas}-${student.rombel}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          kelas: student.kelas,
+          rombel: student.rombel,
+          label: `${student.kelas}${student.rombel}`,
+        });
+      }
+    });
+    return Array.from(map.values()).sort(
+      (a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel)
+    );
+  }, [filteredStudents]);
+
+  useEffect(() => {
+    setDownloadMonths(current => {
+      if (current.length > 0) return current;
+      return [Number(filterMonth)];
+    });
+  }, [filterMonth]);
+
+  useEffect(() => {
+    setSelectedRombelKeys(current => {
+      const available = new Set(availableRombels.map(item => item.key));
+      return current.filter(key => available.has(key));
+    });
+  }, [availableRombels]);
+
+  const allRombelsSelected =
+    availableRombels.length > 0 && selectedRombelKeys.length === availableRombels.length;
+
+  const selectedMonthLabel = downloadMonths.length === 0
+    ? "Belum ada bulan dipilih"
+    : downloadMonths.length <= 3
+    ? `${downloadMonths.map(month => MONTH_NAMES[month - 1]).join(", ")} dipilih`
+    : `${downloadMonths.length} bulan dipilih`;
+
+  const toggleDownloadMonth = (month: number) => {
+    setDownloadMonths(current =>
+      current.includes(month)
+        ? current.filter(item => item !== month)
+        : [...current, month].sort((a, b) => a - b)
+    );
+  };
+
+  const toggleRombel = (key: string) => {
+    setSelectedRombelKeys(current =>
+      current.includes(key)
+        ? current.filter(item => item !== key)
+        : [...current, key]
+    );
+  };
+
+  const toggleAllRombels = () => {
+    setSelectedRombelKeys(allRombelsSelected ? [] : availableRombels.map(item => item.key));
+  };
 
   // Group per rombel: kelas-rombel (single month mode)
   const groups = useMemo(() => {
@@ -527,6 +602,311 @@ const RecapReport = () => {
       ? `${MONTH_NAMES[selectedMonths[0] - 1]} - ${MONTH_NAMES[selectedMonths[selectedMonths.length - 1] - 1]} ${selectedYear}`
       : `${selectedYear}`
     : `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
+
+  const buildRowsForRombelMonth = useCallback((rombel: RombelOption, month: number): PdfRowData[] => {
+    const studentsInRombel = filteredStudents
+      .filter(student => student.kelas === rombel.kelas && student.rombel === rombel.rombel)
+      .sort((a, b) => a.nama.localeCompare(b.nama));
+
+    const monthLabel = `${MONTH_NAMES[month - 1]} ${filterYear}`;
+
+    return studentsInRombel.map((student, index) => {
+      const report = reports.find(item =>
+        item.student_id === student.id &&
+        item.month === month &&
+        item.year === Number(filterYear)
+      );
+
+      if (!report) {
+        return {
+          no: index + 1,
+          studentId: student.id,
+          nama: student.nama,
+          program: getProgramLabel(student.level),
+          level: student.level,
+          periode: monthLabel,
+          awal: "-",
+          akhir: "-",
+          total: "-",
+          target: "-",
+          kehadiran: "-",
+          status: "Belum Diisi",
+          guru: "-",
+          catatan: "",
+        };
+      }
+
+      const awal = report.iqra_level
+        ? (report.program_type === "tahfizh"
+          ? formatTahfizhLevel(report.iqra_level, report.start_page)
+          : `${report.iqra_level} hal.${report.start_page}`)
+        : String(report.start_page);
+      const akhir = (report as any).end_iqra_level
+        ? (report.program_type === "tahfizh"
+          ? formatTahfizhLevel((report as any).end_iqra_level, report.end_page)
+          : `${(report as any).end_iqra_level} hal.${report.end_page}`)
+        : String(report.end_page);
+
+      return {
+        no: index + 1,
+        studentId: student.id,
+        nama: student.nama,
+        program: getProgramLabel(student.level),
+        level: student.level,
+        periode: monthLabel,
+        awal,
+        akhir,
+        total: String(report.pages_read),
+        target: String(report.target_pages),
+        kehadiran: report.attendance_percentage ? `${report.attendance_percentage}%` : "-",
+        status: report.achievement_status === "achieved" ? "Tercapai" : "Belum Tercapai",
+        guru: report.created_by ? (profileMap.get(report.created_by) || "-") : "-",
+        catatan: report.notes || "",
+      };
+    });
+  }, [filterYear, filteredStudents, profileMap, reports]);
+
+  const buildSelectedRombelPDF = useCallback(async (rombel: RombelOption, months: number[]) => {
+    const exportSettings = (settings || {}) as ExportSettings;
+    const [logoB64, koordTtdB64, kepsekTtdB64] = await Promise.all([
+      exportSettings.logo_url ? loadImageAsBase64(exportSettings.logo_url) : Promise.resolve(null),
+      exportSettings.koordinator_ttd_url ? loadImageAsBase64(exportSettings.koordinator_ttd_url) : Promise.resolve(null),
+      exportSettings.kepsek_ttd_url ? loadImageAsBase64(exportSettings.kepsek_ttd_url) : Promise.resolve(null),
+    ]);
+
+    const doc = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4",
+      compress: true,
+      putOnlyUsedFonts: true,
+    });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+    const margin = 12;
+    const hasAmiriFont = await loadAmiriFont(doc);
+
+    const drawHeader = (month: number) => {
+      const y = margin;
+      if (logoB64) {
+        try {
+          doc.addImage(logoB64, "PNG", margin, y, 16, 16);
+        } catch {}
+      }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(22, 101, 52);
+      doc.text((exportSettings.nama_lembaga || "Lembaga").toUpperCase(), pageW / 2, y + 5, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(80);
+      if (exportSettings.alamat) doc.text(exportSettings.alamat, pageW / 2, y + 10, { align: "center" });
+      doc.setDrawColor(217, 119, 6);
+      doc.setLineWidth(0.6);
+      doc.line(margin, y + 18, pageW - margin, y + 18);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(20);
+      doc.text(`REKAP TAHSIN KELAS ${rombel.label}`, pageW / 2, y + 23, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(80);
+      doc.text(`Periode: ${MONTH_NAMES[month - 1]} ${filterYear}`, pageW / 2, y + 28, { align: "center" });
+    };
+
+    const drawSignature = (cursorY: number) => {
+      const signatureHeight = 40;
+      let sigY = cursorY + 6;
+      if (sigY + signatureHeight > pageH - 14) {
+        doc.addPage();
+        sigY = margin + 10;
+      }
+      const colW = (pageW - margin * 2) / 2;
+      const drawOne = (xCenter: number, label: string, nama: string, signature: string | null) => {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(40);
+        doc.text(label, xCenter, sigY, { align: "center" });
+        if (signature) {
+          try {
+            doc.addImage(signature, "PNG", xCenter - 16, sigY + 2, 32, 14);
+          } catch {}
+        }
+        doc.setLineWidth(0.2);
+        doc.setDrawColor(120);
+        doc.line(xCenter - 28, sigY + 18, xCenter + 28, sigY + 18);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.text(nama || "(.....................)", xCenter, sigY + 23, { align: "center" });
+      };
+      drawOne(margin + colW / 2, "Koordinator Tahfizh,", exportSettings.koordinator_nama || "", koordTtdB64);
+      drawOne(margin + colW + colW / 2, "Mengetahui, Kepala Sekolah,", exportSettings.kepsek_nama || "", kepsekTtdB64);
+    };
+
+    months.forEach((month, monthIndex) => {
+      if (monthIndex > 0) doc.addPage();
+      drawHeader(month);
+
+      const rows = buildRowsForRombelMonth(rombel, month);
+      const hasReportData = reports.some(item =>
+        item.month === month &&
+        item.year === Number(filterYear) &&
+        rows.some(row => row.studentId === item.student_id)
+      );
+
+      let cursorY = margin + 34;
+      if (!hasReportData) {
+        doc.setFillColor(255, 247, 237);
+        doc.rect(margin, cursorY, pageW - margin * 2, 18, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(154, 52, 18);
+        doc.text("Belum ada data rekap untuk bulan ini.", margin + 3, cursorY + 11);
+        drawSignature(cursorY + 20);
+        return;
+      }
+
+      autoTable(doc, {
+        startY: cursorY,
+        head: [[
+          "No",
+          "Nama",
+          "Program",
+          "Level",
+          "Awal",
+          "Akhir",
+          "Total",
+          "Target",
+          "Status",
+          "Guru",
+          "Catatan",
+        ]],
+        body: rows.map(row => [
+          String(row.no),
+          cleanPdfText(row.nama),
+          cleanPdfText(row.program),
+          cleanPdfText(row.level),
+          cleanPdfText(row.awal),
+          cleanPdfText(row.akhir),
+          row.status === "Belum Diisi" ? "-" : row.total,
+          row.status === "Belum Diisi" ? "-" : row.target,
+          row.status,
+          cleanPdfText(row.guru),
+          cleanPdfText(row.catatan || "-"),
+        ]),
+        styles: {
+          font: "helvetica",
+          fontStyle: "normal",
+          fontSize: 7,
+          cellPadding: 1.2,
+          overflow: "linebreak",
+          valign: "top",
+          lineColor: [220, 220, 220],
+          lineWidth: 0.1,
+          textColor: [30, 30, 30],
+        },
+        headStyles: {
+          fillColor: [34, 87, 122],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          halign: "center",
+          fontSize: 7,
+        },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: {
+          0: { cellWidth: 8, halign: "center" },
+          1: { cellWidth: 34 },
+          2: { cellWidth: 23 },
+          3: { cellWidth: 21 },
+          4: { cellWidth: 19 },
+          5: { cellWidth: 19 },
+          6: { cellWidth: 11, halign: "center", fontStyle: "bold" },
+          7: { cellWidth: 11, halign: "center" },
+          8: { cellWidth: 20, halign: "center", fontStyle: "bold" },
+          9: { cellWidth: 22 },
+          10: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
+        },
+        didParseCell: data => {
+          if (data.section === "body" && data.column.index === 10) {
+            data.cell.styles.overflow = "linebreak";
+            data.cell.styles.valign = "top";
+            data.cell.styles.font = hasAmiriFont && hasArabicText(data.cell.raw) ? "Amiri" : "helvetica";
+            data.cell.styles.fontStyle = "normal";
+          }
+          if (data.section === "body" && data.column.index === 8) {
+            const value = String(data.cell.raw);
+            if (value === "Tercapai") data.cell.styles.textColor = [16, 124, 65];
+            else if (value === "Belum Tercapai") data.cell.styles.textColor = [185, 28, 28];
+            else if (value === "Belum Diisi") {
+              data.cell.styles.textColor = [220, 38, 38];
+              Object.values(data.row.cells).forEach((cell: any) => {
+                cell.styles.fillColor = [255, 235, 238];
+              });
+            }
+          }
+        },
+        margin: { left: margin, right: margin, bottom: 22 },
+      });
+
+      drawSignature((doc as any).lastAutoTable.finalY + 2);
+    });
+
+    const totalPages = doc.getNumberOfPages();
+    const today = new Date().toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    for (let page = 1; page <= totalPages; page++) {
+      doc.setPage(page);
+      doc.setDrawColor(220);
+      doc.setLineWidth(0.2);
+      doc.line(margin, pageH - 10, pageW - margin, pageH - 10);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(120);
+      doc.text(`Dicetak: ${today}`, margin, pageH - 6);
+      doc.text(`Halaman ${page} dari ${totalPages}`, pageW - margin, pageH - 6, { align: "right" });
+    }
+
+    return doc;
+  }, [buildRowsForRombelMonth, filterYear, reports, settings]);
+
+  const downloadSelectedRombelPDFs = useCallback(async () => {
+    if (downloadMonths.length === 0) {
+      toast({ title: "Pilih minimal satu bulan terlebih dahulu.", variant: "destructive" });
+      return;
+    }
+    if (selectedRombelKeys.length === 0) {
+      toast({ title: "Pilih minimal satu rombel terlebih dahulu.", variant: "destructive" });
+      return;
+    }
+
+    const selectedRombels = availableRombels.filter(item => selectedRombelKeys.includes(item.key));
+    const monthFilePart = downloadMonths.map(month => MONTH_NAMES[month - 1]).join("-");
+    setPdfLoading("multi-rombel");
+
+    try {
+      for (let index = 0; index < selectedRombels.length; index += 1) {
+        const rombel = selectedRombels[index];
+        setMultiDownloadProgress(`Menyiapkan PDF ${index + 1} dari ${selectedRombels.length}...`);
+        await waitForUiFrame();
+        const doc = await buildSelectedRombelPDF(rombel, downloadMonths);
+        doc.save(`Rekap_Tahsin_${safeFilePart(rombel.label)}_${safeFilePart(monthFilePart)}_${filterYear}.pdf`);
+      }
+      toast({ title: `${selectedRombels.length} file PDF rekap multi bulan berhasil diunduh.` });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Gagal mengunduh PDF rekap terpilih",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
+    } finally {
+      setPdfLoading(null);
+      setMultiDownloadProgress("");
+    }
+  }, [availableRombels, buildSelectedRombelPDF, downloadMonths, filterYear, selectedRombelKeys]);
 
   const buildRecapPDF = useCallback(async (paperSize: PdfPaperSize = "a4") => {
     if (activePdfGroups.length === 0) {
@@ -1262,6 +1642,92 @@ const RecapReport = () => {
                     <SelectItem value="empty">Belum Diisi</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Download className="w-4 h-4" />
+                Download PDF Multi Bulan per Rombel
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr_auto]">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs">Pilih Bulan</Label>
+                    <span className="text-xs text-muted-foreground">{selectedMonthLabel}</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {MONTH_NAMES.map((monthName, index) => {
+                      const month = index + 1;
+                      const checked = downloadMonths.includes(month);
+                      return (
+                        <button
+                          key={month}
+                          type="button"
+                          onClick={() => toggleDownloadMonth(month)}
+                          className={`rounded-md border px-3 py-2 text-left text-xs transition-colors ${
+                            checked
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-background hover:bg-muted"
+                          }`}
+                        >
+                          {monthName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="text-xs">Pilih Rombel</Label>
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Checkbox
+                        checked={allRombelsSelected}
+                        onCheckedChange={toggleAllRombels}
+                      />
+                      Pilih Semua Rombel
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                    {availableRombels.map(rombel => (
+                      <label
+                        key={rombel.key}
+                        className="flex items-center gap-2 rounded-md border px-3 py-2 text-xs hover:bg-muted"
+                      >
+                        <Checkbox
+                          checked={selectedRombelKeys.includes(rombel.key)}
+                          onCheckedChange={() => toggleRombel(rombel.key)}
+                        />
+                        {rombel.label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col justify-end gap-2">
+                  <Button
+                    className="gap-2"
+                    disabled={pdfLoading === "multi-rombel"}
+                    onClick={downloadSelectedRombelPDFs}
+                  >
+                    {pdfLoading === "multi-rombel" ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4" />
+                    )}
+                    Download Rekap Terpilih
+                  </Button>
+                  {multiDownloadProgress && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      {multiDownloadProgress}
+                    </p>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
