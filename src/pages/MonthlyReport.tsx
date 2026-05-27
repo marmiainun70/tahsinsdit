@@ -382,7 +382,7 @@ const MonthlyReport = () => {
 
   const startEdit = (report: any) => {
     setEditingId(report.id);
-    setEditData({ start_page: report.start_page, end_page: report.end_page, notes: removeBlockedNoteEmoticons(report.notes || "") });
+    setEditData({ start_page: report.start_page, end_page: report.end_page, notes: report.notes || "" });
   };
 
   const saveEdit = async (report: any) => {
@@ -939,7 +939,7 @@ const MonthlyReport = () => {
                               {r.achievement_status === "decline" && <Badge variant="destructive" className="text-xs">MUNDUR</Badge>}
                             </TableCell>
                             <TableCell className="max-w-[150px] text-xs text-muted-foreground">
-                              <div className="truncate">{removeBlockedNoteEmoticons(r.notes || "") || "-"}</div>
+                              <div className="truncate">{r.notes || "-"}</div>
                               {r.created_by && profileMap.get(r.created_by) && (
                                 <div className="text-[10px] text-primary/70 mt-0.5">👤 {profileMap.get(r.created_by)}</div>
                               )}

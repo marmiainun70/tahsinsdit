@@ -80,6 +80,9 @@ const cleanPdfText = (value: unknown) => {
     .trim();
 };
 
+const hasArabicText = (value: unknown) =>
+  /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/u.test(String(value ?? ""));
+
 const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
   const bytes = new Uint8Array(buffer);
   let binary = "";
@@ -284,7 +287,7 @@ const RecapReport = () => {
           target: rep.target_pages,
           status: rep.achievement_status === "achieved" ? "achieved" : "not_achieved",
           guru: rep.created_by ? (profileMap.get(rep.created_by) || "-") : "-",
-          catatan: removeBlockedNoteEmoticons(rep.notes || ""),
+          catatan: rep.notes || "",
         });
       }
     });
@@ -350,7 +353,7 @@ const RecapReport = () => {
             endIqraLevel: (rep as any)?.end_iqra_level || null,
             attendancePercentage: rep?.attendance_percentage || 0,
             achievementStatus: rep?.achievement_status || 'empty',
-            notes: removeBlockedNoteEmoticons(rep?.notes || ''),
+            notes: rep?.notes || '',
           };
         })
         .sort((a, b) => MONTH_NAMES.indexOf(a.month) - MONTH_NAMES.indexOf(b.month));
@@ -550,7 +553,6 @@ const RecapReport = () => {
     const margin = 12;
     const isLegal = paperSize === "legal";
     const hasAmiriFont = await loadAmiriFont(doc);
-    const noteFont = hasAmiriFont ? "Amiri" : "helvetica";
 
     const drawHeader = () => {
       const y = margin;
@@ -668,7 +670,7 @@ const RecapReport = () => {
               7: { cellWidth: 12, halign: "center" },
               8: { cellWidth: 24, halign: "center", fontStyle: "bold" },
               9: { cellWidth: 28 },
-              10: { cellWidth: "auto", overflow: "linebreak", valign: "top", font: noteFont },
+              10: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
             }
           : {
               0: { cellWidth: 8, halign: "center" },
@@ -681,13 +683,13 @@ const RecapReport = () => {
               7: { cellWidth: 11, halign: "center" },
               8: { cellWidth: 20, halign: "center", fontStyle: "bold" },
               9: { cellWidth: 22 },
-              10: { cellWidth: "auto", overflow: "linebreak", valign: "top", font: noteFont },
+              10: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
             },
         didParseCell: data => {
           if (data.section === "body" && data.column.index === 10) {
             data.cell.styles.overflow = "linebreak";
             data.cell.styles.valign = "top";
-            data.cell.styles.font = noteFont;
+            data.cell.styles.font = hasAmiriFont && hasArabicText(data.cell.raw) ? "Amiri" : "helvetica";
             data.cell.styles.fontStyle = "normal";
           }
 
@@ -828,7 +830,7 @@ const RecapReport = () => {
     try {
       await waitForUiFrame();
       const doc = await buildRecapPDF(paperSize);
-      const blob = doc.output("blob");
+      const blob = new Blob([doc.output("arraybuffer")], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
 
       cleanupPreviewUrl();
@@ -1444,9 +1446,30 @@ const RecapReport = () => {
       <Dialog open={previewOpen} onOpenChange={handlePreviewOpenChange}>
         <DialogContent className="max-w-6xl h-[92vh] p-0 overflow-hidden">
           <DialogHeader className="px-4 py-3 border-b">
-            <DialogTitle className="text-base">
-              Preview PDF Rekap Laporan ({pdfPreviewSize.toUpperCase()} Landscape)
-            </DialogTitle>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <DialogTitle className="text-base">
+                Preview PDF Rekap Laporan ({pdfPreviewSize.toUpperCase()} Landscape)
+              </DialogTitle>
+              {pdfPreviewUrl && (
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={pdfPreviewUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-accent hover:text-accent-foreground"
+                  >
+                    Buka di Tab Baru
+                  </a>
+                  <a
+                    href={pdfPreviewUrl}
+                    download={getPdfFileName(pdfPreviewSize)}
+                    className="inline-flex items-center justify-center rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90"
+                  >
+                    Download PDF
+                  </a>
+                </div>
+              )}
+            </div>
           </DialogHeader>
           {pdfPreviewUrl ? (
             <iframe

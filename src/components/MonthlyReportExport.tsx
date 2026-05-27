@@ -80,7 +80,7 @@ const MonthlyReportExport = ({ reports }: Props) => {
 
   const years = [...new Set(reports.map(r => r.year))].sort((a, b) => b - a);
 
-  const buildRows = () =>
+  const buildRows = (forPdf = false) =>
     filteredData
       .sort((a, b) => {
         const sa = a.students, sb = b.students;
@@ -100,14 +100,14 @@ const MonthlyReportExport = ({ reports }: Props) => {
           Total: r.pages_read,
           Target: r.target_pages,
           Status: r.achievement_status === "achieved" ? "Tercapai" : "Belum Tercapai",
-          Catatan: removeBlockedNoteEmoticons(r.notes || "") || "-",
+          Catatan: forPdf ? (removeBlockedNoteEmoticons(r.notes || "") || "-") : (r.notes || "-"),
         };
       });
 
   const exportExcel = () => {
     setExporting(true);
     try {
-      const rows = buildRows();
+      const rows = buildRows(false);
       if (rows.length === 0) { toast({ title: "Tidak ada data untuk di-export", variant: "destructive" }); setExporting(false); return; }
       const ws = XLSX.utils.json_to_sheet(rows);
       ws["!cols"] = [{ wch: 4 }, { wch: 25 }, { wch: 8 }, { wch: 18 }, { wch: 14 }, { wch: 16 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 16 }, { wch: 30 }];
@@ -126,7 +126,7 @@ const MonthlyReportExport = ({ reports }: Props) => {
   const exportPDF = async () => {
     setExporting(true);
     try {
-      const rows = buildRows();
+      const rows = buildRows(true);
       if (rows.length === 0) { toast({ title: "Tidak ada data untuk di-export", variant: "destructive" }); setExporting(false); return; }
 
       const [logo, ttdKoor, ttdKepsek] = await Promise.all([

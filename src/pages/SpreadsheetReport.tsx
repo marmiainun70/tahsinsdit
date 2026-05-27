@@ -171,7 +171,7 @@ const SpreadsheetReport = () => {
           startPage: existing.start_page || 1,
           endLevel: endLvlRaw,
           endPage: existing.end_page || 1,
-          notes: removeBlockedNoteEmoticons(existing.notes || ""),
+          notes: existing.notes || "",
           ...baseAtt,
           dirty: false,
           saving: false,
