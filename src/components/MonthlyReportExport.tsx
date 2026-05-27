@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -116,7 +116,7 @@ const MonthlyReportExport = ({ reports }: Props) => {
       const kelasLabel = exportKelas !== "all" ? `Kelas ${exportKelas}` : "Semua Kelas";
       XLSX.utils.book_append_sheet(wb, ws, "Rekap Laporan");
       XLSX.writeFile(wb, `Rekap_Laporan_${kelasLabel}_${periodLabel}_${exportYear}.xlsx`);
-      toast({ title: "File Excel berhasil di-download ✅" });
+      toast({ title: "File Excel berhasil di-download" });
     } catch (e: any) {
       toast({ title: "Gagal export Excel", description: e.message, variant: "destructive" });
     }
@@ -154,11 +154,11 @@ const MonthlyReportExport = ({ reports }: Props) => {
       doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.setTextColor(20);
       doc.text("REKAP LAPORAN BULANAN BACAAN AL-QUR'AN", pageW / 2, M + 23, { align: "center" });
       doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(80);
-      doc.text(`${kelasLabel} — ${periodLabel} ${yearLabel}`, pageW / 2, M + 28, { align: "center" });
+      doc.text(`${kelasLabel} â€” ${periodLabel} ${yearLabel}`, pageW / 2, M + 28, { align: "center" });
 
       const achieved = rows.filter(r => r.Status === "Tercapai").length;
       const pct = rows.length > 0 ? Math.round((achieved / rows.length) * 100) : 0;
-      doc.text(`Total: ${rows.length}  •  Tercapai: ${achieved} (${pct}%)  •  Belum: ${rows.length - achieved}`, pageW / 2, M + 33, { align: "center" });
+      doc.text(`Total: ${rows.length}  â€¢  Tercapai: ${achieved} (${pct}%)  â€¢  Belum: ${rows.length - achieved}`, pageW / 2, M + 33, { align: "center" });
 
       autoTable(doc, {
         startY: M + 37,
@@ -208,7 +208,7 @@ const MonthlyReportExport = ({ reports }: Props) => {
       }
 
       doc.save(`Rekap_Laporan_${kelasLabel}_${periodLabel}_${yearLabel}.pdf`);
-      toast({ title: "File PDF berhasil di-download ✅" });
+      toast({ title: "File PDF berhasil di-download" });
     } catch (e: any) {
       toast({ title: "Gagal export PDF", description: e.message, variant: "destructive" });
     }
