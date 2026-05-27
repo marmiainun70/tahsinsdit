@@ -5,7 +5,7 @@ import {
   useAllMonthlyReports, useAddMonthlyReport, useDeleteMonthlyReport, useUpdateMonthlyReport,
   getAchievementStatus, getValidIqraPage, MONTH_NAMES, calcIqraPagesRead, calcIqraPagesSigned,
   isIqraDecline, isIqraGraduated, getProgressStatus, buildIqraDeclineNote, buildTahfizhDeclineNote,
-  getTarget, detectDecline, DECLINE_AUTO_NOTE,
+  getTarget, detectDecline, DECLINE_AUTO_NOTE, getAutoNoteByProgress, getAutoNoteOptions,
 } from "@/hooks/useMonthlyReports";
 import { useAllAttendance, useUpsertAttendance } from "@/hooks/useAttendance";
 import { JUZ_LIST, JUZ_PAGE_LIST, JUZ_DATA, calcHafalanPages, calcHafalanPagesSigned, isTahfizhDecline } from "@/lib/juzData";
@@ -17,13 +17,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import {
   Plus, FileText, Loader2, Trash2, CheckCircle2, XCircle, Filter, Users, Pencil, Save, X,
-  AlertTriangle, Search, UserCheck, Thermometer, HandHeart, UserX, CalendarCheck, BookOpen, TrendingDown
+  AlertTriangle, Search, UserCheck, Thermometer, HandHeart, UserX, CalendarCheck, BookOpen, TrendingDown, MessageSquarePlus
 } from "lucide-react";
 import BulkMonthlyReportForm from "@/components/BulkMonthlyReportForm";
 import MonthlyReportExport from "@/components/MonthlyReportExport";
@@ -139,6 +140,8 @@ const MonthlyReport = () => {
   const pagesRead = pagesSigned; // simpan signed agar status TURUN tercatat
   const progressStatus = getProgressStatus(pagesSigned, target); // achieved | not_achieved | stagnant | decline
   const status = pagesSigned >= target ? "achieved" : pagesSigned < 0 ? "decline" : pagesSigned === 0 ? "stagnant" : "not_achieved";
+  const autoNoteOptions = getAutoNoteOptions(programType);
+  const progressAutoNote = getAutoNoteByProgress(programType, pagesSigned, target);
 
   // Form-level decline detection (berdasarkan input awal vs akhir)
   const isFormDecline = isTahfizh
@@ -788,7 +791,38 @@ const MonthlyReport = () => {
                 </div>
 
                 <div>
-                  <Label className="text-xs">Catatan Guru</Label>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <Label className="text-xs">Catatan Guru</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button type="button" variant="outline" size="sm" className="h-8 gap-1 text-xs">
+                          <MessageSquarePlus className="w-3.5 h-3.5" />
+                          Catatan Otomatis
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[360px] p-2 space-y-1">
+                        <p className="text-xs font-semibold px-1 py-1">Pilih catatan sesuai tingkatan</p>
+                        {autoNoteOptions.map(option => (
+                          <button
+                            key={option.key}
+                            type="button"
+                            onClick={() => handleNotesChange(option.note)}
+                            className="block w-full text-left text-xs p-2 rounded hover:bg-accent"
+                          >
+                            <span className="font-semibold">{option.label}</span>
+                            <span className="block whitespace-pre-line text-muted-foreground mt-1">{option.note}</span>
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => handleNotesChange(progressAutoNote)}
+                          className="block w-full text-left text-xs p-2 rounded bg-primary/10 hover:bg-primary/20 font-medium"
+                        >
+                          Gunakan sesuai progres saat ini
+                        </button>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                   <Textarea value={notes} onChange={e => handleNotesChange(e.target.value)} placeholder="Catatan perkembangan siswa..." rows={2} />
                 </div>
               </CardContent>

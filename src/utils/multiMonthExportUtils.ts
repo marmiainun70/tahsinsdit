@@ -3,6 +3,7 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import type { AggregatedReport } from '@/hooks/useMultiMonthReports';
 import { MONTH_NAMES } from '@/hooks/useMultiMonthReports';
+import { removeBlockedNoteEmoticons } from '@/lib/noteValidation';
 
 export interface ExportSettings {
   nama_lembaga?: string;
@@ -155,7 +156,7 @@ export const generateMultiMonthPDF = async (
         : r.status === 'not_achieved'
         ? 'Belum'
         : 'BELUM DIISI',
-      r.catatan || '-',
+      removeBlockedNoteEmoticons(r.catatan || '') || '-',
     ]);
 
     autoTable(doc, {

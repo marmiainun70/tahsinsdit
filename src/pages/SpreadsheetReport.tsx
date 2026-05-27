@@ -3,7 +3,7 @@ import { useStudents, IQRO_LEVELS, isTahsinDasar } from "@/hooks/useSupabaseData
 import {
   useAllMonthlyReports, useAddMonthlyReport, useUpdateMonthlyReport,
   MONTH_NAMES, calcIqraPagesSigned, getProgressStatus, getTarget,
-  isIqraDecline, buildIqraDeclineNote, buildTahfizhDeclineNote,
+  isIqraDecline, getAutoNoteByProgress, getAutoNoteOptions,
 } from "@/hooks/useMonthlyReports";
 import { useAllAttendance, useUpsertAttendance } from "@/hooks/useAttendance";
 import { JUZ_LIST, JUZ_PAGES_PER_JUZ, calcHafalanPagesSigned, isTahfizhDecline } from "@/lib/juzData";
@@ -31,13 +31,6 @@ const PROGRAMS = [
   { value: "iqra", label: "Iqra (Tahsin Dasar)" },
   { value: "tahsin", label: "Tahsin Lanjutan" },
   { value: "tahfizh", label: "Tahfizh" },
-];
-
-const TEMPLATE_NOTES = [
-  "Perlu peningkatan pada makhraj agar pelafalan setiap huruf semakin jelas dan tepat sesuai dengan kaidah tajwid, terus berlatih secara rutin saat membaca. Barakallah fiik.",
-  "Sudah baik dalam membaca Al-Qur'an, pelafalan dan kelancarannya cukup terjaga, pertahankan dan terus ditingkatkan agar semakin sempurna. Barakallah fiik.",
-  "Perlu lebih sering berlatih membaca agar kelancaran semakin meningkat dan bacaan menjadi lebih percaya diri serta tidak terbata-bata. Barakallah fiik.",
-  "Perlu meningkatkan semangat dan kesungguhan dalam belajar membaca Al-Qur'an, jangan mudah malas dan biasakan berlatih secara rutin agar kualitas bacaan dapat berkembang dengan baik. Barakallah fiik.",
 ];
 
 const IQRA_PAGES = [1, ...Array.from({ length: 29 }, (_, i) => i + 4)]; // 1, 4..32
@@ -230,14 +223,7 @@ const SpreadsheetReport = () => {
 
   const buildAutoNote = (r: Row): string => {
     const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage);
-    if (r.program === "iqra" && isIqraDecline(parseInt(r.startLevel), r.startPage, parseInt(r.endLevel), r.endPage)) {
-      return buildIqraDeclineNote(parseInt(r.startLevel), r.startPage, parseInt(r.endLevel), r.endPage);
-    }
-    if (r.program === "tahfizh" && isTahfizhDecline(parseInt(r.startLevel), r.startPage, parseInt(r.endLevel), r.endPage)) {
-      return buildTahfizhDeclineNote(parseInt(r.startLevel), r.startPage, parseInt(r.endLevel), r.endPage);
-    }
-    if (signed === 0) return "Pada bulan ini progres siswa masih sama seperti sebelumnya. Siswa perlu latihan yang lebih rutin dan pendampingan agar mulai ada peningkatan pada laporan berikutnya.";
-    return "";
+    return getAutoNoteByProgress(r.program, signed, getTarget(r.program));
   };
 
   const saveRow = async (idx: number, silent = false): Promise<boolean> => {
@@ -470,14 +456,15 @@ const SpreadsheetReport = () => {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-[360px] p-2 space-y-1">
-                            <p className="text-xs font-semibold px-1 py-1">Pilih template</p>
-                            {TEMPLATE_NOTES.map((t, i) => (
+                            <p className="text-xs font-semibold px-1 py-1">Pilih catatan otomatis</p>
+                            {getAutoNoteOptions(r.program).map((option) => (
                               <button
-                                key={i}
-                                onClick={() => updateRowNotes(idx, t)}
+                                key={option.key}
+                                onClick={() => updateRowNotes(idx, option.note)}
                                 className="block w-full text-left text-xs p-2 rounded hover:bg-accent"
                               >
-                                {t}
+                                <span className="font-semibold">{option.label}</span>
+                                <span className="block whitespace-pre-line text-muted-foreground mt-1">{option.note}</span>
                               </button>
                             ))}
                             <button

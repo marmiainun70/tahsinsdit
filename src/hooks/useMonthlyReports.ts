@@ -132,6 +132,113 @@ export const detectDecline = (
 export const DECLINE_AUTO_NOTE =
   "Progres bacaan siswa menurun dibanding laporan sebelumnya. Siswa perlu lebih sering murojaah dan berlatih membaca di rumah dengan pendampingan orang tua.";
 
+type AutoNoteProgram = "iqra" | "tahsin" | "tahfizh";
+
+export interface AutoNoteOption {
+  key: "very_weak" | "weak" | "developing" | "good" | "excellent";
+  label: string;
+  note: string;
+}
+
+export const AUTO_NOTE_OPTIONS: Record<AutoNoteProgram, AutoNoteOption[]> = {
+  iqra: [
+    {
+      key: "very_weak",
+      label: "Sangat lemah",
+      note: "Bacaan Iqra masih sangat perlu dibimbing dari dasar.\nSiswa perlu lebih sering mengenal huruf, harakat, dan sambungan kata.\nLatihan pendek setiap hari akan sangat membantu.\nBarakallah fiik.",
+    },
+    {
+      key: "weak",
+      label: "Lemah",
+      note: "Bacaan Iqra sudah mulai berjalan, tetapi masih sering terbata-bata.\nSiswa perlu mengulang halaman yang sulit dan memperjelas bunyi huruf.\nMohon latihan rutin di rumah dengan pendampingan.\nBarakallah fiik.",
+    },
+    {
+      key: "developing",
+      label: "Mulai berkembang",
+      note: "Bacaan Iqra mulai menunjukkan perkembangan yang baik.\nKelancaran dan ketepatan huruf masih perlu terus dikuatkan.\nPertahankan latihan agar lebih percaya diri saat membaca.\nBarakallah fiik.",
+    },
+    {
+      key: "good",
+      label: "Baik",
+      note: "Bacaan Iqra sudah cukup baik dan semakin lancar.\nSiswa mulai mampu membaca dengan lebih tertib dan percaya diri.\nTetap jaga latihan agar bacaan semakin matang.\nBarakallah fiik.",
+    },
+    {
+      key: "excellent",
+      label: "Berprestasi",
+      note: "Bacaan Iqra sangat baik dan progresnya menonjol.\nSiswa membaca dengan lancar, teliti, dan semangat belajar yang kuat.\nSemoga terus istiqamah hingga tahap berikutnya.\nBarakallah fiik.",
+    },
+  ],
+  tahsin: [
+    {
+      key: "very_weak",
+      label: "Sangat lemah",
+      note: "Bacaan Al-Qur'an masih sangat perlu dibimbing secara perlahan.\nSiswa perlu menguatkan makhraj, panjang pendek, dan ketepatan tajwid dasar.\nLatihan rutin dengan contoh bacaan guru sangat dianjurkan.\nBarakallah fiik.",
+    },
+    {
+      key: "weak",
+      label: "Lemah",
+      note: "Bacaan Al-Qur'an sudah mulai terbentuk, tetapi masih kurang stabil.\nPerlu perhatian pada mad, qalqalah, makhraj, dan hukum tajwid yang sering terlewat.\nMohon terus dilatih dengan sabar dan konsisten.\nBarakallah fiik.",
+    },
+    {
+      key: "developing",
+      label: "Mulai berkembang",
+      note: "Bacaan Al-Qur'an mulai berkembang dan lebih terarah.\nPraktik tajwid, mad, qalqalah, dan makhraj sudah mulai terlihat, namun perlu dirapikan.\nTeruskan latihan agar bacaan semakin tartil.\nBarakallah fiik.",
+    },
+    {
+      key: "good",
+      label: "Baik",
+      note: "Bacaan Al-Qur'an sudah baik dan cukup lancar.\nPenerapan tajwid, mad, qalqalah, dan makhraj mulai terjaga dengan rapi.\nPertahankan ketelitian agar bacaan semakin indah.\nBarakallah fiik.",
+    },
+    {
+      key: "excellent",
+      label: "Berprestasi",
+      note: "Bacaan Al-Qur'an sangat baik, tartil, dan percaya diri.\nPenerapan tajwid, mad, qalqalah, serta makhraj terlihat kuat dan stabil.\nSemoga terus menjadi teladan dalam membaca Al-Qur'an.\nBarakallah fiik.",
+    },
+  ],
+  tahfizh: [
+    {
+      key: "very_weak",
+      label: "Sangat lemah",
+      note: "Hafalan siswa masih sangat perlu dikuatkan kembali.\nKelancaran, ketepatan ayat, dan bacaan masih membutuhkan pendampingan dekat.\nFokuskan pada murojaah pendek tetapi rutin setiap hari.\nBarakallah fiik.",
+    },
+    {
+      key: "weak",
+      label: "Lemah",
+      note: "Hafalan siswa mulai terbentuk, tetapi masih sering ragu dan terhenti.\nBacaan serta urutan ayat perlu lebih sering dimurojaah.\nMohon menjaga jadwal hafalan dan pengulangan di rumah.\nBarakallah fiik.",
+    },
+    {
+      key: "developing",
+      label: "Mulai berkembang",
+      note: "Hafalan siswa mulai berkembang dengan cukup baik.\nKelancaran dan ketepatan bacaan sudah meningkat, namun masih perlu penguatan.\nTeruskan murojaah agar hafalan lebih melekat.\nBarakallah fiik.",
+    },
+    {
+      key: "good",
+      label: "Baik",
+      note: "Hafalan siswa sudah baik dan cukup lancar.\nBacaan, urutan ayat, dan ketenangan saat menyetor semakin terjaga.\nPertahankan murojaah agar hafalan tetap kuat.\nBarakallah fiik.",
+    },
+    {
+      key: "excellent",
+      label: "Berprestasi",
+      note: "Hafalan siswa sangat baik, lancar, dan kuat.\nBacaan saat menyetor terdengar rapi, tenang, dan penuh percaya diri.\nSemoga terus istiqamah menjaga hafalan Al-Qur'an.\nBarakallah fiik.",
+    },
+  ],
+};
+
+export const getAutoNoteOptions = (programType: string): AutoNoteOption[] => {
+  if (programType === "tahfizh") return AUTO_NOTE_OPTIONS.tahfizh;
+  if (programType === "tahsin") return AUTO_NOTE_OPTIONS.tahsin;
+  return AUTO_NOTE_OPTIONS.iqra;
+};
+
+export const getAutoNoteByProgress = (programType: string, pagesSigned: number, target: number): string => {
+  const options = getAutoNoteOptions(programType);
+  if (pagesSigned < 0) return options[0].note;
+  if (pagesSigned === 0) return options[1].note;
+  if (pagesSigned < target) return options[2].note;
+  if (pagesSigned < target * 2) return options[3].note;
+  return options[4].note;
+};
+
 export const MONTH_NAMES = [
   "Januari", "Februari", "Maret", "April", "Mei", "Juni",
   "Juli", "Agustus", "September", "Oktober", "November", "Desember"
