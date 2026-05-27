@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "@/hooks/use-toast";
 import { MultiMonthExportFilters } from "@/components/MultiMonthExportFilters";
 import { generateMultiMonthExcel, type ExportGroup } from "@/utils/multiMonthExportUtils";
+import { removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 import {
   Search, Loader2, Eye, Download, CheckCircle2,
   Users, ListChecks, AlertCircle, Percent, FileWarning, FileSpreadsheet, Calendar
@@ -77,6 +78,31 @@ const cleanPdfText = (value: unknown) => {
     .map(line => line.replace(/[ \t]+/g, " ").trim())
     .join("\n")
     .trim();
+};
+
+const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+  return btoa(binary);
+};
+
+const loadAmiriFont = async (doc: jsPDF) => {
+  try {
+    const response = await fetch("/fonts/Amiri-Regular.ttf");
+    if (!response.ok) return false;
+
+    const fontBase64 = arrayBufferToBase64(await response.arrayBuffer());
+    doc.addFileToVFS("Amiri-Regular.ttf", fontBase64);
+    doc.addFont("Amiri-Regular.ttf", "Amiri", "normal");
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const loadImageAsBase64 = (url: string): Promise<string | null> =>
@@ -258,7 +284,7 @@ const RecapReport = () => {
           target: rep.target_pages,
           status: rep.achievement_status === "achieved" ? "achieved" : "not_achieved",
           guru: rep.created_by ? (profileMap.get(rep.created_by) || "-") : "-",
-          catatan: rep.notes || "",
+          catatan: removeBlockedNoteEmoticons(rep.notes || ""),
         });
       }
     });
@@ -324,7 +350,7 @@ const RecapReport = () => {
             endIqraLevel: (rep as any)?.end_iqra_level || null,
             attendancePercentage: rep?.attendance_percentage || 0,
             achievementStatus: rep?.achievement_status || 'empty',
-            notes: rep?.notes || '',
+            notes: removeBlockedNoteEmoticons(rep?.notes || ''),
           };
         })
         .sort((a, b) => MONTH_NAMES.indexOf(a.month) - MONTH_NAMES.indexOf(b.month));
@@ -523,6 +549,8 @@ const RecapReport = () => {
     const pageH = doc.internal.pageSize.getHeight();
     const margin = 12;
     const isLegal = paperSize === "legal";
+    const hasAmiriFont = await loadAmiriFont(doc);
+    const noteFont = hasAmiriFont ? "Amiri" : "helvetica";
 
     const drawHeader = () => {
       const y = margin;
@@ -640,7 +668,7 @@ const RecapReport = () => {
               7: { cellWidth: 12, halign: "center" },
               8: { cellWidth: 24, halign: "center", fontStyle: "bold" },
               9: { cellWidth: 28 },
-              10: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
+              10: { cellWidth: "auto", overflow: "linebreak", valign: "top", font: noteFont },
             }
           : {
               0: { cellWidth: 8, halign: "center" },
@@ -653,12 +681,14 @@ const RecapReport = () => {
               7: { cellWidth: 11, halign: "center" },
               8: { cellWidth: 20, halign: "center", fontStyle: "bold" },
               9: { cellWidth: 22 },
-              10: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
+              10: { cellWidth: "auto", overflow: "linebreak", valign: "top", font: noteFont },
             },
         didParseCell: data => {
           if (data.section === "body" && data.column.index === 10) {
             data.cell.styles.overflow = "linebreak";
             data.cell.styles.valign = "top";
+            data.cell.styles.font = noteFont;
+            data.cell.styles.fontStyle = "normal";
           }
 
           if (data.section === "body" && data.column.index === 8) {
