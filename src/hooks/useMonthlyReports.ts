@@ -244,15 +244,39 @@ export const MONTH_NAMES = [
   "Juli", "Agustus", "September", "Oktober", "November", "Desember"
 ];
 
+const MONTHLY_REPORTS_PAGE_SIZE = 1000;
+
 export const useMonthlyReports = (studentId?: string) =>
   useQuery({
     queryKey: ["monthly_reports", studentId ?? "all"],
     queryFn: async () => {
-      let query = (supabase as any).from("monthly_reports").select("*").order("year", { ascending: false }).order("month", { ascending: false });
-      if (studentId) query = query.eq("student_id", studentId);
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data ?? []) as unknown as MonthlyReport[];
+      const allReports: MonthlyReport[] = [];
+      let from = 0;
+
+      while (true) {
+        let query = (supabase as any)
+          .from("monthly_reports")
+          .select("*")
+          .order("year", { ascending: false })
+          .order("month", { ascending: false })
+          .range(from, from + MONTHLY_REPORTS_PAGE_SIZE - 1);
+
+        if (studentId) {
+          query = query.eq("student_id", studentId);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        const batch = (data ?? []) as MonthlyReport[];
+        allReports.push(...batch);
+
+        if (batch.length < MONTHLY_REPORTS_PAGE_SIZE) break;
+        from += MONTHLY_REPORTS_PAGE_SIZE;
+      }
+
+      return allReports;
     },
   });
 
@@ -260,16 +284,46 @@ export const useAllMonthlyReports = () =>
   useQuery({
     queryKey: ["monthly_reports", "all"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("monthly_reports")
-        .select("*, students(nama, kelas, rombel, level)")
-        .order("year", { ascending: false })
-        .order("month", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as unknown as (MonthlyReport & { students: { nama: string; kelas: number; rombel: string; level: string } })[];
+      const allReports: (MonthlyReport & {
+        students: {
+          nama: string;
+          kelas: number;
+          rombel: string;
+          level: string;
+        };
+      })[] = [];
+
+      let from = 0;
+
+      while (true) {
+        const { data, error } = await (supabase as any)
+          .from("monthly_reports")
+          .select("*, students(nama, kelas, rombel, level)")
+          .order("year", { ascending: false })
+          .order("month", { ascending: false })
+          .range(from, from + MONTHLY_REPORTS_PAGE_SIZE - 1);
+
+        if (error) throw error;
+
+        const batch = (data ?? []) as unknown as (MonthlyReport & {
+          students: {
+            nama: string;
+            kelas: number;
+            rombel: string;
+            level: string;
+          };
+        })[];
+
+        allReports.push(...batch);
+
+        if (batch.length < MONTHLY_REPORTS_PAGE_SIZE) break;
+        from += MONTHLY_REPORTS_PAGE_SIZE;
+      }
+
+      return allReports;
     },
   });
-
+  
 export const useAddMonthlyReport = () => {
   const qc = useQueryClient();
   const { user } = useAuth();
