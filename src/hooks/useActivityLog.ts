@@ -56,8 +56,8 @@ export const ACTIVITY_META: Record<
   lulus_ujian:     { icon: "🏆", color: "text-amber-700",   bgColor: "bg-amber-50",   borderColor: "border-amber-200"  },
   tidak_lulus_ujian:{ icon: "📋", color: "text-yellow-700", bgColor: "bg-yellow-50",  borderColor: "border-yellow-200" },
   pindah_rombel:   { icon: "🔄", color: "text-blue-700",    bgColor: "bg-blue-50",    borderColor: "border-blue-200"   },
-  nilai_rendah:    { icon: "⚠️",  color: "text-red-700",    bgColor: "bg-red-50",     borderColor: "border-red-200"    },
-  catatan_progres: { icon: "📝", color: "text-violet-700",  bgColor: "bg-violet-50",  borderColor: "border-violet-200" },
+  nilai_rendah:    { icon: "!",  color: "text-red-700",    bgColor: "bg-red-50",     borderColor: "border-red-200"    },
+  catatan_progres: { icon: "i", color: "text-violet-700",  bgColor: "bg-violet-50",  borderColor: "border-violet-200" },
 };
 
 export const useActivityLogs = (studentId: string) =>

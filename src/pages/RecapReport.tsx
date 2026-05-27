@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "@/hooks/use-toast";
 import { MultiMonthExportFilters } from "@/components/MultiMonthExportFilters";
 import { generateMultiMonthExcel, type ExportGroup } from "@/utils/multiMonthExportUtils";
+import { removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 import {
   Search, Loader2, Eye, Download, CheckCircle2, FileText,
   Users, ListChecks, AlertCircle, Percent, FileWarning, FileSpreadsheet, Calendar
@@ -76,7 +77,7 @@ const getProgramLabel = (level: string) => {
 };
 
 const truncatePdfNote = (text: string, maxLength = 120) => {
-  const normalized = (text || "").replace(/\s+/g, " ").trim();
+  const normalized = removeBlockedNoteEmoticons(text || "").replace(/\s+/g, " ").trim();
   if (normalized.length <= maxLength) return normalized;
   return `${normalized.slice(0, maxLength).trim()}...`;
 };
@@ -302,7 +303,7 @@ const RecapReport = () => {
           target: rep.target_pages,
           status: rep.achievement_status === "achieved" ? "achieved" : "not_achieved",
           guru: rep.created_by ? (profileMap.get(rep.created_by) || "-") : "-",
-          catatan: rep.notes || "",
+          catatan: removeBlockedNoteEmoticons(rep.notes || ""),
         });
       }
     });
@@ -368,7 +369,7 @@ const RecapReport = () => {
             endIqraLevel: (rep as any)?.end_iqra_level || null,
             attendancePercentage: rep?.attendance_percentage || 0,
             achievementStatus: rep?.achievement_status || 'empty',
-            notes: rep?.notes || '',
+            notes: removeBlockedNoteEmoticons(rep?.notes || ''),
           };
         })
         .sort((a, b) => MONTH_NAMES.indexOf(a.month) - MONTH_NAMES.indexOf(b.month));
@@ -1223,7 +1224,7 @@ const RecapReport = () => {
                   <SelectContent>
                     <SelectItem value="all">Semua</SelectItem>
                     <SelectItem value="filled">✅ Sudah Diisi</SelectItem>
-                    <SelectItem value="empty">⚠️ Belum Diisi</SelectItem>
+                    <SelectItem value="empty">Belum Diisi</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

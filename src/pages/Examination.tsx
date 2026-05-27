@@ -132,7 +132,7 @@ const Examination = () => {
               <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LEVEL_COLORS[student.level as ReadingLevel]}`}>Ujian: {getLevelDisplayLabel(student.level as ReadingLevel)}</span>
               {nextLevel && (
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  → <span className={`px-2 py-0.5 rounded-full font-medium ${LEVEL_COLORS[nextLevel]}`}>{nextLevel}</span>
+                  ke <span className={`px-2 py-0.5 rounded-full font-medium ${LEVEL_COLORS[nextLevel]}`}>{nextLevel}</span>
                 </span>
               )}
             </div>
@@ -207,8 +207,8 @@ const Examination = () => {
               {nextLevel && (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
                   <p className="text-emerald-700 font-medium">Level baru: <span className={`px-2 py-0.5 rounded-full text-xs ml-1 ${LEVEL_COLORS[nextLevel]}`}>{getLevelDisplayLabel(nextLevel)}</span></p>
-                  {nextLevel === "Tahsin Lanjutan" && <p className="text-emerald-600 text-sm mt-1">🌟 Selamat! Siswa telah menyelesaikan seluruh Iqro dan masuk Tahsin Lanjutan!</p>}
-                  {nextLevel && nextLevel !== "Tahsin Lanjutan" && nextLevel !== "Tahfizh" && <p className="text-emerald-600 text-sm mt-1">✨ Lanjut ke jilid berikutnya!</p>}
+                  {nextLevel === "Tahsin Lanjutan" && <p className="text-emerald-600 text-sm mt-1">Siswa telah menyelesaikan seluruh Iqro dan masuk Tahsin Lanjutan.</p>}
+                  {nextLevel && nextLevel !== "Tahsin Lanjutan" && nextLevel !== "Tahfizh" && <p className="text-emerald-600 text-sm mt-1">Siswa dapat melanjutkan ke jilid berikutnya.</p>}
                 </div>
               )}
             </>
