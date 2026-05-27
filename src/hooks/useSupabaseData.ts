@@ -8,7 +8,7 @@ type ReadingStatus = Database["public"]["Enums"]["reading_status"];
 
 export const LEVELS: ReadingLevel[] = [
   "Iqro 1", "Iqro 2", "Iqro 3", "Iqro 4", "Iqro 5", "Iqro 6",
-  "Tahsin Dasar", "Tahsin Lanjutan", "Tahfizh"
+  "Tahsin Lanjutan", "Tahfizh"
 ];
 
 export const LEVEL_COLORS: Record<ReadingLevel, string> = {

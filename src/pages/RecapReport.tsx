@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import html2canvas from "html2canvas";
 import { useStudents, IQRO_LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
 import { useAllMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
 import { useProfileMap } from "@/hooks/useProfiles";
@@ -16,9 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "@/hooks/use-toast";
 import { MultiMonthExportFilters } from "@/components/MultiMonthExportFilters";
 import { generateMultiMonthExcel, type ExportGroup } from "@/utils/multiMonthExportUtils";
-import { removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 import {
-  Search, Loader2, Eye, Download, CheckCircle2, FileText,
+  Search, Loader2, Eye, Download, CheckCircle2,
   Users, ListChecks, AlertCircle, Percent, FileWarning, FileSpreadsheet, Calendar
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
@@ -26,7 +24,7 @@ import type { Database } from "@/integrations/supabase/types";
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
 const YEARS = [2024, 2025, 2026, 2027, 2028];
-type PdfFormat = "a4" | "legal";
+type PdfPaperSize = "a4" | "legal";
 
 interface PdfRowData {
   no: number;
@@ -51,13 +49,6 @@ interface PdfGroupData {
   rows: PdfRowData[];
 }
 
-interface NoteImage {
-  dataUrl: string;
-  format: "JPEG" | "PNG";
-  width: number;
-  height: number;
-}
-
 interface ExportSettings {
   nama_lembaga?: string;
   alamat?: string;
@@ -76,10 +67,16 @@ const getProgramLabel = (level: string) => {
   return level || "-";
 };
 
-const truncatePdfNote = (text: string, maxLength = 120) => {
-  const normalized = removeBlockedNoteEmoticons(text || "").replace(/\s+/g, " ").trim();
-  if (normalized.length <= maxLength) return normalized;
-  return `${normalized.slice(0, maxLength).trim()}...`;
+const cleanPdfText = (value: unknown) => {
+  return String(value ?? "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/[\u{1F300}-\u{1FAFF}]/gu, "")
+    .replace(/[\u{2600}-\u{27BF}]/gu, "")
+    .split("\n")
+    .map(line => line.replace(/[ \t]+/g, " ").trim())
+    .join("\n")
+    .trim();
 };
 
 const loadImageAsBase64 = (url: string): Promise<string | null> =>
@@ -104,47 +101,6 @@ const loadImageAsBase64 = (url: string): Promise<string | null> =>
   });
 
 const waitForUiFrame = () => new Promise(resolve => window.setTimeout(resolve, 0));
-
-const shouldRenderNoteAsImage = (note: string) =>
-  /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\u2600-\u27BF\u{1F000}-\u{1FAFF}]/u.test(note);
-
-const renderNoteImage = async (note: string, widthPx: number): Promise<NoteImage | null> => {
-  const text = truncatePdfNote(note);
-  if (!text) return null;
-
-  const wrapper = document.createElement("div");
-  wrapper.style.position = "fixed";
-  wrapper.style.left = "-10000px";
-  wrapper.style.top = "0";
-  wrapper.style.width = `${widthPx}px`;
-  wrapper.style.padding = "5px 6px";
-  wrapper.style.background = "#ffffff";
-  wrapper.style.color = "#374151";
-  wrapper.style.fontFamily = "Arial, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif";
-  wrapper.style.fontSize = "12px";
-  wrapper.style.lineHeight = "1.3";
-  wrapper.style.whiteSpace = "pre-wrap";
-  wrapper.style.wordBreak = "break-word";
-  wrapper.textContent = text;
-  document.body.appendChild(wrapper);
-
-  try {
-    const canvas = await html2canvas(wrapper, {
-      backgroundColor: "#ffffff",
-      scale: 1,
-      logging: false,
-      useCORS: true,
-    });
-    return {
-      dataUrl: canvas.toDataURL("image/jpeg", 0.72),
-      format: "JPEG",
-      width: canvas.width,
-      height: canvas.height,
-    };
-  } finally {
-    wrapper.remove();
-  }
-};
 
 const formatTahfizhLevel = (level: string | null | undefined, page: number) => {
   if (!level) return `hal.${page}`;
@@ -222,9 +178,8 @@ const RecapReport = () => {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState<"all" | "filled" | "empty">("all");
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [previewTitle, setPreviewTitle] = useState("");
-  const [previewDownloadName, setPreviewDownloadName] = useState("");
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [pdfPreviewSize, setPdfPreviewSize] = useState<PdfPaperSize>("a4");
   const [pdfLoading, setPdfLoading] = useState<string | null>(null);
   
   // Multi-month export state
@@ -303,7 +258,7 @@ const RecapReport = () => {
           target: rep.target_pages,
           status: rep.achievement_status === "achieved" ? "achieved" : "not_achieved",
           guru: rep.created_by ? (profileMap.get(rep.created_by) || "-") : "-",
-          catatan: removeBlockedNoteEmoticons(rep.notes || ""),
+          catatan: rep.notes || "",
         });
       }
     });
@@ -369,7 +324,7 @@ const RecapReport = () => {
             endIqraLevel: (rep as any)?.end_iqra_level || null,
             attendancePercentage: rep?.attendance_percentage || 0,
             achievementStatus: rep?.achievement_status || 'empty',
-            notes: removeBlockedNoteEmoticons(rep?.notes || ''),
+            notes: rep?.notes || '',
           };
         })
         .sort((a, b) => MONTH_NAMES.indexOf(a.month) - MONTH_NAMES.indexOf(b.month));
@@ -468,14 +423,24 @@ const RecapReport = () => {
   };
 
   const cleanupPreviewUrl = useCallback(() => {
-    setPreviewUrl(current => {
+    setPdfPreviewUrl(current => {
       if (current) URL.revokeObjectURL(current);
       return null;
     });
-    setPreviewDownloadName("");
   }, []);
 
-  useEffect(() => cleanupPreviewUrl, [cleanupPreviewUrl]);
+  useEffect(() => {
+    return () => {
+      if (pdfPreviewUrl) {
+        URL.revokeObjectURL(pdfPreviewUrl);
+      }
+    };
+  }, [pdfPreviewUrl]);
+
+  const handlePreviewOpenChange = useCallback((open: boolean) => {
+    setPreviewOpen(open);
+    if (!open) cleanupPreviewUrl();
+  }, [cleanupPreviewUrl]);
 
   const singleMonthPdfGroups = useMemo<PdfGroupData[]>(() => {
     return displayGroups.map(group => ({
@@ -535,7 +500,7 @@ const RecapReport = () => {
       : `${selectedYear}`
     : `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
 
-  const buildRecapPdf = useCallback(async (format: PdfFormat) => {
+  const buildRecapPDF = useCallback(async (paperSize: PdfPaperSize = "a4") => {
     if (activePdfGroups.length === 0) {
       throw new Error("Tidak ada data untuk dicetak");
     }
@@ -550,29 +515,14 @@ const RecapReport = () => {
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
-      format,
+      format: paperSize,
       compress: true,
       putOnlyUsedFonts: true,
     });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
     const margin = 12;
-    const isLegal = format === "legal";
-    const noteColumnWidth = isLegal ? 66 : 44;
-    const noteImageWidthPx = isLegal ? 260 : 210;
-    const noteImages = new Map<string, NoteImage>();
-
-    let renderedNoteCount = 0;
-    for (const group of activePdfGroups) {
-      for (const row of group.rows) {
-        if (!row.catatan.trim()) continue;
-        if (!shouldRenderNoteAsImage(row.catatan)) continue;
-        const rendered = await renderNoteImage(row.catatan, noteImageWidthPx);
-        if (rendered) noteImages.set(row.studentId, rendered);
-        renderedNoteCount += 1;
-        if (renderedNoteCount % 8 === 0) await waitForUiFrame();
-      }
-    }
+    const isLegal = paperSize === "legal";
 
     const drawHeader = () => {
       const y = margin;
@@ -623,29 +573,49 @@ const RecapReport = () => {
       autoTable(doc, {
         startY: cursorY,
         head: [[
-          "No", "Nama", "Program", "Level", "Periode", "Awal", "Akhir",
-          "Total", "Target", "Hadir %", "Status", "Guru", "Catatan",
+          "No",
+          "Nama",
+          "Program",
+          "Level",
+          "Awal",
+          "Akhir",
+          "Total",
+          "Target",
+          "Status",
+          "Guru",
+          "Catatan",
         ]],
-        body: group.rows.map(row => [
-          row.no,
-          row.nama,
-          row.program,
-          row.level,
-          row.periode,
-          row.awal,
-          row.akhir,
-          row.total,
-          row.target,
-          row.kehadiran,
-          row.status,
-          row.guru,
-          noteImages.has(row.studentId) ? "" : (truncatePdfNote(row.catatan) || "-"),
-        ]),
+        body: group.rows.map(row => {
+          const status =
+            row.status === "Tercapai"
+              ? "Tercapai"
+              : row.status === "BELUM DIISI"
+              ? "Belum Diisi"
+              : row.status === "Sebagian"
+              ? "Sebagian"
+              : "Belum Tercapai";
+
+          return [
+            String(row.no),
+            cleanPdfText(row.nama),
+            cleanPdfText(row.program),
+            cleanPdfText(row.level),
+            cleanPdfText(row.awal),
+            cleanPdfText(row.akhir),
+            row.status === "BELUM DIISI" ? "-" : String(row.total),
+            row.status === "BELUM DIISI" ? "-" : String(row.target),
+            status,
+            cleanPdfText(row.guru),
+            cleanPdfText(row.catatan || "-"),
+          ];
+        }),
         styles: {
-          fontSize: isLegal ? 6.2 : 5.8,
-          cellPadding: 0.8,
-          overflow: "ellipsize",
-          valign: "middle",
+          font: "helvetica",
+          fontStyle: "normal",
+          fontSize: isLegal ? 8 : 7,
+          cellPadding: isLegal ? 1.6 : 1.2,
+          overflow: "linebreak",
+          valign: "top",
           lineColor: [220, 220, 220],
           lineWidth: 0.1,
           textColor: [30, 30, 30],
@@ -655,41 +625,48 @@ const RecapReport = () => {
           textColor: [255, 255, 255],
           fontStyle: "bold",
           halign: "center",
-          fontSize: isLegal ? 6.4 : 6,
+          fontSize: isLegal ? 8 : 7,
         },
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: {
-          0: { cellWidth: 7, halign: "center" },
-          1: { cellWidth: isLegal ? 34 : 29 },
-          2: { cellWidth: isLegal ? 25 : 21 },
-          3: { cellWidth: isLegal ? 19 : 16 },
-          4: { cellWidth: isLegal ? 32 : 23 },
-          5: { cellWidth: isLegal ? 20 : 17 },
-          6: { cellWidth: isLegal ? 20 : 17 },
-          7: { cellWidth: 11, halign: "center", fontStyle: "bold" },
-          8: { cellWidth: 11, halign: "center" },
-          9: { cellWidth: 12, halign: "center" },
-          10: { cellWidth: isLegal ? 17 : 15, halign: "center", fontStyle: "bold" },
-          11: { cellWidth: isLegal ? 28 : 20 },
-          12: { cellWidth: noteColumnWidth, fontSize: isLegal ? 6.6 : 6, overflow: "ellipsize" },
-        },
-        didParseCell: data => {
-          if (data.section === "body" && data.column.index === 12) {
-            const row = group.rows[data.row.index];
-            const image = row ? noteImages.get(row.studentId) : null;
-            if (image) {
-              const textLength = truncatePdfNote(row.catatan).length;
-              const estimatedHeight = Math.min(Math.max(8, Math.ceil(textLength / (isLegal ? 48 : 36)) * 4 + 2), 14);
-              data.cell.styles.minCellHeight = estimatedHeight;
-              data.cell.text = [""];
+        columnStyles: isLegal
+          ? {
+              0: { cellWidth: 8, halign: "center" },
+              1: { cellWidth: 42 },
+              2: { cellWidth: 26 },
+              3: { cellWidth: 26 },
+              4: { cellWidth: 22 },
+              5: { cellWidth: 22 },
+              6: { cellWidth: 12, halign: "center", fontStyle: "bold" },
+              7: { cellWidth: 12, halign: "center" },
+              8: { cellWidth: 24, halign: "center", fontStyle: "bold" },
+              9: { cellWidth: 28 },
+              10: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
             }
-          }
+          : {
+              0: { cellWidth: 8, halign: "center" },
+              1: { cellWidth: 34 },
+              2: { cellWidth: 23 },
+              3: { cellWidth: 21 },
+              4: { cellWidth: 19 },
+              5: { cellWidth: 19 },
+              6: { cellWidth: 11, halign: "center", fontStyle: "bold" },
+              7: { cellWidth: 11, halign: "center" },
+              8: { cellWidth: 20, halign: "center", fontStyle: "bold" },
+              9: { cellWidth: 22 },
+              10: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
+            },
+        didParseCell: data => {
           if (data.section === "body" && data.column.index === 10) {
+            data.cell.styles.overflow = "linebreak";
+            data.cell.styles.valign = "top";
+          }
+
+          if (data.section === "body" && data.column.index === 8) {
             const value = String(data.cell.raw);
             if (value === "Tercapai") data.cell.styles.textColor = [16, 124, 65];
             else if (value === "Sebagian") data.cell.styles.textColor = [245, 127, 23];
-            else if (value === "Belum") data.cell.styles.textColor = [185, 28, 28];
-            else if (value === "BELUM DIISI") {
+            else if (value === "Belum Tercapai") data.cell.styles.textColor = [185, 28, 28];
+            else if (value === "Belum Diisi") {
               data.cell.styles.textColor = [220, 38, 38];
               Object.values(data.row.cells).forEach((cell: any) => {
                 cell.styles.fillColor = [255, 235, 238];
@@ -697,23 +674,7 @@ const RecapReport = () => {
             }
           }
         },
-        didDrawCell: data => {
-          if (data.section !== "body" || data.column.index !== 12) return;
-          const row = group.rows[data.row.index];
-          const image = row ? noteImages.get(row.studentId) : null;
-          if (!image) return;
-
-          const padding = 1.2;
-          const maxW = data.cell.width - padding * 2;
-          const maxH = data.cell.height - padding * 2;
-          const ratio = image.height / image.width;
-          const drawW = maxW;
-          const drawH = Math.min(maxH, drawW * ratio);
-          try {
-            doc.addImage(image.dataUrl, image.format, data.cell.x + padding, data.cell.y + padding, drawW, drawH);
-          } catch {}
-        },
-        margin: { left: margin, right: margin, bottom: 24 },
+        margin: { left: margin, right: margin, bottom: 22 },
       });
 
       cursorY = (doc as any).lastAutoTable.finalY + 4;
@@ -797,28 +758,23 @@ const RecapReport = () => {
     return doc;
   }, [activePdfGroups, activePeriodLabel, settings]);
 
-  const handlePdfAction = useCallback(async (mode: "preview" | "download", format: PdfFormat) => {
-    const label = `${mode}-${format}`;
+  const getPdfFileName = useCallback((paperSize: PdfPaperSize) => {
+    return `Rekap_Laporan_${activePeriodLabel.replace(/\s+/g, "_")}_${paperSize.toUpperCase()}.pdf`;
+  }, [activePeriodLabel]);
+
+  const exportPDF = useCallback(async (paperSize: PdfPaperSize) => {
+    if (activePdfGroups.length === 0) {
+      toast({ title: "Tidak ada data untuk dicetak", variant: "destructive" });
+      return;
+    }
+
+    const label = `download-${paperSize}`;
     setPdfLoading(label);
     try {
       await waitForUiFrame();
-      const doc = await buildRecapPdf(format);
-      const fileName = `Rekap_Laporan_${activePeriodLabel.replace(/\s+/g, "_")}_${format.toUpperCase()}_Landscape.pdf`;
-
-      const blob = doc.output("blob");
-      const url = URL.createObjectURL(blob);
-      cleanupPreviewUrl();
-      setPreviewTitle(
-        mode === "preview"
-          ? `Preview PDF ${format.toUpperCase()} Landscape`
-          : `PDF ${format.toUpperCase()} Landscape Siap Diunduh`
-      );
-      setPreviewDownloadName(fileName);
-      setPreviewUrl(url);
-      setPreviewOpen(true);
-      if (mode === "download") {
-        toast({ title: `PDF ${format.toUpperCase()} siap. Klik tombol Download di modal.` });
-      }
+      const doc = await buildRecapPDF(paperSize);
+      doc.save(getPdfFileName(paperSize));
+      toast({ title: `PDF ${paperSize.toUpperCase()} berhasil diunduh` });
     } catch (error) {
       console.error(error);
       toast({
@@ -829,7 +785,37 @@ const RecapReport = () => {
     } finally {
       setPdfLoading(null);
     }
-  }, [activePeriodLabel, buildRecapPdf, cleanupPreviewUrl]);
+  }, [activePdfGroups.length, buildRecapPDF, getPdfFileName]);
+
+  const previewPDF = useCallback(async (paperSize: PdfPaperSize) => {
+    if (activePdfGroups.length === 0) {
+      toast({ title: "Tidak ada data untuk dipreview", variant: "destructive" });
+      return;
+    }
+
+    const label = `preview-${paperSize}`;
+    setPdfLoading(label);
+    try {
+      await waitForUiFrame();
+      const doc = await buildRecapPDF(paperSize);
+      const blob = doc.output("blob");
+      const url = URL.createObjectURL(blob);
+
+      cleanupPreviewUrl();
+      setPdfPreviewUrl(url);
+      setPdfPreviewSize(paperSize);
+      setPreviewOpen(true);
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Error membuat preview PDF",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
+    } finally {
+      setPdfLoading(null);
+    }
+  }, [activePdfGroups.length, buildRecapPDF, cleanupPreviewUrl]);
 
   if (ls || lr) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>;
 
@@ -930,36 +916,36 @@ const RecapReport = () => {
                   variant="outline"
                   className="gap-2 text-xs sm:text-sm"
                   disabled={!!pdfLoading}
-                  onClick={() => handlePdfAction("preview", "a4")}
+                  onClick={() => previewPDF("a4")}
                 >
                   {pdfLoading === "preview-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-                  Preview PDF A4 Landscape
+                  Preview A4
                 </Button>
                 <Button
                   variant="outline"
                   className="gap-2 text-xs sm:text-sm"
                   disabled={!!pdfLoading}
-                  onClick={() => handlePdfAction("preview", "legal")}
+                  onClick={() => previewPDF("legal")}
                 >
                   {pdfLoading === "preview-legal" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-                  Preview PDF Legal Landscape
+                  Preview Legal
                 </Button>
                 <Button
                   variant="outline"
                   className="gap-2 text-xs sm:text-sm"
                   disabled={!!pdfLoading}
-                  onClick={() => handlePdfAction("download", "a4")}
+                  onClick={() => exportPDF("a4")}
                 >
                   {pdfLoading === "download-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                  Download PDF A4 Landscape
+                  PDF A4
                 </Button>
                 <Button
                   className="gap-2 text-xs sm:text-sm"
                   disabled={!!pdfLoading}
-                  onClick={() => handlePdfAction("download", "legal")}
+                  onClick={() => exportPDF("legal")}
                 >
                   {pdfLoading === "download-legal" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                  Download PDF Legal Landscape
+                  PDF Legal
                 </Button>
               </div>
 
@@ -982,11 +968,16 @@ const RecapReport = () => {
                             <th className="px-2 py-2 w-8">No</th>
                             <th className="px-2 py-2 min-w-[120px]">Nama</th>
                             <th className="px-2 py-2">Program</th>
+                            <th className="px-2 py-2">Level</th>
                             <th className="px-2 py-2">Bulan</th>
+                            <th className="px-2 py-2 text-center">Awal</th>
+                            <th className="px-2 py-2 text-center">Akhir</th>
                             <th className="px-2 py-2 text-center">Total Hal</th>
                             <th className="px-2 py-2 text-center">Target</th>
                             <th className="px-2 py-2 text-center">Kehadiran %</th>
                             <th className="px-2 py-2 text-center">Status</th>
+                            <th className="px-2 py-2">Guru</th>
+                            <th className="px-2 py-2 min-w-[200px]">Catatan</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1002,9 +993,12 @@ const RecapReport = () => {
                                   {highlight(row.nama, search)}
                                 </td>
                                 <td className="px-2 py-2">{row.program}</td>
+                                <td className="px-2 py-2">{row.level}</td>
                                 <td className="px-2 py-2 text-xs">
                                   {row.months.join(" / ")}
                                 </td>
+                                <td className="px-2 py-2 text-center">{empty ? "-" : row.startPage}</td>
+                                <td className="px-2 py-2 text-center">{empty ? "-" : row.endPage}</td>
                                 <td className="px-2 py-2 text-center font-bold">
                                   {empty ? "-" : row.totalPages}
                                 </td>
@@ -1036,6 +1030,8 @@ const RecapReport = () => {
                                     </Badge>
                                   )}
                                 </td>
+                                <td className="px-2 py-2 text-muted-foreground">{row.guru}</td>
+                                <td className="px-2 py-2 whitespace-pre-wrap text-muted-foreground">{row.catatan || "-"}</td>
                               </tr>
                             );
                           })}
@@ -1056,11 +1052,19 @@ const RecapReport = () => {
                                 {getStatusLabel(row.status)}
                               </Badge>
                             </div>
-                            <div className="grid grid-cols-3 gap-2 text-xs">
+                            <div className="grid grid-cols-2 gap-2 text-xs">
                               <div><span className="text-muted-foreground">Bulan</span><p>{row.months.join(" / ")}</p></div>
+                              <div><span className="text-muted-foreground">Level</span><p>{row.level}</p></div>
+                              <div><span className="text-muted-foreground">Awal</span><p>{empty ? "-" : row.startPage}</p></div>
+                              <div><span className="text-muted-foreground">Akhir</span><p>{empty ? "-" : row.endPage}</p></div>
                               <div><span className="text-muted-foreground">Total</span><p className="font-semibold">{empty ? "-" : row.totalPages}</p></div>
                               <div><span className="text-muted-foreground">Target</span><p>{empty ? "-" : row.totalTarget}</p></div>
+                              <div><span className="text-muted-foreground">Status</span><p>{getStatusLabel(row.status)}</p></div>
+                              <div><span className="text-muted-foreground">Guru</span><p>{row.guru}</p></div>
                             </div>
+                            {row.catatan && (
+                              <p className="text-xs text-muted-foreground whitespace-pre-wrap">{row.catatan}</p>
+                            )}
                           </div>
                         );
                       })}
@@ -1236,36 +1240,36 @@ const RecapReport = () => {
               variant="outline"
               className="gap-2 text-xs sm:text-sm"
               disabled={!!pdfLoading || activePdfGroups.length === 0}
-              onClick={() => handlePdfAction("preview", "a4")}
+              onClick={() => previewPDF("a4")}
             >
               {pdfLoading === "preview-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-              Preview PDF A4 Landscape
+              Preview A4
             </Button>
             <Button
               variant="outline"
               className="gap-2 text-xs sm:text-sm"
               disabled={!!pdfLoading || activePdfGroups.length === 0}
-              onClick={() => handlePdfAction("preview", "legal")}
+              onClick={() => previewPDF("legal")}
             >
               {pdfLoading === "preview-legal" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-              Preview PDF Legal Landscape
+              Preview Legal
             </Button>
             <Button
               variant="outline"
               className="gap-2 text-xs sm:text-sm"
               disabled={!!pdfLoading || activePdfGroups.length === 0}
-              onClick={() => handlePdfAction("download", "a4")}
+              onClick={() => exportPDF("a4")}
             >
               {pdfLoading === "download-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              Download PDF A4 Landscape
+              PDF A4
             </Button>
             <Button
               className="gap-2 text-xs sm:text-sm"
               disabled={!!pdfLoading || activePdfGroups.length === 0}
-              onClick={() => handlePdfAction("download", "legal")}
+              onClick={() => exportPDF("legal")}
             >
               {pdfLoading === "download-legal" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              Download PDF Legal Landscape
+              PDF Legal
             </Button>
           </div>
 
@@ -1386,10 +1390,13 @@ const RecapReport = () => {
                             {getStatusLabel(row.status)}
                           </Badge>
                         </div>
-                        <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
                           <div><span className="text-muted-foreground">Awal</span><p>{row.awal}</p></div>
                           <div><span className="text-muted-foreground">Akhir</span><p>{row.akhir}</p></div>
                           <div><span className="text-muted-foreground">Total</span><p className="font-semibold">{empty ? "-" : row.total}</p></div>
+                          <div><span className="text-muted-foreground">Target</span><p>{empty ? "-" : row.target}</p></div>
+                          <div><span className="text-muted-foreground">Status</span><p>{getStatusLabel(row.status)}</p></div>
+                          <div><span className="text-muted-foreground">Guru</span><p>{row.guru}</p></div>
                         </div>
                         {row.catatan && (
                           <p className="text-xs text-muted-foreground whitespace-pre-wrap">{row.catatan}</p>
@@ -1404,38 +1411,23 @@ const RecapReport = () => {
         </>
       )}
 
-      <Dialog
-        open={previewOpen}
-        onOpenChange={(open) => {
-          setPreviewOpen(open);
-          if (!open) cleanupPreviewUrl();
-        }}
-      >
-        <DialogContent className="w-[96vw] max-w-6xl h-[90vh] p-0 overflow-hidden">
+      <Dialog open={previewOpen} onOpenChange={handlePreviewOpenChange}>
+        <DialogContent className="max-w-6xl h-[92vh] p-0 overflow-hidden">
           <DialogHeader className="px-4 py-3 border-b">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <DialogTitle className="text-base flex items-center gap-2">
-                <FileText className="w-4 h-4" />
-                {previewTitle}
-              </DialogTitle>
-              {previewUrl && (
-                <a
-                  href={previewUrl}
-                  download={previewDownloadName}
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:bg-primary/90"
-                >
-                  <Download className="w-4 h-4" />
-                  Download PDF
-                </a>
-              )}
-            </div>
+            <DialogTitle className="text-base">
+              Preview PDF Rekap Laporan ({pdfPreviewSize.toUpperCase()} Landscape)
+            </DialogTitle>
           </DialogHeader>
-          {previewUrl && (
+          {pdfPreviewUrl ? (
             <iframe
-              title={previewTitle}
-              src={previewUrl}
-              className="w-full h-[calc(90vh-76px)] border-0 bg-white"
+              src={pdfPreviewUrl}
+              className="w-full h-full"
+              title="Preview PDF Rekap Laporan"
             />
+          ) : (
+            <div className="flex items-center justify-center h-full text-muted-foreground">
+              PDF belum tersedia.
+            </div>
           )}
         </DialogContent>
       </Dialog>
