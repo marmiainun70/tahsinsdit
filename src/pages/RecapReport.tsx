@@ -154,6 +154,23 @@ const getStatusLabel = (status: string) => {
   return "BELUM DIISI";
 };
 
+const isReportMeaningfullyFilled = (report: {
+  achievement_status?: string | null;
+  pages_read?: number | null;
+  start_page?: number | null;
+  end_page?: number | null;
+  iqra_level?: string | null;
+  end_iqra_level?: string | null;
+  notes?: string | null;
+}) => {
+  const status = String(report.achievement_status ?? "");
+  if (status === "achieved" || status === "stagnant" || status === "decline") return true;
+  if (Number(report.pages_read ?? 0) !== 0) return true;
+  if (Number(report.start_page ?? 0) !== Number(report.end_page ?? 0)) return true;
+  if (String(report.notes ?? "").trim().length > 0) return true;
+  return false;
+};
+
 interface RowData {
   no: number;
   studentId: string;
@@ -299,7 +316,7 @@ const RecapReport = () => {
 
       const monthLabel = `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
 
-      if (!rep) {
+      if (!rep || !isReportMeaningfullyFilled(rep)) {
         grp.rows.push({
           no: grp.rows.length + 1,
           studentId: st.id,
@@ -474,7 +491,7 @@ const RecapReport = () => {
         item.year === Number(year)
       );
 
-      if (!report) {
+      if (!report || !isReportMeaningfullyFilled(report)) {
         return {
           no: index + 1,
           studentId: student.id,
