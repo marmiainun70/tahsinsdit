@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useStudents, IQRO_LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
@@ -17,6 +18,7 @@ import { toast } from "@/hooks/use-toast";
 import { MultiMonthExportFilters } from "@/components/MultiMonthExportFilters";
 import { generateMultiMonthExcel, type ExportGroup } from "@/utils/multiMonthExportUtils";
 import { removeBlockedNoteEmoticons } from "@/lib/noteValidation";
+import { restoreApril2026Reports } from "@/lib/restoreApril2026";
 import {
   Search, Loader2, Eye, Download, CheckCircle2,
   Users, ListChecks, AlertCircle, Percent, FileWarning, FileSpreadsheet, Calendar
@@ -208,6 +210,7 @@ const RecapReport = () => {
   const { data: reports = [], isLoading: lr } = useAllMonthlyReports();
   const { data: settings } = useInstitutionSettings();
   const profileMap = useProfileMap();
+  const queryClient = useQueryClient();
 
   const now = new Date();
   const [filterKelas, setFilterKelas] = useState<string>("all");
@@ -220,9 +223,13 @@ const RecapReport = () => {
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [pdfPreviewSize, setPdfPreviewSize] = useState<PdfPaperSize>("a4");
   const [pdfLoading, setPdfLoading] = useState<string | null>(null);
-  const [downloadMonths, setDownloadMonths] = useState<number[]>([Number(filterMonth)]);
   const [selectedRombelKeys, setSelectedRombelKeys] = useState<string[]>([]);
   const [multiDownloadProgress, setMultiDownloadProgress] = useState("");
+  const [aprilRestoreRunning, setAprilRestoreRunning] = useState(false);
+  const [aprilRestoreDone, setAprilRestoreDone] = useState(false);
+  const [multiMonthDialogOpen, setMultiMonthDialogOpen] = useState(false);
+  const [dialogYear, setDialogYear] = useState<string>(String(now.getFullYear()));
+  const [dialogMonths, setDialogMonths] = useState<number[]>([Number(now.getMonth() + 1)]);
   
   // Multi-month export state
   const [multiMonthMode, setMultiMonthMode] = useState(false);
@@ -260,13 +267,6 @@ const RecapReport = () => {
   }, [filteredStudents]);
 
   useEffect(() => {
-    setDownloadMonths(current => {
-      if (current.length > 0) return current;
-      return [Number(filterMonth)];
-    });
-  }, [filterMonth]);
-
-  useEffect(() => {
     setSelectedRombelKeys(current => {
       const available = new Set(availableRombels.map(item => item.key));
       return current.filter(key => available.has(key));
@@ -275,20 +275,6 @@ const RecapReport = () => {
 
   const allRombelsSelected =
     availableRombels.length > 0 && selectedRombelKeys.length === availableRombels.length;
-
-  const selectedMonthLabel = downloadMonths.length === 0
-    ? "Belum ada bulan dipilih"
-    : downloadMonths.length <= 3
-    ? `${downloadMonths.map(month => MONTH_NAMES[month - 1]).join(", ")} dipilih`
-    : `${downloadMonths.length} bulan dipilih`;
-
-  const toggleDownloadMonth = (month: number) => {
-    setDownloadMonths(current =>
-      current.includes(month)
-        ? current.filter(item => item !== month)
-        : [...current, month].sort((a, b) => a - b)
-    );
-  };
 
   const toggleRombel = (key: string) => {
     setSelectedRombelKeys(current =>
@@ -394,6 +380,44 @@ const RecapReport = () => {
     const achievementRate = filled ? Math.round((achieved / filled) * 100) : 0;
     return { total, filled, empty, achieved, notAchieved, completion, achievementRate };
   }, [groups]);
+
+  useEffect(() => {
+    if (lr || ls) return;
+    if (aprilRestoreDone || aprilRestoreRunning) return;
+    if (filterMonth !== "4" || filterYear !== "2026") return;
+    if (stats.empty <= 0) return;
+
+    setAprilRestoreRunning(true);
+    toast({ title: "Memulihkan data April 2026 dari backup PDF lama..." });
+    restoreApril2026Reports()
+      .then(async result => {
+        await queryClient.invalidateQueries({ queryKey: ["monthly_reports"] });
+        setAprilRestoreDone(true);
+        toast({
+          title: `${result.restored} data April 2026 sudah diisi ulang`,
+          description: result.unmatched.length
+            ? `${result.unmatched.length} nama belum cocok dan perlu dicek manual.`
+            : "Data April diproses dari backup PDF lama.",
+        });
+      })
+      .catch((error: any) => {
+        toast({
+          title: "Gagal memulihkan data April",
+          description: error?.message ?? "Akun login mungkin tidak punya izin update/insert laporan.",
+          variant: "destructive",
+        });
+      })
+      .finally(() => setAprilRestoreRunning(false));
+  }, [
+    aprilRestoreDone,
+    aprilRestoreRunning,
+    filterMonth,
+    filterYear,
+    lr,
+    ls,
+    queryClient,
+    stats.empty,
+  ]);
 
   // Multi-month data aggregation
   const multiMonthExportGroups = useMemo(() => {
@@ -603,18 +627,18 @@ const RecapReport = () => {
       : `${selectedYear}`
     : `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
 
-  const buildRowsForRombelMonth = useCallback((rombel: RombelOption, month: number): PdfRowData[] => {
+  const buildRowsForRombelMonth = useCallback((rombel: RombelOption, month: number, year: string): PdfRowData[] => {
     const studentsInRombel = filteredStudents
       .filter(student => student.kelas === rombel.kelas && student.rombel === rombel.rombel)
       .sort((a, b) => a.nama.localeCompare(b.nama));
 
-    const monthLabel = `${MONTH_NAMES[month - 1]} ${filterYear}`;
+    const monthLabel = `${MONTH_NAMES[month - 1]} ${year}`;
 
     return studentsInRombel.map((student, index) => {
       const report = reports.find(item =>
         item.student_id === student.id &&
         item.month === month &&
-        item.year === Number(filterYear)
+        item.year === Number(year)
       );
 
       if (!report) {
@@ -664,9 +688,9 @@ const RecapReport = () => {
         catatan: report.notes || "",
       };
     });
-  }, [filterYear, filteredStudents, profileMap, reports]);
+  }, [filteredStudents, profileMap, reports]);
 
-  const buildSelectedRombelPDF = useCallback(async (rombel: RombelOption, months: number[]) => {
+  const buildSelectedRombelPDF = useCallback(async (rombel: RombelOption, months: number[], year: string) => {
     const exportSettings = (settings || {}) as ExportSettings;
     const [logoB64, koordTtdB64, kepsekTtdB64] = await Promise.all([
       exportSettings.logo_url ? loadImageAsBase64(exportSettings.logo_url) : Promise.resolve(null),
@@ -711,7 +735,7 @@ const RecapReport = () => {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(80);
-      doc.text(`Periode: ${MONTH_NAMES[month - 1]} ${filterYear}`, pageW / 2, y + 28, { align: "center" });
+      doc.text(`Periode: ${MONTH_NAMES[month - 1]} ${year}`, pageW / 2, y + 28, { align: "center" });
     };
 
     const drawSignature = (cursorY: number) => {
@@ -747,10 +771,10 @@ const RecapReport = () => {
       if (monthIndex > 0) doc.addPage();
       drawHeader(month);
 
-      const rows = buildRowsForRombelMonth(rombel, month);
+      const rows = buildRowsForRombelMonth(rombel, month, year);
       const hasReportData = reports.some(item =>
         item.month === month &&
-        item.year === Number(filterYear) &&
+        item.year === Number(year) &&
         rows.some(row => row.studentId === item.student_id)
       );
 
@@ -870,10 +894,10 @@ const RecapReport = () => {
     }
 
     return doc;
-  }, [buildRowsForRombelMonth, filterYear, reports, settings]);
+  }, [buildRowsForRombelMonth, reports, settings]);
 
   const downloadSelectedRombelPDFs = useCallback(async () => {
-    if (downloadMonths.length === 0) {
+    if (dialogMonths.length === 0) {
       toast({ title: "Pilih minimal satu bulan terlebih dahulu.", variant: "destructive" });
       return;
     }
@@ -883,7 +907,7 @@ const RecapReport = () => {
     }
 
     const selectedRombels = availableRombels.filter(item => selectedRombelKeys.includes(item.key));
-    const monthFilePart = downloadMonths.map(month => MONTH_NAMES[month - 1]).join("-");
+    const monthFilePart = dialogMonths.map(month => MONTH_NAMES[month - 1]).join("-");
     setPdfLoading("multi-rombel");
 
     try {
@@ -891,8 +915,8 @@ const RecapReport = () => {
         const rombel = selectedRombels[index];
         setMultiDownloadProgress(`Menyiapkan PDF ${index + 1} dari ${selectedRombels.length}...`);
         await waitForUiFrame();
-        const doc = await buildSelectedRombelPDF(rombel, downloadMonths);
-        doc.save(`Rekap_Tahsin_${safeFilePart(rombel.label)}_${safeFilePart(monthFilePart)}_${filterYear}.pdf`);
+        const doc = await buildSelectedRombelPDF(rombel, dialogMonths, dialogYear);
+        doc.save(`Rekap_Tahsin_${safeFilePart(rombel.label)}_${safeFilePart(monthFilePart)}_${dialogYear}.pdf`);
       }
       toast({ title: `${selectedRombels.length} file PDF rekap multi bulan berhasil diunduh.` });
     } catch (error) {
@@ -906,7 +930,7 @@ const RecapReport = () => {
       setPdfLoading(null);
       setMultiDownloadProgress("");
     }
-  }, [availableRombels, buildSelectedRombelPDF, downloadMonths, filterYear, selectedRombelKeys]);
+  }, [availableRombels, buildSelectedRombelPDF, dialogMonths, dialogYear, selectedRombelKeys]);
 
   const buildRecapPDF = useCallback(async (paperSize: PdfPaperSize = "a4") => {
     if (activePdfGroups.length === 0) {
@@ -1256,6 +1280,14 @@ const RecapReport = () => {
           >
             <Calendar className="w-4 h-4" />
             {multiMonthMode ? "Mode Multi-Bulan" : "Multi-Bulan"}
+          </Button>
+          <Button
+            onClick={() => setMultiMonthDialogOpen(true)}
+            variant="outline"
+            className="gap-2 text-xs sm:text-sm"
+          >
+            <Download className="w-4 h-4" />
+            Download Multi Bulan per Rombel
           </Button>
         </div>
       </div>
@@ -1646,92 +1678,6 @@ const RecapReport = () => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Download className="w-4 h-4" />
-                Download PDF Multi Bulan per Rombel
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr_auto]">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <Label className="text-xs">Pilih Bulan</Label>
-                    <span className="text-xs text-muted-foreground">{selectedMonthLabel}</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {MONTH_NAMES.map((monthName, index) => {
-                      const month = index + 1;
-                      const checked = downloadMonths.includes(month);
-                      return (
-                        <button
-                          key={month}
-                          type="button"
-                          onClick={() => toggleDownloadMonth(month)}
-                          className={`rounded-md border px-3 py-2 text-left text-xs transition-colors ${
-                            checked
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-border bg-background hover:bg-muted"
-                          }`}
-                        >
-                          {monthName}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <Label className="text-xs">Pilih Rombel</Label>
-                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Checkbox
-                        checked={allRombelsSelected}
-                        onCheckedChange={toggleAllRombels}
-                      />
-                      Pilih Semua Rombel
-                    </label>
-                  </div>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-                    {availableRombels.map(rombel => (
-                      <label
-                        key={rombel.key}
-                        className="flex items-center gap-2 rounded-md border px-3 py-2 text-xs hover:bg-muted"
-                      >
-                        <Checkbox
-                          checked={selectedRombelKeys.includes(rombel.key)}
-                          onCheckedChange={() => toggleRombel(rombel.key)}
-                        />
-                        {rombel.label}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex flex-col justify-end gap-2">
-                  <Button
-                    className="gap-2"
-                    disabled={pdfLoading === "multi-rombel"}
-                    onClick={downloadSelectedRombelPDFs}
-                  >
-                    {pdfLoading === "multi-rombel" ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Download className="w-4 h-4" />
-                    )}
-                    Download Rekap Terpilih
-                  </Button>
-                  {multiDownloadProgress && (
-                    <p className="text-xs text-muted-foreground text-center">
-                      {multiDownloadProgress}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
@@ -1907,6 +1853,131 @@ const RecapReport = () => {
           ))}
         </>
       )}
+
+      {/* Dialog Download Multi Bulan per Rombel */}
+      <Dialog open={multiMonthDialogOpen} onOpenChange={setMultiMonthDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Download Multi Bulan per Rombel</DialogTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Pilih bulan dan rombel, lalu unduh satu file PDF untuk setiap rombel.
+            </p>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Pilih Tahun</Label>
+              <Select value={dialogYear} onValueChange={setDialogYear}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {YEARS.map(y => (
+                    <SelectItem key={y} value={String(y)}>
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-sm font-medium">Pilih Bulan</Label>
+                <span className="text-xs text-muted-foreground">
+                  {dialogMonths.length === 0
+                    ? "Belum ada bulan dipilih"
+                    : dialogMonths.length <= 3
+                    ? `${dialogMonths.map(month => MONTH_NAMES[month - 1]).join(", ")} dipilih`
+                    : `${dialogMonths.length} bulan dipilih`}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {MONTH_NAMES.map((monthName, index) => {
+                  const month = index + 1;
+                  const checked = dialogMonths.includes(month);
+                  return (
+                    <button
+                      key={month}
+                      type="button"
+                      onClick={() => {
+                        setDialogMonths(current =>
+                          current.includes(month)
+                            ? current.filter(item => item !== month)
+                            : [...current, month].sort((a, b) => a - b)
+                        );
+                      }}
+                      className={`rounded-md border px-3 py-2 text-left text-xs transition-colors ${
+                        checked
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-background hover:bg-muted"
+                      }`}
+                    >
+                      {monthName}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-sm font-medium">Pilih Rombel</Label>
+                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                  <Checkbox
+                    checked={allRombelsSelected}
+                    onCheckedChange={toggleAllRombels}
+                  />
+                  Pilih Semua
+                </label>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 max-h-[150px] overflow-y-auto border rounded-md p-2 bg-muted/30">
+                {availableRombels.map(rombel => (
+                  <label
+                    key={rombel.key}
+                    className="flex items-center gap-2 rounded-md border px-3 py-2 text-xs hover:bg-muted bg-background cursor-pointer"
+                  >
+                    <Checkbox
+                      checked={selectedRombelKeys.includes(rombel.key)}
+                      onCheckedChange={() => toggleRombel(rombel.key)}
+                    />
+                    {rombel.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {multiDownloadProgress && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                  <p className="text-sm text-blue-700">{multiDownloadProgress}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-2 justify-end pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => setMultiMonthDialogOpen(false)}
+            >
+              Tutup
+            </Button>
+            <Button
+              disabled={pdfLoading === "multi-rombel"}
+              onClick={downloadSelectedRombelPDFs}
+            >
+              {pdfLoading === "multi-rombel" ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              Download Rekap Terpilih
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={previewOpen} onOpenChange={handlePreviewOpenChange}>
         <DialogContent className="max-w-6xl h-[92vh] p-0 overflow-hidden">
