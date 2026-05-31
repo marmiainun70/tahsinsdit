@@ -167,7 +167,6 @@ const isReportMeaningfullyFilled = (report: {
   if (status === "achieved" || status === "stagnant" || status === "decline") return true;
   if (Number(report.pages_read ?? 0) !== 0) return true;
   if (Number(report.start_page ?? 0) !== Number(report.end_page ?? 0)) return true;
-  if (String(report.notes ?? "").trim().length > 0) return true;
   return false;
 };
 
