@@ -162,11 +162,18 @@ const isReportMeaningfullyFilled = (report: {
   iqra_level?: string | null;
   end_iqra_level?: string | null;
   notes?: string | null;
+  created_by?: string | null;
 }) => {
   const status = String(report.achievement_status ?? "");
+  const notes = String(report.notes ?? "").trim();
+  const hasProgress =
+    Number(report.pages_read ?? 0) !== 0 ||
+    Number(report.start_page ?? 0) !== Number(report.end_page ?? 0);
+  const hasTeacherInput = notes.length > 0 || Boolean(report.created_by);
+
   if (status === "achieved" || status === "stagnant" || status === "decline") return true;
-  if (Number(report.pages_read ?? 0) !== 0) return true;
-  if (Number(report.start_page ?? 0) !== Number(report.end_page ?? 0)) return true;
+  if (hasProgress) return true;
+  if ((status === "not_achieved" || status === "partial") && hasTeacherInput) return true;
   return false;
 };
 
