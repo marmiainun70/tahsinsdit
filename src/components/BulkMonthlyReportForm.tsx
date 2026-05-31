@@ -143,6 +143,7 @@ const BulkMonthlyReportForm = ({ onClose }: { onClose: () => void }) => {
           end_page: validEnd,
           pages_read: pagesRead,
           target_pages: target,
+          attendance_percentage: 0,
           achievement_status: status,
           notes: entry.notes,
         });

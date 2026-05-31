@@ -198,7 +198,7 @@ const Layout = ({ children }: LayoutProps) => {
             animate={{ x: 0 }}
             exit={{ x: -280 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed left-0 top-0 h-full w-64 bg-sidebar z-30 lg:hidden"
+            className="fixed left-0 top-0 h-full w-[min(18rem,86vw)] bg-sidebar z-30 lg:hidden"
           >
             <SidebarContent location={location} onLogout={handleLogout} profile={profile} onClose={() => setSidebarOpen(false)} />
           </motion.aside>
@@ -210,18 +210,20 @@ const Layout = ({ children }: LayoutProps) => {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 lg:px-6 flex-shrink-0 shadow-sm">
-          <div className="flex items-center gap-3 min-w-0">
+        <header className="h-16 bg-card border-b border-border flex items-center justify-between gap-2 px-3 sm:px-4 lg:px-6 flex-shrink-0 shadow-sm">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden p-2 rounded-lg hover:bg-secondary transition-colors flex-shrink-0"
             >
               <Menu className="w-5 h-5 text-foreground" />
             </button>
-            <Breadcrumb pathname={location.pathname} />
+            <div className="min-w-0 truncate">
+              <Breadcrumb pathname={location.pathname} />
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <button
               onClick={() => setSearchOpen(true)}
               className="hidden sm:flex items-center gap-2 px-3 py-2 bg-muted hover:bg-secondary border border-border rounded-xl text-sm text-muted-foreground transition-all hover:border-primary/40"
@@ -237,10 +239,10 @@ const Layout = ({ children }: LayoutProps) => {
               <Search className="w-5 h-5 text-muted-foreground" />
             </button>
 
-            <button className="p-2 rounded-xl hover:bg-secondary transition-colors relative">
+            <button className="hidden sm:block p-2 rounded-xl hover:bg-secondary transition-colors relative">
               <Bell className="w-5 h-5 text-muted-foreground" />
             </button>
-            <div className="flex items-center gap-2 bg-secondary rounded-xl px-3 py-2">
+            <div className="flex items-center gap-2 bg-secondary rounded-xl px-2 sm:px-3 py-2">
               <div className="w-7 h-7 rounded-full bg-gradient-hero flex items-center justify-center">
                 <span className="text-primary-foreground text-xs font-bold">
                   {profile?.full_name?.charAt(0)?.toUpperCase() ?? "G"}
@@ -253,7 +255,7 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 scrollbar-thin space-y-4">
+        <main className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6 scrollbar-thin space-y-4">
           <UpcomingExamBanner />
           {children}
         </main>

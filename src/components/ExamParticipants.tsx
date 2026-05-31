@@ -28,6 +28,7 @@ const ELIGIBLE_LEVELS: Record<ExamScheduleType, ReadingLevel[]> = {
     "Iqro 1", "Iqro 2", "Iqro 3", "Iqro 4", "Iqro 5", "Iqro 6", "Tahsin Dasar",
   ],
   tahsin_lanjutan_ke_tahfizh: ["Tahsin Lanjutan"],
+  ujian_sertifikat_tahfizh: ["Tahfizh"],
 };
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────

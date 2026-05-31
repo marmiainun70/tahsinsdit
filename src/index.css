@@ -136,13 +136,96 @@
   }
 }
 
-/* Global: izinkan halaman scroll horizontal jika ada konten yang lebih lebar
-   dari viewport, supaya tabel/card tidak kepotong di layar kecil. */
-html, body {
+/* Global horizontal scrolling (seluruh halaman, bukan per tabel). */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--primary) / 0.5) hsl(var(--muted) / 0.45);
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+#root::-webkit-scrollbar-track {
+  background:
+    linear-gradient(
+      90deg,
+      hsl(var(--muted) / 0.22),
+      hsl(var(--gold) / 0.1),
+      hsl(var(--muted) / 0.22)
+    );
+  border-radius: 999px;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+#root::-webkit-scrollbar-thumb {
+  background:
+    linear-gradient(
+      90deg,
+      hsl(var(--primary) / 0.55),
+      hsl(var(--gold) / 0.72)
+    );
+  border: 2px solid hsl(var(--background));
+  border-radius: 999px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+#root::-webkit-scrollbar-thumb:hover {
+  background:
+    linear-gradient(
+      90deg,
+      hsl(var(--primary) / 0.78),
+      hsl(var(--gold) / 0.9)
+    );
+}
+
+main {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+main > * {
+  min-width: 0;
+}
+
+main table {
+  min-width: 720px;
+}
+
+main .overflow-hidden:has(table) {
   overflow-x: auto;
 }
-main {
-  overflow-x: auto;
+
+@media (max-width: 640px) {
+  main table {
+    min-width: 680px;
+  }
+
+  main .grid {
+    min-width: 0;
+  }
+
+  main input,
+  main select,
+  main textarea,
+  main button {
+    max-width: 100%;
+  }
 }
 /* Auto-wrap tabel di dalam Card bila terlalu lebar */
 .table-responsive {

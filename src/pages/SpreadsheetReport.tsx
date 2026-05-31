@@ -234,6 +234,9 @@ const SpreadsheetReport = () => {
       const target = getTarget(r.program);
       const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage);
       const status = getProgressStatus(signed, target);
+      const totalAttendance = r.present + r.sick + r.permission + r.absent;
+      const attendancePercentage =
+        totalAttendance > 0 ? Math.round((r.present / totalAttendance) * 100) : 0;
       const payload: any = {
         student_id: r.studentId,
         month, year, program_type: r.program,
@@ -247,6 +250,7 @@ const SpreadsheetReport = () => {
         end_page: r.endPage,
         pages_read: signed,
         target_pages: target,
+        attendance_percentage: attendancePercentage,
         achievement_status: status,
         notes: r.notes,
       };

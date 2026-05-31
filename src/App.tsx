@@ -23,6 +23,7 @@ import TahsinLanjutanExam from "@/pages/TahsinLanjutanExam";
 import RecapReport from "@/pages/RecapReport";
 import SpreadsheetReport from "@/pages/SpreadsheetReport";
 import InstitutionSettings from "@/pages/InstitutionSettings";
+import RestoreAprilReports from "@/pages/RestoreAprilReports";
 
 import NotFound from "@/pages/NotFound";
 import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotification";
@@ -65,6 +66,7 @@ const AppRoutes = () => {
       <Route path="/ujian-tahsin-dasar" element={<ProtectedRoute><TahsinDasarExam /></ProtectedRoute>} />
       <Route path="/ujian-tahsin-lanjutan" element={<ProtectedRoute><TahsinLanjutanExam /></ProtectedRoute>} />
       <Route path="/rekap-laporan" element={<ProtectedRoute><RecapReport /></ProtectedRoute>} />
+      <Route path="/restore-april-2026" element={<ProtectedRoute><RestoreAprilReports /></ProtectedRoute>} />
       <Route path="/input-cepat" element={<ProtectedRoute><SpreadsheetReport /></ProtectedRoute>} />
       <Route path="/pengaturan-lembaga" element={<ProtectedRoute><InstitutionSettings /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />

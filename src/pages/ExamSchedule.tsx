@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useStudents } from "@/hooks/useSupabaseData";
 import {
   CalendarIcon, ChevronRight, Plus, Clock, MapPin, FileText,
-  GraduationCap, Loader2, Trash2, X, CheckCircle2, BookOpen, Star, Users, ExternalLink, Pencil,
+  GraduationCap, Loader2, Trash2, X, CheckCircle2, BookOpen, Star, Users, ExternalLink, Pencil, Award,
 } from "lucide-react";
 import ExamParticipantsDialog, { ParticipantCountBadge } from "@/components/ExamParticipants";
 import { format, parseISO, isFuture, isToday } from "date-fns";
@@ -27,7 +28,10 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-export type ExamScheduleType = "tahsin_dasar_ke_lanjutan" | "tahsin_lanjutan_ke_tahfizh";
+export type ExamScheduleType =
+  | "tahsin_dasar_ke_lanjutan"
+  | "tahsin_lanjutan_ke_tahfizh"
+  | "ujian_sertifikat_tahfizh";
 
 export interface ExamSchedule {
   id: string;
@@ -36,6 +40,7 @@ export interface ExamSchedule {
   waktu_mulai: string;
   waktu_selesai: string | null;
   lokasi: string;
+  nama_siswa: string;
   keterangan: string;
   created_by: string | null;
   created_at: string;
@@ -72,6 +77,16 @@ export const EXAM_TYPE_CONFIG: Record<ExamScheduleType, {
     bg: "bg-purple-50",
     border: "border-purple-200",
     icon: Star,
+  },
+  ujian_sertifikat_tahfizh: {
+    label: "Ujian Sertifikat Tahfizh",
+    shortLabel: "Sertifikat Tahfizh",
+    from: "Tahfizh",
+    to: "Sertifikat",
+    color: "text-emerald-700",
+    bg: "bg-emerald-50",
+    border: "border-emerald-200",
+    icon: Award,
   },
 };
 
@@ -116,6 +131,7 @@ const useUpdateExamSchedule = () => {
       waktu_mulai: string;
       waktu_selesai: string | null;
       lokasi: string;
+      nama_siswa: string;
       keterangan: string;
     }) => {
       const { data, error } = await supabase
@@ -149,10 +165,16 @@ const EMPTY_FORM = {
   waktu_mulai: "",
   waktu_selesai: "",
   lokasi: "",
+  nama_siswa: "",
   keterangan: "",
 };
 
 type FormState = typeof EMPTY_FORM;
+type StudentNameOption = {
+  nama: string;
+  kelas: number;
+  rombel: string;
+};
 
 // ─── Normalize HH:MM ──────────────────────────────────────────────────────────
 const normalizeTime = (t: string) => {
@@ -164,19 +186,33 @@ const normalizeTime = (t: string) => {
 
 // ─── Shared form fields ───────────────────────────────────────────────────────
 const ScheduleFormFields = ({
-  form, setForm, calendarOpen, setCalendarOpen, showJenisUjian = true,
+  form, setForm, calendarOpen, setCalendarOpen, showJenisUjian = true, studentNameOptions = [],
 }: {
   form: FormState;
   setForm: React.Dispatch<React.SetStateAction<FormState>>;
   calendarOpen: boolean;
   setCalendarOpen: (v: boolean) => void;
   showJenisUjian?: boolean;
+  studentNameOptions?: StudentNameOption[];
 }) => {
+  const [showStudentSuggestions, setShowStudentSuggestions] = useState(false);
   const handleTimeInput = (raw: string) => {
     let v = raw.replace(/[^0-9]/g, "");
     if (v.length >= 3) v = v.slice(0, 2) + ":" + v.slice(2, 4);
     return v;
   };
+
+  const filteredStudentSuggestions = useMemo(() => {
+    const q = form.nama_siswa.trim().toLowerCase();
+    if (!q) return studentNameOptions.slice(0, 8);
+    return studentNameOptions
+      .filter(item =>
+        item.nama.toLowerCase().includes(q) ||
+        String(item.kelas).includes(q) ||
+        item.rombel.toLowerCase().includes(q)
+      )
+      .slice(0, 8);
+  }, [form.nama_siswa, studentNameOptions]);
 
   return (
     <div className="space-y-4 py-2">
@@ -290,6 +326,40 @@ const ScheduleFormFields = ({
       </div>
 
       <div className="space-y-1.5">
+        <Label>Nama Siswa (Opsional)</Label>
+        <div className="relative">
+          <Input
+            placeholder="Ketik nama siswa..."
+            value={form.nama_siswa}
+            onFocus={() => setShowStudentSuggestions(true)}
+            onBlur={() => window.setTimeout(() => setShowStudentSuggestions(false), 120)}
+            onChange={(e) => {
+              setForm(f => ({ ...f, nama_siswa: e.target.value }));
+              setShowStudentSuggestions(true);
+            }}
+          />
+          {showStudentSuggestions && filteredStudentSuggestions.length > 0 && (
+            <div className="absolute z-20 mt-1 w-full rounded-md border bg-popover shadow-md max-h-48 overflow-y-auto">
+              {filteredStudentSuggestions.map((item) => (
+                <button
+                  key={`${item.nama}-${item.kelas}-${item.rombel}`}
+                  type="button"
+                  className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    setForm(f => ({ ...f, nama_siswa: item.nama }));
+                    setShowStudentSuggestions(false);
+                  }}
+                >
+                  {item.nama} • Kelas {item.kelas} {item.rombel}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
         <Label>Keterangan / Catatan</Label>
         <div className="relative">
           <FileText className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
@@ -309,6 +379,7 @@ const ScheduleFormFields = ({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 const ExamSchedulePage = () => {
   const { data: schedules = [], isLoading } = useExamSchedules();
+  const { data: students = [] } = useStudents();
   const addSchedule = useAddExamSchedule();
   const deleteSchedule = useDeleteExamSchedule();
 
@@ -316,11 +387,29 @@ const ExamSchedulePage = () => {
   const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  const todayKey = format(new Date(nowTick), "yyyy-MM-dd");
 
-  const upcoming = schedules.filter(s => isFuture(parseISO(s.tanggal)) || isToday(parseISO(s.tanggal)));
-  const past = schedules.filter(s => !isFuture(parseISO(s.tanggal)) && !isToday(parseISO(s.tanggal)));
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowTick(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
-  const resetForm = () => setForm({ ...EMPTY_FORM });
+  const upcoming = schedules.filter(s => s.tanggal >= todayKey);
+  const past = schedules.filter(s => s.tanggal < todayKey);
+  const studentNameOptions = useMemo<StudentNameOption[]>(
+    () =>
+      students
+        .map(s => ({ nama: s.nama, kelas: s.kelas, rombel: s.rombel }))
+        .sort((a, b) =>
+          a.nama.localeCompare(b.nama) ||
+          a.kelas - b.kelas ||
+          a.rombel.localeCompare(b.rombel)
+        ),
+    [students]
+  );
+
+  const resetForm = () => setForm({ ...EMPTY_FORM, tanggal: new Date() });
 
   const handleSubmit = async () => {
     if (!form.jenis_ujian || !form.tanggal || !form.waktu_mulai || !form.lokasi) {
@@ -333,6 +422,7 @@ const ExamSchedulePage = () => {
       waktu_mulai: normalizeTime(form.waktu_mulai),
       waktu_selesai: form.waktu_selesai ? normalizeTime(form.waktu_selesai) : null,
       lokasi: form.lokasi,
+      nama_siswa: form.nama_siswa.trim(),
       keterangan: form.keterangan,
       created_by: null,
     });
@@ -376,7 +466,10 @@ const ExamSchedulePage = () => {
             </p>
           </div>
           <Button
-            onClick={() => setOpen(true)}
+            onClick={() => {
+              resetForm();
+              setOpen(true);
+            }}
             className="bg-white/20 hover:bg-white/30 text-primary-foreground border-white/30 border backdrop-blur-sm flex-shrink-0"
             size="sm"
           >
@@ -398,7 +491,7 @@ const ExamSchedulePage = () => {
           <p className="text-sm text-muted-foreground mt-1 mb-4">
             Buat jadwal ujian kenaikan level untuk menginformasikan kepada semua guru.
           </p>
-          <Button onClick={() => setOpen(true)} size="sm">
+          <Button onClick={() => { resetForm(); setOpen(true); }} size="sm">
             <Plus className="w-4 h-4 mr-1.5" /> Buat Jadwal Pertama
           </Button>
         </motion.div>
@@ -412,7 +505,7 @@ const ExamSchedulePage = () => {
               </h2>
               <div className="space-y-3">
                 {upcoming.map((s, i) => (
-                  <ScheduleCard key={s.id} schedule={s} index={i} onDelete={handleDelete} deletingId={deletingId} isUpcoming />
+                  <ScheduleCard key={s.id} schedule={s} index={i} onDelete={handleDelete} deletingId={deletingId} isUpcoming todayKey={todayKey} studentNameOptions={studentNameOptions} />
                 ))}
               </div>
             </section>
@@ -425,7 +518,7 @@ const ExamSchedulePage = () => {
               </h2>
               <div className="space-y-3">
                 {past.map((s, i) => (
-                  <ScheduleCard key={s.id} schedule={s} index={i} onDelete={handleDelete} deletingId={deletingId} isUpcoming={false} />
+                  <ScheduleCard key={s.id} schedule={s} index={i} onDelete={handleDelete} deletingId={deletingId} isUpcoming={false} todayKey={todayKey} studentNameOptions={studentNameOptions} />
                 ))}
               </div>
             </section>
@@ -442,7 +535,7 @@ const ExamSchedulePage = () => {
               Buat Jadwal Ujian Kenaikan
             </DialogTitle>
           </DialogHeader>
-          <ScheduleFormFields form={form} setForm={setForm} calendarOpen={calendarOpen} setCalendarOpen={setCalendarOpen} showJenisUjian />
+          <ScheduleFormFields form={form} setForm={setForm} calendarOpen={calendarOpen} setCalendarOpen={setCalendarOpen} showJenisUjian studentNameOptions={studentNameOptions} />
           <DialogFooter>
             <Button variant="outline" onClick={() => { setOpen(false); resetForm(); }}>Batal</Button>
             <Button onClick={handleSubmit} disabled={addSchedule.isPending}>
@@ -464,12 +557,14 @@ interface ScheduleCardProps {
   onDelete: (id: string) => void;
   deletingId: string | null;
   isUpcoming: boolean;
+  todayKey: string;
+  studentNameOptions: StudentNameOption[];
 }
 
-const ScheduleCard = ({ schedule: s, index, onDelete, deletingId, isUpcoming }: ScheduleCardProps) => {
+const ScheduleCard = ({ schedule: s, index, onDelete, deletingId, isUpcoming, todayKey, studentNameOptions }: ScheduleCardProps) => {
   const cfg = EXAM_TYPE_CONFIG[s.jenis_ujian];
   const dateObj = parseISO(s.tanggal);
-  const isToday_ = isToday(dateObj);
+  const isToday_ = s.tanggal === todayKey;
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editCalendarOpen, setEditCalendarOpen] = useState(false);
@@ -484,6 +579,7 @@ const ScheduleCard = ({ schedule: s, index, onDelete, deletingId, isUpcoming }: 
       waktu_mulai: s.waktu_mulai.slice(0, 5),
       waktu_selesai: s.waktu_selesai ? s.waktu_selesai.slice(0, 5) : "",
       lokasi: s.lokasi,
+      nama_siswa: s.nama_siswa || "",
       keterangan: s.keterangan,
     });
     setEditOpen(true);
@@ -500,6 +596,7 @@ const ScheduleCard = ({ schedule: s, index, onDelete, deletingId, isUpcoming }: 
       waktu_mulai: normalizeTime(editForm.waktu_mulai),
       waktu_selesai: editForm.waktu_selesai ? normalizeTime(editForm.waktu_selesai) : null,
       lokasi: editForm.lokasi,
+      nama_siswa: editForm.nama_siswa.trim(),
       keterangan: editForm.keterangan,
     });
     toast({
@@ -554,6 +651,12 @@ const ScheduleCard = ({ schedule: s, index, onDelete, deletingId, isUpcoming }: 
                 {s.lokasi}
               </span>
             </div>
+
+            {s.nama_siswa && (
+              <p className="mt-2 text-xs text-foreground bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                Siswa: <span className="font-semibold">{s.nama_siswa}</span>
+              </p>
+            )}
 
             {s.keterangan && (
               <p className="mt-2 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2 flex items-start gap-1.5">
@@ -619,6 +722,7 @@ const ScheduleCard = ({ schedule: s, index, onDelete, deletingId, isUpcoming }: 
             calendarOpen={editCalendarOpen}
             setCalendarOpen={setEditCalendarOpen}
             showJenisUjian={false}
+            studentNameOptions={studentNameOptions}
           />
 
           <DialogFooter>

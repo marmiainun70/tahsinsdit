@@ -14,6 +14,7 @@ export interface MonthlyReport {
   end_page: number;
   pages_read: number;
   target_pages: number;
+  attendance_percentage: number;
   achievement_status: string;
   notes: string;
   created_by: string | null;
@@ -244,6 +245,8 @@ export const MONTH_NAMES = [
   "Juli", "Agustus", "September", "Oktober", "November", "Desember"
 ];
 
+const MONTHLY_REPORTS_PAGE_SIZE = 1000;
+
 export const useMonthlyReports = (studentId?: string) =>
   useQuery({
     queryKey: ["monthly_reports", studentId ?? "all"],
@@ -260,13 +263,27 @@ export const useAllMonthlyReports = () =>
   useQuery({
     queryKey: ["monthly_reports", "all"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("monthly_reports")
-        .select("*, students(nama, kelas, rombel, level)")
-        .order("year", { ascending: false })
-        .order("month", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as unknown as (MonthlyReport & { students: { nama: string; kelas: number; rombel: string; level: string } })[];
+      const allReports: unknown[] = [];
+      let from = 0;
+
+      while (true) {
+        const { data, error } = await (supabase as any)
+          .from("monthly_reports")
+          .select("*, students(nama, kelas, rombel, level)")
+          .order("year", { ascending: false })
+          .order("month", { ascending: false })
+          .range(from, from + MONTHLY_REPORTS_PAGE_SIZE - 1);
+
+        if (error) throw error;
+
+        const batch = data ?? [];
+        allReports.push(...batch);
+
+        if (batch.length < MONTHLY_REPORTS_PAGE_SIZE) break;
+        from += MONTHLY_REPORTS_PAGE_SIZE;
+      }
+
+      return allReports as (MonthlyReport & { students: { nama: string; kelas: number; rombel: string; level: string } })[];
     },
   });
 

@@ -1,16 +1,16 @@
-import { useEffect, useState, useRef } from "react";
+﻿import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { GraduationCap, CalendarIcon, Clock, MapPin, X, ChevronRight, BookOpen, Star } from "lucide-react";
-import { format, parseISO, isFuture, isToday, differenceInDays } from "date-fns";
+import { format, parseISO, isFuture, isToday, differenceInCalendarDays } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
 import type { ExamSchedule, ExamScheduleType } from "@/pages/ExamSchedule";
 import { EXAM_TYPE_CONFIG } from "@/pages/ExamSchedule";
 import { useExamSchedules } from "@/pages/ExamSchedule";
 
-// ─── Toast-style new schedule notification (shown on realtime insert) ─────────
+// â”€â”€â”€ Toast-style new schedule notification (shown on realtime insert) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface NewScheduleToastProps {
   schedule: ExamSchedule;
   onClose: () => void;
@@ -33,7 +33,13 @@ const NewScheduleToast = ({ schedule: s, onClose }: NewScheduleToastProps) => {
       className="w-full max-w-sm bg-card border border-border rounded-2xl shadow-xl overflow-hidden pointer-events-auto"
     >
       {/* Accent top bar */}
-      <div className={`h-1 w-full ${s.jenis_ujian === "tahsin_dasar_ke_lanjutan" ? "bg-orange-400" : "bg-purple-500"}`} />
+      <div className={`h-1 w-full ${
+        s.jenis_ujian === "tahsin_dasar_ke_lanjutan"
+          ? "bg-orange-400"
+          : s.jenis_ujian === "tahsin_lanjutan_ke_tahfizh"
+          ? "bg-purple-500"
+          : "bg-emerald-500"
+      }`} />
 
       <div className="p-4 flex items-start gap-3">
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border ${cfg.bg} ${cfg.border}`}>
@@ -43,7 +49,7 @@ const NewScheduleToast = ({ schedule: s, onClose }: NewScheduleToastProps) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5">
             <span className="text-xs font-bold text-primary">Jadwal Ujian Baru</span>
-            <span className="text-muted-foreground/40 text-xs">•</span>
+            <span className="text-muted-foreground/40 text-xs">â€¢</span>
             <span className={`text-xs font-semibold ${cfg.color}`}>{cfg.shortLabel}</span>
           </div>
           <p className="text-sm font-semibold text-foreground leading-tight">
@@ -53,13 +59,18 @@ const NewScheduleToast = ({ schedule: s, onClose }: NewScheduleToastProps) => {
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {s.waktu_mulai.slice(0, 5)}
-              {s.waktu_selesai && ` – ${s.waktu_selesai.slice(0, 5)}`}
+              {s.waktu_selesai && ` â€“ ${s.waktu_selesai.slice(0, 5)}`}
             </span>
             <span className="flex items-center gap-1">
               <MapPin className="w-3 h-3" />
               {s.lokasi}
             </span>
           </div>
+          {s.nama_siswa && (
+            <p className="text-xs text-foreground mt-1">
+              Siswa: <span className="font-semibold">{s.nama_siswa}</span>
+            </p>
+          )}
           {s.keterangan && (
             <p className="text-xs text-muted-foreground mt-1 truncate">{s.keterangan}</p>
           )}
@@ -83,7 +94,7 @@ const NewScheduleToast = ({ schedule: s, onClose }: NewScheduleToastProps) => {
   );
 };
 
-// ─── Upcoming exam banner (persistent, shown when upcoming exams exist) ────────
+// â”€â”€â”€ Upcoming exam banner (persistent, shown when upcoming exams exist) â”€â”€â”€â”€â”€â”€â”€â”€
 const UpcomingExamBanner = () => {
   const { data: schedules = [] } = useExamSchedules();
   const [dismissed, setDismissed] = useState<string[]>([]);
@@ -98,8 +109,9 @@ const UpcomingExamBanner = () => {
   // Show the most imminent one
   const next = upcoming[0];
   const cfg = EXAM_TYPE_CONFIG[next.jenis_ujian];
-  const daysLeft = differenceInDays(parseISO(next.tanggal), new Date());
-  const urgencyLabel = isToday(parseISO(next.tanggal))
+  const examDate = parseISO(next.tanggal);
+  const daysLeft = differenceInCalendarDays(examDate, new Date());
+  const urgencyLabel = isToday(examDate)
     ? "Hari ini!"
     : daysLeft === 1
     ? "Besok!"
@@ -118,7 +130,7 @@ const UpcomingExamBanner = () => {
             ? "bg-orange-50 border-orange-200"
             : next.jenis_ujian === "tahsin_lanjutan_ke_tahfizh"
             ? "bg-purple-50 border-purple-200"
-            : "bg-orange-50/60 border-orange-200/60"
+            : "bg-emerald-50 border-emerald-200"
         }`}
       >
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 border ${cfg.bg} ${cfg.border}`}>
@@ -137,9 +149,14 @@ const UpcomingExamBanner = () => {
           </div>
           <p className="text-sm font-medium text-foreground mt-0.5">
             {format(parseISO(next.tanggal), "EEEE, dd MMMM yyyy", { locale: idLocale })}
-            {" · "}<span className="text-muted-foreground">{next.waktu_mulai.slice(0, 5)}</span>
-            {" · "}<span className="text-muted-foreground">{next.lokasi}</span>
+            {" آ· "}<span className="text-muted-foreground">{next.waktu_mulai.slice(0, 5)}</span>
+            {" آ· "}<span className="text-muted-foreground">{next.lokasi}</span>
           </p>
+          {next.nama_siswa && (
+            <p className="text-xs text-foreground mt-1">
+              Siswa: <span className="font-semibold">{next.nama_siswa}</span>
+            </p>
+          )}
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {upcoming.length > 1 && (
@@ -167,7 +184,7 @@ const UpcomingExamBanner = () => {
   );
 };
 
-// ─── Realtime listener + toast queue (rendered in Layout) ────────────────────
+// â”€â”€â”€ Realtime listener + toast queue (rendered in Layout) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export const ExamScheduleRealtimeProvider = () => {
   const qc = useQueryClient();
   const [toasts, setToasts] = useState<ExamSchedule[]>([]);
@@ -232,3 +249,4 @@ export const ExamScheduleRealtimeProvider = () => {
 
 export { UpcomingExamBanner };
 export default ExamScheduleRealtimeProvider;
+

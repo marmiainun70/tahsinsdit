@@ -40,15 +40,31 @@ export const MONTH_NAMES = [
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
 ];
 
+const MONTHLY_REPORTS_PAGE_SIZE = 1000;
+
 export const useAllMonthlyReports = () => {
   return useQuery({
     queryKey: ['all-monthly-reports'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('monthly_reports')
-        .select('*');
-      if (error) throw error;
-      return (data || []) as MonthlyReport[];
+      const allReports: MonthlyReport[] = [];
+      let from = 0;
+
+      while (true) {
+        const { data, error } = await supabase
+          .from('monthly_reports')
+          .select('*')
+          .range(from, from + MONTHLY_REPORTS_PAGE_SIZE - 1);
+
+        if (error) throw error;
+
+        const batch = (data || []) as MonthlyReport[];
+        allReports.push(...batch);
+
+        if (batch.length < MONTHLY_REPORTS_PAGE_SIZE) break;
+        from += MONTHLY_REPORTS_PAGE_SIZE;
+      }
+
+      return allReports;
     },
   });
 };
@@ -63,17 +79,29 @@ export const useMultiMonthReports = (
     queryFn: async () => {
       if (!studentIds.length || !months.length) return {};
 
-      const { data, error } = await supabase
-        .from('monthly_reports')
-        .select('*')
-        .in('student_id', studentIds)
-        .in('month', months)
-        .eq('year', year);
+      const reports: MonthlyReport[] = [];
+      let from = 0;
 
-      if (error) throw error;
+      while (true) {
+        const { data, error } = await supabase
+          .from('monthly_reports')
+          .select('*')
+          .in('student_id', studentIds)
+          .in('month', months)
+          .eq('year', year)
+          .range(from, from + MONTHLY_REPORTS_PAGE_SIZE - 1);
+
+        if (error) throw error;
+
+        const batch = (data || []) as MonthlyReport[];
+        reports.push(...batch);
+
+        if (batch.length < MONTHLY_REPORTS_PAGE_SIZE) break;
+        from += MONTHLY_REPORTS_PAGE_SIZE;
+      }
 
       // Group by student
-      const grouped = (data || []).reduce(
+      const grouped = reports.reduce(
         (acc, report) => {
           if (!acc[report.student_id]) {
             acc[report.student_id] = [];

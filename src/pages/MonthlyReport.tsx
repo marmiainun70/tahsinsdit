@@ -296,6 +296,9 @@ const MonthlyReport = () => {
       autoNote = autoNote ? `${autoNote}\n\n${grad}` : grad;
     }
     const finalNotes = autoNote ? (notes ? `${notes}\n\n${autoNote}` : autoNote) : notes;
+    const totalAttendance = attPresent + attSick + attPermission + attAbsent;
+    const attendancePercentage =
+      totalAttendance > 0 ? Math.round((attPresent / totalAttendance) * 100) : 0;
 
     try {
       // Save monthly report
@@ -309,6 +312,7 @@ const MonthlyReport = () => {
         end_page: isTahfizh ? Number(endJuzPage) : validEnd,
         pages_read: pagesRead,
         target_pages: target,
+        attendance_percentage: attendancePercentage,
         achievement_status: status,
         notes: finalNotes,
       });

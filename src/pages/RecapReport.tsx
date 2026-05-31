@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+﻿import { useState, useMemo, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -15,13 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { MultiMonthExportFilters } from "@/components/MultiMonthExportFilters";
-import { generateMultiMonthExcel, type ExportGroup } from "@/utils/multiMonthExportUtils";
 import { removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 import { restoreApril2026Reports } from "@/lib/restoreApril2026";
 import {
   Search, Loader2, Eye, Download, CheckCircle2,
-  Users, ListChecks, AlertCircle, Percent, FileWarning, FileSpreadsheet, Calendar
+  Users, ListChecks, AlertCircle, Percent, FileWarning, Calendar
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -232,9 +230,6 @@ const RecapReport = () => {
   const [dialogMonths, setDialogMonths] = useState<number[]>([Number(now.getMonth() + 1)]);
   
   // Multi-month export state
-  const [multiMonthMode, setMultiMonthMode] = useState(false);
-  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
-  const [selectedYear, setSelectedYear] = useState<number>(now.getFullYear());
 
   // Filter siswa sesuai kelas/rombel/search
   const filteredStudents = useMemo(() => {
@@ -419,136 +414,6 @@ const RecapReport = () => {
     stats.empty,
   ]);
 
-  // Multi-month data aggregation
-  const multiMonthExportGroups = useMemo(() => {
-    if (!multiMonthMode || selectedMonths.length === 0) return [];
-
-    const map = new Map<string, ExportGroup>();
-    
-    filteredStudents.forEach(st => {
-      const key = `${st.kelas}-${st.rombel}`;
-      if (!map.has(key)) {
-        map.set(key, { kelas: st.kelas, rombel: st.rombel, reports: [] });
-      }
-
-      const studentReports = reports.filter(
-        r => r.student_id === st.id && 
-             selectedMonths.includes(r.month) && 
-             r.year === selectedYear
-      );
-
-      const monthlyData = selectedMonths
-        .map(m => {
-          const rep = studentReports.find(r => r.month === m);
-          return {
-            month: MONTH_NAMES[m - 1],
-            year: selectedYear,
-            startPage: rep?.start_page || 0,
-            endPage: rep?.end_page || 0,
-            pagesRead: rep?.pages_read || 0,
-            targetPages: rep?.target_pages || 0,
-            iqraLevel: rep?.iqra_level || null,
-            endIqraLevel: (rep as any)?.end_iqra_level || null,
-            attendancePercentage: rep?.attendance_percentage || 0,
-            achievementStatus: rep?.achievement_status || 'empty',
-            notes: rep?.notes || '',
-          };
-        })
-        .sort((a, b) => MONTH_NAMES.indexOf(a.month) - MONTH_NAMES.indexOf(b.month));
-
-      const filledMonths = monthlyData.filter(m => m.pagesRead > 0);
-      const totalPages = filledMonths.reduce((sum, m) => sum + m.pagesRead, 0);
-      const totalTarget = filledMonths.reduce((sum, m) => sum + m.targetPages, 0);
-      const avgAttendance =
-        filledMonths.length > 0
-          ? Math.round(
-              filledMonths.reduce((sum, m) => sum + m.attendancePercentage, 0) /
-                filledMonths.length
-            )
-          : 0;
-
-      const achievedCount = filledMonths.filter(
-        m => m.achievementStatus === 'achieved'
-      ).length;
-      let status: 'achieved' | 'not_achieved' | 'partial' | 'empty';
-      if (filledMonths.length === 0) {
-        status = 'empty';
-      } else if (achievedCount === filledMonths.length) {
-        status = 'achieved';
-      } else if (achievedCount > 0) {
-        status = 'partial';
-      } else {
-        status = 'not_achieved';
-      }
-
-      const aggregated: AggregatedReport = {
-        studentId: st.id,
-        nama: st.nama,
-        kelas: st.kelas,
-        rombel: st.rombel,
-        level: st.level,
-        program: getProgramLabel(st.level),
-        months: monthlyData.map(m => m.month),
-        startPage: monthlyData[0]?.startPage || 0,
-        endPage: monthlyData[monthlyData.length - 1]?.endPage || 0,
-        totalPages,
-        totalTarget,
-        averageAttendance: avgAttendance,
-        status,
-        guru: studentReports[0]?.created_by ? `${studentReports[0].created_by}`.substring(0, 50) : '-',
-        catatan: monthlyData.map(m => m.notes).filter(Boolean).join(' | '),
-        monthlyData,
-      };
-
-      map.get(key)!.reports.push(aggregated);
-    });
-
-    return Array.from(map.values())
-      .map(g => ({
-        ...g,
-        reports: g.reports.sort((a, b) => a.nama.localeCompare(b.nama))
-      }))
-      .sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
-  }, [multiMonthMode, selectedMonths, selectedYear, filteredStudents, reports]);
-
-  // Multi-month stats
-  const multiMonthStats = useMemo(() => {
-    if (!multiMonthExportGroups.length) return null;
-
-    const all = multiMonthExportGroups.flatMap(g => g.reports);
-    const total = all.length;
-    const filled = all.filter(r => r.status !== "empty").length;
-    const empty = total - filled;
-    const achieved = all.filter(r => r.status === "achieved").length;
-    const partial = all.filter(r => r.status === "partial").length;
-    const totalPages = all.reduce((sum, r) => sum + r.totalPages, 0);
-    const avgAttendance = filled > 0 
-      ? Math.round(all.reduce((sum, r) => sum + r.averageAttendance, 0) / filled)
-      : 0;
-
-    return { total, filled, empty, achieved, partial, totalPages, avgAttendance };
-  }, [multiMonthExportGroups]);
-
-  const exportMultiMonthExcel = () => {
-    if (multiMonthExportGroups.length === 0) {
-      toast({ title: "Tidak ada data untuk diexport", variant: "destructive" });
-      return;
-    }
-
-    try {
-      generateMultiMonthExcel(
-        multiMonthExportGroups,
-        selectedMonths,
-        selectedYear,
-        settings || {}
-      );
-      toast({ title: "Excel berhasil diunduh" });
-    } catch (error) {
-      console.error(error);
-      toast({ title: "Error mengekspor Excel", variant: "destructive" });
-    }
-  };
-
   const cleanupPreviewUrl = useCallback(() => {
     setPdfPreviewUrl(current => {
       if (current) URL.revokeObjectURL(current);
@@ -592,40 +457,8 @@ const RecapReport = () => {
     }));
   }, [displayGroups]);
 
-  const multiMonthPdfGroups = useMemo<PdfGroupData[]>(() => {
-    return multiMonthExportGroups.map(group => ({
-      kelas: group.kelas,
-      rombel: group.rombel,
-      rows: group.reports.map((row, index) => ({
-        no: index + 1,
-        studentId: row.studentId,
-        nama: row.nama,
-        program: row.program,
-        level: row.level,
-        periode: row.months.join(" / "),
-        awal: row.startPage > 0 ? formatTahfizhLevel(row.monthlyData[0]?.iqraLevel, row.startPage) : "-",
-        akhir: row.endPage > 0
-          ? formatTahfizhLevel(row.monthlyData[row.monthlyData.length - 1]?.endIqraLevel, row.endPage)
-          : "-",
-        total: row.status === "empty" ? "-" : String(row.totalPages),
-        target: row.status === "empty" ? "-" : String(row.totalTarget),
-        kehadiran: row.status === "empty" ? "-" : `${row.averageAttendance}%`,
-        status: getStatusLabel(row.status),
-        guru: row.guru,
-        catatan: row.catatan,
-      })),
-    }));
-  }, [multiMonthExportGroups]);
-
-  const activePdfGroups = multiMonthMode ? multiMonthPdfGroups : singleMonthPdfGroups;
-
-  const activePeriodLabel = multiMonthMode
-    ? selectedMonths.length === 1
-      ? `${MONTH_NAMES[selectedMonths[0] - 1]} ${selectedYear}`
-      : selectedMonths.length > 1
-      ? `${MONTH_NAMES[selectedMonths[0] - 1]} - ${MONTH_NAMES[selectedMonths[selectedMonths.length - 1] - 1]} ${selectedYear}`
-      : `${selectedYear}`
-    : `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
+  const activePdfGroups = singleMonthPdfGroups;
+  const activePeriodLabel = `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
 
   const buildRowsForRombelMonth = useCallback((rombel: RombelOption, month: number, year: string): PdfRowData[] => {
     const studentsInRombel = filteredStudents
@@ -801,6 +634,7 @@ const RecapReport = () => {
           "Akhir",
           "Total",
           "Target",
+          "Kehadiran",
           "Status",
           "Guru",
           "Catatan",
@@ -814,6 +648,7 @@ const RecapReport = () => {
           cleanPdfText(row.akhir),
           row.status === "Belum Diisi" ? "-" : row.total,
           row.status === "Belum Diisi" ? "-" : row.target,
+          row.status === "Belum Diisi" ? "-" : row.kehadiran,
           row.status,
           cleanPdfText(row.guru),
           cleanPdfText(row.catatan || "-"),
@@ -846,18 +681,19 @@ const RecapReport = () => {
           5: { cellWidth: 19 },
           6: { cellWidth: 11, halign: "center", fontStyle: "bold" },
           7: { cellWidth: 11, halign: "center" },
-          8: { cellWidth: 20, halign: "center", fontStyle: "bold" },
-          9: { cellWidth: 22 },
-          10: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
+          8: { cellWidth: 16, halign: "center" },
+          9: { cellWidth: 20, halign: "center", fontStyle: "bold" },
+          10: { cellWidth: 22 },
+          11: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
         },
         didParseCell: data => {
-          if (data.section === "body" && data.column.index === 10) {
+          if (data.section === "body" && data.column.index === 11) {
             data.cell.styles.overflow = "linebreak";
             data.cell.styles.valign = "top";
             data.cell.styles.font = hasAmiriFont && hasArabicText(data.cell.raw) ? "Amiri" : "helvetica";
             data.cell.styles.fontStyle = "normal";
           }
-          if (data.section === "body" && data.column.index === 8) {
+          if (data.section === "body" && data.column.index === 9) {
             const value = String(data.cell.raw);
             if (value === "Tercapai") data.cell.styles.textColor = [16, 124, 65];
             else if (value === "Belum Tercapai") data.cell.styles.textColor = [185, 28, 28];
@@ -1269,19 +1105,6 @@ const RecapReport = () => {
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Button
-            variant={multiMonthMode ? "default" : "outline"}
-            className="gap-2 text-xs sm:text-sm"
-            onClick={() => {
-              setMultiMonthMode(!multiMonthMode);
-              if (!multiMonthMode) {
-                setSelectedMonths([]);
-              }
-            }}
-          >
-            <Calendar className="w-4 h-4" />
-            {multiMonthMode ? "Mode Multi-Bulan" : "Multi-Bulan"}
-          </Button>
-          <Button
             onClick={() => setMultiMonthDialogOpen(true)}
             variant="outline"
             className="gap-2 text-xs sm:text-sm"
@@ -1292,245 +1115,7 @@ const RecapReport = () => {
         </div>
       </div>
 
-      {/* Multi-Month Mode */}
-      {multiMonthMode && (
-        <div className="space-y-4">
-          <MultiMonthExportFilters
-            onMonthsChange={setSelectedMonths}
-            onYearChange={setSelectedYear}
-            selectedMonths={selectedMonths}
-            selectedYear={selectedYear}
-          />
-
-          {selectedMonths.length > 0 && multiMonthExportGroups.length > 0 && (
-            <>
-              {/* Multi-Month Stats */}
-              {multiMonthStats && (
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-                  <StatCard
-                    icon={<Users className="w-4 h-4" />}
-                    label="Total Siswa"
-                    value={multiMonthStats.total}
-                    color="bg-blue-50 text-blue-700"
-                  />
-                  <StatCard
-                    icon={<CheckCircle2 className="w-4 h-4" />}
-                    label="Tercapai"
-                    value={multiMonthStats.achieved}
-                    color="bg-emerald-50 text-emerald-700"
-                  />
-                  <StatCard
-                    icon={<AlertCircle className="w-4 h-4" />}
-                    label="Sebagian"
-                    value={multiMonthStats.partial}
-                    color="bg-amber-50 text-amber-700"
-                  />
-                  <StatCard
-                    icon={<FileWarning className="w-4 h-4" />}
-                    label="Belum Diisi"
-                    value={multiMonthStats.empty}
-                    color="bg-rose-50 text-rose-700"
-                  />
-                  <StatCard
-                    icon={<Percent className="w-4 h-4" />}
-                    label="Kehadiran"
-                    value={`${multiMonthStats.avgAttendance}%`}
-                    color="bg-violet-50 text-violet-700"
-                  />
-                  <StatCard
-                    icon={<ListChecks className="w-4 h-4" />}
-                    label="Total Hal."
-                    value={multiMonthStats.totalPages}
-                    color="bg-indigo-50 text-indigo-700"
-                  />
-                </div>
-              )}
-
-              {/* Export Buttons */}
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  className="gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50 text-xs sm:text-sm"
-                  onClick={exportMultiMonthExcel}
-                >
-                  <FileSpreadsheet className="w-4 h-4" /> Excel
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2 text-xs sm:text-sm"
-                  disabled={!!pdfLoading}
-                  onClick={() => previewPDF("a4")}
-                >
-                  {pdfLoading === "preview-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-                  Preview A4
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2 text-xs sm:text-sm"
-                  disabled={!!pdfLoading}
-                  onClick={() => previewPDF("legal")}
-                >
-                  {pdfLoading === "preview-legal" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-                  Preview Legal
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2 text-xs sm:text-sm"
-                  disabled={!!pdfLoading}
-                  onClick={() => exportPDF("a4")}
-                >
-                  {pdfLoading === "download-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                  PDF A4
-                </Button>
-                <Button
-                  className="gap-2 text-xs sm:text-sm"
-                  disabled={!!pdfLoading}
-                  onClick={() => exportPDF("legal")}
-                >
-                  {pdfLoading === "download-legal" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                  PDF Legal
-                </Button>
-              </div>
-
-              {/* Multi-Month Tables */}
-              {multiMonthExportGroups.map(grp => (
-                <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
-                  <CardHeader className="bg-blue-50 py-3">
-                    <CardTitle className="text-sm text-blue-900">
-                      Kelas {grp.kelas} — Rombel {grp.rombel}{" "}
-                      <Badge variant="outline" className="ml-2 bg-white">
-                        {grp.reports.length} siswa
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <div className="hidden md:block overflow-x-auto">
-                      <table className="w-full text-xs border-collapse">
-                        <thead className="sticky top-0 bg-muted/80">
-                          <tr className="text-left">
-                            <th className="px-2 py-2 w-8">No</th>
-                            <th className="px-2 py-2 min-w-[120px]">Nama</th>
-                            <th className="px-2 py-2">Program</th>
-                            <th className="px-2 py-2">Level</th>
-                            <th className="px-2 py-2">Bulan</th>
-                            <th className="px-2 py-2 text-center">Awal</th>
-                            <th className="px-2 py-2 text-center">Akhir</th>
-                            <th className="px-2 py-2 text-center">Total Hal</th>
-                            <th className="px-2 py-2 text-center">Target</th>
-                            <th className="px-2 py-2 text-center">Kehadiran %</th>
-                            <th className="px-2 py-2 text-center">Status</th>
-                            <th className="px-2 py-2">Guru</th>
-                            <th className="px-2 py-2 min-w-[200px]">Catatan</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {grp.reports.map((row, idx) => {
-                            const empty = row.status === "empty";
-                            return (
-                              <tr
-                                key={row.studentId}
-                                className={`border-t ${empty ? "bg-rose-50/60" : "hover:bg-muted/40"}`}
-                              >
-                                <td className="px-2 py-2">{idx + 1}</td>
-                                <td className="px-2 py-2 font-medium">
-                                  {highlight(row.nama, search)}
-                                </td>
-                                <td className="px-2 py-2">{row.program}</td>
-                                <td className="px-2 py-2">{row.level}</td>
-                                <td className="px-2 py-2 text-xs">
-                                  {row.months.join(" / ")}
-                                </td>
-                                <td className="px-2 py-2 text-center">{empty ? "-" : row.startPage}</td>
-                                <td className="px-2 py-2 text-center">{empty ? "-" : row.endPage}</td>
-                                <td className="px-2 py-2 text-center font-bold">
-                                  {empty ? "-" : row.totalPages}
-                                </td>
-                                <td className="px-2 py-2 text-center">
-                                  {empty ? "-" : row.totalTarget}
-                                </td>
-                                <td className="px-2 py-2 text-center">
-                                  {empty ? "-" : `${row.averageAttendance}%`}
-                                </td>
-                                <td className="px-2 py-2 text-center">
-                                  {row.status === "achieved" && (
-                                    <Badge className="bg-emerald-100 text-emerald-800 text-[10px]">
-                                      Tercapai
-                                    </Badge>
-                                  )}
-                                  {row.status === "partial" && (
-                                    <Badge className="bg-amber-100 text-amber-800 text-[10px]">
-                                      Sebagian
-                                    </Badge>
-                                  )}
-                                  {row.status === "not_achieved" && (
-                                    <Badge variant="destructive" className="text-[10px]">
-                                      Belum
-                                    </Badge>
-                                  )}
-                                  {empty && (
-                                    <Badge className="bg-rose-200 text-rose-900 text-[10px]">
-                                      Belum diisi
-                                    </Badge>
-                                  )}
-                                </td>
-                                <td className="px-2 py-2 text-muted-foreground">{row.guru}</td>
-                                <td className="px-2 py-2 whitespace-pre-wrap text-muted-foreground">{row.catatan || "-"}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="md:hidden divide-y">
-                      {grp.reports.map((row, idx) => {
-                        const empty = row.status === "empty";
-                        return (
-                          <div key={row.studentId} className={`p-3 space-y-2 ${empty ? "bg-rose-50/60" : ""}`}>
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <p className="text-sm font-semibold text-foreground">{idx + 1}. {row.nama}</p>
-                                <p className="text-xs text-muted-foreground">{row.program} - {row.level}</p>
-                              </div>
-                              <Badge className={`text-[10px] ${empty ? "bg-rose-200 text-rose-900" : row.status === "achieved" ? "bg-emerald-100 text-emerald-800" : row.status === "partial" ? "bg-amber-100 text-amber-800" : "bg-red-100 text-red-800"}`}>
-                                {getStatusLabel(row.status)}
-                              </Badge>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                              <div><span className="text-muted-foreground">Bulan</span><p>{row.months.join(" / ")}</p></div>
-                              <div><span className="text-muted-foreground">Level</span><p>{row.level}</p></div>
-                              <div><span className="text-muted-foreground">Awal</span><p>{empty ? "-" : row.startPage}</p></div>
-                              <div><span className="text-muted-foreground">Akhir</span><p>{empty ? "-" : row.endPage}</p></div>
-                              <div><span className="text-muted-foreground">Total</span><p className="font-semibold">{empty ? "-" : row.totalPages}</p></div>
-                              <div><span className="text-muted-foreground">Target</span><p>{empty ? "-" : row.totalTarget}</p></div>
-                              <div><span className="text-muted-foreground">Status</span><p>{getStatusLabel(row.status)}</p></div>
-                              <div><span className="text-muted-foreground">Guru</span><p>{row.guru}</p></div>
-                            </div>
-                            {row.catatan && (
-                              <p className="text-xs text-muted-foreground whitespace-pre-wrap">{row.catatan}</p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </>
-          )}
-
-          {selectedMonths.length === 0 && (
-            <Card>
-              <CardContent className="p-8 text-center text-muted-foreground">
-                Silakan pilih bulan untuk menampilkan data
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-
       {/* Single Month Mode */}
-      {!multiMonthMode && (
-        <>
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <StatCard
@@ -1851,8 +1436,6 @@ const RecapReport = () => {
               </CardContent>
             </Card>
           ))}
-        </>
-      )}
 
       {/* Dialog Download Multi Bulan per Rombel */}
       <Dialog open={multiMonthDialogOpen} onOpenChange={setMultiMonthDialogOpen}>
@@ -2062,3 +1645,7 @@ const highlight = (text: string, q: string) => {
 };
 
 export default RecapReport;
+
+
+
+

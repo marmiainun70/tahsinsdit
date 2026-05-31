@@ -48,6 +48,7 @@ const LEVEL_BADGE: Record<string, { bg: string; color: string }> = {
 const TYPE_GRADIENT: Record<ExamScheduleType, string> = {
   tahsin_dasar_ke_lanjutan: "linear-gradient(135deg, #c2410c 0%, #ea580c 60%, #f97316 100%)",
   tahsin_lanjutan_ke_tahfizh: "linear-gradient(135deg, #5b21b6 0%, #7c3aed 60%, #8b5cf6 100%)",
+  ujian_sertifikat_tahfizh: "linear-gradient(135deg, #047857 0%, #059669 60%, #10b981 100%)",
 };
 
 const formatDate = (dateStr: string) =>
