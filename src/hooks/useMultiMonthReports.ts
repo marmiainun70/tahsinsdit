@@ -141,7 +141,7 @@ export const aggregateMultiMonthData = (
         targetPages: rep?.target_pages || 0,
         iqraLevel: rep?.iqra_level || null,
         endIqraLevel: (rep as any)?.end_iqra_level || null,
-        attendancePercentage: rep?.attendance_percentage || 0,
+        attendancePercentage: 0,
         achievementStatus: rep?.achievement_status || 'empty',
         notes: rep?.notes || '',
       };
