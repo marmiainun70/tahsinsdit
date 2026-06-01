@@ -136,9 +136,11 @@ const useUpdateExamSchedule = () => {
       nama_siswa: string;
       keterangan: string;
     }) => {
+      const { nama_siswa: _ignored, ...rest } = updates;
+      const dbUpdates: any = rest;
       const { data, error } = await supabase
         .from("exam_schedules")
-        .update(updates)
+        .update(dbUpdates)
         .eq("id", id)
         .select()
         .single();
