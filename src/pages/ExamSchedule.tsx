@@ -110,10 +110,11 @@ const useAddExamSchedule = () => {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (payload: Omit<ExamSchedule, "id" | "created_at" | "updated_at">) => {
-      const { nama_siswa: _ignored, ...dbPayload } = payload as Omit<ExamSchedule, "id" | "created_at" | "updated_at">;
+      const { nama_siswa: _ignored, ...rest } = payload;
+      const dbPayload: any = { ...rest, created_by: user?.id ?? null };
       const { data, error } = await supabase
         .from("exam_schedules")
-        .insert({ ...dbPayload, created_by: user?.id ?? null })
+        .insert(dbPayload)
         .select()
         .single();
       if (error) throw error;
