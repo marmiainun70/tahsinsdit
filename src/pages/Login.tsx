@@ -1,8 +1,23 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import heroPattern from "@/assets/hero-pattern.png";
+import { motion, type Variants } from "framer-motion";
 import { BookOpen, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+
+const VIDEO_SRC =
+  "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260506_081238_406ed0e3-5d83-436e-a512-0bbff7ec5b95.mp4";
+
+const heroContainer: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15, delayChildren: 0.2 },
+  },
+};
+
+const heroItem: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+};
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -22,124 +37,160 @@ const Login = () => {
     setLoading(true);
     const { error: err } = await signIn(email, password);
     setLoading(false);
-    if (err) {
-      setError("Email atau password salah. Silakan coba lagi.");
-    }
+    if (err) setError("Email atau password salah. Silakan coba lagi.");
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel */}
-      <div
-        className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center relative overflow-hidden"
-        style={{ background: "hsl(var(--green-deep))" }}
-      >
-        <img src={heroPattern} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40" />
-        <div className="relative z-10 text-center px-12">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            className="w-24 h-24 rounded-full bg-gradient-gold flex items-center justify-center mx-auto mb-6 shadow-gold"
-          >
-            <BookOpen className="w-12 h-12 text-white" />
-          </motion.div>
-          <motion.h1
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="text-4xl font-bold text-primary-foreground mb-4"
-          >
-            Sistem Monitoring
-          </motion.h1>
-          <motion.p
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-            className="text-2xl font-arabic text-gold mb-3"
-          >
-            Iqro & Tahsin Al-Qur'an
-          </motion.p>
-          <motion.p
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            className="text-primary-foreground/70 text-base leading-relaxed"
-          >
-            Pantau perkembangan bacaan Al-Qur'an siswa SD dengan mudah dan terstruktur
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="mt-10 grid grid-cols-3 gap-4"
-          >
-            {[["6", "Kelas"], ["9", "Level"], ["Realtime", "Monitoring"]].map(([n, l]) => (
-              <div key={l} className="bg-white/10 rounded-xl p-4 text-center">
-                <p className="text-3xl font-bold text-gold">{n}</p>
-                <p className="text-primary-foreground/80 text-xs mt-1">{l}</p>
-              </div>
-            ))}
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Right Panel */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-background p-8">
-        <motion.div
-          initial={{ x: 30, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
+    <main
+      className="flex min-h-screen w-full p-2 transition-all duration-500 lg:h-screen lg:overflow-hidden lg:p-4"
+      style={{ background: "hsl(var(--green-deep))" }}
+    >
+      {/* ─── Left Hero ───────────────────────────────────────────────── */}
+      <section className="relative hidden h-full w-[52%] flex-col items-center justify-end overflow-hidden rounded-3xl px-12 pb-32 shadow-2xl lg:flex">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover"
         >
-          <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <div className="w-10 h-10 rounded-full bg-gradient-hero flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <p className="font-bold text-foreground text-sm">Monitoring Iqro & Tahsin</p>
+          <source src={VIDEO_SRC} type="video/mp4" />
+        </video>
+
+        {/* gradient halus dari bawah untuk keterbacaan teks */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3"
+          style={{
+            background:
+              "linear-gradient(to top, hsl(var(--green-deep) / 0.85) 0%, hsl(var(--green-deep) / 0.4) 45%, transparent 100%)",
+          }}
+        />
+
+        <motion.div
+          variants={heroContainer}
+          initial="hidden"
+          animate="show"
+          className="relative z-10 w-full max-w-xs space-y-8"
+        >
+          {/* Brand */}
+          <motion.div variants={heroItem} className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-gold shadow-gold">
+              <BookOpen className="h-4 w-4 text-[hsl(var(--green-deep))]" />
+            </span>
+            <span className="text-xl font-semibold tracking-tight text-white">
+              Tahsin SDIT
+            </span>
+            <span className="font-arabic text-lg text-gold">اقرأ</span>
+          </motion.div>
+
+          {/* Heading */}
+          <motion.div variants={heroItem} className="space-y-3">
+            <h1 className="whitespace-nowrap text-4xl font-medium tracking-tight text-white">
+              Selamat Datang
+            </h1>
+            <p className="px-1 text-sm leading-relaxed text-white/70">
+              Tiga langkah singkat menuju ruang monitoring Iqra & Tahsin Anda.
+            </p>
+          </motion.div>
+
+          {/* Steps */}
+          <motion.div variants={heroItem} className="space-y-2.5">
+            <StepItem number={1} text="Masuk akun guru / admin" active />
+            <StepItem number={2} text="Pantau progres siswa" />
+            <StepItem number={3} text="Kelola laporan & ujian" />
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* ─── Right Form ──────────────────────────────────────────────── */}
+      <section className="flex flex-1 flex-col items-center justify-center overflow-y-auto bg-background px-4 py-12 sm:px-12 lg:overflow-hidden lg:rounded-3xl lg:py-6 lg:px-16 xl:px-24">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="w-full max-w-xl space-y-8 sm:space-y-10 lg:space-y-6"
+        >
+          {/* Brand kecil untuk mobile */}
+          <div className="flex items-center gap-3 lg:hidden">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-hero">
+              <BookOpen className="h-4 w-4 text-primary-foreground" />
+            </span>
+            <span className="text-sm font-semibold text-foreground">
+              Tahsin SDIT
+            </span>
           </div>
 
-          <h2 className="text-3xl font-bold text-foreground mb-2">Selamat Datang</h2>
-          <p className="text-muted-foreground mb-8">Masuk untuk mengelola data pembelajaran Al-Qur'an</p>
+          {/* Header */}
+          <div className="space-y-2">
+            <h2 className="text-3xl font-medium tracking-tight text-foreground">
+              Masuk ke Sistem
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Monitoring Iqra & Tahsin Al-Qur'an — akses guru & admin.
+            </p>
+          </div>
 
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Email Guru</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="guru@sekolah.ac.id"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm"
-                />
-              </div>
+          {/* Divider Bismillah */}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gold/30" />
             </div>
+            <div className="relative flex justify-center">
+              <span className="bg-background px-4 text-[11px] font-semibold uppercase tracking-[0.25em] text-gold">
+                Bismillah
+              </span>
+            </div>
+          </div>
+
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-5">
+            <InputGroup
+              label="Email Guru"
+              icon={<Mail className="h-4 w-4" />}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="guru@sekolah.ac.id"
+            />
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Password</label>
+              <label className="mb-2 block text-sm font-medium text-foreground">
+                Password
+              </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
-                  onChange={e => setPassword(e.target.value)}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password Anda"
-                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm"
+                  className="h-11 w-full rounded-xl border-none bg-secondary pl-10 pr-10 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowPassword((s) => !s)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Sembunyikan" : "Tampilkan"}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
+              <p className="mt-1.5 text-xs text-muted-foreground/80">
+                Minimal 8 karakter. Jaga kerahasiaan password Anda.
+              </p>
             </div>
 
             {error && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
+              >
                 {error}
               </motion.div>
             )}
@@ -147,26 +198,92 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-gradient-hero text-primary-foreground font-semibold hover:opacity-90 transition-opacity shadow-green disabled:opacity-60 flex items-center justify-center gap-2"
+              className="mt-2 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold font-semibold text-[hsl(var(--green-deep))] shadow-gold transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60"
             >
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-[hsl(var(--green-deep))]/30 border-t-[hsl(var(--green-deep))]" />
                   Memverifikasi...
                 </>
-              ) : "Masuk ke Sistem"}
+              ) : (
+                "Masuk ke Sistem"
+              )}
             </button>
-          </form>
 
-          <div className="mt-6 p-4 bg-secondary rounded-xl text-sm text-secondary-foreground">
-            <p className="font-medium mb-2 flex items-center gap-2">
-              <span>💡</span> Belum punya akun?
+            <p className="pt-2 text-center text-sm text-muted-foreground">
+              Belum punya akun?{" "}
+              <span className="font-medium text-primary">
+                Hubungi admin sekolah.
+              </span>
             </p>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Hubungi admin sekolah untuk mendaftarkan akun guru Anda ke sistem ini.
-            </p>
-          </div>
+          </form>
         </motion.div>
+      </section>
+    </main>
+  );
+};
+
+/* ─── Reusable bits ───────────────────────────────────────────────── */
+
+const StepItem = ({
+  number,
+  text,
+  active = false,
+}: {
+  number: number;
+  text: string;
+  active?: boolean;
+}) => {
+  return (
+    <div
+      className={[
+        "flex items-center gap-3 rounded-2xl px-4 py-3 transition-all",
+        active
+          ? "border border-gold bg-gold/95 text-[hsl(var(--green-deep))] shadow-gold"
+          : "border border-white/10 bg-white/5 text-white/80 backdrop-blur-sm",
+      ].join(" ")}
+    >
+      <span
+        className={[
+          "flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold",
+          active
+            ? "bg-[hsl(var(--green-deep))] text-gold"
+            : "bg-white/10 text-white/50",
+        ].join(" ")}
+      >
+        {number}
+      </span>
+      <span className="text-sm font-medium">{text}</span>
+    </div>
+  );
+};
+
+const InputGroup = ({
+  label,
+  icon,
+  ...inputProps
+}: React.InputHTMLAttributes<HTMLInputElement> & {
+  label: string;
+  icon?: React.ReactNode;
+}) => {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-medium text-foreground">
+        {label}
+      </label>
+      <div className="relative">
+        {icon && (
+          <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+            {icon}
+          </span>
+        )}
+        <input
+          {...inputProps}
+          className={[
+            "h-11 w-full rounded-xl border-none bg-secondary text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30",
+            icon ? "pl-10 pr-4" : "px-4",
+          ].join(" ")}
+        />
       </div>
     </div>
   );
