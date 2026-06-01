@@ -214,7 +214,6 @@ export type Database = {
           jenis_ujian: Database["public"]["Enums"]["exam_schedule_type"]
           keterangan: string
           lokasi: string
-          nama_siswa: string
           tanggal: string
           updated_at: string
           waktu_mulai: string
@@ -227,7 +226,6 @@ export type Database = {
           jenis_ujian: Database["public"]["Enums"]["exam_schedule_type"]
           keterangan?: string
           lokasi?: string
-          nama_siswa?: string
           tanggal: string
           updated_at?: string
           waktu_mulai: string
@@ -240,7 +238,6 @@ export type Database = {
           jenis_ujian?: Database["public"]["Enums"]["exam_schedule_type"]
           keterangan?: string
           lokasi?: string
-          nama_siswa?: string
           tanggal?: string
           updated_at?: string
           waktu_mulai?: string
@@ -290,7 +287,6 @@ export type Database = {
       monthly_reports: {
         Row: {
           achievement_status: string
-          attendance_percentage: number
           created_at: string
           created_by: string | null
           end_iqra_level: string | null
@@ -308,7 +304,6 @@ export type Database = {
         }
         Insert: {
           achievement_status?: string
-          attendance_percentage?: number
           created_at?: string
           created_by?: string | null
           end_iqra_level?: string | null
@@ -326,7 +321,6 @@ export type Database = {
         }
         Update: {
           achievement_status?: string
-          attendance_percentage?: number
           created_at?: string
           created_by?: string | null
           end_iqra_level?: string | null
@@ -820,7 +814,6 @@ export type Database = {
       exam_schedule_type:
         | "tahsin_dasar_ke_lanjutan"
         | "tahsin_lanjutan_ke_tahfizh"
-        | "ujian_sertifikat_tahfizh"
       reading_level:
         | "Iqro 1"
         | "Iqro 2"
@@ -972,7 +965,6 @@ export const Constants = {
       exam_schedule_type: [
         "tahsin_dasar_ke_lanjutan",
         "tahsin_lanjutan_ke_tahfizh",
-        "ujian_sertifikat_tahfizh",
       ],
       reading_level: [
         "Iqro 1",
