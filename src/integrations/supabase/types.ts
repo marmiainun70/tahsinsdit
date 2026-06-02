@@ -385,6 +385,72 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_preferences: {
+        Row: {
+          announcement: boolean
+          attention_alert: boolean
+          exam_reminder: boolean
+          exam_result: boolean
+          monthly_report: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          announcement?: boolean
+          attention_alert?: boolean
+          exam_reminder?: boolean
+          exam_result?: boolean
+          monthly_report?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          announcement?: boolean
+          attention_alert?: boolean
+          exam_reminder?: boolean
+          exam_result?: boolean
+          monthly_report?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          link: string | null
+          metadata: Json
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          metadata?: Json
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          metadata?: Json
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       parents: {
         Row: {
           created_at: string
@@ -493,6 +559,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       students: {
         Row: {
