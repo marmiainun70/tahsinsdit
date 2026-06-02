@@ -1,86 +1,63 @@
-# Rencana: Redesign Halaman Login → "Aurora Sign Up" Islamic Modern
+# Rencana: PWA + Push Notification Realtime
 
-Mengadaptasi spesifikasi Aurora Sign Up (two-column, video hero, staggered animation) tapi diselaraskan dengan identitas visual project: **Forest Green deep + Gold accent + Plus Jakarta Sans + Amiri (Arabic)** — bukan hitam putih ala Aurora asli.
+## Tujuan
+Mengubah aplikasi Tahsin SDIT menjadi **PWA installable** dan menambahkan **push notification realtime** untuk laporan bulanan baru, jadwal ujian, peringatan "Perlu Perhatian", dan pengumuman admin.
 
-## Lingkup
+## Catatan penting tentang iOS
+- Di iPhone (Safari), push notification PWA **hanya bekerja jika pengguna meng-install aplikasi ke Home Screen** (Share → Add to Home Screen) terlebih dahulu. Sebelum di-install, iPhone tidak menerima notifikasi sama sekali.
+- Di Android (Chrome) berjalan penuh tanpa harus di-install (meski lebih baik di-install).
+- Akan ditampilkan banner "Install Aplikasi" agar wali murid/guru terdorong meng-install.
 
-- Hanya menyentuh `src/pages/Login.tsx` (form login yang sudah ada) — TIDAK menambah halaman baru, TIDAK mengubah `signIn` / `AuthContext`.
-- Tetap memakai Tailwind v3 + token semantic di `index.css` (project ini bukan Tailwind v4). Tidak menambah font Inter — gunakan `Plus Jakarta Sans` yang sudah terdaftar.
-- Tetap `framer-motion` (sudah dipakai), bukan `motion/react`.
-- Form tetap **Login** (email + password) — bukan registrasi multi-step. Hanya bahasa visual & layout-nya yang mengikuti Aurora.
+## Bagian 1 — PWA Installable
+1. Tambah `manifest.webmanifest` dengan nama "Tahsin SDIT", warna brand (Forest Green & Gold), `display: standalone`, ikon 192/512/maskable.
+2. Tambah meta tag mobile + iOS (`apple-touch-icon`, `apple-mobile-web-app-capable`, theme-color) di `index.html`.
+3. Generate ikon PWA (icon-192, icon-512, maskable, apple-touch-icon) menggunakan logo masjid + warna brand.
+4. Setup service worker via `vite-plugin-pwa` dengan pengaman:
+   - Tidak aktif di dev / iframe preview Lovable.
+   - `NetworkFirst` untuk HTML, `navigateFallbackDenylist` untuk `/~oauth`.
+   - Auto-update.
+5. Komponen `InstallPrompt` (banner kecil di dashboard) yang menampilkan tombol "Install Aplikasi" saat browser men-trigger `beforeinstallprompt`, plus instruksi khusus iOS ("Tap Share → Add to Home Screen").
 
-## Struktur Layout Baru
+## Bagian 2 — Push Notification (Web Push)
 
-```text
-<main> flex min-h-screen p-2 lg:p-4 bg-[hsl(var(--green-deep))]
- ├── Left Hero (lg:w-[52%], rounded-3xl, overflow-hidden)
- │    ├── <video> autoplay muted loop playsInline (URL persis seperti spec)
- │    ├── Lapisan halus gradient hijau→transparan dari bawah (HANYA agar teks terbaca,
- │    │   bukan tint penuh — spec asli melarang overlay; di sini kompromi minimal
- │    │   untuk kontras teks putih. Bila tidak diinginkan, hapus.)
- │    └── Konten z-10 (staggerChildren 0.15, delayChildren 0.2):
- │         • Brand: ikon BookOpen (gold) + "Tahsin SDIT" + baris arab "اقرأ"
- │         • Heading: "Selamat Datang" + sub "Tiga langkah singkat menuju ruang Anda."
- │         • 3 StepItem: "Masuk akun guru/admin" (active),
- │                       "Pantau progres siswa",
- │                       "Kelola laporan & ujian"
- │
- └── Right Form (flex-1, py-12 lg:py-6, px-4 sm:px-12 lg:px-16)
-      └── motion.div fade-in 0.8s, w-full max-w-xl, space-y-8
-           ├── Header: "Masuk ke Sistem" + sub "Monitoring Iqra & Tahsin Al-Qur'an"
-           ├── (Tombol social DIHAPUS — project tidak pakai OAuth; mempertahankannya
-           │    akan menyesatkan user. Diganti badge kecil "Akses guru & admin".)
-           ├── Divider tipis gold/10 dengan teks "BISMILLAH"
-           ├── InputGroup Email (ikon Mail)
-           ├── InputGroup Password (ikon Lock + toggle Eye/EyeOff)
-           ├── Pesan error (state lama tetap)
-           ├── Submit "Masuk ke Sistem" — h-14 rounded-xl bg-gold text-green-deep
-           │   font-semibold hover:opacity-90 active:scale-[0.98]
-           └── Footer: "Belum punya akun? Hubungi admin sekolah."
-```
+### Database (migration)
+- Tabel `push_subscriptions` (user_id, endpoint, p256dh, auth, user_agent, created_at) + RLS: user hanya bisa kelola subscription miliknya, admin bisa baca semua untuk broadcast.
+- Tabel `notifications` (id, user_id, type, title, body, link, read_at, created_at) sebagai inbox in-app + RLS per user.
+- Tabel `notification_preferences` (user_id + flag per jenis notifikasi) — default semua ON.
+- GRANT untuk `authenticated` + `service_role`.
 
-## Penyesuaian Tema (Islamic Modern)
+### Edge Functions
+1. `save-push-subscription` — simpan/upsert subscription dari browser.
+2. `send-push-notification` — kirim push via Web Push protocol (VAPID) ke daftar `push_subscriptions`. Dipakai oleh trigger & manual broadcast admin. Sekaligus insert ke tabel `notifications`.
+3. `broadcast-announcement` — admin only, kirim pengumuman ke role tertentu (semua / guru / wali murid).
 
-| Elemen spec asli | Adaptasi project |
-|---|---|
-| `bg-black` body | `bg-[hsl(var(--green-deep))]` |
-| `bg-brand-gray #1A1A1A` (input/step inactive) | `bg-white/5` di atas hero, `bg-secondary` di sisi form |
-| Tombol putih `bg-white text-black` | `bg-gold text-green-deep` (sudah ada token `--gold`) |
-| Aksen putih (`text-white/60`, border `white/10`) | Di hero: tetap putih transparan agar kontras dengan video. Di form: `text-muted-foreground`, `border-border` |
-| Font Inter | `Plus Jakarta Sans` (sudah aktif global) + `font-arabic` (Amiri) untuk satu kalimat khas |
-| Ikon `Circle` brand | `BookOpen` (konsisten dengan brand existing) |
+### Trigger otomatis (PostgreSQL → pg_net → edge function)
+- **Laporan bulanan baru**: trigger di `monthly_reports` AFTER INSERT → kirim notif ke wali murid siswa terkait.
+- **Nilai ujian baru**: trigger di tabel exam result → kirim notif ke wali murid.
+- **Pengingat jadwal ujian**: cron `pg_cron` harian jam 07:00 → cek `exam_schedules` H-1 → kirim notif ke siswa/wali murid + penguji.
+- **Perlu Perhatian**: modifikasi fungsi `check_tahsin_attention` agar saat flag diset → panggil edge function untuk notif admin & guru rombel siswa.
+- **Pengumuman admin**: manual via halaman admin → `broadcast-announcement`.
 
-## Komponen yang Dibuat (lokal di `Login.tsx`)
+### Secrets yang dibutuhkan
+- `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (email admin) — akan diminta lewat add_secret. Saya akan beri tahu cara generate (perintah `npx web-push generate-vapid-keys`).
 
-1. **`StepItem({ number, text, active })`**
-   - Active: `bg-gold/95 text-green-deep border border-gold` + lingkaran nomor `bg-green-deep text-gold`.
-   - Inactive: `bg-white/5 text-white/70 border border-white/10` + nomor `bg-white/10 text-white/40`.
-   - Rounded-2xl, padding `px-4 py-3`, flex gap-3.
+### Frontend
+- Hook `usePushNotifications` — minta permission, subscribe ke `pushManager`, kirim subscription ke edge function.
+- Tombol "Aktifkan Notifikasi" di halaman pengaturan + prompt halus di dashboard pertama kali login.
+- Halaman / dropdown **Inbox Notifikasi** (ikon lonceng di header) — list dari tabel `notifications`, realtime via Supabase Realtime subscription, badge unread.
+- Halaman admin **Kirim Pengumuman** (judul, isi, target role).
+- Service worker handler `push` → `self.registration.showNotification(...)` + `notificationclick` → buka `link`.
 
-2. **`InputGroup({ label, icon, ...inputProps })`**
-   - Label: `text-sm font-medium text-foreground mb-2`.
-   - Input: `bg-secondary border-none rounded-xl h-11 pl-10 pr-4 text-foreground placeholder:text-muted-foreground/50 focus:ring-2 focus:ring-primary/30`.
-   - Icon absolut kiri.
+## Bagian 3 — Urutan eksekusi
+1. Migration tabel + RLS + preferences.
+2. Generate VAPID keys (minta user input via add_secret).
+3. Edge functions (save-subscription, send-push, broadcast).
+4. Trigger DB & cron job pengingat ujian.
+5. Setup PWA (manifest, ikon, service worker dengan handler push).
+6. Frontend: hook subscribe, inbox bell, halaman pengaturan notifikasi, halaman broadcast admin, banner install.
+7. QA: test install di Android & desktop, test kirim manual, test trigger laporan bulanan.
 
-(Komponen `SocialButton` dari spec **tidak dibuat** karena OAuth belum diaktifkan di project; menambahkan tombol non-fungsional akan menyesatkan user.)
-
-## Animasi (framer-motion)
-
-- Hero container: `initial={{ opacity: 0 }} animate={{ opacity: 1 }}` + child variants `y:10→0`, `opacity:0→1`, `duration:0.5`, `staggerChildren:0.15`, `delayChildren:0.2`.
-- Form container: fade + slight scale, `duration:0.8`, `ease:"easeOut"`.
-
-## Yang TIDAK Berubah
-
-- Logika `signIn`, state `email/password/error/loading`, validasi, navigasi.
-- Tidak menyentuh `index.css` (token Forest Green/Gold sudah lengkap).
-- Tidak menyentuh `tailwind.config.ts`.
-- Tidak menambah dependency.
-
-## Catatan Klarifikasi
-
-- **Video CloudFront** dari spec akan dipakai apa adanya. Bila preview-nya tidak cocok dengan nuansa islami (mis. tampil objek tidak relevan), opsi alternatif: pakai `src/assets/hero-pattern.png` lama sebagai background statis. **Default plan: pakai video sesuai spec.**
-- **Overlay gradient bawah** ditambahkan tipis (hijau-deep → transparan ~40% di 1/3 bawah) hanya untuk keterbacaan teks. Spec asli melarang overlay; jika Anda mau strict no-overlay, sebut saja saat approve.
-
-## Deliverable
-
-- 1 file dimodifikasi: `src/pages/Login.tsx`.
+## Yang TIDAK termasuk
+- Publish ke Play Store / App Store (perlu pendekatan Native/Capacitor).
+- Notifikasi SMS / email (terpisah).
+- Backfill subscription untuk user lama — mereka akan diminta enable saat login berikutnya.
