@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useStudents, LEVELS, LEVEL_COLORS, getLevelDisplayLabel, getLevelGroup, IQRO_LEVELS, IQRO_JILID_COLORS } from "@/hooks/useSupabaseData";
 import { Users, BookOpen, Star, TrendingUp, Award, Loader2, AlertTriangle, ChevronRight, BookOpenCheck } from "lucide-react";
 import StudentRanking from "@/components/StudentRanking";
+import RelatedSystemCard from "@/components/RelatedSystemCard";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
