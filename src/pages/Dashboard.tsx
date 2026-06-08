@@ -93,6 +93,10 @@ const Dashboard = () => {
         )}
       </div>
 
+      <RelatedSystemCard />
+
+
+
       {/* Panel Peringatan Siswa Tahsin */}
       <AnimatePresence>
         {perluPerhatian.length > 0 &&
