@@ -3,8 +3,9 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen, LayoutDashboard, BarChart3, ClipboardList, PieChart,
-  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings, Megaphone
+  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings, Megaphone, ExternalLink
 } from "lucide-react";
+import { RELATED_SYSTEM } from "@/components/RelatedSystemCard";
 import GlobalSearch from "@/components/GlobalSearch";
 import ScrollFab from "@/components/ScrollFab";
 import { useAuth } from "@/contexts/AuthContext";
