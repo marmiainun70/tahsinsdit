@@ -3,12 +3,15 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen, LayoutDashboard, BarChart3, ClipboardList, PieChart,
-  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings
+  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings, Megaphone, ExternalLink
 } from "lucide-react";
+import { RELATED_SYSTEM } from "@/components/RelatedSystemCard";
 import GlobalSearch from "@/components/GlobalSearch";
 import ScrollFab from "@/components/ScrollFab";
 import { useAuth } from "@/contexts/AuthContext";
 import { UpcomingExamBanner } from "@/components/ExamScheduleNotification";
+import NotificationBell from "@/components/NotificationBell";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,6 +24,8 @@ const navItems = [
   { to: "/rekap-laporan", icon: FileSpreadsheet, label: "Rekap Laporan" },
   { to: "/monitoring", icon: BarChart3, label: "Monitoring" },
   { to: "/jadwal-ujian", icon: GraduationCap, label: "Jadwal Ujian" },
+  { to: "/pengumuman", icon: Megaphone, label: "Pengumuman" },
+  { to: "/pengaturan-notifikasi", icon: Bell, label: "Pengaturan Notifikasi" },
   { to: "/pengaturan-lembaga", icon: Settings, label: "Pengaturan Lembaga" },
 ];
 
@@ -110,7 +115,20 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
           );
         })}
       </div>
+
+      <div className="pt-4 mt-2 border-t border-sidebar-border/40">
+        <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-2">Sistem Terkait</p>
+        <button
+          onClick={() => { window.location.href = RELATED_SYSTEM.url; }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+        >
+          <ExternalLink className="w-4 h-4" />
+          <span className="truncate">{RELATED_SYSTEM.menuLabel}</span>
+        </button>
+      </div>
     </nav>
+
+
 
     {/* User info + Logout */}
     <div className="p-4 border-t border-sidebar-border space-y-2">
@@ -239,9 +257,7 @@ const Layout = ({ children }: LayoutProps) => {
               <Search className="w-5 h-5 text-muted-foreground" />
             </button>
 
-            <button className="hidden sm:block p-2 rounded-xl hover:bg-secondary transition-colors relative">
-              <Bell className="w-5 h-5 text-muted-foreground" />
-            </button>
+            <NotificationBell />
             <div className="flex items-center gap-2 bg-secondary rounded-xl px-2 sm:px-3 py-2">
               <div className="w-7 h-7 rounded-full bg-gradient-hero flex items-center justify-center">
                 <span className="text-primary-foreground text-xs font-bold">
@@ -263,6 +279,7 @@ const Layout = ({ children }: LayoutProps) => {
 
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
       <ScrollFab />
+      <PWAInstallPrompt />
     </div>
   );
 };

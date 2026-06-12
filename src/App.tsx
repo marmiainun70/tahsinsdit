@@ -24,6 +24,9 @@ import RecapReport from "@/pages/RecapReport";
 import SpreadsheetReport from "@/pages/SpreadsheetReport";
 import InstitutionSettings from "@/pages/InstitutionSettings";
 import RestoreAprilReports from "@/pages/RestoreAprilReports";
+import NotificationSettings from "@/pages/NotificationSettings";
+import BroadcastAnnouncement from "@/pages/BroadcastAnnouncement";
+import Landing from "@/pages/Landing";
 
 import NotFound from "@/pages/NotFound";
 import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotification";
@@ -40,7 +43,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       </div>
     </div>
   );
-  if (!session) return <Navigate to="/login" replace />;
+  if (!session) return <Navigate to="/landing" replace />;
   return <Layout>{children}</Layout>;
 };
 
@@ -50,6 +53,7 @@ const AppRoutes = () => {
 
   return (
     <Routes>
+      <Route path="/landing" element={session ? <Navigate to="/" replace /> : <Landing />} />
       <Route path="/login" element={session ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/class/:classId" element={<ProtectedRoute><ClassStudents /></ProtectedRoute>} />
@@ -69,6 +73,8 @@ const AppRoutes = () => {
       <Route path="/restore-april-2026" element={<ProtectedRoute><RestoreAprilReports /></ProtectedRoute>} />
       <Route path="/input-cepat" element={<ProtectedRoute><SpreadsheetReport /></ProtectedRoute>} />
       <Route path="/pengaturan-lembaga" element={<ProtectedRoute><InstitutionSettings /></ProtectedRoute>} />
+      <Route path="/pengaturan-notifikasi" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
+      <Route path="/pengumuman" element={<ProtectedRoute><BroadcastAnnouncement /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

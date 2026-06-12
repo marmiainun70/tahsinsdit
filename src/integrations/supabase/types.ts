@@ -214,7 +214,6 @@ export type Database = {
           jenis_ujian: Database["public"]["Enums"]["exam_schedule_type"]
           keterangan: string
           lokasi: string
-          nama_siswa: string
           tanggal: string
           updated_at: string
           waktu_mulai: string
@@ -227,7 +226,6 @@ export type Database = {
           jenis_ujian: Database["public"]["Enums"]["exam_schedule_type"]
           keterangan?: string
           lokasi?: string
-          nama_siswa?: string
           tanggal: string
           updated_at?: string
           waktu_mulai: string
@@ -240,7 +238,6 @@ export type Database = {
           jenis_ujian?: Database["public"]["Enums"]["exam_schedule_type"]
           keterangan?: string
           lokasi?: string
-          nama_siswa?: string
           tanggal?: string
           updated_at?: string
           waktu_mulai?: string
@@ -290,7 +287,6 @@ export type Database = {
       monthly_reports: {
         Row: {
           achievement_status: string
-          attendance_percentage: number
           created_at: string
           created_by: string | null
           end_iqra_level: string | null
@@ -310,7 +306,6 @@ export type Database = {
         }
         Insert: {
           achievement_status?: string
-          attendance_percentage?: number
           created_at?: string
           created_by?: string | null
           end_iqra_level?: string | null
@@ -330,7 +325,6 @@ export type Database = {
         }
         Update: {
           achievement_status?: string
-          attendance_percentage?: number
           created_at?: string
           created_by?: string | null
           end_iqra_level?: string | null
@@ -394,6 +388,72 @@ export type Database = {
           target_pages?: number
           updated_at?: string
           year?: number
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          announcement: boolean
+          attention_alert: boolean
+          exam_reminder: boolean
+          exam_result: boolean
+          monthly_report: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          announcement?: boolean
+          attention_alert?: boolean
+          exam_reminder?: boolean
+          exam_result?: boolean
+          monthly_report?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          announcement?: boolean
+          attention_alert?: boolean
+          exam_reminder?: boolean
+          exam_result?: boolean
+          monthly_report?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          link: string | null
+          metadata: Json
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          metadata?: Json
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          metadata?: Json
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -505,6 +565,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       students: {
         Row: {
@@ -805,6 +895,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_notification: {
+        Args: {
+          _body: string
+          _link?: string
+          _metadata?: Json
+          _title: string
+          _type: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -826,7 +927,6 @@ export type Database = {
       exam_schedule_type:
         | "tahsin_dasar_ke_lanjutan"
         | "tahsin_lanjutan_ke_tahfizh"
-        | "ujian_sertifikat_tahfizh"
       reading_level:
         | "Iqro 1"
         | "Iqro 2"
@@ -978,7 +1078,6 @@ export const Constants = {
       exam_schedule_type: [
         "tahsin_dasar_ke_lanjutan",
         "tahsin_lanjutan_ke_tahfizh",
-        "ujian_sertifikat_tahfizh",
       ],
       reading_level: [
         "Iqro 1",

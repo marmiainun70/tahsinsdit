@@ -110,9 +110,11 @@ const useAddExamSchedule = () => {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (payload: Omit<ExamSchedule, "id" | "created_at" | "updated_at">) => {
+      const { nama_siswa: _ignored, ...rest } = payload;
+      const dbPayload: any = { ...rest, created_by: user?.id ?? null };
       const { data, error } = await supabase
         .from("exam_schedules")
-        .insert({ ...payload, created_by: user?.id ?? null })
+        .insert(dbPayload)
         .select()
         .single();
       if (error) throw error;
@@ -134,9 +136,11 @@ const useUpdateExamSchedule = () => {
       nama_siswa: string;
       keterangan: string;
     }) => {
+      const { nama_siswa: _ignored, ...rest } = updates;
+      const dbUpdates: any = rest;
       const { data, error } = await supabase
         .from("exam_schedules")
-        .update(updates)
+        .update(dbUpdates)
         .eq("id", id)
         .select()
         .single();
