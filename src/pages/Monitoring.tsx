@@ -37,7 +37,7 @@ import {
   GraduationCap,
   Lightbulb,
   Loader2,
-  Map,
+  Map as MapIcon,
   Presentation,
   Star,
   TrendingUp,
@@ -817,7 +817,7 @@ const Monitoring = () => {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="flex items-center gap-2 text-lg font-bold text-foreground">
-              <Map className="h-5 w-5 text-primary" />
+              <MapIcon className="h-5 w-5 text-primary" />
               Peta Kondisi Per Kelas
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
