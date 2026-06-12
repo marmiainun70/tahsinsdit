@@ -163,13 +163,17 @@ const isReportMeaningfullyFilled = (report: {
   end_iqra_level?: string | null;
   notes?: string | null;
   created_by?: string | null;
+  teacher_name?: string | null;
 }) => {
   const status = String(report.achievement_status ?? "");
   const notes = String(report.notes ?? "").trim();
   const hasProgress =
     Number(report.pages_read ?? 0) !== 0 ||
     Number(report.start_page ?? 0) !== Number(report.end_page ?? 0);
-  const hasTeacherInput = notes.length > 0 || Boolean(report.created_by);
+  const hasTeacherInput =
+    notes.length > 0 ||
+    Boolean(report.teacher_name) ||
+    Boolean(report.created_by);
 
   if (status === "achieved" || status === "stagnant" || status === "decline") return true;
   if (hasProgress) return true;
@@ -364,7 +368,9 @@ const RecapReport = () => {
           total: rep.pages_read,
           target: rep.target_pages,
           status: rep.achievement_status === "achieved" ? "achieved" : "not_achieved",
-          guru: rep.created_by ? (profileMap.get(rep.created_by) || "-") : "-",
+          guru:
+            rep.teacher_name?.trim() ||
+            (rep.created_by ? profileMap.get(rep.created_by) || "-" : "-"),
           catatan: rep.notes || "",
         });
       }
@@ -540,7 +546,11 @@ const RecapReport = () => {
         target: String(report.target_pages),
         kehadiran: report.attendance_percentage ? `${report.attendance_percentage}%` : "-",
         status: report.achievement_status === "achieved" ? "Tercapai" : "Belum Tercapai",
-        guru: report.created_by ? (profileMap.get(report.created_by) || "-") : "-",
+        guru:
+          report.teacher_name?.trim() ||
+          (report.created_by
+            ? profileMap.get(report.created_by) || "-"
+            : "-"),
         catatan: report.notes || "",
       };
     });

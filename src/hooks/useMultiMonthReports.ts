@@ -173,9 +173,7 @@ export const aggregateMultiMonthData = (
     status = 'not_achieved';
   }
 
-  const guru = reports[0]?.created_by
-    ? `${reports[0].created_by}`.substring(0, 50)
-    : '-';
+  const guru = reports[0]?.teacher_name?.trim() || '-';
 
   return {
     studentId,

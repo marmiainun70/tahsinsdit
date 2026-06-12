@@ -18,6 +18,8 @@ export interface MonthlyReport {
   achievement_status: string;
   notes: string;
   created_by: string | null;
+  teacher_id: string | null;
+  teacher_name: string | null;
   created_at: string;
 }
 
@@ -325,12 +327,30 @@ export const useAllMonthlyReports = () =>
   
 export const useAddMonthlyReport = () => {
   const qc = useQueryClient();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const teacherName =
+    profile?.full_name?.trim() ||
+    (typeof user?.user_metadata?.full_name === "string"
+      ? user.user_metadata.full_name.trim()
+      : "") ||
+    user?.email?.trim() ||
+    "Belum ditentukan";
+
   return useMutation({
-    mutationFn: async (report: Omit<MonthlyReport, "id" | "created_at" | "created_by">) => {
+    mutationFn: async (
+      report: Omit<
+        MonthlyReport,
+        "id" | "created_at" | "created_by" | "teacher_id" | "teacher_name"
+      >,
+    ) => {
       const { data, error } = await (supabase as any)
         .from("monthly_reports")
-        .insert({ ...report, created_by: user?.id ?? null })
+        .insert({
+          ...report,
+          created_by: user?.id ?? null,
+          teacher_id: user?.id ?? null,
+          teacher_name: teacherName,
+        })
         .select()
         .single();
       if (error) throw error;
@@ -344,11 +364,27 @@ export const useAddMonthlyReport = () => {
 
 export const useUpdateMonthlyReport = () => {
   const qc = useQueryClient();
+  const { user, profile } = useAuth();
+  const teacherName =
+    profile?.full_name?.trim() ||
+    (typeof user?.user_metadata?.full_name === "string"
+      ? user.user_metadata.full_name.trim()
+      : "") ||
+    user?.email?.trim() ||
+    "Belum ditentukan";
+
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<MonthlyReport> & { id: string }) => {
+    mutationFn: async ({
+      id,
+      ...updates
+    }: Partial<MonthlyReport> & { id: string }) => {
       const { data, error } = await (supabase as any)
         .from("monthly_reports")
-        .update(updates)
+        .update({
+          ...updates,
+          teacher_id: user?.id ?? updates.teacher_id ?? null,
+          teacher_name: teacherName,
+        })
         .eq("id", id)
         .select()
         .single();

@@ -304,6 +304,8 @@ export type Database = {
           start_page: number
           student_id: string
           target_pages: number
+          teacher_id: string | null
+          teacher_name: string | null
           year: number
         }
         Insert: {
@@ -322,6 +324,8 @@ export type Database = {
           start_page?: number
           student_id: string
           target_pages?: number
+          teacher_id?: string | null
+          teacher_name?: string | null
           year: number
         }
         Update: {
@@ -340,6 +344,8 @@ export type Database = {
           start_page?: number
           student_id?: string
           target_pages?: number
+          teacher_id?: string | null
+          teacher_name?: string | null
           year?: number
         }
         Relationships: [

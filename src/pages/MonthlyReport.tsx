@@ -978,8 +978,10 @@ const MonthlyReport = () => {
                             </TableCell>
                             <TableCell className="max-w-[150px] text-xs text-muted-foreground">
                               <div className="truncate">{r.notes || "-"}</div>
-                              {r.created_by && profileMap.get(r.created_by) && (
-                                <div className="text-[10px] text-primary/70 mt-0.5">👤 {profileMap.get(r.created_by)}</div>
+                              {(r.teacher_name || (r.created_by && profileMap.get(r.created_by))) && (
+                                <div className="text-[10px] text-primary/70 mt-0.5">
+                                  👤 {r.teacher_name || profileMap.get(r.created_by!)}
+                                </div>
                               )}
                             </TableCell>
                             <TableCell>

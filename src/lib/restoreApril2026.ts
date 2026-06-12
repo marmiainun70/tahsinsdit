@@ -31,6 +31,8 @@ type ProfileRow = {
 type ExistingReportRow = {
   student_id: string;
   created_by: string | null;
+  teacher_id: string | null;
+  teacher_name: string | null;
 };
 
 export type AprilRestoreResult = {
@@ -166,7 +168,7 @@ export const restoreApril2026Reports = async (): Promise<AprilRestoreResult> => 
 
   const { data: aprilReports, error: reportError } = await supabase
     .from("monthly_reports")
-    .select("student_id,created_by")
+    .select("student_id,created_by,teacher_id,teacher_name")
     .eq("month", 4)
     .eq("year", 2026);
   if (reportError) throw reportError;
@@ -195,6 +197,10 @@ export const restoreApril2026Reports = async (): Promise<AprilRestoreResult> => 
     }
 
     const teacherId = findBestTeacherId(backup.guru, profileRows);
+    const matchedTeacherName = teacherId
+      ? profileRows.find(profile => profile.user_id === teacherId)?.full_name
+      : null;
+    const existingReport = existingReportByStudent.get(student.id);
     return [{
       student_id: student.id,
       month: 4,
@@ -208,7 +214,13 @@ export const restoreApril2026Reports = async (): Promise<AprilRestoreResult> => 
       target_pages: backup.target_pages,
       achievement_status: backup.achievement_status,
       notes: backup.notes,
-      created_by: teacherId ?? existingReportByStudent.get(student.id)?.created_by ?? null,
+      created_by: teacherId ?? existingReport?.created_by ?? null,
+      teacher_id: teacherId ?? existingReport?.teacher_id ?? existingReport?.created_by ?? null,
+      teacher_name:
+        matchedTeacherName ??
+        backup.guru?.trim() ??
+        existingReport?.teacher_name ??
+        null,
     }];
   });
 
