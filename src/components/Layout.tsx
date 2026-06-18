@@ -60,78 +60,83 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
       )}
     </div>
 
-    <nav className="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-thin">
-      <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-3">Menu Utama</p>
-      {navItems.map(({ to, icon: Icon, label }) => {
-        const active = location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
-        return (
-          <Link
-            key={to}
-            to={to}
-            onClick={onClose}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium ${
-              active
-                ? "bg-gold text-white shadow-gold"
-                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-            }`}
-          >
-            <Icon className="w-4 h-4" />
-            {label}
-            {active && <ChevronRight className="w-3 h-3 ml-auto" />}
-          </Link>
-        );
-      })}
-
-      <div className="pt-3">
-        <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-3">Data Kelas</p>
-        {[1, 2, 3, 4, 5, 6].map(k => {
-          const isClassActive = location.pathname === `/class/${k}`;
+    <div className="relative flex-1 overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b from-sidebar via-sidebar/90 to-transparent" />
+      <nav className="sidebar-scroll h-full overflow-y-auto px-4 py-4 space-y-1">
+        <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-3">Menu Utama</p>
+        {navItems.map(({ to, icon: Icon, label }) => {
+          const active = location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
           return (
-            <div key={k}>
-              <Link
-                to={`/class/${k}`}
-                onClick={onClose}
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-sm ${
-                  isClassActive
-                    ? "bg-sidebar-accent text-sidebar-foreground font-medium"
-                    : "text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
-                }`}
-              >
-                <span className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold">
-                  {k}
-                </span>
-                Kelas {k}
-              </Link>
-              {isClassActive && (
-                <div className="ml-3 pl-3 border-l border-sidebar-border/30 mt-1 mb-1 grid grid-cols-4 gap-1">
-                  {["A","B","C","D"].map(r => (
-                    <Link
-                      key={r}
-                      to={`/class/${k}`}
-                      onClick={onClose}
-                      className="flex items-center justify-center py-1 rounded-lg text-xs font-bold text-sidebar-foreground/50 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground transition-all"
-                    >
-                      {r}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+            <Link
+              key={to}
+              to={to}
+              onClick={onClose}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium ${
+                active
+                  ? "bg-gold text-white shadow-gold"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {label}
+              {active && <ChevronRight className="w-3 h-3 ml-auto" />}
+            </Link>
           );
         })}
-      </div>
 
-      <div className="pt-4 mt-2 border-t border-sidebar-border/40">
-        <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-2">Sistem Terkait</p>
-        <button
-          onClick={() => { window.location.href = RELATED_SYSTEM.url; }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-        >
-          <ExternalLink className="w-4 h-4" />
-          <span className="truncate">{RELATED_SYSTEM.menuLabel}</span>
-        </button>
-      </div>
-    </nav>
+        <div className="pt-3">
+          <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-3">Data Kelas</p>
+          {[1, 2, 3, 4, 5, 6].map(k => {
+            const isClassActive = location.pathname === `/class/${k}`;
+            return (
+              <div key={k}>
+                <Link
+                  to={`/class/${k}`}
+                  onClick={onClose}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all text-sm ${
+                    isClassActive
+                      ? "bg-sidebar-accent text-sidebar-foreground font-medium"
+                      : "text-sidebar-foreground/60 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground"
+                  }`}
+                >
+                  <span className="w-6 h-6 rounded-lg bg-white/10 flex items-center justify-center text-xs font-bold">
+                    {k}
+                  </span>
+                  Kelas {k}
+                </Link>
+                {isClassActive && (
+                  <div className="ml-3 pl-3 border-l border-sidebar-border/30 mt-1 mb-1 grid grid-cols-4 gap-1">
+                    {["A","B","C","D"].map(r => (
+                      <Link
+                        key={r}
+                        to={`/class/${k}`}
+                        onClick={onClose}
+                        className="flex items-center justify-center py-1 rounded-lg text-xs font-bold text-sidebar-foreground/50 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground transition-all"
+                      >
+                        {r}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="pt-4 mt-2 border-t border-sidebar-border/40">
+          <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-2">Sistem Terkait</p>
+          <button
+            onClick={() => { window.location.href = RELATED_SYSTEM.url; }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-sm font-medium text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          >
+            <ExternalLink className="w-4 h-4" />
+            <span className="truncate">{RELATED_SYSTEM.menuLabel}</span>
+          </button>
+        </div>
+        <div className="h-6" aria-hidden="true" />
+      </nav>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-10 bg-gradient-to-t from-sidebar via-sidebar/95 to-transparent" />
+    </div>
 
 
 
