@@ -49,7 +49,12 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
         </div>
       </div>
       {onClose && (
-        <button onClick={onClose} className="text-sidebar-foreground/60 hover:text-sidebar-foreground lg:hidden">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Tutup sidebar"
+          className="text-sidebar-foreground/60 hover:text-sidebar-foreground lg:hidden"
+        >
           <X className="w-5 h-5" />
         </button>
       )}
@@ -178,6 +183,15 @@ const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, profile } = useAuth();
+  const isMobileSidebarOpen = sidebarOpen;
+
+  const toggleSidebar = () => {
+    setSidebarOpen((open) => !open);
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
 
   const handleLogout = async () => {
     await signOut();
@@ -186,6 +200,10 @@ const Layout = ({ children }: LayoutProps) => {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isMobileSidebarOpen) {
+        setSidebarOpen(false);
+        return;
+      }
       if (e.key === "/" && !searchOpen && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
         e.preventDefault();
         setSearchOpen(true);
@@ -193,32 +211,45 @@ const Layout = ({ children }: LayoutProps) => {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [searchOpen]);
+  }, [isMobileSidebarOpen, searchOpen]);
+
+  useEffect(() => {
+    closeSidebar();
+  }, [location.pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = isMobileSidebarOpen ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileSidebarOpen]);
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <AnimatePresence>
-        {sidebarOpen && (
+        {isMobileSidebarOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={() => setSidebarOpen(false)}
+            onClick={closeSidebar}
             className="fixed inset-0 bg-black/40 z-20 lg:hidden"
           />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
-        {sidebarOpen && (
+        {isMobileSidebarOpen && (
           <motion.aside
+            id="mobile-dashboard-sidebar"
             initial={{ x: -280 }}
             animate={{ x: 0 }}
             exit={{ x: -280 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="fixed left-0 top-0 h-full w-[min(18rem,86vw)] bg-sidebar z-30 lg:hidden"
           >
-            <SidebarContent location={location} onLogout={handleLogout} profile={profile} onClose={() => setSidebarOpen(false)} />
+            <SidebarContent location={location} onLogout={handleLogout} profile={profile} onClose={closeSidebar} />
           </motion.aside>
         )}
       </AnimatePresence>
@@ -231,7 +262,11 @@ const Layout = ({ children }: LayoutProps) => {
         <header className="h-16 bg-card border-b border-border flex items-center justify-between gap-2 px-3 sm:px-4 lg:px-6 flex-shrink-0 shadow-sm">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
-              onClick={() => setSidebarOpen(true)}
+              type="button"
+              onClick={toggleSidebar}
+              aria-label={isMobileSidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
+              aria-expanded={isMobileSidebarOpen}
+              aria-controls="mobile-dashboard-sidebar"
               className="lg:hidden p-2 rounded-lg hover:bg-secondary transition-colors flex-shrink-0"
             >
               <Menu className="w-5 h-5 text-foreground" />
