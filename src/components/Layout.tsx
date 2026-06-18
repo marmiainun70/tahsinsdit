@@ -178,19 +178,23 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
 };
 
 const Layout = ({ children }: LayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, profile } = useAuth();
-  const isMobileSidebarOpen = sidebarOpen;
 
-  const toggleSidebar = () => {
-    setSidebarOpen((open) => !open);
+  const toggleMobileSidebar = () => {
+    setMobileSidebarOpen((open) => !open);
   };
 
-  const closeSidebar = () => {
-    setSidebarOpen(false);
+  const closeMobileSidebar = () => {
+    setMobileSidebarOpen(false);
+  };
+
+  const toggleDesktopSidebar = () => {
+    setDesktopSidebarOpen((open) => !open);
   };
 
   const handleLogout = async () => {
@@ -200,8 +204,8 @@ const Layout = ({ children }: LayoutProps) => {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isMobileSidebarOpen) {
-        setSidebarOpen(false);
+      if (e.key === "Escape" && mobileSidebarOpen) {
+        setMobileSidebarOpen(false);
         return;
       }
       if (e.key === "/" && !searchOpen && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
@@ -211,36 +215,36 @@ const Layout = ({ children }: LayoutProps) => {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [isMobileSidebarOpen, searchOpen]);
+  }, [mobileSidebarOpen, searchOpen]);
 
   useEffect(() => {
-    closeSidebar();
+    closeMobileSidebar();
   }, [location.pathname]);
 
   useEffect(() => {
-    document.body.style.overflow = isMobileSidebarOpen ? "hidden" : "";
+    document.body.style.overflow = mobileSidebarOpen ? "hidden" : "";
 
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isMobileSidebarOpen]);
+  }, [mobileSidebarOpen]);
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <AnimatePresence>
-        {isMobileSidebarOpen && (
+        {mobileSidebarOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={closeSidebar}
+            onClick={closeMobileSidebar}
             className="fixed inset-0 bg-black/40 z-20 lg:hidden"
           />
         )}
       </AnimatePresence>
 
       <AnimatePresence>
-        {isMobileSidebarOpen && (
+        {mobileSidebarOpen && (
           <motion.aside
             id="mobile-dashboard-sidebar"
             initial={{ x: -280 }}
@@ -249,25 +253,45 @@ const Layout = ({ children }: LayoutProps) => {
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="fixed left-0 top-0 h-full w-[min(18rem,86vw)] bg-sidebar z-30 lg:hidden"
           >
-            <SidebarContent location={location} onLogout={handleLogout} profile={profile} onClose={closeSidebar} />
+            <SidebarContent location={location} onLogout={handleLogout} profile={profile} onClose={closeMobileSidebar} />
           </motion.aside>
         )}
       </AnimatePresence>
 
-      <aside className="hidden lg:flex flex-col w-64 bg-sidebar flex-shrink-0">
-        <SidebarContent location={location} onLogout={handleLogout} profile={profile} />
-      </aside>
+      <motion.aside
+        initial={false}
+        animate={{
+          width: desktopSidebarOpen ? 256 : 0,
+          opacity: desktopSidebarOpen ? 1 : 0,
+        }}
+        transition={{ duration: 0.2, ease: "easeInOut" }}
+        className="hidden lg:flex flex-col bg-sidebar flex-shrink-0 overflow-hidden border-r border-sidebar-border"
+        aria-hidden={!desktopSidebarOpen}
+      >
+        <div className="w-64 h-full">
+          <SidebarContent location={location} onLogout={handleLogout} profile={profile} />
+        </div>
+      </motion.aside>
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <header className="h-16 bg-card border-b border-border flex items-center justify-between gap-2 px-3 sm:px-4 lg:px-6 flex-shrink-0 shadow-sm">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
               type="button"
-              onClick={toggleSidebar}
-              aria-label={isMobileSidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
-              aria-expanded={isMobileSidebarOpen}
+              onClick={toggleMobileSidebar}
+              aria-label={mobileSidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
+              aria-expanded={mobileSidebarOpen}
               aria-controls="mobile-dashboard-sidebar"
               className="lg:hidden p-2 rounded-lg hover:bg-secondary transition-colors flex-shrink-0"
+            >
+              <Menu className="w-5 h-5 text-foreground" />
+            </button>
+            <button
+              type="button"
+              onClick={toggleDesktopSidebar}
+              aria-label={desktopSidebarOpen ? "Sembunyikan sidebar" : "Tampilkan sidebar"}
+              aria-expanded={desktopSidebarOpen}
+              className="hidden lg:inline-flex p-2 rounded-lg hover:bg-secondary transition-colors flex-shrink-0"
             >
               <Menu className="w-5 h-5 text-foreground" />
             </button>
