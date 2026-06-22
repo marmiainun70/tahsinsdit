@@ -35,6 +35,8 @@ const PROGRAMS = [
 
 const IQRA_PAGES = [1, ...Array.from({ length: 29 }, (_, i) => i + 4)]; // 1, 4..32
 const TAHSIN_LANJUTAN_PAGES = 200; // halaman bebas
+const END_NOT_SET = "__empty__";
+const ADVANCED_LEVELS = ["Tahsin Lanjutan", "Tahfizh"] as const;
 
 const programLevels = (program: string): string[] => {
   if (program === "iqra") return ["1", "2", "3", "4", "5", "6"];
@@ -42,11 +44,28 @@ const programLevels = (program: string): string[] => {
   return JUZ_LIST.map(String); // tahfizh
 };
 
+const endLevelOptions = (program: string): string[] => {
+  if (program === "iqra") return ["1", "2", "3", "4", "5", "6", "Tahsin Lanjutan"];
+  if (program === "tahsin") return ["Tahsin Lanjutan", "Tahfizh"];
+  return JUZ_LIST.map(String); // tahfizh
+};
+
 const formatLevel = (program: string, lvl: string): string => {
+  if (ADVANCED_LEVELS.includes(lvl as any)) return lvl;
   if (program === "iqra") return `Iqro ${lvl}`;
   if (program === "tahfizh") return `Juz ${lvl}`;
   return lvl;
 };
+
+const formatStoredLevel = (program: string, lvl: string): string => {
+  if (ADVANCED_LEVELS.includes(lvl as any)) return lvl;
+  return formatLevel(program, lvl);
+};
+
+const isAdvancedEndLevel = (lvl: string): boolean => ADVANCED_LEVELS.includes(lvl as any);
+const isPromotionEnd = (program: string, lvl: string): boolean =>
+  (program === "iqra" && lvl === "Tahsin Lanjutan") ||
+  (program === "tahsin" && lvl === "Tahfizh");
 
 const detectProgramFromLevel = (level: ReadingLevel | string | null | undefined): "iqra" | "tahsin" | "tahfizh" => {
   if (!level) return "iqra";
@@ -57,12 +76,17 @@ const detectProgramFromLevel = (level: ReadingLevel | string | null | undefined)
 };
 
 const calcSigned = (program: string, sl: string, sp: number, el: string, ep: number): number => {
+  if (isPromotionEnd(program, el)) {
+    if (program === "iqra") return calcIqraPagesSigned(parseInt(sl), sp, 6, 32);
+    return getTarget(program);
+  }
   if (program === "tahfizh") return calcHafalanPagesSigned(parseInt(sl), sp, parseInt(el), ep);
   if (program === "iqra") return calcIqraPagesSigned(parseInt(sl), sp, parseInt(el), ep);
   return ep - sp;
 };
 
 const isDecline = (program: string, sl: string, sp: number, el: string, ep: number): boolean => {
+  if (isPromotionEnd(program, el)) return false;
   if (program === "tahfizh") return isTahfizhDecline(parseInt(sl), sp, parseInt(el), ep);
   if (program === "iqra") return isIqraDecline(parseInt(sl), sp, parseInt(el), ep);
   return ep < sp;
@@ -78,6 +102,21 @@ const stepPage = (program: string, cur: number, dir: 1 | -1): number => {
   return Math.max(1, Math.min(TAHSIN_LANJUTAN_PAGES, cur + dir));
 };
 
+const getPageLimit = (program: string, level?: string): number => {
+  if (level === "Tahfizh" || program === "tahfizh") return JUZ_PAGES_PER_JUZ;
+  if (program === "iqra" && !isAdvancedEndLevel(level || "")) return 32;
+  return TAHSIN_LANJUTAN_PAGES;
+};
+
+const pageProgramFor = (program: string, level?: string): string => {
+  if (level === "Tahfizh") return "tahfizh";
+  if (level === "Tahsin Lanjutan") return "tahsin";
+  return program;
+};
+
+const clampPage = (program: string, page: number, level?: string): number =>
+  Math.max(1, Math.min(getPageLimit(program, level), page));
+
 interface Row {
   studentId: string;
   studentName: string;
@@ -88,7 +127,7 @@ interface Row {
   startLevel: string;
   startPage: number;
   endLevel: string;
-  endPage: number;
+  endPage: number | null;
   notes: string;
   present: number;
   sick: number;
@@ -124,12 +163,23 @@ const SpreadsheetReport = () => {
   useEffect(() => {
     const newRows: Row[] = filteredStudents.map(s => {
       const defaultProgram = detectProgramFromLevel(s.level);
+      const latestPrev = (reports as any[])
+        .filter(r => r.student_id === s.id)
+        .sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month))
+        .find(r => r.year * 12 + r.month < year * 12 + month);
+      const previousEndLevel = latestPrev?.end_iqra_level || latestPrev?.iqra_level || "";
 
       // existing report (any program for this month)
       const existing = (reports as any[]).find(
         r => r.student_id === s.id && r.month === month && r.year === year,
       );
-      const program: "iqra" | "tahsin" | "tahfizh" = existing ? existing.program_type : defaultProgram;
+      const program: "iqra" | "tahsin" | "tahfizh" = existing
+        ? existing.program_type
+        : previousEndLevel === "Tahfizh"
+          ? "tahfizh"
+          : previousEndLevel === "Tahsin Lanjutan"
+            ? "tahsin"
+            : defaultProgram;
 
       // previous report (same program) for autofill
       const prev = (reports as any[])
@@ -172,9 +222,13 @@ const SpreadsheetReport = () => {
       }
 
       // autofill from previous month's end
-      const prevEndLvlRaw = prev ? ((prev.end_iqra_level || prev.iqra_level || fallbackLvl)).replace(/^Iqro /, "").replace(/^Juz /, "") : fallbackLvl;
-      const sl = prevEndLvlRaw;
-      const sp = prev ? prev.end_page : 1;
+      const transitionPrev = latestPrev && ["Tahsin Lanjutan", "Tahfizh"].includes(latestPrev.end_iqra_level) ? latestPrev : null;
+      const prevForStart = prev || transitionPrev;
+      const prevEndLvlRaw = prevForStart
+        ? ((prevForStart.end_iqra_level || prevForStart.iqra_level || fallbackLvl)).replace(/^Iqro /, "").replace(/^Juz /, "")
+        : fallbackLvl;
+      const sl = program === "tahfizh" && prevForStart?.end_iqra_level === "Tahfizh" ? "30" : prevEndLvlRaw;
+      const sp = prevForStart ? prevForStart.end_page : 1;
       return {
         studentId: s.id,
         studentName: s.nama,
@@ -182,8 +236,8 @@ const SpreadsheetReport = () => {
         program,
         startLevel: sl,
         startPage: sp,
-        endLevel: sl,
-        endPage: sp,
+        endLevel: "",
+        endPage: null,
         notes: "",
         ...baseAtt,
         dirty: false,
@@ -201,8 +255,11 @@ const SpreadsheetReport = () => {
       // jika program berubah, reset level default
       if (patch.program && patch.program !== r.program) {
         const fb = patch.program === "tahfizh" ? "30" : patch.program === "iqra" ? "1" : "Tahsin Lanjutan";
-        next.startLevel = fb; next.endLevel = fb;
-        next.startPage = 1; next.endPage = 1;
+        next.startLevel = fb; next.endLevel = "";
+        next.startPage = 1; next.endPage = null;
+      }
+      if (patch.endLevel) {
+        next.endPage = clampPage(patch.program || next.program, next.endPage ?? 1, patch.endLevel);
       }
       return next;
     }));
@@ -222,6 +279,7 @@ const SpreadsheetReport = () => {
   const progressPct = totalRows ? Math.round((filledCount / totalRows) * 100) : 0;
 
   const buildAutoNote = (r: Row): string => {
+    if (!r.endLevel || r.endPage === null) return "";
     const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage);
     return getAutoNoteByProgress(r.program, signed, getTarget(r.program));
   };
@@ -229,23 +287,23 @@ const SpreadsheetReport = () => {
   const saveRow = async (idx: number, silent = false): Promise<boolean> => {
     const r = rows[idx];
     if (!r.dirty || r.saving) return true;
+    if (!r.endLevel || r.endPage === null) {
+      if (!silent) toast({ title: `Lengkapi Akhir dan Hal. Akhir untuk ${r.studentName}`, variant: "destructive" });
+      return false;
+    }
     setRows(prev => prev.map((x, i) => i === idx ? { ...x, saving: true } : x));
     try {
       const target = getTarget(r.program);
       const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage);
-      const status = getProgressStatus(signed, target);
+      const status = isPromotionEnd(r.program, r.endLevel) ? "achieved" : getProgressStatus(signed, target);
       const totalAttendance = r.present + r.sick + r.permission + r.absent;
       const attendancePercentage =
         totalAttendance > 0 ? Math.round((r.present / totalAttendance) * 100) : 0;
       const payload: any = {
         student_id: r.studentId,
         month, year, program_type: r.program,
-        iqra_level: r.program === "iqra" ? `Iqro ${r.startLevel}`
-          : r.program === "tahfizh" ? `Juz ${r.startLevel}`
-          : r.startLevel,
-        end_iqra_level: r.program === "iqra" ? `Iqro ${r.endLevel}`
-          : r.program === "tahfizh" ? `Juz ${r.endLevel}`
-          : r.endLevel,
+        iqra_level: formatStoredLevel(r.program, r.startLevel),
+        end_iqra_level: formatStoredLevel(r.program, r.endLevel),
         start_page: r.startPage,
         end_page: r.endPage,
         pages_read: signed,
@@ -376,17 +434,21 @@ const SpreadsheetReport = () => {
               )}
               {rows.map((r, idx) => {
                 const target = getTarget(r.program);
-                const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage);
-                const status = getProgressStatus(signed, target);
-                const decline = isDecline(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage);
+                const hasEnd = Boolean(r.endLevel && r.endPage !== null);
+                const signed = hasEnd ? calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage as number) : 0;
+                const status = hasEnd
+                  ? (isPromotionEnd(r.program, r.endLevel) ? "achieved" : getProgressStatus(signed, target))
+                  : null;
+                const decline = hasEnd ? isDecline(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage as number) : false;
                 const lvlOpts = programLevels(r.program);
-                const showLevelSelect = r.program !== "tahsin"; // Tahsin Lanjutan: 1 level, sembunyikan dropdown
+                const endOpts = endLevelOptions(r.program);
+                const showStartLevelSelect = r.program !== "tahsin"; // Tahsin Lanjutan: 1 level, sembunyikan dropdown awal
                 const statusBadge = {
                   achieved: <Badge className="bg-green-100 text-green-700 hover:bg-green-100"><CheckCircle2 className="w-3 h-3 mr-1" />Tercapai</Badge>,
                   not_achieved: <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100"><AlertTriangle className="w-3 h-3 mr-1" />Belum</Badge>,
                   stagnant: <Badge className="bg-gray-200 text-gray-700 hover:bg-gray-200"><Pause className="w-3 h-3 mr-1" />Stagnan</Badge>,
                   decline: <Badge className="bg-red-100 text-red-700 hover:bg-red-100"><TrendingDown className="w-3 h-3 mr-1" />Turun</Badge>,
-                }[status];
+                }[status || "stagnant"];
 
                 return (
                   <tr key={r.studentId} className={r.dirty ? "bg-amber-50/50" : decline ? "bg-red-50/30" : ""}>
@@ -402,7 +464,7 @@ const SpreadsheetReport = () => {
                       </Select>
                     </td>
                     <td className="p-2 border-b">
-                      {showLevelSelect ? (
+                      {showStartLevelSelect ? (
                         <Select value={r.startLevel} onValueChange={v => updateRow(idx, { startLevel: v })}>
                           <SelectTrigger className="h-8 w-[110px]"><SelectValue /></SelectTrigger>
                           <SelectContent>{lvlOpts.map(l => <SelectItem key={l} value={l}>{formatLevel(r.program, l)}</SelectItem>)}</SelectContent>
@@ -412,28 +474,46 @@ const SpreadsheetReport = () => {
                     <td className="p-2 border-b">
                       <div className="flex items-center gap-1">
                         <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, -1) })}><Minus className="w-3 h-3" /></Button>
-                        <span className="w-8 text-center font-mono">{r.startPage}</span>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={getPageLimit(r.program, r.startLevel)}
+                          value={r.startPage}
+                          onChange={e => updateRow(idx, { startPage: clampPage(r.program, parseInt(e.target.value) || 1, r.startLevel) })}
+                          className="h-8 w-16 text-center text-xs px-1 font-mono"
+                        />
                         <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, 1) })}><Plus className="w-3 h-3" /></Button>
                       </div>
                     </td>
                     <td className="p-2 border-b">
-                      {showLevelSelect ? (
-                        <Select value={r.endLevel} onValueChange={v => updateRow(idx, { endLevel: v })}>
-                          <SelectTrigger className="h-8 w-[110px]"><SelectValue /></SelectTrigger>
-                          <SelectContent>{lvlOpts.map(l => <SelectItem key={l} value={l}>{formatLevel(r.program, l)}</SelectItem>)}</SelectContent>
-                        </Select>
-                      ) : <span className="text-xs text-muted-foreground">—</span>}
+                      <Select value={r.endLevel || END_NOT_SET} onValueChange={v => updateRow(idx, { endLevel: v === END_NOT_SET ? "" : v })}>
+                        <SelectTrigger className="h-8 w-[130px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={END_NOT_SET}>Pilih akhir</SelectItem>
+                          {endOpts.map(l => <SelectItem key={l} value={l}>{formatLevel(r.program, l)}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </td>
                     <td className="p-2 border-b">
                       <div className="flex items-center gap-1">
-                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateRow(idx, { endPage: stepPage(r.program, r.endPage, -1) })}><Minus className="w-3 h-3" /></Button>
-                        <span className="w-8 text-center font-mono">{r.endPage}</span>
-                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateRow(idx, { endPage: stepPage(r.program, r.endPage, 1) })}><Plus className="w-3 h-3" /></Button>
+                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, -1) })}><Minus className="w-3 h-3" /></Button>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={getPageLimit(r.program, r.endLevel)}
+                          value={r.endPage ?? ""}
+                          placeholder="Isi"
+                          onChange={e => updateRow(idx, {
+                            endPage: e.target.value === "" ? null : clampPage(r.program, parseInt(e.target.value) || 1, r.endLevel),
+                          })}
+                          className="h-8 w-16 text-center text-xs px-1 font-mono"
+                        />
+                        <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, 1) })}><Plus className="w-3 h-3" /></Button>
                       </div>
                     </td>
-                    <td className={`p-2 border-b text-center font-mono ${signed < 0 ? "text-red-600" : ""}`}>{signed}</td>
+                    <td className={`p-2 border-b text-center font-mono ${signed < 0 ? "text-red-600" : ""}`}>{hasEnd ? signed : "-"}</td>
                     <td className="p-2 border-b text-center font-mono text-muted-foreground">{target}</td>
-                    <td className="p-2 border-b text-center">{statusBadge}</td>
+                    <td className="p-2 border-b text-center">{hasEnd ? statusBadge : <span className="text-muted-foreground text-xs">-</span>}</td>
                     {(["present", "sick", "permission", "absent"] as const).map(k => (
                       <td key={k} className="p-1 border-b">
                         <Input
