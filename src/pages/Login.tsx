@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, type Variants } from "framer-motion";
-import { BookOpen, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { AlertCircle, BookOpen, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const VIDEO_SRC =
@@ -23,21 +23,31 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  // credError: hanya untuk kesalahan email/password
+  const [credError, setCredError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, authError, clearAuthError } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setCredError("");
+    clearAuthError();
+
     if (!email || !password) {
-      setError("Email dan password harus diisi.");
+      setCredError("Email dan password harus diisi.");
       return;
     }
     setLoading(true);
-    const { error: err } = await signIn(email, password);
+    const result = await signIn(email, password);
     setLoading(false);
-    if (err) setError("Email atau password salah. Silakan coba lagi.");
+
+    if (!result.success) {
+      if (result.type === "credentials") {
+        setCredError(result.message);
+      }
+      // Untuk type lain (pending/rejected/inactive/profile_missing),
+      // pesan sudah disimpan di authError via AuthContext — tidak perlu setCredError
+    }
   };
 
   return (
@@ -185,13 +195,26 @@ const Login = () => {
               </p>
             </div>
 
-            {error && (
+            {/* Error status akun — dari AuthContext, bertahan lintas render */}
+            {authError && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                <span>{authError}</span>
+              </motion.div>
+            )}
+
+            {/* Error kredensial — hanya untuk email/password salah */}
+            {credError && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
               >
-                {error}
+                {credError}
               </motion.div>
             )}
 

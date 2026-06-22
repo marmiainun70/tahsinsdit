@@ -34,18 +34,47 @@ import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotificat
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { session, loading } = useAuth();
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-        <p className="text-muted-foreground text-sm">Memuat...</p>
+  const { session, profile, loading, accountStatus } = useAuth();
+
+  // Tampilkan spinner selama: (a) session belum diketahui, atau
+  // (b) session ada tapi profile belum selesai diverifikasi
+  if (loading || (session && profile === null && accountStatus === null)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">Memuat...</p>
+        </div>
       </div>
-    </div>
-  );
-  if (!session) return <Navigate to="/landing" replace />;
+    );
+  }
+
+  // Tidak ada session → ke halaman login
+  if (!session) return <Navigate to="/login" replace />;
+
+  // Session ada, tapi status sudah diverifikasi dan bukan approved
+  // (enforceSignOut di AuthContext sudah memanggil supabase.signOut,
+  //  sehingga session akan null setelah onAuthStateChange berjalan;
+  //  guard ini untuk transisi sebelum state terupdate)
+  if (accountStatus !== null && accountStatus !== "approved") {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Profile belum ada meskipun accountStatus sudah diketahui — transisi singkat
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="text-muted-foreground text-sm">Memverifikasi akun...</p>
+        </div>
+      </div>
+    );
+  }
+
   return <Layout>{children}</Layout>;
 };
+
 
 const AppRoutes = () => {
   const { session, loading } = useAuth();

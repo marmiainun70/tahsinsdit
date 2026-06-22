@@ -497,25 +497,37 @@ export type Database = {
           created_at: string
           full_name: string
           id: string
+          registered_at: string
           role: string
+          status: "pending" | "approved" | "rejected" | "inactive"
           updated_at: string
           user_id: string
+          username: string | null
+          whatsapp: string | null
         }
         Insert: {
           created_at?: string
           full_name?: string
           id?: string
+          registered_at?: string
           role?: string
+          status?: "pending" | "approved" | "rejected" | "inactive"
           updated_at?: string
           user_id: string
+          username?: string | null
+          whatsapp?: string | null
         }
         Update: {
           created_at?: string
           full_name?: string
           id?: string
+          registered_at?: string
           role?: string
+          status?: "pending" | "approved" | "rejected" | "inactive"
           updated_at?: string
           user_id?: string
+          username?: string | null
+          whatsapp?: string | null
         }
         Relationships: []
       }
