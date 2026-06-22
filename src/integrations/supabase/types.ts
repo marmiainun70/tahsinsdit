@@ -214,6 +214,7 @@ export type Database = {
           jenis_ujian: Database["public"]["Enums"]["exam_schedule_type"]
           keterangan: string
           lokasi: string
+          nama_siswa: string
           tanggal: string
           updated_at: string
           waktu_mulai: string
@@ -226,6 +227,7 @@ export type Database = {
           jenis_ujian: Database["public"]["Enums"]["exam_schedule_type"]
           keterangan?: string
           lokasi?: string
+          nama_siswa?: string
           tanggal: string
           updated_at?: string
           waktu_mulai: string
@@ -238,6 +240,7 @@ export type Database = {
           jenis_ujian?: Database["public"]["Enums"]["exam_schedule_type"]
           keterangan?: string
           lokasi?: string
+          nama_siswa?: string
           tanggal?: string
           updated_at?: string
           waktu_mulai?: string
@@ -606,6 +609,8 @@ export type Database = {
           kelas: number
           level: Database["public"]["Enums"]["reading_level"]
           nama: string
+          nis: string | null
+          nisn: string | null
           perlu_perhatian: boolean
           rombel: string
           status_bacaan: Database["public"]["Enums"]["reading_status"]
@@ -620,6 +625,8 @@ export type Database = {
           kelas: number
           level?: Database["public"]["Enums"]["reading_level"]
           nama: string
+          nis?: string | null
+          nisn?: string | null
           perlu_perhatian?: boolean
           rombel?: string
           status_bacaan?: Database["public"]["Enums"]["reading_status"]
@@ -634,6 +641,8 @@ export type Database = {
           kelas?: number
           level?: Database["public"]["Enums"]["reading_level"]
           nama?: string
+          nis?: string | null
+          nisn?: string | null
           perlu_perhatian?: boolean
           rombel?: string
           status_bacaan?: Database["public"]["Enums"]["reading_status"]
@@ -927,6 +936,7 @@ export type Database = {
       exam_schedule_type:
         | "tahsin_dasar_ke_lanjutan"
         | "tahsin_lanjutan_ke_tahfizh"
+        | "ujian_sertifikat_tahfizh"
       reading_level:
         | "Iqro 1"
         | "Iqro 2"
@@ -1078,6 +1088,7 @@ export const Constants = {
       exam_schedule_type: [
         "tahsin_dasar_ke_lanjutan",
         "tahsin_lanjutan_ke_tahfizh",
+        "ujian_sertifikat_tahfizh",
       ],
       reading_level: [
         "Iqro 1",
