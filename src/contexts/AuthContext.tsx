@@ -107,13 +107,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // sehingga tidak ada race condition concurrent.
   const fetchAndVerifyProfile = async (userId: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("profiles")
         .select("full_name, role, status")
         .eq("user_id", userId)
         .single();
 
-      // Fail closed: jika error DB, tolak akses
+      // Graceful fallback: Jika gagal karena kolom 'status' belum ada di live DB
+      // (karena frontend di-deploy sebelum migration backend)
+      if (error && error.message.toLowerCase().includes("status")) {
+        const fallbackRes = await supabase
+          .from("profiles")
+          .select("full_name, role")
+          .eq("user_id", userId)
+          .single();
+        data = fallbackRes.data;
+        error = fallbackRes.error;
+      }
+
+      // Fail closed: jika masih error DB atau data kosong, tolak akses
       if (error || !data) {
         persistAuthError(PROFILE_MISSING_MESSAGE);
         setProfile(null);
