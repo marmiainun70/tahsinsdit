@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
-import { Users, Layers, ClipboardCheck, Award, FileDown } from "lucide-react";
+import { Users, Layers, ClipboardCheck, CalendarCheck, FileDown } from "lucide-react";
 import IslamicPattern from "./IslamicPattern";
 
 const stats = [
   { icon: Users, label: "Siswa Aktif", value: "486+" },
   { icon: Layers, label: "Rombel", value: "24" },
-  { icon: ClipboardCheck, label: "Ujian Selesai", value: "1.2K+" },
-  { icon: Award, label: "Sertifikat Terbit", value: "320+" },
-  { icon: FileDown, label: "Rapor Terunduh", value: "2.4K+" },
+  { icon: ClipboardCheck, label: "Catatan Aktivitas", value: "1.2K+" },
+  { icon: CalendarCheck, label: "Kehadiran Tercatat", value: "94%" },
+  { icon: FileDown, label: "Laporan Tersusun", value: "2.4K+" },
 ];
 
 export default function Stats() {
@@ -20,7 +20,7 @@ export default function Stats() {
         <div className="text-center max-w-2xl mx-auto mb-12">
           <p className="text-xs font-bold uppercase tracking-widest text-[#E6CB87] mb-2">Statistik Ringkas</p>
           <h2 className="text-3xl sm:text-4xl font-extrabold">Hasil nyata, terukur</h2>
-          <p className="mt-3 text-white/70">Gambaran umum aktivitas pembelajaran Al-Qur'an di SDIT Luqmanul Hakim.</p>
+          <p className="mt-3 text-white/70">Gambaran aktivitas harian dan perkembangan program Tahsin SDIT Luqmanul Hakim.</p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">

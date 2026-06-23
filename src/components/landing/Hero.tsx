@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, Sparkles, BookOpen, GraduationCap, Users, Award, QrCode, TrendingUp } from "lucide-react";
+import { ArrowRight, Sparkles, BookOpen, GraduationCap, Users, CalendarCheck, FileText, TrendingUp } from "lucide-react";
 import IslamicPattern from "./IslamicPattern";
 
 export default function Hero() {
@@ -22,12 +22,12 @@ export default function Hero() {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm mb-6">
             <Sparkles className="w-3.5 h-3.5 text-[#E6CB87]" />
             <span className="text-xs font-semibold tracking-wide text-[#E6CB87]">
-              Sistem Digital Pembelajaran Al-Qur'an
+              Sistem Monitoring Program Tahsin
             </span>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-[1.1] tracking-tight">
-            Sistem Tahsin & Tahfizh{" "}
+            Aktivitas Tahsin Harian{" "}
             <span className="bg-gradient-to-r from-[#E6CB87] via-[#F4DDA0] to-[#C9A24C] bg-clip-text text-transparent">
               SDIT Luqmanul Hakim
             </span>
@@ -38,8 +38,8 @@ export default function Hero() {
           </p>
 
           <p className="mt-5 text-base sm:text-lg text-white/80 max-w-2xl leading-relaxed">
-            Platform digital untuk mengelola ujian tahsin, setoran tahfizh, rapor, sertifikat,
-            rekap nilai, dan validasi dokumen secara lebih rapi, cepat, dan profesional.
+            Platform digital untuk mencatat aktivitas pembelajaran Tahsin, absensi, capaian harian,
+            laporan bulanan, dan penilaian rapor progresif secara rapi dan berkelanjutan.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -60,9 +60,9 @@ export default function Hero() {
 
           <div className="mt-10 grid grid-cols-3 gap-4 max-w-md">
             {[
-              { label: "Tahsin", icon: BookOpen },
-              { label: "Tahfizh", icon: Award },
-              { label: "Rapor PDF", icon: TrendingUp },
+              { label: "Aktivitas Harian", icon: BookOpen },
+              { label: "Laporan Bulanan", icon: FileText },
+              { label: "Progres Siswa", icon: TrendingUp },
             ].map((b) => (
               <div key={b.label} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
                 <b.icon className="w-4 h-4 text-[#E6CB87]" />
@@ -96,8 +96,8 @@ export default function Hero() {
                 {[
                   { icon: Users, label: "Siswa Aktif", value: "486", color: "from-emerald-500 to-emerald-700" },
                   { icon: GraduationCap, label: "Guru", value: "32", color: "from-blue-500 to-blue-700" },
-                  { icon: Award, label: "Sertifikat", value: "214", color: "from-amber-500 to-amber-700" },
-                  { icon: QrCode, label: "QR Validasi", value: "98%", color: "from-purple-500 to-purple-700" },
+                  { icon: CalendarCheck, label: "Kehadiran", value: "94%", color: "from-amber-500 to-amber-700" },
+                  { icon: FileText, label: "Laporan Bulanan", value: "Aktif", color: "from-purple-500 to-purple-700" },
                 ].map((s) => (
                   <div key={s.label} className="p-3 rounded-xl bg-gradient-to-br from-slate-50 to-white border border-slate-200/70">
                     <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${s.color} flex items-center justify-center mb-2`}>
@@ -111,7 +111,7 @@ export default function Hero() {
 
               <div className="mt-4 p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-amber-50 border border-emerald-100">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-semibold text-[#0B1F3A]">Progres Tahfizh</p>
+                  <p className="text-xs font-semibold text-[#0B1F3A]">Progres Tahsin Bulanan</p>
                   <p className="text-xs font-bold text-emerald-700">82%</p>
                 </div>
                 <div className="h-2 rounded-full bg-emerald-100 overflow-hidden">

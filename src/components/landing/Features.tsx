@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
-import { ClipboardCheck, RefreshCw, FileDown, ShieldCheck, Users, UserCog } from "lucide-react";
+import { ClipboardCheck, RefreshCw, FileDown, CalendarCheck, Users, UserCog } from "lucide-react";
 
 const features = [
-  { icon: ClipboardCheck, title: "Input nilai lebih rapi", desc: "Form terstruktur dengan validasi otomatis untuk meminimalkan kesalahan input." },
-  { icon: RefreshCw, title: "Rekap otomatis", desc: "Data ujian dan setoran terkumpul otomatis tiap bulan tanpa rekap manual." },
-  { icon: FileDown, title: "Rapor PDF siap unduh", desc: "Cetak rapor dengan layout profesional dalam satu klik." },
-  { icon: ShieldCheck, title: "Sertifikat ber-QR validasi", desc: "Setiap sertifikat memiliki QR code untuk verifikasi keaslian." },
+  { icon: ClipboardCheck, title: "Catatan harian terstruktur", desc: "Materi, capaian, catatan guru, dan tindak lanjut tersimpan dengan rapi." },
+  { icon: RefreshCw, title: "Rekap bulanan otomatis", desc: "Aktivitas harian dihimpun menjadi laporan perkembangan setiap bulan." },
+  { icon: FileDown, title: "Laporan siap unduh", desc: "Unduh laporan bulanan dan dokumen progres siswa ketika dibutuhkan." },
+  { icon: CalendarCheck, title: "Absensi terintegrasi", desc: "Kehadiran siswa tercatat bersama aktivitas pembelajaran Tahsin." },
   { icon: Users, title: "Data per kelas & rombel", desc: "Pengelompokan siswa per kelas 1–6 dan rombel A–D." },
-  { icon: UserCog, title: "Dukungan guru & admin", desc: "Hak akses bertingkat untuk admin, guru, penguji, dan wali murid." },
+  { icon: UserCog, title: "Dukungan guru & admin", desc: "Guru dan admin memperoleh akses sesuai kebutuhan pengelolaan program." },
 ];
 
 export default function Features() {

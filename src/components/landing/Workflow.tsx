@@ -1,13 +1,13 @@
 import { motion } from "framer-motion";
-import { UserSearch, PenSquare, Calculator, MessageSquare, FileDown, QrCode } from "lucide-react";
+import { UserSearch, PenSquare, CalendarCheck, MessageSquare, FileDown, TrendingUp } from "lucide-react";
 
 const steps = [
   { icon: UserSearch, title: "Pilih siswa", desc: "Pilih siswa berdasarkan kelas dan rombel." },
-  { icon: PenSquare, title: "Input ujian / setoran", desc: "Catat ujian tahsin atau setoran tahfizh." },
-  { icon: Calculator, title: "Sistem menghitung nilai", desc: "Nilai akhir dihitung otomatis sesuai rumus." },
-  { icon: MessageSquare, title: "Guru memberi catatan", desc: "Tambahkan catatan & evaluasi tiap siswa." },
-  { icon: FileDown, title: "Unduh rapor / sertifikat", desc: "Export PDF rapor bulanan atau sertifikat." },
-  { icon: QrCode, title: "QR untuk validasi", desc: "Verifikasi dokumen lewat QR code resmi." },
+  { icon: PenSquare, title: "Catat aktivitas", desc: "Isi materi, capaian bacaan, dan hasil pembelajaran harian." },
+  { icon: CalendarCheck, title: "Catat kehadiran", desc: "Lengkapi status absensi siswa pada periode pembelajaran." },
+  { icon: MessageSquare, title: "Guru memberi evaluasi", desc: "Tambahkan catatan perkembangan dan tindak lanjut siswa." },
+  { icon: TrendingUp, title: "Pantau progres", desc: "Lihat perkembangan Tahsin siswa dari waktu ke waktu." },
+  { icon: FileDown, title: "Unduh laporan", desc: "Siapkan laporan bulanan dan rapor progresif saat dibutuhkan." },
 ];
 
 export default function Workflow() {

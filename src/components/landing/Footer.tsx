@@ -12,7 +12,7 @@ export default function Footer() {
             </div>
             <div>
               <p className="text-lg font-bold text-white">SDIT Luqmanul Hakim</p>
-              <p className="text-sm text-[#E6CB87]">Sistem Tahsin & Tahfizh Al-Qur'an</p>
+              <p className="text-sm text-[#E6CB87]">Monitoring Aktivitas Tahsin Harian</p>
               <p className="mt-3 text-sm text-white/65 max-w-md leading-relaxed">
                 Dikembangkan untuk mendukung pengelolaan pembelajaran Al-Qur'an
                 yang rapi, terukur, dan profesional.

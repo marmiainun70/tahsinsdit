@@ -12,7 +12,7 @@ export const RELATED_SYSTEM = IS_TAHSIN
   ? {
       title: "Buka Sistem Tahfizh",
       description:
-        "Untuk setoran hafalan, ujian tahfizh, sertifikat tahfizh, dan QR validasi.",
+        "Untuk ujian Tahsin dan Tahfizh, rapor, sertifikat, rekap nilai, dan verifikasi dokumen.",
       buttonLabel: "Masuk ke Sistem Tahfizh",
       url: TAHFIZH_URL,
       menuLabel: "Buka Sistem Tahfizh",

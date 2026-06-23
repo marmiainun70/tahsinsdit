@@ -1,33 +1,33 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BookOpen, Award, FileText, BarChart3, ArrowRight } from "lucide-react";
+import { BookOpen, CalendarCheck, FileText, BarChart3, ArrowRight } from "lucide-react";
 
 const cards = [
   {
     icon: BookOpen,
-    title: "Ujian Tahsin",
-    desc: "Kelola ujian tahsin dasar dan tahsin lanjutan.",
+    title: "Aktivitas Harian",
+    desc: "Catat materi, halaman, capaian, dan evaluasi pembelajaran setiap hari.",
     color: "from-emerald-500 to-emerald-700",
     bg: "from-emerald-50 to-white",
   },
   {
-    icon: Award,
-    title: "Ujian Tahfizh",
-    desc: "Kelola ujian hafalan, juz, surat, ayat, dan nilai.",
+    icon: CalendarCheck,
+    title: "Absensi Siswa",
+    desc: "Pantau kehadiran siswa sebagai bagian dari aktivitas program Tahsin.",
     color: "from-[#C9A24C] to-[#E6CB87]",
     bg: "from-amber-50 to-white",
   },
   {
     icon: FileText,
-    title: "Rapor & Sertifikat",
-    desc: "Buat dan unduh rapor atau sertifikat dalam format PDF.",
+    title: "Laporan Bulanan",
+    desc: "Susun dan unduh laporan aktivitas serta perkembangan siswa setiap bulan.",
     color: "from-blue-500 to-blue-700",
     bg: "from-blue-50 to-white",
   },
   {
     icon: BarChart3,
-    title: "Rekap & Statistik",
-    desc: "Pantau progres, rekap bulanan, dan hasil ujian siswa.",
+    title: "Progres & Rapor",
+    desc: "Pantau perkembangan bertahap dan penilaian rapor progresif siswa.",
     color: "from-purple-500 to-purple-700",
     bg: "from-purple-50 to-white",
   },

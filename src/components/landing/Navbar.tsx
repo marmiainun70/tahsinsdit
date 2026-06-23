@@ -39,7 +39,7 @@ export default function Navbar() {
               SDIT Luqmanul Hakim
             </p>
             <p className={`text-[10px] sm:text-xs leading-tight truncate ${scrolled ? "text-emerald-800/70" : "text-[#E6CB87]"}`}>
-              Sistem Tahsin & Tahfizh Al-Qur'an
+              Monitoring Aktivitas Tahsin Harian
             </p>
           </div>
         </Link>
