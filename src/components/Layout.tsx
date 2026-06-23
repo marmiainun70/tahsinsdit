@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { UpcomingExamBanner } from "@/components/ExamScheduleNotification";
 import NotificationBell from "@/components/NotificationBell";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -320,7 +321,7 @@ const Layout = ({ children }: LayoutProps) => {
             >
               <Search className="w-5 h-5 text-muted-foreground" />
             </button>
-
+            <ThemeToggle />
             <NotificationBell />
             <div className="flex items-center gap-2 bg-secondary rounded-xl px-2 sm:px-3 py-2">
               <div className="w-7 h-7 rounded-full bg-gradient-hero flex items-center justify-center">
