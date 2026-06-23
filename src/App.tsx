@@ -85,7 +85,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/landing" element={session ? <Navigate to="/" replace /> : <Landing />} />
       <Route path="/login" element={session ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/" element={session ? <ProtectedRoute><Dashboard /></ProtectedRoute> : <Landing />} />
       <Route path="/class/:classId" element={<ProtectedRoute><ClassStudents /></ProtectedRoute>} />
       <Route path="/student/:studentId" element={<ProtectedRoute><StudentProgress /></ProtectedRoute>} />
       <Route path="/exam/:studentId" element={<ProtectedRoute><Examination /></ProtectedRoute>} />
