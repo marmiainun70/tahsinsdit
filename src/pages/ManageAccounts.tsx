@@ -14,6 +14,19 @@ type AccountRow = {
   registered_at: string;
 };
 
+type ParentStudentRow = {
+  user_id: string;
+  students: {
+    nama: string;
+    kelas: number;
+    rombel: string;
+  } | {
+    nama: string;
+    kelas: number;
+    rombel: string;
+  }[] | null;
+};
+
 export default function ManageAccounts() {
   const { profile, user } = useAuth();
   const queryClient = useQueryClient();
@@ -30,7 +43,25 @@ export default function ManageAccounts() {
         .select("user_id,full_name,username,whatsapp,role,status,registered_at")
         .order("registered_at", { ascending: false });
       if (error) throw error;
-      return data as AccountRow[];
+
+      const { data: parentStudents, error: parentStudentsError } = await supabase
+        .from("parents")
+        .select("user_id,students(nama,kelas,rombel)");
+      if (parentStudentsError) throw parentStudentsError;
+
+      const childrenByParent = new Map<string, string[]>();
+      for (const link of (parentStudents || []) as ParentStudentRow[]) {
+        const student = Array.isArray(link.students) ? link.students[0] : link.students;
+        if (!student) continue;
+        const children = childrenByParent.get(link.user_id) || [];
+        children.push(`${student.nama} (${student.kelas}${student.rombel})`);
+        childrenByParent.set(link.user_id, children);
+      }
+
+      return (data as AccountRow[]).map((account) => ({
+        ...account,
+        children: childrenByParent.get(account.user_id) || [],
+      }));
     },
   });
 
@@ -66,7 +97,7 @@ export default function ManageAccounts() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Persetujuan Akun</h1>
-        <p className="text-sm text-muted-foreground">Tinjau akun guru yang mendaftar dari halaman publik.</p>
+        <p className="text-sm text-muted-foreground">Tinjau akun guru dan orang tua yang mendaftar dari halaman publik.</p>
       </div>
 
       {actionError && (
@@ -105,6 +136,14 @@ export default function ManageAccounts() {
                   <p className="mt-1 text-xs text-muted-foreground">
                     Mendaftar {new Date(account.registered_at).toLocaleString("id-ID")}
                   </p>
+                  {account.role === "parent" && (
+                    <div className="mt-3 rounded-xl bg-secondary/60 p-3">
+                      <p className="text-xs font-semibold text-foreground">Anak yang diverifikasi</p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {account.children.length > 0 ? account.children.join(", ") : "Data anak tidak ditemukan"}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap gap-2">
