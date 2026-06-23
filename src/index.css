@@ -63,45 +63,54 @@
   }
 
   .dark {
-    --background: 150 60% 10%;
-    --foreground: 40 60% 96%;
+    /* OLED-like Dark Forest - Provides maximum contrast */
+    --background: 150 15% 4%;
+    --foreground: 40 20% 96%;
 
-    --card: 150 60% 14%;
-    --card-foreground: 40 60% 96%;
+    /* Slightly raised surfaces for depth */
+    --card: 150 15% 7%;
+    --card-foreground: 40 20% 96%;
 
-    --popover: 150 60% 14%;
-    --popover-foreground: 40 60% 96%;
+    --popover: 150 15% 7%;
+    --popover-foreground: 40 20% 96%;
 
-    --primary: 43 74% 49%;
-    --primary-foreground: 150 60% 10%;
+    /* Vibrant Emerald for Primary Actions - pops against dark bg */
+    --primary: 150 65% 35%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 150 50% 22%;
-    --secondary-foreground: 40 60% 96%;
+    /* Secondary / Alt backgrounds */
+    --secondary: 150 15% 12%;
+    --secondary-foreground: 40 20% 96%;
 
-    --muted: 150 40% 20%;
-    --muted-foreground: 150 20% 65%;
+    /* Muted states - higher lightness for better readability */
+    --muted: 150 15% 10%;
+    --muted-foreground: 150 10% 65%;
 
-    --accent: 150 50% 22%;
-    --accent-foreground: 40 60% 96%;
+    /* Accent / Hover - Soft dark green with Gold text for elegant hover effects */
+    --accent: 150 15% 14%;
+    --accent-foreground: 43 74% 55%;
 
-    --destructive: 0 62.8% 40%;
+    --destructive: 0 70% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 150 40% 22%;
-    --input: 150 40% 22%;
+    /* Borders and Dividers - crisp and subtle */
+    --border: 150 15% 14%;
+    --input: 150 15% 14%;
     --ring: 43 74% 49%;
 
-    --sidebar-background: 150 60% 12%;
-    --sidebar-foreground: 40 60% 96%;
+    /* Sidebar matching the theme */
+    --sidebar-background: 150 15% 5%;
+    --sidebar-foreground: 40 20% 90%;
     --sidebar-primary: 43 74% 49%;
-    --sidebar-primary-foreground: 150 60% 10%;
-    --sidebar-accent: 150 50% 20%;
-    --sidebar-accent-foreground: 40 60% 96%;
-    --sidebar-border: 150 40% 22%;
+    --sidebar-primary-foreground: 150 15% 5%;
+    --sidebar-accent: 150 15% 10%;
+    --sidebar-accent-foreground: 43 74% 55%;
+    --sidebar-border: 150 15% 12%;
     --sidebar-ring: 43 74% 49%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(150 60% 10%), hsl(150 50% 20%));
-    --gradient-card: linear-gradient(135deg, hsl(150 50% 18%), hsl(150 60% 12%));
+    /* Premium Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(150 15% 4%), hsl(150 20% 10%));
+    --gradient-card: linear-gradient(135deg, hsl(150 15% 8%), hsl(150 15% 4%));
   }
 }
 
