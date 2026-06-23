@@ -79,13 +79,13 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => {
   const { session, loading } = useAuth();
-  if (loading) return null;
+  const hasVerifiedSession = !loading && Boolean(session);
 
   return (
     <Routes>
-      <Route path="/landing" element={session ? <Navigate to="/" replace /> : <Landing />} />
-      <Route path="/login" element={session ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/" element={session ? <ProtectedRoute><Dashboard /></ProtectedRoute> : <Landing />} />
+      <Route path="/landing" element={hasVerifiedSession ? <Navigate to="/" replace /> : <Landing />} />
+      <Route path="/login" element={hasVerifiedSession ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/" element={hasVerifiedSession ? <ProtectedRoute><Dashboard /></ProtectedRoute> : <Landing />} />
       <Route path="/class/:classId" element={<ProtectedRoute><ClassStudents /></ProtectedRoute>} />
       <Route path="/student/:studentId" element={<ProtectedRoute><StudentProgress /></ProtectedRoute>} />
       <Route path="/exam/:studentId" element={<ProtectedRoute><Examination /></ProtectedRoute>} />

@@ -190,24 +190,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     // Cek session yang sudah ada saat pertama kali load
-    supabase.auth.getSession().then(async ({ data: { session: existingSession } }) => {
-      if (!mounted) return;
+    supabase.auth
+      .getSession()
+      .then(async ({ data: { session: existingSession } }) => {
+        if (!mounted) return;
 
-      if (!existingSession?.user) {
+        if (!existingSession?.user) {
+          setLoading(false);
+          return;
+        }
+
+        setSession(existingSession);
+        setUser(existingSession.user);
+
+        const approved = await fetchAndVerifyProfile(existingSession.user.id);
+        if (!approved && mounted) {
+          await enforceSignOut();
+        }
+
+        if (mounted) setLoading(false);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setAccountStatus(null);
         setLoading(false);
-        return;
-      }
-
-      setSession(existingSession);
-      setUser(existingSession.user);
-
-      const approved = await fetchAndVerifyProfile(existingSession.user.id);
-      if (!approved && mounted) {
-        await enforceSignOut();
-      }
-
-      if (mounted) setLoading(false);
-    });
+      });
 
     return () => {
       mounted = false;
