@@ -1,20 +1,23 @@
-import { Moon, Sun } from "lucide-react"
-import { useTheme } from "@/components/theme-provider"
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   return (
     <button
-      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+      type="button"
+      onClick={() => setTheme(isDark ? "light" : "dark")}
       className="p-2 rounded-xl hover:bg-secondary transition-colors"
-      title="Ganti Tema"
+      title={isDark ? "Gunakan tema terang" : "Gunakan tema gelap"}
+      aria-label={isDark ? "Gunakan tema terang" : "Gunakan tema gelap"}
     >
-      {theme === "light" ? (
+      {isDark ? (
         <Sun className="h-5 w-5 text-muted-foreground" />
       ) : (
         <Moon className="h-5 w-5 text-muted-foreground" />
       )}
     </button>
-  )
+  );
 }
