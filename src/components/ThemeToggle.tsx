@@ -10,8 +10,8 @@ export function ThemeToggle() {
       type="button"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className="p-2 rounded-xl hover:bg-secondary transition-colors"
-      title={isDark ? "Gunakan tema terang" : "Gunakan tema gelap"}
-      aria-label={isDark ? "Gunakan tema terang" : "Gunakan tema gelap"}
+      title={isDark ? "Beralih ke tema terang" : "Beralih ke tema gelap"}
+      aria-label={isDark ? "Beralih ke tema terang" : "Beralih ke tema gelap"}
     >
       {isDark ? (
         <Sun className="h-5 w-5 text-muted-foreground" />
