@@ -79,6 +79,70 @@ export const useStudents = () =>
     },
   });
 
+export const usePaginatedStudents = ({
+  page,
+  pageSize,
+  search,
+  kelas,
+  rombel,
+  level,
+}: {
+  page: number;
+  pageSize: number;
+  search: string;
+  kelas: string;
+  rombel: string;
+  level: string;
+}) => {
+  return useQuery({
+    queryKey: ["students", "paginated", { page, pageSize, search, kelas, rombel, level }],
+    queryFn: async () => {
+      let query = supabase
+        .from("students")
+        .select("*", { count: "exact" });
+
+      if (search.trim()) {
+        const searchTerm = `%${search.trim()}%`;
+        query = query.or(`nama.ilike.${searchTerm},nis.ilike.${searchTerm},nisn.ilike.${searchTerm},rombel.ilike.${searchTerm}`);
+      }
+
+      if (kelas !== "all") {
+        query = query.eq("kelas", parseInt(kelas));
+      }
+      if (rombel !== "all") {
+        query = query.eq("rombel", rombel);
+      }
+
+      if (level !== "all") {
+        if (level === "tahsin-dasar" || level === "Tahsin Dasar") {
+          query = query.in("level", IQRO_LEVELS);
+        } else if (level === "tahsin-lanjutan" || level === "Tahsin Lanjutan") {
+          query = query.eq("level", "Tahsin Lanjutan");
+        } else if (level === "tahfizh" || level === "Tahfizh") {
+          query = query.eq("level", "Tahfizh");
+        } else {
+          query = query.eq("level", level);
+        }
+      }
+
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      query = query
+        .order("kelas", { ascending: true })
+        .order("nama", { ascending: true })
+        .range(from, to);
+
+      const { data, error, count } = await query;
+      if (error) throw error;
+
+      return {
+        students: data || [],
+        totalCount: count || 0,
+      };
+    },
+  });
+};
+
 export const useStudentsByClass = (kelas: number) =>
   useQuery({
     queryKey: ["students", "class", kelas],
@@ -112,7 +176,7 @@ export const useAddStudent = () => {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async (student: { nama: string; kelas: number; level: ReadingLevel; rombel?: string }) => {
+    mutationFn: async (student: { nama: string; kelas: number; level: ReadingLevel; rombel?: string; nis?: string | null; nisn?: string | null }) => {
       const { data, error } = await supabase
         .from("students")
         .insert({ ...student, rombel: student.rombel ?? 'A', created_by: user?.id ?? null })
@@ -131,7 +195,7 @@ export const useAddStudent = () => {
 export const useUpdateStudent = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; level?: ReadingLevel; halaman_terakhir?: number; status_bacaan?: ReadingStatus; rombel?: string }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; nama?: string; kelas?: number; level?: ReadingLevel; halaman_terakhir?: number; status_bacaan?: ReadingStatus; rombel?: string; nis?: string | null; nisn?: string | null }) => {
       const { data, error } = await supabase
         .from("students")
         .update(updates)

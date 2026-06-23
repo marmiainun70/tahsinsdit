@@ -9,6 +9,7 @@ import Layout from "@/components/Layout";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import ManageAccounts from "@/pages/ManageAccounts";
+import ManageStudents from "@/pages/ManageStudents";
 import Dashboard from "@/pages/Dashboard";
 import ClassStudents from "@/pages/ClassStudents";
 import StudentProgress from "@/pages/StudentProgress";
@@ -90,6 +91,7 @@ const AppRoutes = () => {
       <Route path="/login" element={hasVerifiedSession ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/register" element={hasVerifiedSession ? <Navigate to="/" replace /> : <Register />} />
       <Route path="/" element={hasVerifiedSession ? <ProtectedRoute><Dashboard /></ProtectedRoute> : <Landing />} />
+      <Route path="/kelola-siswa" element={<ProtectedRoute><ManageStudents /></ProtectedRoute>} />
       <Route path="/class/:classId" element={<ProtectedRoute><ClassStudents /></ProtectedRoute>} />
       <Route path="/student/:studentId" element={<ProtectedRoute><StudentProgress /></ProtectedRoute>} />
       <Route path="/exam/:studentId" element={<ProtectedRoute><Examination /></ProtectedRoute>} />

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen, LayoutDashboard, BarChart3, ClipboardList, PieChart,
-  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings, Megaphone, ExternalLink, UserCog
+  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings, Megaphone, ExternalLink, UserCog, Users
 } from "lucide-react";
 import { RELATED_SYSTEM } from "@/components/RelatedSystemCard";
 import GlobalSearch from "@/components/GlobalSearch";
@@ -20,6 +20,7 @@ interface LayoutProps {
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/kelola-siswa", icon: Users, label: "Kelola Siswa" },
   { to: "/laporan-bulanan", icon: FileText, label: "Laporan & Absensi" },
   { to: "/input-cepat", icon: FileSpreadsheet, label: "Input Laporan Bulanan & Absensi (Spreadsheet)" },
   { to: "/rekap-laporan", icon: FileSpreadsheet, label: "Rekap Laporan" },
@@ -165,6 +166,7 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
 
 const Breadcrumb = ({ pathname }: { pathname: string }) => {
   if (pathname === "/") return <h2 className="font-semibold text-foreground text-base">Dashboard</h2>;
+  if (pathname === "/kelola-siswa") return <h2 className="font-semibold text-foreground text-base">Kelola Siswa</h2>;
   if (pathname === "/monitoring") return <h2 className="font-semibold text-foreground text-base">Monitoring Seluruh Siswa</h2>;
   if (pathname === "/exam-list") return <h2 className="font-semibold text-foreground text-base">Daftar Ujian</h2>;
   if (pathname === "/report/class") return <h2 className="font-semibold text-foreground text-base">Rekap Nilai Kelas</h2>;

@@ -25,7 +25,7 @@ const Dashboard = () => {
   const tahsinDasarCount = students.filter((s) => getLevelGroup(s.level as ReadingLevel) === "Tahsin Dasar").length;
   const tahsinLanjutanCount = students.filter((s) => s.level === "Tahsin Lanjutan").length;
   const tahfizhCount = students.filter((s) => s.level === "Tahfizh").length;
-  const perluPerhatian = students.filter((s) => (s as any).perlu_perhatian === true);
+  const perluPerhatian = students.filter((s) => s.perlu_perhatian === true);
 
   const getClassStats = (kelas: number) => {
     const cls = students.filter((s) => s.kelas === kelas);
@@ -35,19 +35,20 @@ const Dashboard = () => {
       tahsinLanjutan: cls.filter((s) => s.level === "Tahsin Lanjutan").length,
       tahfizh: cls.filter((s) => s.level === "Tahfizh").length,
       rombel: {
-        A: cls.filter((s) => (s as any).rombel === "A").length,
-        B: cls.filter((s) => (s as any).rombel === "B").length,
-        C: cls.filter((s) => (s as any).rombel === "C").length,
-        D: cls.filter((s) => (s as any).rombel === "D").length
+        A: cls.filter((s) => s.rombel === "A").length,
+        B: cls.filter((s) => s.rombel === "B").length,
+        C: cls.filter((s) => s.rombel === "C").length,
+        D: cls.filter((s) => s.rombel === "D").length
       }
     };
   };
 
   const statCards = [
-  { label: "Total Siswa", value: total, icon: Users, color: "bg-primary", sub: "Seluruh kelas" },
-  { label: "Tahsin Dasar", value: tahsinDasarCount, icon: BookOpen, color: "bg-gold", sub: "Iqro Jilid 1–6" },
-  { label: "Tahsin Lanjutan", value: tahsinLanjutanCount, icon: Star, color: "bg-emerald-600", sub: "Al-Qur'an" },
-  { label: "Tahfizh", value: tahfizhCount, icon: Award, color: "bg-purple-600", sub: "Hafalan" }];
+    { label: "Total Siswa", value: total, icon: Users, color: "bg-primary", sub: "Seluruh kelas", link: "/kelola-siswa" },
+    { label: "Tahsin Dasar", value: tahsinDasarCount, icon: BookOpen, color: "bg-gold", sub: "Iqro Jilid 1–6", link: "/kelola-siswa?level=tahsin-dasar" },
+    { label: "Tahsin Lanjutan", value: tahsinLanjutanCount, icon: BookOpenCheck, color: "bg-emerald-600", sub: "Al-Qur'an", link: "/kelola-siswa?level=tahsin-lanjutan" },
+    { label: "Tahfizh", value: tahfizhCount, icon: Award, color: "bg-purple-600", sub: "Hafalan", link: "/kelola-siswa?level=tahfizh" }
+  ];
 
 
   if (isLoading) return (
@@ -75,22 +76,36 @@ const Dashboard = () => {
       </motion.div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((s, i) =>
-        <motion.div
-          key={s.label}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.08 }}
-          className="bg-card rounded-2xl p-5 shadow-sm border border-border">
-          
-            <div className={`w-10 h-10 rounded-xl ${s.color} flex items-center justify-center mb-3`}>
-              <s.icon className="w-5 h-5 text-white" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">{s.value}</p>
-            <p className="text-sm font-medium text-foreground">{s.label}</p>
-            <p className="text-xs text-muted-foreground">{s.sub}</p>
-          </motion.div>
-        )}
+        {statCards.map((s, i) => (
+          <Link
+            key={s.label}
+            to={s.link}
+            className="block group rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+              className="bg-card rounded-2xl p-5 shadow-sm border border-border hover:border-primary/50 hover:shadow-md transition-all duration-300 cursor-pointer h-full flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex justify-between items-start">
+                  <div className={`w-10 h-10 rounded-xl ${s.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-sm`}>
+                    <s.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                </div>
+                <p className="text-2xl font-bold text-foreground mt-1">{s.value}</p>
+                <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{s.label}</p>
+                <p className="text-xs text-muted-foreground">{s.sub}</p>
+              </div>
+              <div className="mt-4 pt-2.5 border-t border-border/40 flex items-center justify-between text-[11px] font-medium text-muted-foreground group-hover:text-primary transition-colors">
+                <span>Kelola Siswa</span>
+                <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+              </div>
+            </motion.div>
+          </Link>
+        ))}
       </div>
 
       <RelatedSystemCard />
@@ -130,8 +145,8 @@ const Dashboard = () => {
                       <p className="text-sm font-semibold text-foreground truncate">{s.nama}</p>
                       <p className="text-xs text-muted-foreground">
                         Kelas {s.kelas} · {s.level}
-                        {(s as any).catatan_perhatian &&
-                    <span className="ml-1 italic text-destructive/70">— {(s as any).catatan_perhatian}</span>
+                        {s.catatan_perhatian &&
+                    <span className="ml-1 italic text-destructive/70">— {s.catatan_perhatian}</span>
                     }
                       </p>
                     </div>
