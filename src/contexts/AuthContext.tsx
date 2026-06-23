@@ -169,15 +169,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // ─── Auth State Listener ─────────────────────────────────────────────────
-  // Supabase JS v2: onAuthStateChange menembakkan INITIAL_SESSION pada subscribe,
-  // sehingga getSession() manual tidak diperlukan dan hanya menyebabkan race condition.
-  // Satu sumber kebenaran = onAuthStateChange.
+  // Supabase JS v2: callback onAuthStateChange harus selesai secara sinkron.
+  // Query Supabase lain dijalankan setelah callback selesai agar auth client
+  // tidak terkunci saat profile sedang diverifikasi.
   useEffect(() => {
     let mounted = true;
+    let verificationId = 0;
+
+    const verifySession = async (newSession: Session, currentVerificationId: number) => {
+      const approved = await fetchAndVerifyProfile(newSession.user.id);
+
+      if (!mounted || currentVerificationId !== verificationId) return;
+
+      if (!approved) {
+        await enforceSignOut();
+      }
+
+      if (mounted && currentVerificationId === verificationId) {
+        setLoading(false);
+      }
+    };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
+      (_event, newSession) => {
         if (!mounted) return;
+
+        const currentVerificationId = ++verificationId;
 
         if (!newSession?.user) {
           setSession(null);
@@ -188,15 +205,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
+        setLoading(true);
         setSession(newSession);
         setUser(newSession.user);
 
-        const approved = await fetchAndVerifyProfile(newSession.user.id);
-        if (!approved && mounted) {
-          await enforceSignOut();
-        }
-
-        if (mounted) setLoading(false);
+        window.setTimeout(() => {
+          if (!mounted || currentVerificationId !== verificationId) return;
+          void verifySession(newSession, currentVerificationId);
+        }, 0);
       }
     );
 
