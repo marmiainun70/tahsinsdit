@@ -39,9 +39,10 @@ const queryClient = new QueryClient();
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, profile, loading, accountStatus } = useAuth();
 
-  // Tampilkan spinner selama: (a) session belum diketahui, atau
-  // (b) session ada tapi profile belum selesai diverifikasi
-  if (loading || (session && profile === null && accountStatus === null)) {
+  // Tampilkan spinner selama auth belum selesai diverifikasi.
+  // loading hanya di-set false setelah profile + accountStatus terisi
+  // (atau setelah enforceSignOut pada akun non-approved).
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">

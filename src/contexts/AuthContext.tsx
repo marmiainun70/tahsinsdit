@@ -84,8 +84,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   });
 
-  // Ref untuk mencegah fetchProfile dijalankan berulang / concurrent
-  const fetchingRef = useRef(false);
   // Ref untuk mencegah signOut dipanggil berulang saat status non-approved
   const signingOutRef = useRef(false);
 
@@ -105,9 +103,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const clearAuthError = () => persistAuthError(null);
 
   // ─── Fetch + Verifikasi Profile ──────────────────────────────────────────
+  // Tidak ada fetchingRef: onAuthStateChange adalah satu-satunya pemanggil,
+  // sehingga tidak ada race condition concurrent.
   const fetchAndVerifyProfile = async (userId: string): Promise<boolean> => {
-    if (fetchingRef.current) return false;
-    fetchingRef.current = true;
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -144,8 +142,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setProfile(null);
       setAccountStatus(null);
       return false;
-    } finally {
-      fetchingRef.current = false;
     }
   };
 
@@ -161,6 +157,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // ─── Auth State Listener ─────────────────────────────────────────────────
+  // Supabase JS v2: onAuthStateChange menembakkan INITIAL_SESSION pada subscribe,
+  // sehingga getSession() manual tidak diperlukan dan hanya menyebabkan race condition.
+  // Satu sumber kebenaran = onAuthStateChange.
   useEffect(() => {
     let mounted = true;
 
@@ -189,36 +188,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     );
 
-    // Cek session yang sudah ada saat pertama kali load
-    supabase.auth
-      .getSession()
-      .then(async ({ data: { session: existingSession } }) => {
-        if (!mounted) return;
-
-        if (!existingSession?.user) {
-          setLoading(false);
-          return;
-        }
-
-        setSession(existingSession);
-        setUser(existingSession.user);
-
-        const approved = await fetchAndVerifyProfile(existingSession.user.id);
-        if (!approved && mounted) {
-          await enforceSignOut();
-        }
-
-        if (mounted) setLoading(false);
-      })
-      .catch(() => {
-        if (!mounted) return;
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-        setAccountStatus(null);
-        setLoading(false);
-      });
-
     return () => {
       mounted = false;
       subscription.unsubscribe();
@@ -226,12 +195,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ─── signIn ──────────────────────────────────────────────────────────────
+  // Hanya memanggil signInWithPassword. Setelah berhasil, onAuthStateChange
+  // akan menembakkan SIGNED_IN dan menangani fetchProfile + setLoading.
+  // Verifikasi status (pending/rejected/dll) dilakukan di listener, bukan di sini,
+  // untuk menghindari fetch profile duplikat yang menyebabkan race condition.
   const signIn = async (email: string, password: string): Promise<SignInResult> => {
     clearAuthError();
 
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: authErr } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (authError) {
+    if (authErr) {
       return {
         success: false,
         type: "credentials",
@@ -239,43 +212,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       };
     }
 
-    // Setelah signInWithPassword berhasil, onAuthStateChange akan terpicu
-    // dan fetchAndVerifyProfile akan berjalan.
-    // Untuk signIn, kita ambil session saat ini dan verifikasi langsung.
-    const { data: { session: newSession } } = await supabase.auth.getSession();
-    if (!newSession?.user) {
-      return {
-        success: false,
-        type: "unknown",
-        message: "Gagal mendapatkan sesi. Silakan coba lagi.",
-      };
-    }
-
-    // Ambil profile untuk verifikasi status
-    const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
-      .select("full_name, role, status")
-      .eq("user_id", newSession.user.id)
-      .single();
-
-    if (profileError || !profileData) {
-      await enforceSignOut();
-      const msg = PROFILE_MISSING_MESSAGE;
-      persistAuthError(msg);
-      return { success: false, type: "profile_missing", message: msg };
-    }
-
-    const status = (profileData.status as AccountStatus) ?? "approved";
-
-    if (status !== "approved") {
-      await enforceSignOut();
-      const msg = getStatusMessage(status);
-      persistAuthError(msg);
-      return { success: false, type: status, message: msg };
-    }
-
-    // Status approved — bersihkan error lama
-    persistAuthError(null);
+    // Kembalikan success. onAuthStateChange(SIGNED_IN) akan populate session,
+    // profile, accountStatus, dan memanggil setLoading(false).
+    // Jika status bukan approved, enforceSignOut akan dipanggil oleh listener
+    // dan authError akan di-set — Login.tsx tidak perlu handle ini karena
+    // halaman akan tetap di /login setelah enforceSignOut.
     return { success: true };
   };
 
