@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen, LayoutDashboard, BarChart3, ClipboardList, PieChart,
-  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings, Megaphone, ExternalLink
+  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings, Megaphone, ExternalLink, UserCog
 } from "lucide-react";
 import { RELATED_SYSTEM } from "@/components/RelatedSystemCard";
 import GlobalSearch from "@/components/GlobalSearch";
@@ -28,6 +28,7 @@ const navItems = [
   { to: "/pengumuman", icon: Megaphone, label: "Pengumuman" },
   { to: "/pengaturan-notifikasi", icon: Bell, label: "Pengaturan Notifikasi" },
   { to: "/pengaturan-lembaga", icon: Settings, label: "Pengaturan Lembaga" },
+  { to: "/kelola-akun", icon: UserCog, label: "Persetujuan Akun", adminOnly: true },
 ];
 
 interface SidebarContentProps {
@@ -65,7 +66,9 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b from-sidebar via-sidebar/90 to-transparent" />
       <nav className="sidebar-scroll h-full overflow-y-auto px-4 py-4 space-y-1">
         <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-3">Menu Utama</p>
-        {navItems.map(({ to, icon: Icon, label }) => {
+        {navItems
+          .filter((item) => !item.adminOnly || profile?.role === "admin")
+          .map(({ to, icon: Icon, label }) => {
           const active = location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
           return (
             <Link
@@ -173,6 +176,7 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
   if (pathname === "/rekap-laporan") return <h2 className="font-semibold text-foreground text-base">Rekap Laporan Bulanan</h2>;
   if (pathname === "/input-cepat") return <h2 className="font-semibold text-foreground text-base">Input Laporan Bulanan & Absensi (Spreadsheet)</h2>;
   if (pathname === "/pengaturan-lembaga") return <h2 className="font-semibold text-foreground text-base">Pengaturan Lembaga</h2>;
+  if (pathname === "/kelola-akun") return <h2 className="font-semibold text-foreground text-base">Persetujuan Akun</h2>;
   if (pathname.startsWith("/class/")) {
     const k = pathname.split("/")[2];
     return <h2 className="font-semibold text-foreground text-base">Data Siswa — Kelas {k}</h2>;

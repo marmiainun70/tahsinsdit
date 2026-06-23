@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "next-themes";
 import Layout from "@/components/Layout";
 import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import ManageAccounts from "@/pages/ManageAccounts";
 import Dashboard from "@/pages/Dashboard";
 import ClassStudents from "@/pages/ClassStudents";
 import StudentProgress from "@/pages/StudentProgress";
@@ -85,6 +87,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/landing" element={hasVerifiedSession ? <Navigate to="/" replace /> : <Landing />} />
       <Route path="/login" element={hasVerifiedSession ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/register" element={hasVerifiedSession ? <Navigate to="/" replace /> : <Register />} />
       <Route path="/" element={hasVerifiedSession ? <ProtectedRoute><Dashboard /></ProtectedRoute> : <Landing />} />
       <Route path="/class/:classId" element={<ProtectedRoute><ClassStudents /></ProtectedRoute>} />
       <Route path="/student/:studentId" element={<ProtectedRoute><StudentProgress /></ProtectedRoute>} />
@@ -103,6 +106,7 @@ const AppRoutes = () => {
       <Route path="/restore-april-2026" element={<ProtectedRoute><RestoreAprilReports /></ProtectedRoute>} />
       <Route path="/input-cepat" element={<ProtectedRoute><SpreadsheetReport /></ProtectedRoute>} />
       <Route path="/pengaturan-lembaga" element={<ProtectedRoute><InstitutionSettings /></ProtectedRoute>} />
+      <Route path="/kelola-akun" element={<ProtectedRoute><ManageAccounts /></ProtectedRoute>} />
       <Route path="/pengaturan-notifikasi" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
       <Route path="/pengumuman" element={<ProtectedRoute><BroadcastAnnouncement /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />

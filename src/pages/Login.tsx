@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, type Variants } from "framer-motion";
 import { AlertCircle, BookOpen, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 const VIDEO_SRC =
   "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260506_081238_406ed0e3-5d83-436e-a512-0bbff7ec5b95.mp4";
@@ -235,9 +236,9 @@ const Login = () => {
 
             <p className="pt-2 text-center text-sm text-muted-foreground">
               Belum punya akun?{" "}
-              <span className="font-medium text-primary">
-                Hubungi admin sekolah.
-              </span>
+              <Link to="/register" className="font-medium text-primary hover:underline">
+                Daftar di sini.
+              </Link>
             </p>
           </form>
         </motion.div>
