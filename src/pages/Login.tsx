@@ -40,9 +40,9 @@ const Login = () => {
     }
     setLoading(true);
     const result = await signIn(email, password);
-    setLoading(false);
 
     if (!result.success) {
+      setLoading(false);
       if (result.type === "credentials") {
         setCredError(result.message);
       }
