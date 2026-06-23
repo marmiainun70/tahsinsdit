@@ -499,7 +499,7 @@ export type Database = {
           id: string
           registered_at: string
           role: string
-          status: "pending" | "approved" | "rejected" | "inactive"
+          status: string
           updated_at: string
           user_id: string
           username: string | null
@@ -511,7 +511,7 @@ export type Database = {
           id?: string
           registered_at?: string
           role?: string
-          status?: "pending" | "approved" | "rejected" | "inactive"
+          status?: string
           updated_at?: string
           user_id: string
           username?: string | null
@@ -523,7 +523,7 @@ export type Database = {
           id?: string
           registered_at?: string
           role?: string
-          status?: "pending" | "approved" | "rejected" | "inactive"
+          status?: string
           updated_at?: string
           user_id?: string
           username?: string | null
