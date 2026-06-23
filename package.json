@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "lint:changed": "node scripts/lint-changed.mjs",
+    "push:remote": "node scripts/push-remote.mjs",
     "verify:remote": "node scripts/verify-remote.mjs",
     "preview": "vite preview",
     "test": "vitest run",

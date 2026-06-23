@@ -27,14 +27,15 @@ Lakukan perubahan sekecil mungkin untuk memenuhi permintaan pengguna. Pertahanka
 6. Jalankan `npm run build` untuk perubahan source/config.
 7. Pastikan hanya file dalam lingkup tugas yang akan di-stage.
 8. Commit dengan pesan yang menjelaskan satu tujuan perubahan.
-9. Push branch aktif ke `origin`.
+9. Push branch aktif ke `origin` dengan `npm run push:remote`. Jangan gunakan `git push` langsung dari lingkungan agent.
 10. Jalankan `npm run verify:remote` dan pastikan hash lokal sama dengan hash remote.
 11. Laporkan file yang berubah, hasil verifikasi, commit, branch, dan status sinkronisasi remote.
 
 ## Alur publikasi GitHub
 
 - Jangan menganggap pekerjaan selesai jika perubahan hanya ada di komputer lokal.
-- Default untuk tugas implementasi adalah: edit -> verifikasi -> commit -> push -> verifikasi remote.
+- Default untuk tugas implementasi adalah: edit -> verifikasi -> commit -> `npm run push:remote` -> verifikasi remote.
+- Lingkungan agent dapat menyuntikkan dummy `GITHUB_TOKEN`. Karena itu, gunakan `npm run push:remote`; script ini membersihkan token environment dan memakai Git Credential Manager secara eksplisit.
 - Jika push gagal karena autentikasi atau jaringan, tampilkan error sebenarnya dan langkah yang diperlukan. Jangan mengatakan tugas selesai.
 - Jangan menggunakan force push, reset, rebase, atau mengubah riwayat tanpa izin eksplisit.
 - Jangan memasukkan file lain yang tidak terkait hanya agar worktree terlihat bersih.
