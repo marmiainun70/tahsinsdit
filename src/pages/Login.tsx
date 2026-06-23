@@ -92,7 +92,6 @@ const Login = () => {
             <span className="text-xl font-semibold tracking-tight text-white">
               Tahsin SDIT
             </span>
-            <span className="font-arabic text-lg text-gold">اقرأ</span>
           </motion.div>
 
           {/* Heading */}
@@ -101,15 +100,15 @@ const Login = () => {
               Selamat Datang
             </h1>
             <p className="px-1 text-sm leading-relaxed text-white/70">
-              Tiga langkah singkat menuju ruang monitoring Iqra & Tahsin Anda.
+              Portal terpadu untuk memantau perkembangan tahsin dan evaluasi belajar.
             </p>
           </motion.div>
 
           {/* Steps */}
           <motion.div variants={heroItem} className="space-y-2.5">
-            <StepItem number={1} text="Masuk akun guru / admin" active />
-            <StepItem number={2} text="Pantau progres siswa" />
-            <StepItem number={3} text="Kelola laporan & ujian" />
+            <StepItem number={1} text="Masuk ke portal" active />
+            <StepItem number={2} text="Pantau progres belajar" />
+            <StepItem number={3} text="Akses laporan evaluasi" />
           </motion.div>
         </motion.div>
       </section>
@@ -135,10 +134,10 @@ const Login = () => {
           {/* Header */}
           <div className="space-y-2">
             <h2 className="text-3xl font-medium tracking-tight text-foreground">
-              Masuk ke Sistem
+              Masuk ke Portal
             </h2>
             <p className="text-sm text-muted-foreground">
-              Monitoring Iqra & Tahsin Al-Qur'an — akses guru & admin.
+              Akses terpadu untuk Orang Tua, Guru, dan Admin.
             </p>
           </div>
 
@@ -157,12 +156,12 @@ const Login = () => {
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-5">
             <InputGroup
-              label="Email Guru"
+              label="Alamat Email"
               icon={<Mail className="h-4 w-4" />}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="guru@sekolah.ac.id"
+              placeholder="email@contoh.com"
             />
 
             <div>
@@ -230,7 +229,7 @@ const Login = () => {
                   Memverifikasi...
                 </>
               ) : (
-                "Masuk ke Sistem"
+                "Masuk ke Portal"
               )}
             </button>
 
