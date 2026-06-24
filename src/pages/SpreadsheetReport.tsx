@@ -455,7 +455,6 @@ const SpreadsheetReport = () => {
                     <td className="p-1 border border-blue-300 dark:border-white/20 text-center text-muted-foreground text-[11px]">{idx + 1}</td>
                     <td className="p-1 border border-blue-300 dark:border-white/20 font-medium text-[11px]">
                       <div>{r.studentName}</div>
-                      <div className="text-[9px] text-muted-foreground">{r.studentLevel}</div>
                     </td>
                     <td className="p-0 border border-blue-300 dark:border-white/20">
                       <Select value={r.program} onValueChange={(v: any) => updateRow(idx, { program: v })}>
