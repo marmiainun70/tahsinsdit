@@ -21,6 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { toast } from "@/hooks/use-toast";
 import { NOTE_EMOTICON_WARNING, hasBlockedNoteEmoticon, removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 import { Save, Plus, Minus, Loader2, FileSpreadsheet, MessageSquarePlus, CheckCircle2, AlertTriangle, TrendingDown, Pause } from "lucide-react";
+import { DataTablePagination } from "@/components/DataTablePagination";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -121,6 +122,8 @@ interface Row {
   studentId: string;
   studentName: string;
   studentLevel: ReadingLevel;
+  kelas: number;
+  rombel: string;
   reportId?: string;
   attendanceId?: string;
   program: "iqra" | "tahsin" | "tahfizh";
@@ -148,14 +151,17 @@ const SpreadsheetReport = () => {
   const ensureTS = useEnsureTeacherStudent();
   const [zoom, setZoom] = useState<number>(100);
 
-  const [kelas, setKelas] = useState<string>("1");
-  const [rombel, setRombel] = useState("A");
+  const [kelas, setKelas] = useState<string>("semua");
+  const [rombel, setRombel] = useState<string>("semua");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
   const [savingAll, setSavingAll] = useState(false);
 
   const filteredStudents = useMemo(
-    () => students.filter(s => s.kelas === parseInt(kelas) && s.rombel === rombel),
+    () => students.filter(s => 
+      (kelas === "semua" || s.kelas === parseInt(kelas)) && 
+      (rombel === "semua" || s.rombel === rombel)
+    ),
     [students, kelas, rombel],
   );
 
@@ -209,6 +215,8 @@ const SpreadsheetReport = () => {
           studentId: s.id,
           studentName: s.nama,
           studentLevel: s.level as ReadingLevel,
+          kelas: s.kelas,
+          rombel: s.rombel,
           reportId: existing.id,
           program,
           startLevel: lvlRaw,
@@ -234,6 +242,8 @@ const SpreadsheetReport = () => {
         studentId: s.id,
         studentName: s.nama,
         studentLevel: s.level as ReadingLevel,
+        kelas: s.kelas,
+        rombel: s.rombel,
         program,
         startLevel: sl,
         startPage: sp,
@@ -278,6 +288,34 @@ const SpreadsheetReport = () => {
   const filledCount = rows.filter(r => r.reportId).length;
   const totalRows = rows.length;
   const progressPct = totalRows ? Math.round((filledCount / totalRows) * 100) : 0;
+
+  const rowPages = useMemo(() => {
+    const groups: Record<string, { row: Row, index: number }[]> = {};
+    rows.forEach((r, index) => {
+      const key = `${r.kelas}-${r.rombel}`;
+      if (!groups[key]) groups[key] = [];
+      groups[key].push({ row: r, index });
+    });
+
+    const pages: { row: Row, index: number }[][] = [];
+    const sortedKeys = Object.keys(groups).sort();
+    for (const key of sortedKeys) {
+      const classRows = groups[key];
+      for (let i = 0; i < classRows.length; i += 20) {
+        pages.push(classRows.slice(i, i + 20));
+      }
+    }
+    return pages;
+  }, [rows]);
+
+  const [page, setPage] = useState(1);
+  const totalPages = rowPages.length || 1;
+
+  useEffect(() => {
+    setPage(1);
+  }, [kelas, rombel, month, year]);
+
+  const currentPageRows = rowPages[page - 1] || [];
 
   const buildAutoNote = (r: Row): string => {
     if (!r.endLevel || r.endPage === null) return "";
@@ -374,11 +412,17 @@ const SpreadsheetReport = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             <Select value={kelas} onValueChange={setKelas}>
               <SelectTrigger><SelectValue placeholder="Kelas" /></SelectTrigger>
-              <SelectContent>{KELAS_LIST.map(k => <SelectItem key={k} value={String(k)}>Kelas {k}</SelectItem>)}</SelectContent>
+              <SelectContent>
+                <SelectItem value="semua">Semua Kelas</SelectItem>
+                {KELAS_LIST.map(k => <SelectItem key={k} value={String(k)}>Kelas {k}</SelectItem>)}
+              </SelectContent>
             </Select>
             <Select value={rombel} onValueChange={setRombel}>
               <SelectTrigger><SelectValue placeholder="Rombel" /></SelectTrigger>
-              <SelectContent>{ROMBELS.map(r => <SelectItem key={r} value={r}>Rombel {r}</SelectItem>)}</SelectContent>
+              <SelectContent>
+                <SelectItem value="semua">Semua Rombel</SelectItem>
+                {ROMBELS.map(r => <SelectItem key={r} value={r}>Rombel {r}</SelectItem>)}
+              </SelectContent>
             </Select>
             <Select value={String(month)} onValueChange={v => setMonth(parseInt(v))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -444,10 +488,10 @@ const SpreadsheetReport = () => {
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 && (
+              {currentPageRows.length === 0 && (
                 <tr><td colSpan={16} className="p-6 text-center text-muted-foreground border border-blue-300 dark:border-white/20 text-[10px]">Belum ada siswa pada filter ini.</td></tr>
               )}
-              {rows.map((r, idx) => {
+              {currentPageRows.map(({ row: r, index: idx }, pageIndex) => {
                 const target = getTarget(r.program);
                 const hasEnd = Boolean(r.endLevel && r.endPage !== null);
                 const signed = hasEnd ? calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage as number) : 0;
@@ -473,7 +517,7 @@ const SpreadsheetReport = () => {
 
                 return (
                   <tr key={r.studentId} className={`divide-x divide-blue-300 dark:divide-white/20 ${r.dirty ? "bg-amber-50/50 dark:bg-amber-950/20" : decline ? "bg-red-50/30 dark:bg-red-950/20" : "hover:bg-muted/10"}`}>
-                    <td className={`p-0.5 border border-blue-300 dark:border-white/20 text-center text-muted-foreground text-[10px] sticky left-0 z-10 ${rowBg}`}>{idx + 1}</td>
+                    <td className={`p-0.5 border border-blue-300 dark:border-white/20 text-center text-muted-foreground text-[10px] sticky left-0 z-10 ${rowBg}`}>{pageIndex + 1}</td>
                     <td className={`p-0.5 px-1 border border-blue-300 dark:border-white/20 border-r-2 border-r-blue-500 dark:border-r-white/50 font-medium text-[10px] truncate max-w-[130px] sticky left-[28px] z-10 ${rowBg}`} title={r.studentName}>
                       {r.studentName}
                     </td>
@@ -596,7 +640,12 @@ const SpreadsheetReport = () => {
       </Card>
 
       {rows.length > 0 && (
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center mt-4">
+          <div className="flex-1">
+            {totalPages > 1 && (
+              <DataTablePagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
+            )}
+          </div>
           <Button onClick={saveAll} disabled={savingAll} size="lg" className="gap-2">
             {savingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Simpan Semua
