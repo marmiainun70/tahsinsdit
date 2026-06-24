@@ -1,6 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import * as XLSX from "xlsx";
+import BulkImportStudents from "@/components/BulkImportStudents";
 import {
   usePaginatedStudents,
   useAddStudent,
@@ -23,6 +27,8 @@ import {
   ChevronRight,
   AlertTriangle,
   ClipboardList,
+  Download,
+  Upload,
 } from "lucide-react";
 import {
   Dialog,
@@ -54,6 +60,83 @@ export default function ManageStudents() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const [exporting, setExporting] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      let query = supabase
+        .from("students")
+        .select("*");
+
+      if (search.trim()) {
+        const searchTerm = `%${search.trim()}%`;
+        query = query.or(`nama.ilike.${searchTerm},nis.ilike.${searchTerm},nisn.ilike.${searchTerm},rombel.ilike.${searchTerm}`);
+      }
+
+      if (kelas !== "all") {
+        query = query.eq("kelas", parseInt(kelas));
+      }
+      if (rombel !== "all") {
+        query = query.eq("rombel", rombel);
+      }
+
+      if (level !== "all") {
+        if (level === "tahsin-dasar" || level === "Tahsin Dasar") {
+          query = query.in("level", IQRO_LEVELS);
+        } else if (level === "tahsin-lanjutan" || level === "Tahsin Lanjutan") {
+          query = query.eq("level", "Tahsin Lanjutan");
+        } else if (level === "tahfizh" || level === "Tahfizh") {
+          query = query.eq("level", "Tahfizh");
+        } else {
+          query = query.eq("level", level);
+        }
+      }
+
+      query = query
+        .order("kelas", { ascending: true })
+        .order("nama", { ascending: true });
+
+      const { data: allFilteredStudents, error } = await query;
+      if (error) throw error;
+
+      if (!allFilteredStudents || allFilteredStudents.length === 0) {
+        toast({ title: "Tidak ada data untuk diexport", variant: "destructive" });
+        return;
+      }
+
+      const dataToExport = allFilteredStudents.map((s, idx) => ({
+        "No": idx + 1,
+        "Nama Siswa": s.nama,
+        "NIS": s.nis || "",
+        "NISN": s.nisn || "",
+        "Kelas": s.kelas,
+        "Rombel": s.rombel,
+        "Level Bacaan": s.level,
+        "Halaman Terakhir": s.halaman_terakhir || 0,
+        "Status Bacaan": s.status_bacaan || "",
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(dataToExport);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Data Siswa");
+      
+      let filterLabel = "";
+      if (kelas !== "all") filterLabel += `_Kelas_${kelas}`;
+      if (rombel !== "all") filterLabel += `_Rombel_${rombel}`;
+      if (level !== "all") filterLabel += `_${level}`;
+      
+      XLSX.writeFile(wb, `Data_Siswa${filterLabel}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      toast({ title: "Export Berhasil", description: `${dataToExport.length} data siswa berhasil diexport` });
+    } catch (error) {
+      const e = error as Error;
+      toast({ title: "Gagal melakukan export", description: e.message, variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Active query filters from search params
   const page = parseInt(searchParams.get("page") || "1");
@@ -282,15 +365,34 @@ export default function ManageStudents() {
           </p>
         </div>
         
-        {isAdmin && (
-          <Dialog open={addOpen} onOpenChange={setAddOpen}>
-            <DialogTrigger asChild>
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-gradient-hero text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap shadow-green">
-                <UserPlus className="w-4 h-4" />
-                Tambah Siswa Baru
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center gap-2 px-4 py-2.5 border border-border bg-card text-foreground rounded-xl text-sm font-medium hover:bg-muted transition-colors whitespace-nowrap"
+          >
+            {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            Export Excel
+          </button>
+
+          {isAdmin && (
+            <>
+              <button
+                onClick={() => setShowImport(true)}
+                className="flex items-center gap-2 px-4 py-2.5 border border-border bg-card text-foreground rounded-xl text-sm font-medium hover:bg-muted transition-colors whitespace-nowrap"
+              >
+                <Upload className="w-4 h-4" />
+                Import CSV
               </button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+
+              <Dialog open={addOpen} onOpenChange={setAddOpen}>
+                <DialogTrigger asChild>
+                  <button className="flex items-center gap-2 px-4 py-2.5 bg-gradient-hero text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap shadow-green">
+                    <UserPlus className="w-4 h-4" />
+                    Tambah Siswa Baru
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Tambah Siswa Baru</DialogTitle>
               </DialogHeader>
@@ -394,7 +496,9 @@ export default function ManageStudents() {
               </form>
             </DialogContent>
           </Dialog>
+          </>
         )}
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -725,6 +829,15 @@ export default function ManageStudents() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Bulk Import Modal */}
+      <AnimatePresence>
+        {showImport && (
+          <BulkImportStudents
+            onClose={() => setShowImport(false)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
