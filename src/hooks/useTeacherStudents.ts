@@ -6,7 +6,13 @@ export interface TeacherStudent {
   id: string;
   teacher_id: string;
   student_id: string;
+  status: "pending" | "approved" | "rejected" | "conflict" | "released";
   created_at: string;
+  requested_at?: string;
+  requested_by?: string | null;
+  reviewed_at?: string | null;
+  reviewed_by?: string | null;
+  review_note?: string | null;
 }
 
 export interface TeacherClass {
@@ -16,12 +22,13 @@ export interface TeacherClass {
   rombel: string;
 }
 
-export const useTeacherStudents = (teacherId?: string) =>
+export const useTeacherStudents = (teacherId?: string, status = "approved") =>
   useQuery({
-    queryKey: ["teacher_students", teacherId ?? "all"],
+    queryKey: ["teacher_students", teacherId ?? "all", status],
     queryFn: async () => {
       let q = (supabase as any).from("teacher_students").select("*");
       if (teacherId) q = q.eq("teacher_id", teacherId);
+      if (status !== "all") q = q.eq("status", status);
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as TeacherStudent[];
@@ -47,9 +54,8 @@ export const useEnsureTeacherStudent = () => {
   return useMutation({
     mutationFn: async ({ studentId, kelas, rombel }: { studentId: string; kelas?: number; rombel?: string }) => {
       if (!user?.id) return;
-      await (supabase as any)
-        .from("teacher_students")
-        .upsert({ teacher_id: user.id, student_id: studentId }, { onConflict: "teacher_id,student_id", ignoreDuplicates: true });
+      const { error } = await (supabase as any).rpc("request_teacher_student", { p_student_id: studentId });
+      if (error) throw error;
       if (kelas != null && rombel) {
         await (supabase as any)
           .from("teacher_classes")
@@ -59,6 +65,7 @@ export const useEnsureTeacherStudent = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["teacher_students"] });
       qc.invalidateQueries({ queryKey: ["teacher_classes"] });
+      qc.invalidateQueries({ queryKey: ["teacher-student-assignments"] });
     },
   });
 };

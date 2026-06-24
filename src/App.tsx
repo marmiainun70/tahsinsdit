@@ -10,6 +10,8 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import ManageAccounts from "@/pages/ManageAccounts";
 import ManageStudents from "@/pages/ManageStudents";
+import AdminTeacherAssignments from "@/pages/AdminTeacherAssignments";
+import TeacherManagedStudents from "@/pages/TeacherManagedStudents";
 import Dashboard from "@/pages/Dashboard";
 import ClassStudents from "@/pages/ClassStudents";
 import StudentProgress from "@/pages/StudentProgress";
@@ -92,6 +94,8 @@ const AppRoutes = () => {
       <Route path="/register" element={hasVerifiedSession ? <Navigate to="/" replace /> : <Register />} />
       <Route path="/" element={hasVerifiedSession ? <ProtectedRoute><Dashboard /></ProtectedRoute> : <Landing />} />
       <Route path="/kelola-siswa" element={<ProtectedRoute><ManageStudents /></ProtectedRoute>} />
+      <Route path="/murid-binaan" element={<ProtectedRoute><TeacherManagedStudents /></ProtectedRoute>} />
+      <Route path="/penugasan-guru" element={<ProtectedRoute><AdminTeacherAssignments /></ProtectedRoute>} />
       <Route path="/class/:classId" element={<ProtectedRoute><ClassStudents /></ProtectedRoute>} />
       <Route path="/student/:studentId" element={<ProtectedRoute><StudentProgress /></ProtectedRoute>} />
       <Route path="/exam/:studentId" element={<ProtectedRoute><Examination /></ProtectedRoute>} />

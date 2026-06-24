@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchApprovedManagedStudentIds } from "@/hooks/useSupabaseData";
 
 export interface MonthlyReport {
   id: string;
@@ -249,10 +250,15 @@ export const MONTH_NAMES = [
 
 const MONTHLY_REPORTS_PAGE_SIZE = 1000;
 
-export const useMonthlyReports = (studentId?: string) =>
-  useQuery({
-    queryKey: ["monthly_reports", studentId ?? "all"],
+export const useMonthlyReports = (studentId?: string) => {
+  const { user, profile } = useAuth();
+
+  return useQuery({
+    queryKey: ["monthly_reports", studentId ?? "all", user?.id ?? "anon", profile?.role ?? "none"],
     queryFn: async () => {
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && managedStudentIds.length === 0) return [];
+
       const allReports: MonthlyReport[] = [];
       let from = 0;
 
@@ -266,6 +272,9 @@ export const useMonthlyReports = (studentId?: string) =>
 
         if (studentId) {
           query = query.eq("student_id", studentId);
+        }
+        if (managedStudentIds) {
+          query = query.in("student_id", managedStudentIds);
         }
 
         const { data, error } = await query;
@@ -282,11 +291,17 @@ export const useMonthlyReports = (studentId?: string) =>
       return allReports;
     },
   });
+};
 
-export const useAllMonthlyReports = () =>
-  useQuery({
-    queryKey: ["monthly_reports", "all"],
+export const useAllMonthlyReports = () => {
+  const { user, profile } = useAuth();
+
+  return useQuery({
+    queryKey: ["monthly_reports", "all", user?.id ?? "anon", profile?.role ?? "none"],
     queryFn: async () => {
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && managedStudentIds.length === 0) return [];
+
       const allReports: (MonthlyReport & {
         students: {
           nama: string;
@@ -298,12 +313,18 @@ export const useAllMonthlyReports = () =>
       let from = 0;
 
       while (true) {
-        const { data, error } = await (supabase as any)
+        let query = (supabase as any)
           .from("monthly_reports")
           .select("*, students(nama, kelas, rombel, level)")
           .order("year", { ascending: false })
           .order("month", { ascending: false })
           .range(from, from + MONTHLY_REPORTS_PAGE_SIZE - 1);
+
+        if (managedStudentIds) {
+          query = query.in("student_id", managedStudentIds);
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
 
@@ -324,6 +345,7 @@ export const useAllMonthlyReports = () =>
       return allReports;
     },
   });
+};
   
 export const useAddMonthlyReport = () => {
   const qc = useQueryClient();

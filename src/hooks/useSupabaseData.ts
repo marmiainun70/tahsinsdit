@@ -64,20 +64,43 @@ export const getNextLevel = (current: ReadingLevel): ReadingLevel | null => {
   return null;
 };
 
+export const fetchApprovedManagedStudentIds = async (userId?: string, role?: string) => {
+  if (!userId || role !== "guru") return null;
+
+  const { data, error } = await (supabase as any)
+    .from("teacher_students")
+    .select("student_id")
+    .eq("teacher_id", userId)
+    .eq("status", "approved");
+
+  if (error) throw error;
+
+  return Array.from(new Set((data ?? []).map((item: { student_id: string }) => item.student_id)));
+};
+
 // ─── STUDENTS ────────────────────────────────────────────────────────────────
-export const useStudents = () =>
-  useQuery({
-    queryKey: ["students"],
+export const useStudents = () => {
+  const { user, profile } = useAuth();
+
+  return useQuery({
+    queryKey: ["students", user?.id ?? "anon", profile?.role ?? "none"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("students")
         .select("*")
         .order("kelas", { ascending: true })
         .order("nama", { ascending: true });
+
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && managedStudentIds.length === 0) return [];
+      if (managedStudentIds) query = query.in("id", managedStudentIds);
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
   });
+};
 
 export const usePaginatedStudents = ({
   page,
@@ -94,12 +117,25 @@ export const usePaginatedStudents = ({
   rombel: string;
   level: string;
 }) => {
+  const { user, profile } = useAuth();
+
   return useQuery({
-    queryKey: ["students", "paginated", { page, pageSize, search, kelas, rombel, level }],
+    queryKey: ["students", "paginated", { page, pageSize, search, kelas, rombel, level, userId: user?.id ?? "anon", role: profile?.role ?? "none" }],
     queryFn: async () => {
       let query = supabase
         .from("students")
         .select("*", { count: "exact" });
+
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && managedStudentIds.length === 0) {
+        return {
+          students: [],
+          totalCount: 0,
+        };
+      }
+      if (managedStudentIds) {
+        query = query.in("id", managedStudentIds);
+      }
 
       if (search.trim()) {
         const searchTerm = `%${search.trim()}%`;
@@ -143,24 +179,38 @@ export const usePaginatedStudents = ({
   });
 };
 
-export const useStudentsByClass = (kelas: number) =>
-  useQuery({
-    queryKey: ["students", "class", kelas],
+export const useStudentsByClass = (kelas: number) => {
+  const { user, profile } = useAuth();
+
+  return useQuery({
+    queryKey: ["students", "class", kelas, user?.id ?? "anon", profile?.role ?? "none"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("students")
         .select("*")
         .eq("kelas", kelas)
         .order("nama", { ascending: true });
+
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && managedStudentIds.length === 0) return [];
+      if (managedStudentIds) query = query.in("id", managedStudentIds);
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
   });
+};
 
-export const useStudent = (id: string) =>
-  useQuery({
-    queryKey: ["student", id],
+export const useStudent = (id: string) => {
+  const { user, profile } = useAuth();
+
+  return useQuery({
+    queryKey: ["student", id, user?.id ?? "anon", profile?.role ?? "none"],
     queryFn: async () => {
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && !managedStudentIds.includes(id)) return null;
+
       const { data, error } = await supabase
         .from("students")
         .select("*")
@@ -171,6 +221,7 @@ export const useStudent = (id: string) =>
     },
     enabled: !!id,
   });
+};
 
 export const useAddStudent = () => {
   const qc = useQueryClient();
@@ -229,10 +280,15 @@ export const useDeleteStudent = () => {
 };
 
 // ─── PROGRESS ENTRIES ────────────────────────────────────────────────────────
-export const useProgressEntries = (studentId: string) =>
-  useQuery({
-    queryKey: ["progress", studentId],
+export const useProgressEntries = (studentId: string) => {
+  const { user, profile } = useAuth();
+
+  return useQuery({
+    queryKey: ["progress", studentId, user?.id ?? "anon", profile?.role ?? "none"],
     queryFn: async () => {
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && !managedStudentIds.includes(studentId)) return [];
+
       const { data, error } = await supabase
         .from("progress_entries")
         .select("*")
@@ -243,6 +299,7 @@ export const useProgressEntries = (studentId: string) =>
     },
     enabled: !!studentId,
   });
+};
 
 export const useAddProgress = () => {
   const qc = useQueryClient();
@@ -272,10 +329,15 @@ export const useAddProgress = () => {
 };
 
 // ─── EXAM RECORDS ─────────────────────────────────────────────────────────────
-export const useExamRecords = (studentId: string) =>
-  useQuery({
-    queryKey: ["exams", studentId],
+export const useExamRecords = (studentId: string) => {
+  const { user, profile } = useAuth();
+
+  return useQuery({
+    queryKey: ["exams", studentId, user?.id ?? "anon", profile?.role ?? "none"],
     queryFn: async () => {
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && !managedStudentIds.includes(studentId)) return [];
+
       const { data, error } = await supabase
         .from("exam_records")
         .select("*")
@@ -286,19 +348,29 @@ export const useExamRecords = (studentId: string) =>
     },
     enabled: !!studentId,
   });
+};
 
-export const useAllExamRecords = () =>
-  useQuery({
-    queryKey: ["exams", "all"],
+export const useAllExamRecords = () => {
+  const { user, profile } = useAuth();
+
+  return useQuery({
+    queryKey: ["exams", "all", user?.id ?? "anon", profile?.role ?? "none"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("exam_records")
         .select("*, students(nama, kelas)")
         .order("created_at", { ascending: false });
+
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && managedStudentIds.length === 0) return [];
+      if (managedStudentIds) query = query.in("student_id", managedStudentIds);
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
   });
+};
 
 export const useAddExam = () => {
   const qc = useQueryClient();
@@ -340,10 +412,15 @@ export interface TahsinAssessment {
   updated_at: string;
 }
 
-export const useTahsinAssessments = (studentId: string) =>
-  useQuery({
-    queryKey: ["tahsin", studentId],
+export const useTahsinAssessments = (studentId: string) => {
+  const { user, profile } = useAuth();
+
+  return useQuery({
+    queryKey: ["tahsin", studentId, user?.id ?? "anon", profile?.role ?? "none"],
     queryFn: async () => {
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && !managedStudentIds.includes(studentId)) return [];
+
       const { data, error } = await supabase
         .from("tahsin_assessments" as never)
         .select("*")
@@ -354,6 +431,7 @@ export const useTahsinAssessments = (studentId: string) =>
     },
     enabled: !!studentId,
   });
+};
 
 export const useAddTahsinAssessment = () => {
   const qc = useQueryClient();

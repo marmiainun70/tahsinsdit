@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen, LayoutDashboard, BarChart3, ClipboardList, PieChart,
-  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings, Megaphone, ExternalLink, UserCog, Users
+  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings, Megaphone, ExternalLink, UserCheck, UserCog, Users
 } from "lucide-react";
 import { RELATED_SYSTEM } from "@/components/RelatedSystemCard";
 import GlobalSearch from "@/components/GlobalSearch";
@@ -21,6 +21,8 @@ interface LayoutProps {
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/kelola-siswa", icon: Users, label: "Kelola Siswa" },
+  { to: "/murid-binaan", icon: UserCheck, label: "Murid Binaan", teacherOnly: true },
+  { to: "/penugasan-guru", icon: UserCog, label: "Penugasan Guru", adminOnly: true },
   { to: "/laporan-bulanan", icon: FileText, label: "Laporan & Absensi" },
   { to: "/input-cepat", icon: FileSpreadsheet, label: "Input Laporan Bulanan & Absensi (Spreadsheet)" },
   { to: "/rekap-laporan", icon: FileSpreadsheet, label: "Rekap Laporan" },
@@ -69,6 +71,7 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
         <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-3">Menu Utama</p>
         {navItems
           .filter((item) => !item.adminOnly || profile?.role === "admin")
+          .filter((item) => !item.teacherOnly || profile?.role === "guru" || profile?.role === "admin")
           .map(({ to, icon: Icon, label }) => {
           const active = location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
           return (
@@ -167,6 +170,8 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
 const Breadcrumb = ({ pathname }: { pathname: string }) => {
   if (pathname === "/") return <h2 className="font-semibold text-foreground text-base">Dashboard</h2>;
   if (pathname === "/kelola-siswa") return <h2 className="font-semibold text-foreground text-base">Kelola Siswa</h2>;
+  if (pathname === "/murid-binaan") return <h2 className="font-semibold text-foreground text-base">Murid Binaan</h2>;
+  if (pathname === "/penugasan-guru") return <h2 className="font-semibold text-foreground text-base">Penugasan Guru</h2>;
   if (pathname === "/monitoring") return <h2 className="font-semibold text-foreground text-base">Monitoring Seluruh Siswa</h2>;
   if (pathname === "/exam-list") return <h2 className="font-semibold text-foreground text-base">Daftar Ujian</h2>;
   if (pathname === "/report/class") return <h2 className="font-semibold text-foreground text-base">Rekap Nilai Kelas</h2>;

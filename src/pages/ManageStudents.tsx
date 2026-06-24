@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import BulkImportStudents from "@/components/BulkImportStudents";
 import {
+  fetchApprovedManagedStudentIds,
   usePaginatedStudents,
   useAddStudent,
   useUpdateStudent,
@@ -55,7 +56,7 @@ const ROMBEL_COLORS: Record<Rombel, string> = {
 };
 
 export default function ManageStudents() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const isAdmin = profile?.role === "admin";
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -71,6 +72,15 @@ export default function ManageStudents() {
       let query = supabase
         .from("students")
         .select("*");
+
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && managedStudentIds.length === 0) {
+        toast({ title: "Tidak ada data untuk diexport", variant: "destructive" });
+        return;
+      }
+      if (managedStudentIds) {
+        query = query.in("id", managedStudentIds);
+      }
 
       if (search.trim()) {
         const searchTerm = `%${search.trim()}%`;
