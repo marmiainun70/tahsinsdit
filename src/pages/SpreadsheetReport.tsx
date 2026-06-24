@@ -399,7 +399,7 @@ const SpreadsheetReport = () => {
 
   return (
     <div className="p-3 md:p-6 space-y-4 max-w-[1700px] mx-auto">
-      <Card className="rounded-xl overflow-hidden border-slate-200/60 dark:border-slate-800/60 shadow-sm">
+      <Card className="rounded-2xl overflow-hidden border-2 border-blue-400/60 dark:border-blue-600/60 shadow-md shadow-blue-500/5 bg-background">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base md:text-lg">
             <FileSpreadsheet className="w-5 h-5 text-primary" /> Input Laporan Bulanan & Absensi (Spreadsheet)
@@ -467,29 +467,29 @@ const SpreadsheetReport = () => {
       <Card>
         <CardContent className="p-0 overflow-x-auto">
           <table className="w-full text-xs border-collapse min-w-[950px]" style={{ fontFamily: "'Carlito', 'Calibri', sans-serif", zoom: zoom / 100 }}>
-            <thead className="bg-emerald-600/95 dark:bg-emerald-900/90 backdrop-blur-sm text-white sticky top-0 z-10">
+            <thead className="bg-blue-600 dark:bg-blue-800 text-white sticky top-0 z-10">
               <tr className="text-center">
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-7 text-center align-middle text-[10px] font-semibold sticky left-0 z-20 bg-emerald-600/95 dark:bg-emerald-900/90 backdrop-blur-sm">#</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 border-r-2 border-r-slate-300 dark:border-r-slate-700/80 w-[130px] text-center align-middle text-[10px] font-semibold sticky left-[28px] z-20 bg-emerald-600/95 dark:bg-emerald-900/90 backdrop-blur-sm">Nama Siswa</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-[65px] text-center align-middle text-[10px] font-semibold">Program</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-[55px] text-center align-middle text-[10px] font-semibold">Awal</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-[65px] text-center align-middle text-[10px] font-semibold">Hal. Awal</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-[55px] text-center align-middle text-[10px] font-semibold">Akhir</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-[65px] text-center align-middle text-[10px] font-semibold">Hal. Akhir</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-8 text-center align-middle text-[10px] font-semibold">Total</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-8 text-center align-middle text-[10px] font-semibold">Target</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-[70px] text-center align-middle text-[10px] font-semibold">Status</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-7 text-center align-middle text-[10px] font-semibold" title="Hadir">H</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-7 text-center align-middle text-[10px] font-semibold" title="Sakit">S</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-7 text-center align-middle text-[10px] font-semibold" title="Izin">I</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-7 text-center align-middle text-[10px] font-semibold" title="Alpha">A</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 min-w-[140px] text-center align-middle text-[10px] font-semibold">Catatan</th>
-                <th className="p-0.5 border border-slate-200 dark:border-slate-800/60 w-20 text-center align-middle text-[10px] font-semibold">Status Simpan</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-7 text-center align-middle text-[10px] font-semibold sticky left-0 z-20 bg-blue-600 dark:bg-blue-800">#</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 border-r-2 border-r-slate-300 dark:border-r-slate-700/80 w-[130px] text-center align-middle text-[10px] font-semibold sticky left-[28px] z-20 bg-blue-600 dark:bg-blue-800">Nama Siswa</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[65px] text-center align-middle text-[10px] font-semibold">Program</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[55px] text-center align-middle text-[10px] font-semibold">Awal</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[65px] text-center align-middle text-[10px] font-semibold">Hal. Awal</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[55px] text-center align-middle text-[10px] font-semibold">Akhir</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[65px] text-center align-middle text-[10px] font-semibold">Hal. Akhir</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-8 text-center align-middle text-[10px] font-semibold">Total</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-8 text-center align-middle text-[10px] font-semibold">Target</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[70px] text-center align-middle text-[10px] font-semibold">Status</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-7 text-center align-middle text-[10px] font-semibold" title="Hadir">H</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-7 text-center align-middle text-[10px] font-semibold" title="Sakit">S</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-7 text-center align-middle text-[10px] font-semibold" title="Izin">I</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-7 text-center align-middle text-[10px] font-semibold" title="Alpha">A</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 min-w-[140px] text-center align-middle text-[10px] font-semibold">Catatan</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-20 text-center align-middle text-[10px] font-semibold">Status Simpan</th>
               </tr>
             </thead>
             <tbody>
               {currentPageRows.length === 0 && (
-                <tr><td colSpan={16} className="p-6 text-center text-muted-foreground border border-slate-200 dark:border-slate-800/60 text-[10px]">Belum ada siswa pada filter ini.</td></tr>
+                <tr><td colSpan={16} className="p-6 text-center text-muted-foreground border border-[1.5px] border-blue-400 dark:border-blue-700 text-[10px]">Belum ada siswa pada filter ini.</td></tr>
               )}
               {currentPageRows.map(({ row: r, index: idx }, pageIndex) => {
                 const target = getTarget(r.program);
@@ -510,24 +510,24 @@ const SpreadsheetReport = () => {
                 }[status || "stagnant"];
 
                 const rowBg = r.dirty
-                  ? "bg-[#fffbeb] dark:bg-amber-950/40"
+                  ? "bg-amber-100 dark:bg-amber-900/40"
                   : decline
-                    ? "bg-[#fef2f2] dark:bg-red-950/40"
-                    : "bg-white dark:bg-[#070b09]";
+                    ? "bg-rose-100 dark:bg-rose-900/40"
+                    : "bg-card";
 
                 return (
-                  <tr key={r.studentId} className={`divide-x divide-slate-200 dark:divide-slate-800/60 ${r.dirty ? "bg-amber-50/50 dark:bg-amber-950/20" : decline ? "bg-red-50/30 dark:bg-red-950/20" : "hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"}`}>
-                    <td className={`p-0.5 border border-slate-200 dark:border-slate-800/60 text-center text-muted-foreground text-[10px] sticky left-0 z-10 ${rowBg}`}>{pageIndex + 1}</td>
-                    <td className={`p-0.5 px-1 border border-slate-200 dark:border-slate-800/60 border-r-2 border-r-slate-300 dark:border-r-slate-700/80 font-medium text-[10px] truncate max-w-[130px] sticky left-[28px] z-10 ${rowBg}`} title={r.studentName}>
+                  <tr key={r.studentId} className={`divide-x divide-blue-400 dark:divide-blue-700 ${r.dirty ? "bg-amber-50/50 dark:bg-amber-950/20" : decline ? "bg-red-50/30 dark:bg-red-950/20" : "hover:bg-blue-50/80 dark:hover:bg-blue-900/40 transition-colors"}`}>
+                    <td className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px] sticky left-0 z-10 ${rowBg}`}>{pageIndex + 1}</td>
+                    <td className={`p-0.5 px-1 border border-[1.5px] border-blue-400 dark:border-blue-700 border-r-2 border-r-slate-300 dark:border-r-slate-700/80 font-medium text-[10px] truncate max-w-[130px] sticky left-[28px] z-10 ${rowBg}`} title={r.studentName}>
                       {r.studentName}
                     </td>
-                    <td className="p-0 border border-slate-200 dark:border-slate-800/60">
+                    <td className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <Select value={r.program} onValueChange={(v: any) => updateRow(idx, { program: v })}>
                         <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
                         <SelectContent>{PROGRAMS.map(p => <SelectItem key={p.value} value={p.value} className="text-[10px]">{p.label}</SelectItem>)}</SelectContent>
                       </Select>
                     </td>
-                    <td className="p-0 border border-slate-200 dark:border-slate-800/60">
+                    <td className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       {showStartLevelSelect ? (
                         <Select value={r.startLevel} onValueChange={v => updateRow(idx, { startLevel: v })}>
                           <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
@@ -535,7 +535,7 @@ const SpreadsheetReport = () => {
                         </Select>
                       ) : <span className="text-[10px] text-muted-foreground px-1">—</span>}
                     </td>
-                    <td className="p-0 border border-slate-200 dark:border-slate-800/60">
+                    <td className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <div className="flex items-center justify-center">
                         <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, -1) })}><Minus className="w-2 h-2" /></Button>
                         <Input
@@ -544,12 +544,12 @@ const SpreadsheetReport = () => {
                           max={getPageLimit(r.program, r.startLevel)}
                           value={r.startPage}
                           onChange={e => updateRow(idx, { startPage: clampPage(r.program, parseInt(e.target.value) || 1, r.startLevel) })}
-                          className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
+                          className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-50 dark:focus-visible:bg-blue-900/30"
                         />
                         <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, 1) })}><Plus className="w-2 h-2" /></Button>
                       </div>
                     </td>
-                    <td className="p-0 border border-slate-200 dark:border-slate-800/60">
+                    <td className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <Select value={r.endLevel || END_NOT_SET} onValueChange={v => updateRow(idx, { endLevel: v === END_NOT_SET ? "" : v })}>
                         <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -558,7 +558,7 @@ const SpreadsheetReport = () => {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-0 border border-slate-200 dark:border-slate-800/60">
+                    <td className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <div className="flex items-center justify-center">
                         <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, -1) })}><Minus className="w-2 h-2" /></Button>
                         <Input
@@ -570,31 +570,31 @@ const SpreadsheetReport = () => {
                           onChange={e => updateRow(idx, {
                             endPage: e.target.value === "" ? null : clampPage(r.program, parseInt(e.target.value) || 1, r.endLevel),
                           })}
-                          className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
+                          className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-50 dark:focus-visible:bg-blue-900/30"
                         />
                         <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
                       </div>
                     </td>
-                    <td className={`p-0.5 border border-slate-200 dark:border-slate-800/60 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
-                    <td className="p-0.5 border border-slate-200 dark:border-slate-800/60 text-center text-muted-foreground text-[10px]">{target}</td>
-                    <td className="p-0.5 border border-slate-200 dark:border-slate-800/60 text-center">{hasEnd ? <span className="scale-[0.85] inline-block">{statusBadge}</span> : <span className="text-muted-foreground text-[10px]">-</span>}</td>
+                    <td className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
+                    <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px]">{target}</td>
+                    <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">{hasEnd ? <span className="scale-[0.85] inline-block">{statusBadge}</span> : <span className="text-muted-foreground text-[10px]">-</span>}</td>
                     {(["present", "sick", "permission", "absent"] as const).map(k => (
-                      <td key={k} className="p-0 border border-slate-200 dark:border-slate-800/60">
+                      <td key={k} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                         <Input
                           type="number" min={0}
                           value={r[k]}
                           onChange={e => updateRow(idx, { [k]: Math.max(0, parseInt(e.target.value) || 0) } as any)}
-                          className="h-6 w-full text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
+                          className="h-6 w-full text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-50 dark:focus-visible:bg-blue-900/30"
                         />
                       </td>
                     ))}
-                    <td className="p-0.5 border border-slate-200 dark:border-slate-800/60">
+                    <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <div className="flex items-center gap-0.5">
                         <Textarea
                           value={r.notes}
                           onChange={e => updateRowNotes(idx, e.target.value)}
                           placeholder="Catatan..."
-                          className="min-h-[22px] h-6 w-full border-none bg-transparent shadow-none resize-none focus-visible:ring-0 focus-visible:bg-background text-[10px] px-1 py-0"
+                          className="min-h-[22px] h-6 w-full border-none bg-transparent shadow-none resize-none focus-visible:ring-0 focus-visible:bg-blue-50 dark:focus-visible:bg-blue-900/30 text-[10px] px-1 py-0"
                           rows={1}
                         />
                         <Popover>
@@ -625,7 +625,7 @@ const SpreadsheetReport = () => {
                         </Popover>
                       </div>
                     </td>
-                    <td className="p-0.5 border border-slate-200 dark:border-slate-800/60 text-center text-[10px]">
+                    <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px]">
                       {r.saving ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> :
                         r.dirty ? <Badge variant="outline" className="text-amber-600 border-amber-300 py-0 px-1 text-[9px]">Belum Simpan</Badge> :
                         r.reportId ? <CheckCircle2 className="w-3 h-3 text-green-600 inline" /> :
