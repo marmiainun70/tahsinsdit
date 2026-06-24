@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -243,7 +243,8 @@ const RecapReport = () => {
   const [filterMonth, setFilterMonth] = useState<string>(String(now.getMonth() + 1));
   const [filterYear, setFilterYear] = useState<string>(String(now.getFullYear()));
   const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"all" | "filled" | "empty">("all");
+  type FilterStatusType = "all" | "filled" | "empty" | "achieved" | "not_achieved";
+  const [filterStatus, setFilterStatus] = useState<FilterStatusType>("all");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [pdfPreviewSize, setPdfPreviewSize] = useState<PdfPaperSize>("a4");
@@ -385,6 +386,8 @@ const RecapReport = () => {
         const filtered = g.rows.filter(r => {
           if (filterStatus === "filled") return r.status !== "empty";
           if (filterStatus === "empty") return r.status === "empty";
+          if (filterStatus === "achieved") return r.status === "achieved";
+          if (filterStatus === "not_achieved") return r.status === "not_achieved";
           return true;
         }).map((r, i) => ({ ...r, no: i + 1 }));
         return { ...g, rows: filtered };
@@ -1156,32 +1159,98 @@ const RecapReport = () => {
               label="Total Siswa"
               value={stats.total}
               color="bg-blue-50 text-blue-700"
+              onClick={() => setFilterStatus("all")}
+              isActive={filterStatus === "all"}
+              activeColor="border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/30"
             />
             <StatCard
               icon={<ListChecks className="w-4 h-4" />}
               label="Sudah Diisi"
               value={stats.filled}
               color="bg-emerald-50 text-emerald-700"
+              onClick={() => setFilterStatus("filled")}
+              isActive={filterStatus === "filled"}
+              activeColor="border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/30"
             />
             <StatCard
               icon={<FileWarning className="w-4 h-4" />}
               label="Belum Diisi"
               value={stats.empty}
               color="bg-rose-50 text-rose-700"
+              onClick={() => setFilterStatus("empty")}
+              isActive={filterStatus === "empty"}
+              activeColor="border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30"
             />
             <StatCard
               icon={<Percent className="w-4 h-4" />}
               label="Kelengkapan"
               value={`${stats.completion}%`}
               color="bg-amber-50 text-amber-700"
+              onClick={() => setFilterStatus("filled")}
+              isActive={false}
+              activeColor="border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/30"
             />
             <StatCard
               icon={<CheckCircle2 className="w-4 h-4" />}
               label="Target Tercapai"
               value={`${stats.achievementRate}%`}
               color="bg-violet-50 text-violet-700"
+              onClick={() => setFilterStatus("achieved")}
+              isActive={filterStatus === "achieved"}
+              activeColor="border-violet-500 ring-2 ring-violet-500/20 bg-violet-50/30"
             />
           </div>
+
+          {/* Active Filter Cues */}
+          {(filterStatus !== "all" || search.trim() || filterKelas !== "all" || filterRombel !== "all") && (
+            <div className="flex flex-wrap items-center gap-2 p-2.5 bg-muted/40 border border-border rounded-lg text-xs transition-all duration-200">
+              <span className="text-muted-foreground font-medium flex items-center gap-1">
+                Filter Aktif:
+              </span>
+              {filterStatus !== "all" && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Status: {
+                    filterStatus === "filled" ? "Sudah Diisi" :
+                    filterStatus === "empty" ? "Belum Diisi" :
+                    filterStatus === "achieved" ? "Target Tercapai" :
+                    filterStatus === "not_achieved" ? "Target Belum Tercapai" : ""
+                  }
+                  <button onClick={() => setFilterStatus("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">×</button>
+                </Badge>
+              )}
+              {filterKelas !== "all" && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Kelas {filterKelas}
+                  <button onClick={() => setFilterKelas("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">×</button>
+                </Badge>
+              )}
+              {filterRombel !== "all" && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Rombel {filterRombel}
+                  <button onClick={() => setFilterRombel("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">×</button>
+                </Badge>
+              )}
+              {search.trim() && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Cari: "{search}"
+                  <button onClick={() => setSearch("")} className="hover:text-foreground text-muted-foreground font-bold ml-1">×</button>
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-[11px] text-rose-600 hover:text-rose-700 hover:bg-rose-50 ml-auto"
+                onClick={() => {
+                  setFilterStatus("all");
+                  setFilterKelas("all");
+                  setFilterRombel("all");
+                  setSearch("");
+                }}
+              >
+                Reset Semua Filter
+              </Button>
+            </div>
+          )}
 
           {stats.empty > 0 && (
             <div className="flex items-start gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-800">
@@ -1276,11 +1345,15 @@ const RecapReport = () => {
                   onValueChange={(v) => setFilterStatus(v as any)}
                 >
                   <SelectTrigger
-                    className={`h-9 ${
+                    className={`h-9 transition-colors ${
                       filterStatus === "empty"
-                        ? "border-rose-400 text-rose-700"
+                        ? "border-rose-400 text-rose-700 bg-rose-50/50"
                         : filterStatus === "filled"
-                        ? "border-emerald-400 text-emerald-700"
+                        ? "border-emerald-400 text-emerald-700 bg-emerald-50/50"
+                        : filterStatus === "achieved"
+                        ? "border-violet-400 text-violet-700 bg-violet-50/50"
+                        : filterStatus === "not_achieved"
+                        ? "border-amber-400 text-amber-700 bg-amber-50/50"
                         : ""
                     }`}
                   >
@@ -1290,6 +1363,8 @@ const RecapReport = () => {
                     <SelectItem value="all">Semua</SelectItem>
                     <SelectItem value="filled">Sudah Diisi</SelectItem>
                     <SelectItem value="empty">Belum Diisi</SelectItem>
+                    <SelectItem value="achieved">Target Tercapai</SelectItem>
+                    <SelectItem value="not_achieved">Target Belum Tercapai</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1645,22 +1720,46 @@ const StatCard = ({
   label,
   value,
   color,
+  onClick,
+  isActive,
+  activeColor,
 }: {
   icon: React.ReactNode;
   label: string;
   value: number | string;
   color: string;
-}) => (
-  <Card>
-    <CardContent className="p-3">
-      <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg ${color} mb-2`}>
-        {icon}
-      </div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-xl font-bold text-foreground">{value}</p>
-    </CardContent>
-  </Card>
-);
+  onClick?: () => void;
+  isActive?: boolean;
+  activeColor?: string;
+}) => {
+  const activeClass = isActive
+    ? activeColor || "border-primary ring-2 ring-primary/20 bg-primary/5"
+    : "hover:border-muted-foreground/30";
+
+  return (
+    <Card
+      onClick={onClick}
+      className={`transition-all duration-200 select-none ${
+        onClick ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:translate-y-0" : ""
+      } ${activeClass}`}
+    >
+      <CardContent className="p-3">
+        <div className="flex justify-between items-start">
+          <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg ${color} mb-2`}>
+            {icon}
+          </div>
+          {isActive && (
+            <Badge variant="secondary" className="text-[9px] py-0 px-1.5 h-3.5 bg-primary/10 text-primary border-none font-semibold">
+              Aktif
+            </Badge>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-xl font-bold text-foreground">{value}</p>
+      </CardContent>
+    </Card>
+  );
+};
 
 const highlight = (text: string, q: string) => {
   if (!q.trim()) return text;
