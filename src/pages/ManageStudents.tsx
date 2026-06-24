@@ -64,22 +64,9 @@ export default function ManageStudents() {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const [tableHeight, setTableHeight] = useState<number | "auto">("auto");
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const observer = new ResizeObserver((entries) => {
-      if (window.innerWidth >= 768) {
-        setTableHeight(entries[0].contentRect.height * 0.85);
-      } else {
-        setTableHeight("auto");
-      }
-    });
-    const el = tableContainerRef.current;
-    if (el) observer.observe(el);
-    return () => observer.disconnect();
-  }, [students]);
-
   const [exporting, setExporting] = useState(false);
   const [showImport, setShowImport] = useState(false);
+
 
   const handleExport = async () => {
     try {
