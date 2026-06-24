@@ -619,7 +619,7 @@ export default function ManageStudents() {
         ) : (
           <div>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full md:[zoom:0.75]">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
                     <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">No</th>
