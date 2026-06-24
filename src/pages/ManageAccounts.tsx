@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Loader2, ShieldCheck, UserX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getRoleLabel } from "@/lib/roleLabels";
 
 type AccountRow = {
   user_id: string;
@@ -131,7 +132,7 @@ export default function ManageAccounts() {
                     )}
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    @{account.username || "-"} · {account.whatsapp || "WhatsApp belum diisi"} · {account.role}
+                    @{account.username || "-"} · {account.whatsapp || "WhatsApp belum diisi"} · {getRoleLabel(account.role)}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     Mendaftar {new Date(account.registered_at).toLocaleString("id-ID")}

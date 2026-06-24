@@ -737,14 +737,14 @@ const Monitoring = () => {
             </label>
             <label className="space-y-1">
               <span className="text-xs font-medium text-primary-foreground/80">
-                Guru/Penguji
+                Guru Tahsin & Tahfizh
               </span>
               <select
                 value={selectedTeacher}
                 onChange={(event) => setSelectedTeacher(event.target.value)}
                 className="h-10 w-full rounded-xl border border-white/30 bg-white px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-white/50"
               >
-                <option value={ALL_TEACHERS}>Semua Guru/Penguji</option>
+                <option value={ALL_TEACHERS}>Semua Guru Tahsin & Tahfizh</option>
                 {teacherNames.map((teacherName) => (
                   <option key={teacherName} value={teacherName}>
                     {teacherName}
@@ -940,7 +940,7 @@ const Monitoring = () => {
         <div className="mb-4">
           <h2 className="flex items-center gap-2 font-bold text-foreground">
             <Users className="h-5 w-5 text-primary" />
-            Ringkasan Guru/Penguji
+            Ringkasan Guru Tahsin & Tahfizh
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
             Berdasarkan laporan {MONTH_NAMES[activeMonth - 1]} {activeYear}.
@@ -948,7 +948,7 @@ const Monitoring = () => {
         </div>
         {teacherSummaries.length === 0 ? (
           <p className="rounded-xl bg-muted/40 p-4 text-sm text-muted-foreground">
-            Belum ada data guru/penguji untuk dirangkum.
+            Belum ada data guru tahsin & tahfizh untuk dirangkum.
           </p>
         ) : (
           <div
@@ -1117,7 +1117,7 @@ const Monitoring = () => {
             Belum ada data pada filter ini
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pilih guru/penguji lain atau tambahkan data siswa.
+            Pilih guru tahsin & tahfizh lain atau tambahkan data siswa.
           </p>
         </div>
       ) : (
@@ -1551,7 +1551,7 @@ const Monitoring = () => {
                         "No",
                         "Nama",
                         "Kelas",
-                        "Guru/Penguji",
+                        "Guru Tahsin & Tahfizh",
                         "Level",
                         "Status Bacaan",
                         "Halaman",

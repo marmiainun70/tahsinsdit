@@ -32,8 +32,8 @@ Deno.serve(async (req) => {
     // Insert user_role as 'guru'
     await supabase.from("user_roles").insert({ user_id: userId, role: "guru" });
 
-    // Update profile with full_name and role 'penguji'
-    await supabase.from("profiles").update({ full_name: u.full_name, role: "penguji" }).eq("user_id", userId);
+    // Update profile with full_name and role 'guru'
+    await supabase.from("profiles").update({ full_name: u.full_name, role: "guru" }).eq("user_id", userId);
 
     results.push({ email: u.email, success: true });
   }

@@ -242,7 +242,7 @@ export const useExportPDF = () => {
           section("Riwayat Ujian Kenaikan Level");
           autoTable(doc, {
             startY: cursorY,
-            head: [["Tanggal", "Dari", "Ke", "Hasil", "Nilai", "Penguji"]],
+            head: [["Tanggal", "Dari", "Ke", "Hasil", "Nilai", "Guru Tahsin & Tahfizh"]],
             body: ujian.slice(0, 15).map((u: any) => [
               u.tanggal,
               u.level_dari || "—",

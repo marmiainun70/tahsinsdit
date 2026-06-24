@@ -48,7 +48,7 @@ export default function TeacherManagedStudents() {
   const [kelasFilter, setKelasFilter] = useState(ALL);
   const [viewFilter, setViewFilter] = useState<"available" | "mine" | "pending">("available");
   const [page, setPage] = useState(1);
-  const isTeacher = profile?.role === "guru" || profile?.role === "admin";
+  const isTeacher = profile?.role === "guru" || profile?.role === "penguji" || profile?.role === "admin";
 
   const { data, isLoading } = useQuery({
     queryKey: ["teacher-managed-students", user?.id],

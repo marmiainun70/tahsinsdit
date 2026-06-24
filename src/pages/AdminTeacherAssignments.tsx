@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, Loader2, Search, ShieldCheck, UserMinus, UserPlus, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock3, Loader2, Search, ShieldCheck, UserCheck, UserMinus, UserPlus, UserX, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { DataTablePagination } from "@/components/DataTablePagination";
@@ -49,6 +49,11 @@ const statusClass: Record<AssignmentStatus, string> = {
   released: "bg-slate-100 text-slate-700",
 };
 
+const teacherRoleLabel: Record<string, string> = {
+  guru: "Guru Tahsin & Tahfizh",
+  penguji: "Guru Tahsin & Tahfizh",
+};
+
 export default function AdminTeacherAssignments() {
   const { profile } = useAuth();
   const isAdmin = profile?.role === "admin";
@@ -67,7 +72,7 @@ export default function AdminTeacherAssignments() {
       const [studentsResult, assignmentsResult, teachersResult] = await Promise.all([
         supabase.from("students").select("*").order("kelas", { ascending: true }).order("nama", { ascending: true }),
         (supabase as any).from("teacher_students").select("*").order("requested_at", { ascending: true }),
-        supabase.from("profiles").select("user_id,full_name,role,status").eq("role", "guru").eq("status", "approved").order("full_name"),
+        supabase.from("profiles").select("user_id,full_name,role,status").in("role", ["guru", "penguji"]).eq("status", "approved").order("full_name"),
       ]);
 
       if (studentsResult.error) throw studentsResult.error;
@@ -146,6 +151,7 @@ export default function AdminTeacherAssignments() {
   const pendingAssignments = (data?.assignments ?? []).filter((item) => item.status === "pending");
   const assignedCount = (data?.students ?? []).filter((student) => (assignmentsByStudent.get(student.id) ?? []).some((item) => item.status === "approved")).length;
   const unassignedCount = Math.max((data?.students ?? []).length - assignedCount, 0);
+  const selectedTeacherName = teacherFilter !== ALL ? teachersById.get(teacherFilter)?.full_name ?? "Guru" : null;
   const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const visibleRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -208,22 +214,69 @@ export default function AdminTeacherAssignments() {
           <SelectTrigger><SelectValue placeholder="Guru" /></SelectTrigger>
           <SelectContent>
             <SelectItem value={ALL}>Semua guru</SelectItem>
-            {(data?.teachers ?? []).map((teacher) => <SelectItem key={teacher.user_id} value={teacher.user_id}>{teacher.full_name}</SelectItem>)}
+            {(data?.teachers ?? []).map((teacher) => (
+              <SelectItem key={teacher.user_id} value={teacher.user_id}>
+                {teacher.full_name} - {teacherRoleLabel[teacher.role] ?? teacher.role}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-border bg-card p-4"><p className="text-sm text-muted-foreground">Sudah memiliki guru</p><p className="text-2xl font-bold">{assignedCount}</p></div>
-        <div className="rounded-xl border border-border bg-card p-4"><p className="text-sm text-muted-foreground">Menunggu persetujuan</p><p className="text-2xl font-bold">{pendingAssignments.length}</p></div>
-        <div className="rounded-xl border border-border bg-card p-4"><p className="text-sm text-muted-foreground">Belum memiliki guru</p><p className="text-2xl font-bold">{unassignedCount}</p></div>
+        <button type="button" onClick={() => resetPage(() => setStatusFilter("assigned"))} className={`rounded-xl border p-4 text-left transition-colors ${statusFilter === "assigned" ? "border-emerald-300 bg-emerald-50" : "border-border bg-card hover:border-emerald-200"}`}>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm text-muted-foreground">Sudah memiliki guru</p>
+              <p className="text-2xl font-bold">{assignedCount}</p>
+            </div>
+            <UserCheck className="h-5 w-5 text-emerald-600" />
+          </div>
+        </button>
+        <button type="button" onClick={() => resetPage(() => setStatusFilter("pending"))} className={`rounded-xl border p-4 text-left transition-colors ${statusFilter === "pending" ? "border-amber-300 bg-amber-50" : "border-border bg-card hover:border-amber-200"}`}>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm text-muted-foreground">Menunggu persetujuan</p>
+              <p className="text-2xl font-bold">{pendingAssignments.length}</p>
+            </div>
+            <Clock3 className="h-5 w-5 text-amber-600" />
+          </div>
+        </button>
+        <button type="button" onClick={() => resetPage(() => setStatusFilter("unassigned"))} className={`rounded-xl border p-4 text-left transition-colors ${statusFilter === "unassigned" ? "border-slate-300 bg-slate-50" : "border-border bg-card hover:border-slate-200"}`}>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm text-muted-foreground">Belum memiliki guru</p>
+              <p className="text-2xl font-bold">{unassignedCount}</p>
+            </div>
+            <UserX className="h-5 w-5 text-slate-600" />
+          </div>
+        </button>
       </div>
+
+      {(statusFilter !== "all" || selectedTeacherName) && (
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          {statusFilter !== "all" && (
+            <span className="rounded-full bg-secondary px-3 py-1">
+              Filter status: {statusFilter === "assigned" ? "Sudah memiliki guru" : statusFilter === "pending" ? "Menunggu persetujuan" : "Belum memiliki guru"}
+            </span>
+          )}
+          {selectedTeacherName && (
+            <span className="rounded-full bg-secondary px-3 py-1">
+              Filter guru: {selectedTeacherName}
+            </span>
+          )}
+          <button type="button" onClick={() => { setStatusFilter("all"); setTeacherFilter(ALL); setPage(1); }} className="rounded-full border border-border px-3 py-1 text-foreground">
+            Reset filter cepat
+          </button>
+        </div>
+      )}
 
       <div className="space-y-3">
         {visibleRows.map((student) => {
           const studentAssignments = assignmentsByStudent.get(student.id) ?? [];
           const approved = studentAssignments.find((item) => item.status === "approved");
           const pending = studentAssignments.filter((item) => item.status === "pending");
+          const approvedTeacher = approved ? teachersById.get(approved.teacher_id) : null;
           const selectedTeacher = selectedTeachers[student.id] ?? approved?.teacher_id ?? "";
 
           return (
@@ -233,7 +286,26 @@ export default function AdminTeacherAssignments() {
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="font-semibold text-foreground">{student.nama}</h2>
                     <Badge variant="secondary">Kelas {student.kelas}{student.rombel}</Badge>
-                    {approved ? <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass.approved}`}>Dibina {teachersById.get(approved.teacher_id)?.full_name ?? "Guru"}</span> : <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">Belum memiliki guru</span>}
+                    {approved ? <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass.approved}`}>Sudah dibina</span> : <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">Belum memiliki guru</span>}
+                  </div>
+                  <div className="mt-2 space-y-1 text-sm">
+                    {approvedTeacher ? (
+                      <p className="text-foreground">
+                        Dibina oleh <span className="font-semibold">{approvedTeacher.full_name}</span>
+                        <span className="text-muted-foreground"> ({teacherRoleLabel[approvedTeacher.role] ?? approvedTeacher.role})</span>
+                      </p>
+                    ) : (
+                      <p className="text-muted-foreground">Belum ada guru pembina aktif untuk siswa ini.</p>
+                    )}
+                    {pending.length > 0 && (
+                      <p className="text-muted-foreground">
+                        Permintaan aktif: {pending.map((request) => {
+                          const requestTeacher = teachersById.get(request.teacher_id);
+                          if (!requestTeacher) return "Guru";
+                          return `${requestTeacher.full_name} (${teacherRoleLabel[requestTeacher.role] ?? requestTeacher.role})`;
+                        }).join(", ")}
+                      </p>
+                    )}
                   </div>
                   {pending.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-2">
@@ -252,7 +324,11 @@ export default function AdminTeacherAssignments() {
                   <Select value={selectedTeacher} onValueChange={(value) => setSelectedTeachers((current) => ({ ...current, [student.id]: value }))}>
                     <SelectTrigger><SelectValue placeholder="Pilih guru pembina" /></SelectTrigger>
                     <SelectContent>
-                      {(data?.teachers ?? []).map((teacher) => <SelectItem key={teacher.user_id} value={teacher.user_id}>{teacher.full_name}</SelectItem>)}
+                      {(data?.teachers ?? []).map((teacher) => (
+                        <SelectItem key={teacher.user_id} value={teacher.user_id}>
+                          {teacher.full_name} - {teacherRoleLabel[teacher.role] ?? teacher.role}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Button disabled={!selectedTeacher || runAction.isPending} onClick={() => runAction.mutate({ type: "assign", studentId: student.id, teacherId: selectedTeacher })}>

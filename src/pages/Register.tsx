@@ -179,7 +179,7 @@ export default function Register() {
               onChange={(event) => setRole(event.target.value as RoleOption)}
               className="h-11 w-full rounded-xl border border-border bg-secondary px-4 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30"
             >
-              <option value="guru">Guru Tahsin</option>
+              <option value="guru">Guru Tahsin & Tahfizh</option>
               <option value="parent">Orang Tua</option>
             </select>
           </div>

@@ -490,7 +490,7 @@ const ExamReportPDF = React.forwardRef<HTMLDivElement, Props>(
             {/* Tengah — penguji */}
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 10, color: "#6b7280", margin: 0, marginBottom: 4 }}>
-                Penguji / Guru Tahsin
+                Guru Tahsin & Tahfizh
               </p>
               <div
                 style={{

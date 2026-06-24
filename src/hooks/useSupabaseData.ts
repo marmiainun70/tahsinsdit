@@ -65,7 +65,7 @@ export const getNextLevel = (current: ReadingLevel): ReadingLevel | null => {
 };
 
 export const fetchApprovedManagedStudentIds = async (userId?: string, role?: string) => {
-  if (!userId || role !== "guru") return null;
+  if (!userId || (role !== "guru" && role !== "penguji")) return null;
 
   const { data, error } = await (supabase as any)
     .from("teacher_students")

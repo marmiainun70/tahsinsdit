@@ -185,7 +185,7 @@ const Examination = () => {
           <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
             <h2 className="font-bold text-foreground mb-3 flex items-center gap-2">
               <span className="w-6 h-6 rounded-lg bg-gold flex items-center justify-center text-white text-xs font-bold">3</span>
-              Catatan Penguji
+              Catatan Guru Tahsin & Tahfizh
             </h2>
             <textarea value={form.catatan} onChange={e => handleCatatanChange(e.target.value)} placeholder="Contoh: Bacaan cukup baik namun masih perlu latihan makhraj..." rows={3} className="w-full px-4 py-3 rounded-xl border border-border bg-card focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm resize-none" />
           </div>
