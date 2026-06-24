@@ -876,18 +876,36 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          requested_at: string
+          requested_by: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
           student_id: string
           teacher_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          requested_at?: string
+          requested_by?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
           student_id: string
           teacher_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          requested_at?: string
+          requested_by?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
           student_id?: string
           teacher_id?: string
         }
@@ -933,6 +951,59 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      is_teacher_account: {
+        Args: {
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      list_active_teacher_accounts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          email: string | null
+          full_name: string | null
+          role: string | null
+          status: string | null
+          user_id: string
+          username: string | null
+        }[]
+      }
+      approve_all_pending_teacher_student_requests: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      approve_teacher_student_request: {
+        Args: {
+          p_request_id: string
+        }
+        Returns: Database["public"]["Tables"]["teacher_students"]["Row"]
+      }
+      assign_teacher_student: {
+        Args: {
+          p_student_id: string
+          p_teacher_id: string
+        }
+        Returns: Database["public"]["Tables"]["teacher_students"]["Row"]
+      }
+      reject_teacher_student_request: {
+        Args: {
+          p_note?: string | null
+          p_request_id: string
+        }
+        Returns: Database["public"]["Tables"]["teacher_students"]["Row"]
+      }
+      release_teacher_student: {
+        Args: {
+          p_student_id: string
+        }
+        Returns: number
+      }
+      request_teacher_student: {
+        Args: {
+          p_student_id: string
+        }
+        Returns: Database["public"]["Tables"]["teacher_students"]["Row"]
       }
     }
     Enums: {
