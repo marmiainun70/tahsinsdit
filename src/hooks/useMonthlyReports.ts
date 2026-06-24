@@ -16,6 +16,15 @@ export interface MonthlyReport {
   pages_read: number;
   target_pages: number;
   attendance_percentage: number;
+  poin_kehadiran_kesiapan?: number | null;
+  poin_kualitas_bacaan?: number | null;
+  poin_perbaikan_bacaan?: number | null;
+  poin_konsistensi?: number | null;
+  pencapaian_target_bulan?: number | null;
+  poin_pencapaian?: number | null;
+  nilai_dasar?: number | null;
+  nilai_akhir_progresif?: number | null;
+  kategori_progres?: string | null;
   achievement_status: string;
   notes: string;
   created_by: string | null;

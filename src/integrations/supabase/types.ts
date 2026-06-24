@@ -296,9 +296,19 @@ export type Database = {
           end_page: number
           id: string
           iqra_level: string | null
+          attendance_percentage: number
+          kategori_progres: string
           month: number
+          nilai_akhir_progresif: number
+          nilai_dasar: number
           notes: string | null
           pages_read: number
+          pencapaian_target_bulan: number
+          poin_kehadiran_kesiapan: number
+          poin_konsistensi: number
+          poin_kualitas_bacaan: number
+          poin_pencapaian: number
+          poin_perbaikan_bacaan: number
           program_type: string
           start_page: number
           student_id: string
@@ -315,9 +325,19 @@ export type Database = {
           end_page?: number
           id?: string
           iqra_level?: string | null
+          attendance_percentage?: number
+          kategori_progres?: string
           month: number
+          nilai_akhir_progresif?: number
+          nilai_dasar?: number
           notes?: string | null
           pages_read?: number
+          pencapaian_target_bulan?: number
+          poin_kehadiran_kesiapan?: number
+          poin_konsistensi?: number
+          poin_kualitas_bacaan?: number
+          poin_pencapaian?: number
+          poin_perbaikan_bacaan?: number
           program_type?: string
           start_page?: number
           student_id: string
@@ -334,9 +354,19 @@ export type Database = {
           end_page?: number
           id?: string
           iqra_level?: string | null
+          attendance_percentage?: number
+          kategori_progres?: string
           month?: number
+          nilai_akhir_progresif?: number
+          nilai_dasar?: number
           notes?: string | null
           pages_read?: number
+          pencapaian_target_bulan?: number
+          poin_kehadiran_kesiapan?: number
+          poin_konsistensi?: number
+          poin_kualitas_bacaan?: number
+          poin_pencapaian?: number
+          poin_perbaikan_bacaan?: number
           program_type?: string
           start_page?: number
           student_id?: string

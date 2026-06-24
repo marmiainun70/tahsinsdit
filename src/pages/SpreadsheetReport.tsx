@@ -1,5 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { useStudents, IQRO_LEVELS, isTahsinDasar } from "@/hooks/useSupabaseData";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useStudents, isTahsinDasar } from "@/hooks/useSupabaseData";
 import {
   useAllMonthlyReports, useAddMonthlyReport, useUpdateMonthlyReport,
   MONTH_NAMES, calcIqraPagesSigned, getProgressStatus, getTarget,
@@ -18,10 +18,22 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
 import { NOTE_EMOTICON_WARNING, hasBlockedNoteEmoticon, removeBlockedNoteEmoticons } from "@/lib/noteValidation";
-import { Save, Plus, Minus, Loader2, FileSpreadsheet, MessageSquarePlus, CheckCircle2, AlertTriangle, TrendingDown, Pause } from "lucide-react";
+import { Save, Plus, Minus, Loader2, FileSpreadsheet, MessageSquarePlus, CheckCircle2, Info, Search } from "lucide-react";
 import { DataTablePagination } from "@/components/DataTablePagination";
+import { FixedHorizontalScrollbar } from "@/components/reports/FixedHorizontalScrollbar";
+import {
+  PROGRESSIVE_POINT_OPTIONS,
+  TARGET_MONTH_OPTIONS,
+  buildProgressiveReportScopeKey,
+  calculateProgressiveReportScore,
+  normalizeProgressivePoint,
+  type ProgressivePoint,
+  type ProgressCategory,
+  type ReportProgram,
+} from "@/utils/calculateProgressiveReportScore";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -30,7 +42,7 @@ const ROMBELS = ["A", "B", "C", "D"];
 const KELAS_LIST = [1, 2, 3, 4, 5, 6];
 const PROGRAMS = [
   { value: "iqra", label: "Iqra" },
-  { value: "tahsin", label: "Tahsin" },
+  { value: "tahsin", label: "Tahsin Lanjutan" },
   { value: "tahfizh", label: "Tahfizh" },
 ];
 
@@ -38,6 +50,75 @@ const IQRA_PAGES = [1, ...Array.from({ length: 29 }, (_, i) => i + 4)]; // 1, 4.
 const TAHSIN_LANJUTAN_PAGES = 200; // halaman bebas
 const END_NOT_SET = "__empty__";
 const ADVANCED_LEVELS = ["Tahsin Lanjutan", "Tahfizh"] as const;
+const INDICATOR_GUIDES = [
+  {
+    key: "kehadiranKesiapan",
+    field: "poinKehadiranKesiapan",
+    label: "Kehadiran & Kesiapan Belajar",
+    descriptions: {
+      2: "Selalu hadir dan selalu siap mengikuti pembelajaran.",
+      1: "Sering hadir, tetapi terkadang belum siap belajar.",
+      0: "Sering tidak hadir, tetapi memiliki keterangan.",
+      [-1]: "Sering absen tanpa keterangan.",
+    },
+  },
+  {
+    key: "kualitasBacaan",
+    field: "poinKualitasBacaan",
+    label: "Kualitas Bacaan Harian",
+    descriptions: {
+      2: "Bacaan lancar dan hanya memerlukan koreksi minimal.",
+      1: "Cukup lancar, tetapi masih terdapat beberapa koreksi.",
+      0: "Kurang lancar dan masih memerlukan banyak koreksi.",
+      [-1]: "Tidak siap membaca ketika mendapat giliran.",
+    },
+  },
+  {
+    key: "perbaikanBacaan",
+    field: "poinPerbaikanBacaan",
+    label: "Perbaikan Bacaan Harian",
+    descriptions: {
+      2: "Kesalahan sebelumnya sudah berkurang atau tidak terulang.",
+      1: "Sudah terlihat sedikit perbaikan.",
+      0: "Kesalahan yang sama masih berulang.",
+      [-1]: "Kesalahan bertambah atau belum terlihat upaya perbaikan.",
+    },
+  },
+] as const;
+
+const formatPoint = (point: number) => (point > 0 ? `+${point}` : String(point));
+
+const clampTargetMonths = (value: unknown, program: ReportProgram) => {
+  if (program === "iqra") return 0;
+  const parsed = Math.round(Number(value) || 0);
+  return Math.max(0, Math.min(5, parsed));
+};
+
+const normalizeProgramType = (value: unknown, fallback: ReportProgram): ReportProgram => {
+  if (value === "iqra" || value === "tahsin" || value === "tahfizh") return value;
+  return fallback;
+};
+
+const getCategoryClass = (category: ProgressCategory) => {
+  switch (category) {
+    case "Konsisten & Progresif":
+      return "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100";
+    case "Ada Progres":
+      return "bg-teal-100 text-teal-700 border-teal-200 hover:bg-teal-100";
+    case "Stagnan":
+      return "bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100";
+    case "Kurang Konsisten":
+      return "bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100";
+    case "Tidak Konsisten":
+      return "bg-red-100 text-red-700 border-red-200 hover:bg-red-100";
+  }
+};
+
+const getScoreClass = (score: number) => {
+  if (score >= 90) return "bg-emerald-100 text-emerald-700 border-emerald-200";
+  if (score >= 75) return "bg-primary/10 text-primary border-primary/20";
+  return "bg-red-100 text-red-700 border-red-200";
+};
 
 const programLevels = (program: string): string[] => {
   if (program === "iqra") return ["1", "2", "3", "4", "5", "6"];
@@ -63,12 +144,19 @@ const formatStoredLevel = (program: string, lvl: string): string => {
   return formatLevel(program, lvl);
 };
 
+const stripStoredLevelPrefix = (level: string): string =>
+  level
+    .replace(/^Iqra\s+/i, "")
+    .replace(/^Iqro\s+/i, "")
+    .replace(/^Jilid\s+/i, "")
+    .replace(/^Juz\s+/i, "");
+
 const isAdvancedEndLevel = (lvl: string): boolean => ADVANCED_LEVELS.includes(lvl as any);
 const isPromotionEnd = (program: string, lvl: string): boolean =>
   (program === "iqra" && lvl === "Tahsin Lanjutan") ||
   (program === "tahsin" && lvl === "Tahfizh");
 
-const detectProgramFromLevel = (level: ReadingLevel | string | null | undefined): "iqra" | "tahsin" | "tahfizh" => {
+const detectProgramFromLevel = (level: ReadingLevel | string | null | undefined): ReportProgram => {
   if (!level) return "iqra";
   if (level === "Tahfizh") return "tahfizh";
   if (level === "Tahsin Lanjutan") return "tahsin";
@@ -126,11 +214,15 @@ interface Row {
   rombel: string;
   reportId?: string;
   attendanceId?: string;
-  program: "iqra" | "tahsin" | "tahfizh";
+  program: ReportProgram;
   startLevel: string;
   startPage: number;
   endLevel: string;
   endPage: number | null;
+  poinKehadiranKesiapan: ProgressivePoint;
+  poinKualitasBacaan: ProgressivePoint;
+  poinPerbaikanBacaan: ProgressivePoint;
+  pencapaianTargetBulan: number;
   notes: string;
   present: number;
   sick: number;
@@ -150,19 +242,27 @@ const SpreadsheetReport = () => {
   const upsertAttendance = useUpsertAttendance();
   const ensureTS = useEnsureTeacherStudent();
   const [zoom, setZoom] = useState<number>(100);
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
 
   const [kelas, setKelas] = useState<string>("semua");
   const [rombel, setRombel] = useState<string>("semua");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
+  const [studentSearch, setStudentSearch] = useState("");
+  const [showGuide, setShowGuide] = useState(true);
   const [savingAll, setSavingAll] = useState(false);
 
   const filteredStudents = useMemo(
-    () => students.filter(s => 
-      (kelas === "semua" || s.kelas === parseInt(kelas)) && 
-      (rombel === "semua" || s.rombel === rombel)
-    ),
-    [students, kelas, rombel],
+    () => students.filter(s => {
+      const keyword = studentSearch.trim().toLowerCase();
+      return (
+        (kelas === "semua" || s.kelas === parseInt(kelas)) &&
+        (rombel === "semua" || s.rombel === rombel) &&
+        (!keyword || s.nama.toLowerCase().includes(keyword))
+      );
+    }),
+    [students, kelas, rombel, studentSearch],
   );
 
   const [rows, setRows] = useState<Row[]>([]);
@@ -176,17 +276,17 @@ const SpreadsheetReport = () => {
         .find(r => r.year * 12 + r.month < year * 12 + month);
       const previousEndLevel = latestPrev?.end_iqra_level || latestPrev?.iqra_level || "";
 
-      // existing report (any program for this month)
+      // existing report is scoped by student + month + year so changing months never overwrites another report.
+      const currentScopeKey = buildProgressiveReportScopeKey({ studentId: s.id, month, year });
       const existing = (reports as any[]).find(
-        r => r.student_id === s.id && r.month === month && r.year === year,
+        r => buildProgressiveReportScopeKey({ studentId: r.student_id, month: r.month, year: r.year }) === currentScopeKey,
       );
-      const program: "iqra" | "tahsin" | "tahfizh" = existing
-        ? existing.program_type
-        : previousEndLevel === "Tahfizh"
-          ? "tahfizh"
-          : previousEndLevel === "Tahsin Lanjutan"
-            ? "tahsin"
-            : defaultProgram;
+      const inferredProgram: ReportProgram = previousEndLevel === "Tahfizh"
+        ? "tahfizh"
+        : previousEndLevel === "Tahsin Lanjutan"
+          ? "tahsin"
+          : defaultProgram;
+      const program = normalizeProgramType(existing?.program_type, inferredProgram);
 
       // previous report (same program) for autofill
       const prev = (reports as any[])
@@ -207,10 +307,16 @@ const SpreadsheetReport = () => {
         permission: att?.permission ?? 0,
         absent: att?.absent ?? 0,
       };
+      const progressiveDefaults = {
+        poinKehadiranKesiapan: normalizeProgressivePoint(Number(existing?.poin_kehadiran_kesiapan ?? 0)),
+        poinKualitasBacaan: normalizeProgressivePoint(Number(existing?.poin_kualitas_bacaan ?? 0)),
+        poinPerbaikanBacaan: normalizeProgressivePoint(Number(existing?.poin_perbaikan_bacaan ?? 0)),
+        pencapaianTargetBulan: clampTargetMonths(existing?.pencapaian_target_bulan ?? 0, program),
+      };
 
       if (existing) {
-        const lvlRaw = (existing.iqra_level || fallbackLvl).replace(/^Iqro /, "").replace(/^Juz /, "");
-        const endLvlRaw = (existing.end_iqra_level || existing.iqra_level || fallbackLvl).replace(/^Iqro /, "").replace(/^Juz /, "");
+        const lvlRaw = stripStoredLevelPrefix(existing.iqra_level || fallbackLvl);
+        const endLvlRaw = stripStoredLevelPrefix(existing.end_iqra_level || existing.iqra_level || fallbackLvl);
         return {
           studentId: s.id,
           studentName: s.nama,
@@ -223,6 +329,7 @@ const SpreadsheetReport = () => {
           startPage: existing.start_page || 1,
           endLevel: endLvlRaw,
           endPage: existing.end_page || 1,
+          ...progressiveDefaults,
           notes: existing.notes || "",
           ...baseAtt,
           dirty: false,
@@ -234,7 +341,7 @@ const SpreadsheetReport = () => {
       const transitionPrev = latestPrev && ["Tahsin Lanjutan", "Tahfizh"].includes(latestPrev.end_iqra_level) ? latestPrev : null;
       const prevForStart = prev || transitionPrev;
       const prevEndLvlRaw = prevForStart
-        ? ((prevForStart.end_iqra_level || prevForStart.iqra_level || fallbackLvl)).replace(/^Iqro /, "").replace(/^Juz /, "")
+        ? stripStoredLevelPrefix(prevForStart.end_iqra_level || prevForStart.iqra_level || fallbackLvl)
         : fallbackLvl;
       const sl = program === "tahfizh" && prevForStart?.end_iqra_level === "Tahfizh" ? "30" : prevEndLvlRaw;
       const sp = prevForStart ? prevForStart.end_page : 1;
@@ -249,6 +356,7 @@ const SpreadsheetReport = () => {
         startPage: sp,
         endLevel: "",
         endPage: null,
+        ...progressiveDefaults,
         notes: "",
         ...baseAtt,
         dirty: false,
@@ -268,6 +376,10 @@ const SpreadsheetReport = () => {
         const fb = patch.program === "tahfizh" ? "30" : patch.program === "iqra" ? "1" : "Tahsin Lanjutan";
         next.startLevel = fb; next.endLevel = "";
         next.startPage = 1; next.endPage = null;
+        next.pencapaianTargetBulan = patch.program === "iqra" ? 0 : clampTargetMonths(next.pencapaianTargetBulan, patch.program);
+      }
+      if (patch.pencapaianTargetBulan !== undefined) {
+        next.pencapaianTargetBulan = clampTargetMonths(patch.pencapaianTargetBulan, next.program);
       }
       if (patch.endLevel) {
         next.endPage = clampPage(patch.program || next.program, next.endPage ?? 1, patch.endLevel);
@@ -313,9 +425,28 @@ const SpreadsheetReport = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [kelas, rombel, month, year]);
+  }, [kelas, rombel, month, year, studentSearch]);
 
   const currentPageRows = rowPages[page - 1] || [];
+  const scoreForRow = useCallback((r: Row) => calculateProgressiveReportScore({
+    program: r.program,
+    kelas: r.kelas,
+    endLevel: r.endLevel || r.startLevel,
+    kehadiranKesiapan: r.poinKehadiranKesiapan,
+    kualitasBacaan: r.poinKualitasBacaan,
+    perbaikanBacaan: r.poinPerbaikanBacaan,
+    pencapaianTargetBulan: r.pencapaianTargetBulan,
+  }), []);
+
+  const programStats = useMemo(() => rows.reduce(
+    (acc, row) => {
+      acc[row.program] += 1;
+      acc.totalScore += scoreForRow(row).nilaiAkhir;
+      return acc;
+    },
+    { iqra: 0, tahsin: 0, tahfizh: 0, totalScore: 0 },
+  ), [rows, scoreForRow]);
+  const averageScore = rows.length ? Math.round(programStats.totalScore / rows.length) : null;
 
   const buildAutoNote = (r: Row): string => {
     if (!r.endLevel || r.endPage === null) return "";
@@ -335,6 +466,7 @@ const SpreadsheetReport = () => {
       const target = getTarget(r.program);
       const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage);
       const status = isPromotionEnd(r.program, r.endLevel) ? "achieved" : getProgressStatus(signed, target);
+      const progressiveScore = scoreForRow(r);
       const totalAttendance = r.present + r.sick + r.permission + r.absent;
       const attendancePercentage =
         totalAttendance > 0 ? Math.round((r.present / totalAttendance) * 100) : 0;
@@ -348,6 +480,15 @@ const SpreadsheetReport = () => {
         pages_read: signed,
         target_pages: target,
         attendance_percentage: attendancePercentage,
+        poin_kehadiran_kesiapan: r.poinKehadiranKesiapan,
+        poin_kualitas_bacaan: r.poinKualitasBacaan,
+        poin_perbaikan_bacaan: r.poinPerbaikanBacaan,
+        poin_konsistensi: progressiveScore.poinKonsistensi,
+        pencapaian_target_bulan: progressiveScore.pencapaianTargetBulan,
+        poin_pencapaian: progressiveScore.poinPencapaian,
+        nilai_dasar: progressiveScore.nilaiDasar,
+        nilai_akhir_progresif: progressiveScore.nilaiAkhir,
+        kategori_progres: progressiveScore.kategoriProgres,
         achievement_status: status,
         notes: r.notes,
       };
@@ -369,7 +510,14 @@ const SpreadsheetReport = () => {
       const stu = filteredStudents.find(s => s.id === r.studentId);
       await ensureTS.mutateAsync({ studentId: r.studentId, kelas: stu?.kelas, rombel: stu?.rombel });
 
-      setRows(prev => prev.map((x, i) => i === idx ? { ...x, reportId: saved.id, attendanceId: attId, dirty: false, saving: false } : x));
+      setRows(prev => prev.map((x, i) => i === idx ? {
+        ...x,
+        reportId: saved.id,
+        attendanceId: attId,
+        pencapaianTargetBulan: progressiveScore.pencapaianTargetBulan,
+        dirty: false,
+        saving: false,
+      } : x));
       return true;
     } catch (e: any) {
       setRows(prev => prev.map((x, i) => i === idx ? { ...x, saving: false } : x));
@@ -398,9 +546,9 @@ const SpreadsheetReport = () => {
   };
 
   return (
-    <div className="p-3 md:p-6 space-y-4 max-w-[1700px] mx-auto">
-      <Card className="rounded-2xl overflow-hidden border-2 border-blue-400/60 dark:border-blue-600/60 shadow-md shadow-blue-500/5 bg-background">
-        <CardHeader className="pb-3">
+    <div className="spreadsheet-report-page p-3 md:p-6 space-y-4 max-w-[1700px] mx-auto">
+      <Card className="rounded-2xl overflow-hidden border border-primary/15 shadow-lg shadow-primary/5 bg-background">
+        <CardHeader className="pb-3 border-b border-border/70 bg-gradient-to-b from-background to-muted/20">
           <CardTitle className="flex items-center gap-2 text-base md:text-lg">
             <FileSpreadsheet className="w-5 h-5 text-primary" /> Input Laporan Bulanan & Absensi (Spreadsheet)
           </CardTitle>
@@ -409,7 +557,7 @@ const SpreadsheetReport = () => {
           </p>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
             <Select value={kelas} onValueChange={setKelas}>
               <SelectTrigger><SelectValue placeholder="Kelas" /></SelectTrigger>
               <SelectContent>
@@ -432,6 +580,38 @@ const SpreadsheetReport = () => {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{YEARS.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
             </Select>
+            <div className="relative col-span-2 md:col-span-1">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={studentSearch}
+                onChange={(event) => setStudentSearch(event.target.value)}
+                placeholder="Cari siswa..."
+                className="pl-8"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+            <div className="rounded-xl border border-border bg-card px-3 py-2">
+              <p className="text-[10px] text-muted-foreground">Total Siswa</p>
+              <p className="text-lg font-bold text-foreground">{rows.length}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card px-3 py-2">
+              <p className="text-[10px] text-muted-foreground">Program Iqra</p>
+              <p className="text-lg font-bold text-primary">{programStats.iqra}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card px-3 py-2">
+              <p className="text-[10px] text-muted-foreground">Tahsin Lanjutan</p>
+              <p className="text-lg font-bold text-primary">{programStats.tahsin}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card px-3 py-2">
+              <p className="text-[10px] text-muted-foreground">Program Tahfizh</p>
+              <p className="text-lg font-bold text-primary">{programStats.tahfizh}</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card px-3 py-2">
+              <p className="text-[10px] text-muted-foreground">Rata-rata Nilai</p>
+              <p className="text-lg font-bold text-foreground">{averageScore ?? "-"}</p>
+            </div>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
@@ -464,50 +644,100 @@ const SpreadsheetReport = () => {
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl overflow-hidden border-2 border-blue-400/60 dark:border-blue-600/60 shadow-md shadow-blue-500/5 bg-background">
-        <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-xs border-separate border-spacing-0 min-w-[950px]" style={{ fontFamily: "'Carlito', 'Calibri', sans-serif", zoom: zoom / 100 }}>
-            <thead className="bg-[#107c41] text-white sticky top-0 z-30">
+      <Card className="overflow-hidden rounded-2xl border border-amber-600/20 bg-amber-50/40 shadow-sm dark:bg-amber-950/10">
+        <button
+          type="button"
+          onClick={() => setShowGuide((open) => !open)}
+          className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+          aria-expanded={showGuide}
+        >
+          <span className="flex items-center gap-2 text-sm font-bold text-amber-900 dark:text-amber-100">
+            <Info className="h-4 w-4" />
+            Panduan Penilaian Progresif (+2, +1, 0, -1)
+          </span>
+          <span className="text-xs font-medium text-muted-foreground">
+            {showGuide ? "Tutup panduan" : "Buka panduan"}
+          </span>
+        </button>
+        {showGuide && (
+          <CardContent className="grid gap-2 p-4 pt-0 md:grid-cols-3">
+            {INDICATOR_GUIDES.map((guide) => (
+              <div key={guide.key} className="overflow-hidden rounded-xl border border-amber-200 bg-background">
+                <div className="bg-amber-100/70 px-3 py-2 text-xs font-bold text-amber-900 dark:bg-amber-900/30 dark:text-amber-100">
+                  {guide.label}
+                </div>
+                <div className="divide-y divide-amber-100 dark:divide-amber-900/40">
+                  {PROGRESSIVE_POINT_OPTIONS.map((point) => (
+                    <div key={point} className="grid grid-cols-[42px_1fr] gap-2 px-3 py-2 text-[11px] leading-relaxed">
+                      <span className="inline-flex min-h-6 items-center justify-center rounded-md bg-primary/10 font-black text-primary">
+                        {formatPoint(point)}
+                      </span>
+                      <span className="text-muted-foreground">{guide.descriptions[point]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        )}
+      </Card>
+
+      <Card className="rounded-2xl overflow-hidden border border-primary/20 shadow-md shadow-primary/5 bg-background">
+        <CardContent ref={tableScrollRef} className="spreadsheet-table-scroll p-0">
+          <table
+            ref={tableRef}
+            aria-label="Tabel input laporan bulanan dan penilaian progresif"
+            className="w-full min-w-[1880px] border-separate border-spacing-0 text-xs"
+            style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", zoom: zoom / 100 }}
+          >
+            <thead className="text-white">
               <tr className="text-center">
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-7 text-center align-middle text-[10px] font-semibold sticky left-0 z-40 bg-[#107c41]">#</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 border-r-2 border-r-blue-500 dark:border-r-blue-400 w-[130px] text-center align-middle text-[10px] font-semibold sticky left-[28px] z-40 bg-[#107c41]">Nama Siswa</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[65px] text-center align-middle text-[10px] font-semibold">Program</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[55px] text-center align-middle text-[10px] font-semibold">Awal</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[65px] text-center align-middle text-[10px] font-semibold">Hal. Awal</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[55px] text-center align-middle text-[10px] font-semibold">Akhir</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[65px] text-center align-middle text-[10px] font-semibold">Hal. Akhir</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-8 text-center align-middle text-[10px] font-semibold">Total</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-8 text-center align-middle text-[10px] font-semibold">Target</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[70px] text-center align-middle text-[10px] font-semibold">Status</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-7 text-center align-middle text-[10px] font-semibold" title="Hadir">H</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-7 text-center align-middle text-[10px] font-semibold" title="Sakit">S</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-7 text-center align-middle text-[10px] font-semibold" title="Izin">I</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-7 text-center align-middle text-[10px] font-semibold" title="Alpha">A</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 min-w-[140px] text-center align-middle text-[10px] font-semibold">Catatan</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-20 text-center align-middle text-[10px] font-semibold">Status Simpan</th>
+                <th className="sticky left-0 top-0 z-[55] h-9 border border-white/20 bg-[#087047] px-2 py-2 text-center align-middle text-[10px] font-extrabold" colSpan={3}>
+                  Identitas
+                </th>
+                <th className="sticky top-0 z-30 h-9 border border-white/20 bg-[#0a7950] px-2 py-2 text-center align-middle text-[10px] font-extrabold" colSpan={6}>
+                  Progres Bulanan
+                </th>
+                <th className="sticky top-0 z-30 h-9 border border-white/20 bg-[#8a650e] px-2 py-2 text-center align-middle text-[10px] font-extrabold" colSpan={5}>
+                  Penilaian Progresif
+                </th>
+                <th className="sticky top-0 z-30 h-9 border border-white/20 bg-[#32443a] px-2 py-2 text-center align-middle text-[10px] font-extrabold" colSpan={3}>
+                  Hasil
+                </th>
+              </tr>
+              <tr className="text-center">
+                <th className="sticky left-0 top-9 z-[56] h-10 w-7 border border-white/20 bg-[#0a8251] px-1 py-2 text-center align-middle text-[10px] font-extrabold">No.</th>
+                <th className="sticky left-[28px] top-9 z-[56] h-10 w-[150px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Nama Siswa</th>
+                <th className="sticky top-9 z-30 h-10 w-[105px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Program</th>
+                <th className="sticky top-9 z-30 h-10 w-[75px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Awal</th>
+                <th className="sticky top-9 z-30 h-10 w-[82px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Hal. Awal</th>
+                <th className="sticky top-9 z-30 h-10 w-[75px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Akhir</th>
+                <th className="sticky top-9 z-30 h-10 w-[82px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Hal. Akhir</th>
+                <th className="sticky top-9 z-30 h-10 w-[58px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Total</th>
+                <th className="sticky top-9 z-30 h-10 w-[58px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Target</th>
+                <th className="sticky top-9 z-30 h-10 min-w-[172px] border border-white/20 bg-[#9a7418] px-2 py-2 text-center align-middle text-[10px] font-extrabold leading-snug">Kehadiran & Kesiapan Belajar</th>
+                <th className="sticky top-9 z-30 h-10 min-w-[172px] border border-white/20 bg-[#9a7418] px-2 py-2 text-center align-middle text-[10px] font-extrabold leading-snug">Kualitas Bacaan Harian</th>
+                <th className="sticky top-9 z-30 h-10 min-w-[172px] border border-white/20 bg-[#9a7418] px-2 py-2 text-center align-middle text-[10px] font-extrabold leading-snug">Perbaikan Bacaan Harian</th>
+                <th className="sticky top-9 z-30 h-10 w-[150px] border border-white/20 bg-[#9a7418] px-2 py-2 text-center align-middle text-[10px] font-extrabold leading-snug">Pencapaian Bulanan</th>
+                <th className="sticky top-9 z-30 h-10 w-[165px] border border-white/20 bg-[#9a7418] px-2 py-2 text-center align-middle text-[10px] font-extrabold leading-snug">Kategori Progres</th>
+                <th className="sticky top-9 z-30 h-10 w-[70px] border border-white/20 bg-[#3b5045] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Nilai</th>
+                <th className="sticky top-9 z-30 h-10 min-w-[210px] border border-white/20 bg-[#3b5045] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Catatan</th>
+                <th className="sticky top-9 z-30 h-10 w-[108px] border border-white/20 bg-[#3b5045] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Status Simpan</th>
               </tr>
             </thead>
             <tbody>
               {currentPageRows.length === 0 && (
-                <tr><td colSpan={16} className="p-6 text-center text-muted-foreground border border-[1.5px] border-blue-400 dark:border-blue-700 text-[10px]">Belum ada siswa pada filter ini.</td></tr>
+                <tr><td colSpan={17} className="p-6 text-center text-muted-foreground border border-border text-[10px]">Belum ada siswa pada filter ini.</td></tr>
               )}
               {currentPageRows.map(({ row: r, index: idx }, pageIndex) => {
                 const target = getTarget(r.program);
                 const hasEnd = Boolean(r.endLevel && r.endPage !== null);
                 const signed = hasEnd ? calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage as number) : 0;
-                const status = hasEnd
-                  ? (isPromotionEnd(r.program, r.endLevel) ? "achieved" : getProgressStatus(signed, target))
-                  : null;
                 const decline = hasEnd ? isDecline(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage as number) : false;
                 const lvlOpts = programLevels(r.program);
                 const endOpts = endLevelOptions(r.program);
                 const showStartLevelSelect = r.program !== "tahsin"; // Tahsin Lanjutan: 1 level, sembunyikan dropdown awal
-                const statusBadge = {
-                  achieved: <Badge className="bg-green-100 text-green-700 hover:bg-green-100 py-0 px-1 text-[9px]"><CheckCircle2 className="w-2 h-2 mr-0.5" />Tercapai</Badge>,
-                  not_achieved: <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 py-0 px-1 text-[9px]"><AlertTriangle className="w-2 h-2 mr-0.5" />Belum</Badge>,
-                  stagnant: <Badge className="bg-gray-200 text-gray-700 hover:bg-gray-200 py-0 px-1 text-[9px]"><Pause className="w-2 h-2 mr-0.5" />Stagnan</Badge>,
-                  decline: <Badge className="bg-red-100 text-red-700 hover:bg-red-100 py-0 px-1 text-[9px]"><TrendingDown className="w-2 h-2 mr-0.5" />Turun</Badge>,
-                }[status || "stagnant"];
+                const progressiveScore = scoreForRow(r);
 
                 const rowBg = r.dirty
                   ? "bg-amber-100 dark:bg-amber-900/40"
@@ -577,17 +807,77 @@ const SpreadsheetReport = () => {
                     </td>
                     <td className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
                     <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px]">{target}</td>
-                    <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">{hasEnd ? <span className="scale-[0.85] inline-block">{statusBadge}</span> : <span className="text-muted-foreground text-[10px]">-</span>}</td>
-                    {(["present", "sick", "permission", "absent"] as const).map(k => (
-                      <td key={k} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
-                        <Input
-                          type="number" min={0}
-                          value={r[k]}
-                          onChange={e => updateRow(idx, { [k]: Math.max(0, parseInt(e.target.value) || 0) } as any)}
-                          className="h-6 w-full text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-50 dark:focus-visible:bg-blue-900/30"
-                        />
-                      </td>
-                    ))}
+                    {INDICATOR_GUIDES.map((guide) => {
+                      const point = r[guide.field] as ProgressivePoint;
+                      const tooltipText = `${formatPoint(point)} - ${guide.descriptions[point]}`;
+                      return (
+                        <td key={guide.key} className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                          <Select
+                            value={String(point)}
+                            onValueChange={(value) => updateRow(idx, {
+                              [guide.field]: normalizeProgressivePoint(Number(value)),
+                            } as Partial<Row>)}
+                          >
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <SelectTrigger
+                                  title={tooltipText}
+                                  aria-label={`${guide.label}: ${tooltipText}`}
+                                  className="h-7 w-full border-amber-200 bg-amber-50/70 px-2 text-center text-[10px] font-bold shadow-none focus:ring-0 focus:ring-offset-0"
+                                >
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-[260px] text-xs">
+                                {tooltipText}
+                              </TooltipContent>
+                            </Tooltip>
+                            <SelectContent>
+                              {PROGRESSIVE_POINT_OPTIONS.map((option) => (
+                                <SelectItem key={option} value={String(option)} className="text-[10px]">
+                                  {formatPoint(option)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                      );
+                    })}
+                    <td className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700 bg-amber-50/40 dark:bg-amber-950/10">
+                      <Select
+                        value={String(r.pencapaianTargetBulan)}
+                        disabled={r.program === "iqra"}
+                        onValueChange={(value) => updateRow(idx, { pencapaianTargetBulan: Number(value) })}
+                      >
+                        <SelectTrigger
+                          title={r.program === "iqra" ? "Pencapaian bulanan hanya untuk Tahsin Lanjutan dan Tahfizh" : "Jumlah bulan target tercapai selama semester berjalan"}
+                          className="h-7 w-full border-amber-200 bg-amber-50 px-2 text-left text-[10px] font-bold text-amber-800 shadow-none disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground focus:ring-0 focus:ring-offset-0"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {r.program === "iqra" ? (
+                            <SelectItem value="0" className="text-[10px]">&mdash; Tidak berlaku</SelectItem>
+                          ) : (
+                            TARGET_MONTH_OPTIONS.map((option) => (
+                              <SelectItem key={option} value={String(option)} className="text-[10px]">
+                                {option} bulan
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">
+                      <Badge variant="outline" className={`py-0 px-1.5 text-[9px] ${getCategoryClass(progressiveScore.kategoriProgres)}`}>
+                        {progressiveScore.kategoriProgres}
+                      </Badge>
+                    </td>
+                    <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">
+                      <span className={`inline-flex min-h-7 min-w-10 items-center justify-center rounded-lg border px-2 text-[13px] font-black ${getScoreClass(progressiveScore.nilaiAkhir)}`}>
+                        {progressiveScore.nilaiAkhir}
+                      </span>
+                    </td>
                     <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <div className="flex items-center gap-0.5">
                         <Textarea
@@ -627,9 +917,10 @@ const SpreadsheetReport = () => {
                     </td>
                     <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px]">
                       {r.saving ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> :
-                        r.dirty ? <Badge variant="outline" className="text-amber-600 border-amber-300 py-0 px-1 text-[9px]">Belum Simpan</Badge> :
-                        r.reportId ? <CheckCircle2 className="w-3 h-3 text-green-600 inline" /> :
+                        r.dirty || !r.reportId ? <Badge variant="outline" className="text-amber-600 border-amber-300 py-0 px-1 text-[9px]">Belum Simpan</Badge> :
+                        <Badge variant="outline" className="border-emerald-200 bg-emerald-50 py-0 px-1 text-[9px] text-emerald-700"><CheckCircle2 className="mr-0.5 h-2.5 w-2.5" />Tersimpan</Badge>}{/*
                         <span className="text-muted-foreground text-[10px]">—</span>}
+                    */}
                     </td>
                   </tr>
                 );
@@ -652,6 +943,12 @@ const SpreadsheetReport = () => {
           </Button>
         </div>
       )}
+
+      <FixedHorizontalScrollbar
+        scrollContainerRef={tableScrollRef}
+        contentRef={tableRef}
+        refreshKey={`${zoom}-${page}-${currentPageRows.length}-${rows.length}`}
+      />
     </div>
   );
 };
