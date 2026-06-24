@@ -407,7 +407,7 @@ const SpreadsheetReport = () => {
 
       <Card>
         <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-xs border-collapse border border-blue-300 dark:border-white/20 min-w-[950px]">
+          <table className="w-full text-xs border-collapse border border-blue-300 dark:border-white/20 min-w-[950px]" style={{ fontFamily: "'Carlito', 'Calibri', sans-serif" }}>
             <thead className="bg-[#107c41] text-white sticky top-0 z-10">
               <tr className="text-center">
                 <th className="p-0.5 border border-blue-300 dark:border-white/25 w-7 text-center align-middle text-[10px] font-semibold">#</th>
