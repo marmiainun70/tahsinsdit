@@ -864,15 +864,15 @@ const ClassReport = () => {
                     />
                     {selectedMetrics.includes("kelancaran") && (
                       <Bar dataKey="kelancaran" fill={METRIC_COLORS.kelancaran} radius={[5, 5, 0, 0]} maxBarSize={36}
-                        onClick={(d) => setSelectedKelas(d.kelas)} className="cursor-pointer" />
+                        onClick={(d: any) => setSelectedKelas(d.kelas)} className="cursor-pointer" />
                     )}
                     {selectedMetrics.includes("makhraj") && (
                       <Bar dataKey="makhraj" fill={METRIC_COLORS.makhraj} radius={[5, 5, 0, 0]} maxBarSize={36}
-                        onClick={(d) => setSelectedKelas(d.kelas)} className="cursor-pointer" />
+                        onClick={(d: any) => setSelectedKelas(d.kelas)} className="cursor-pointer" />
                     )}
                     {selectedMetrics.includes("tajwid") && (
                       <Bar dataKey="tajwid" fill={METRIC_COLORS.tajwid} radius={[5, 5, 0, 0]} maxBarSize={36}
-                        onClick={(d) => setSelectedKelas(d.kelas)} className="cursor-pointer" />
+                        onClick={(d: any) => setSelectedKelas(d.kelas)} className="cursor-pointer" />
                     )}
                   </BarChart>
                 </ResponsiveContainer>

@@ -43,8 +43,9 @@ const Login = () => {
 
     if (!result.success) {
       setLoading(false);
-      if (result.type === "credentials") {
-        setCredError(result.message);
+      const r = result as Extract<typeof result, { success: false }>;
+      if (r.type === "credentials") {
+        setCredError(r.message);
       }
       // Untuk type lain (pending/rejected/inactive/profile_missing),
       // pesan sudah disimpan di authError via AuthContext — tidak perlu setCredError

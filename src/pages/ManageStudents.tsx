@@ -64,22 +64,9 @@ export default function ManageStudents() {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const [tableHeight, setTableHeight] = useState<number | "auto">("auto");
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const observer = new ResizeObserver((entries) => {
-      if (window.innerWidth >= 768) {
-        setTableHeight(entries[0].contentRect.height * 0.85);
-      } else {
-        setTableHeight("auto");
-      }
-    });
-    const el = tableContainerRef.current;
-    if (el) observer.observe(el);
-    return () => observer.disconnect();
-  }, [students]);
-
   const [exporting, setExporting] = useState(false);
   const [showImport, setShowImport] = useState(false);
+
 
   const handleExport = async () => {
     try {
@@ -108,7 +95,7 @@ export default function ManageStudents() {
         } else if (level === "tahfizh" || level === "Tahfizh") {
           query = query.eq("level", "Tahfizh");
         } else {
-          query = query.eq("level", level);
+          query = query.eq("level", level as any);
         }
       }
 
@@ -198,6 +185,20 @@ export default function ManageStudents() {
   const students = data?.students || [];
   const totalCount = data?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / 20);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const observer = new ResizeObserver((entries) => {
+      if (window.innerWidth >= 768) {
+        setTableHeight(entries[0].contentRect.height * 0.85);
+      } else {
+        setTableHeight("auto");
+      }
+    });
+    const el = tableContainerRef.current;
+    if (el) observer.observe(el);
+    return () => observer.disconnect();
+  }, [students]);
 
   // Actions
   const addStudent = useAddStudent();
