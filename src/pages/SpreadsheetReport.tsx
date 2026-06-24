@@ -407,25 +407,25 @@ const SpreadsheetReport = () => {
 
       <Card>
         <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-xs md:text-sm border-collapse min-w-[1400px]">
+          <table className="w-full text-xs md:text-sm border-collapse min-w-[1150px]">
             <thead className="bg-muted sticky top-0 z-10">
               <tr className="text-left">
-                <th className="p-2 border-b">#</th>
-                <th className="p-2 border-b min-w-[170px]">Nama Siswa</th>
-                <th className="p-2 border-b min-w-[140px]">Program</th>
-                <th className="p-2 border-b">Awal</th>
-                <th className="p-2 border-b">Hal. Awal</th>
-                <th className="p-2 border-b">Akhir</th>
-                <th className="p-2 border-b">Hal. Akhir</th>
-                <th className="p-2 border-b text-center">Total</th>
-                <th className="p-2 border-b text-center">Target</th>
-                <th className="p-2 border-b text-center">Status</th>
-                <th className="p-2 border-b text-center" title="Hadir">H</th>
-                <th className="p-2 border-b text-center" title="Sakit">S</th>
-                <th className="p-2 border-b text-center" title="Izin">I</th>
-                <th className="p-2 border-b text-center" title="Alpha">A</th>
-                <th className="p-2 border-b min-w-[240px]">Catatan</th>
-                <th className="p-2 border-b text-center">Status Simpan</th>
+                <th className="p-2 border-b w-8 text-center">#</th>
+                <th className="p-2 border-b w-[170px]">Nama Siswa</th>
+                <th className="p-2 border-b w-[130px]">Program</th>
+                <th className="p-2 border-b w-[120px]">Awal</th>
+                <th className="p-2 border-b w-[130px] text-center">Hal. Awal</th>
+                <th className="p-2 border-b w-[140px]">Akhir</th>
+                <th className="p-2 border-b w-[130px] text-center">Hal. Akhir</th>
+                <th className="p-2 border-b w-12 text-center">Total</th>
+                <th className="p-2 border-b w-12 text-center">Target</th>
+                <th className="p-2 border-b w-24 text-center">Status</th>
+                <th className="p-2 border-b w-12 text-center" title="Hadir">H</th>
+                <th className="p-2 border-b w-12 text-center" title="Sakit">S</th>
+                <th className="p-2 border-b w-12 text-center" title="Izin">I</th>
+                <th className="p-2 border-b w-12 text-center" title="Alpha">A</th>
+                <th className="p-2 border-b min-w-[200px]">Catatan</th>
+                <th className="p-2 border-b w-28 text-center">Status Simpan</th>
               </tr>
             </thead>
             <tbody>
@@ -452,7 +452,7 @@ const SpreadsheetReport = () => {
 
                 return (
                   <tr key={r.studentId} className={r.dirty ? "bg-amber-50/50" : decline ? "bg-red-50/30" : ""}>
-                    <td className="p-2 border-b text-muted-foreground">{idx + 1}</td>
+                    <td className="p-2 border-b text-center text-muted-foreground">{idx + 1}</td>
                     <td className="p-2 border-b font-medium">
                       <div>{r.studentName}</div>
                       <div className="text-[10px] text-muted-foreground">{r.studentLevel}</div>
