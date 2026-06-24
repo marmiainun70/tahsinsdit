@@ -1158,46 +1158,46 @@ const RecapReport = () => {
               icon={<Users className="w-4 h-4" />}
               label="Total Siswa"
               value={stats.total}
-              color="bg-blue-50 text-blue-700"
+              color="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
               onClick={() => setFilterStatus("all")}
               isActive={filterStatus === "all"}
-              activeColor="border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/30"
+              activeColor="border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/30 dark:bg-blue-950/20"
             />
             <StatCard
               icon={<ListChecks className="w-4 h-4" />}
               label="Sudah Diisi"
               value={stats.filled}
-              color="bg-emerald-50 text-emerald-700"
+              color="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
               onClick={() => setFilterStatus("filled")}
               isActive={filterStatus === "filled"}
-              activeColor="border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/30"
+              activeColor="border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/30 dark:bg-emerald-950/20"
             />
             <StatCard
               icon={<FileWarning className="w-4 h-4" />}
               label="Belum Diisi"
               value={stats.empty}
-              color="bg-rose-50 text-rose-700"
+              color="bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
               onClick={() => setFilterStatus("empty")}
               isActive={filterStatus === "empty"}
-              activeColor="border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30"
+              activeColor="border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30 dark:bg-rose-950/20"
             />
             <StatCard
               icon={<Percent className="w-4 h-4" />}
               label="Kelengkapan"
               value={`${stats.completion}%`}
-              color="bg-amber-50 text-amber-700"
+              color="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
               onClick={() => setFilterStatus("filled")}
               isActive={false}
-              activeColor="border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/30"
+              activeColor="border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/30 dark:bg-amber-950/20"
             />
             <StatCard
               icon={<CheckCircle2 className="w-4 h-4" />}
               label="Target Tercapai"
               value={`${stats.achievementRate}%`}
-              color="bg-violet-50 text-violet-700"
+              color="bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400"
               onClick={() => setFilterStatus("achieved")}
               isActive={filterStatus === "achieved"}
-              activeColor="border-violet-500 ring-2 ring-violet-500/20 bg-violet-50/30"
+              activeColor="border-violet-500 ring-2 ring-violet-500/20 bg-violet-50/30 dark:bg-violet-950/20"
             />
           </div>
 
@@ -1239,7 +1239,7 @@ const RecapReport = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 px-2 text-[11px] text-rose-600 hover:text-rose-700 hover:bg-rose-50 ml-auto"
+                className="h-6 px-2 text-[11px] text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/20 ml-auto"
                 onClick={() => {
                   setFilterStatus("all");
                   setFilterKelas("all");
@@ -1253,7 +1253,7 @@ const RecapReport = () => {
           )}
 
           {stats.empty > 0 && (
-            <div className="flex items-start gap-2 p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-800">
+            <div className="flex items-start gap-2 p-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 rounded-lg text-sm text-rose-800 dark:text-rose-300">
               <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
               <span>
                 Masih ada <strong>{stats.empty} siswa</strong> yang belum diisi laporannya untuk periode ini.
@@ -1419,15 +1419,15 @@ const RecapReport = () => {
           )}
           {displayGroups.map(grp => (
             <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
-              <CardHeader className="bg-emerald-50 py-3">
-                <CardTitle className="text-sm text-emerald-900">
+              <CardHeader className="bg-emerald-50 dark:bg-emerald-950/20 py-3">
+                <CardTitle className="text-sm text-emerald-900 dark:text-emerald-300">
                   Kelas {grp.kelas} — Rombel {grp.rombel}{" "}
-                  <Badge variant="outline" className="ml-2 bg-white">
+                  <Badge variant="outline" className="ml-2 bg-white dark:bg-background">
                     {grp.rows.length} siswa
                   </Badge>
                   <Badge
                     variant="outline"
-                    className="ml-1 bg-white text-rose-700 border-rose-200"
+                    className="ml-1 bg-white dark:bg-background text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/50"
                   >
                     {grp.rows.filter(r => r.status === "empty").length} belum diisi
                   </Badge>
@@ -1459,7 +1459,7 @@ const RecapReport = () => {
                             key={row.studentId}
                             className={`border-t ${
                               empty
-                                ? "bg-rose-50/60"
+                                ? "bg-rose-50/60 dark:bg-rose-950/20"
                                 : "hover:bg-muted/40"
                             }`}
                           >
@@ -1487,7 +1487,7 @@ const RecapReport = () => {
                             </td>
                             <td className="px-2 py-2 text-center">
                               {row.status === "achieved" && (
-                                <Badge className="bg-emerald-100 text-emerald-800">
+                                <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
                                   Tercapai
                                 </Badge>
                               )}
@@ -1495,7 +1495,7 @@ const RecapReport = () => {
                                 <Badge variant="destructive">Belum</Badge>
                               )}
                               {empty && (
-                                <Badge className="bg-rose-200 text-rose-900">
+                                <Badge className="bg-rose-200 text-rose-900 dark:bg-rose-950/40 dark:text-rose-400">
                                   Belum diisi
                                 </Badge>
                               )}
@@ -1516,13 +1516,13 @@ const RecapReport = () => {
                   {grp.rows.map(row => {
                     const empty = row.status === "empty";
                     return (
-                      <div key={row.studentId} className={`p-3 space-y-2 ${empty ? "bg-rose-50/60" : ""}`}>
+                      <div key={row.studentId} className={`p-3 space-y-2 ${empty ? "bg-rose-50/60 dark:bg-rose-950/10" : ""}`}>
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="text-sm font-semibold text-foreground">{row.no}. {row.nama}</p>
                             <p className="text-xs text-muted-foreground">{row.program} - {row.level}</p>
                           </div>
-                          <Badge className={`text-[10px] ${empty ? "bg-rose-200 text-rose-900" : row.status === "achieved" ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"}`}>
+                          <Badge className={`text-[10px] ${empty ? "bg-rose-200 dark:bg-rose-950/40 text-rose-900 dark:text-rose-400" : row.status === "achieved" ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400" : "bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-400"}`}>
                             {getStatusLabel(row.status)}
                           </Badge>
                         </div>
