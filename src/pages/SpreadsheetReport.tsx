@@ -479,7 +479,7 @@ const SpreadsheetReport = () => {
                           max={getPageLimit(r.program, r.startLevel)}
                           value={r.startPage}
                           onChange={e => updateRow(idx, { startPage: clampPage(r.program, parseInt(e.target.value) || 1, r.startLevel) })}
-                          className="h-6 w-9 text-center text-[10px] px-0.5 font-mono border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
+                          className="h-6 w-9 text-center text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
                         />
                         <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, 1) })}><Plus className="w-2 h-2" /></Button>
                       </div>
@@ -505,13 +505,13 @@ const SpreadsheetReport = () => {
                           onChange={e => updateRow(idx, {
                             endPage: e.target.value === "" ? null : clampPage(r.program, parseInt(e.target.value) || 1, r.endLevel),
                           })}
-                          className="h-6 w-9 text-center text-[10px] px-0.5 font-mono border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
+                          className="h-6 w-9 text-center text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
                         />
                         <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
                       </div>
                     </td>
-                    <td className={`p-0.5 border border-blue-300 dark:border-white/20 text-center font-mono text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
-                    <td className="p-0.5 border border-blue-300 dark:border-white/20 text-center font-mono text-muted-foreground text-[10px]">{target}</td>
+                    <td className={`p-0.5 border border-blue-300 dark:border-white/20 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
+                    <td className="p-0.5 border border-blue-300 dark:border-white/20 text-center text-muted-foreground text-[10px]">{target}</td>
                     <td className="p-0.5 border border-blue-300 dark:border-white/20 text-center">{hasEnd ? <span className="scale-[0.85] inline-block">{statusBadge}</span> : <span className="text-muted-foreground text-[10px]">-</span>}</td>
                     {(["present", "sick", "permission", "absent"] as const).map(k => (
                       <td key={k} className="p-0 border border-blue-300 dark:border-white/20">
@@ -519,7 +519,7 @@ const SpreadsheetReport = () => {
                           type="number" min={0}
                           value={r[k]}
                           onChange={e => updateRow(idx, { [k]: Math.max(0, parseInt(e.target.value) || 0) } as any)}
-                          className="h-6 w-full text-center text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background font-mono"
+                          className="h-6 w-full text-center text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
                         />
                       </td>
                     ))}
