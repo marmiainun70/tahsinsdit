@@ -248,7 +248,7 @@ const Layout = ({ children }: LayoutProps) => {
   }, [mobileSidebarOpen]);
 
   return (
-    <div className="flex h-screen min-h-0 bg-background overflow-hidden">
+    <div className="flex min-h-screen bg-background">
       <AnimatePresence>
         {mobileSidebarOpen && (
           <motion.div
@@ -291,7 +291,7 @@ const Layout = ({ children }: LayoutProps) => {
         </div>
       </motion.aside>
 
-      <div className="flex-1 flex min-h-0 min-w-0 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col">
         <header className="h-16 bg-card border-b border-border flex items-center justify-between gap-2 px-3 sm:px-4 lg:px-6 flex-shrink-0 shadow-sm">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
@@ -348,7 +348,7 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
         </header>
 
-        <main className="flex-1 min-h-0 overflow-x-hidden overflow-y-auto p-3 scrollbar-thin space-y-4 sm:p-4 lg:p-6">
+        <main className="flex-1 overflow-x-hidden p-3 space-y-4 sm:p-4 lg:p-6">
           <UpcomingExamBanner />
           {children}
         </main>

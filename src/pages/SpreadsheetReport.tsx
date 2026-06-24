@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent } from "react";
 import { useStudents, isTahsinDasar } from "@/hooks/useSupabaseData";
 import {
   useAllMonthlyReports, useAddMonthlyReport, useUpdateMonthlyReport,
@@ -24,6 +25,10 @@ import { NOTE_EMOTICON_WARNING, hasBlockedNoteEmoticon, removeBlockedNoteEmotico
 import { Save, Plus, Minus, Loader2, FileSpreadsheet, MessageSquarePlus, CheckCircle2, Info, Search } from "lucide-react";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { FixedHorizontalScrollbar } from "@/components/reports/FixedHorizontalScrollbar";
+import { SpreadsheetLayoutToolbar } from "@/components/reports/SpreadsheetLayoutToolbar";
+import { ResizableTableHeader } from "@/components/reports/ResizableTableHeader";
+import { MONTHLY_REPORT_COLUMNS } from "@/config/monthlyReportColumns";
+import { useSpreadsheetLayout } from "@/hooks/useSpreadsheetLayout";
 import {
   PROGRESSIVE_POINT_OPTIONS,
   TARGET_MONTH_OPTIONS,
@@ -35,6 +40,7 @@ import {
   type ReportProgram,
 } from "@/utils/calculateProgressiveReportScore";
 import { generateIntegratedMonthlyNote } from "@/utils/generateIntegratedMonthlyNote";
+import type { SpreadsheetAlign, SpreadsheetColumnKey, SpreadsheetFont } from "@/types/spreadsheetLayout";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -51,6 +57,8 @@ const IQRA_PAGES = [1, ...Array.from({ length: 29 }, (_, i) => i + 4)]; // 1, 4.
 const TAHSIN_LANJUTAN_PAGES = 200; // halaman bebas
 const END_NOT_SET = "__empty__";
 const ADVANCED_LEVELS = ["Tahsin Lanjutan", "Tahfizh"] as const;
+const isAdvancedLevel = (lvl: string): lvl is (typeof ADVANCED_LEVELS)[number] =>
+  ADVANCED_LEVELS.some((level) => level === lvl);
 const INDICATOR_GUIDES = [
   {
     key: "kehadiranKesiapan",
@@ -134,14 +142,14 @@ const endLevelOptions = (program: string): string[] => {
 };
 
 const formatLevel = (program: string, lvl: string): string => {
-  if (ADVANCED_LEVELS.includes(lvl as any)) return lvl;
+  if (isAdvancedLevel(lvl)) return lvl;
   if (program === "iqra") return `Iqro ${lvl}`;
   if (program === "tahfizh") return `Juz ${lvl}`;
   return lvl;
 };
 
 const formatStoredLevel = (program: string, lvl: string): string => {
-  if (ADVANCED_LEVELS.includes(lvl as any)) return lvl;
+  if (isAdvancedLevel(lvl)) return lvl;
   return formatLevel(program, lvl);
 };
 
@@ -152,10 +160,71 @@ const stripStoredLevelPrefix = (level: string): string =>
     .replace(/^Jilid\s+/i, "")
     .replace(/^Juz\s+/i, "");
 
-const isAdvancedEndLevel = (lvl: string): boolean => ADVANCED_LEVELS.includes(lvl as any);
+const isAdvancedEndLevel = (lvl: string): boolean => isAdvancedLevel(lvl);
 const isPromotionEnd = (program: string, lvl: string): boolean =>
   (program === "iqra" && lvl === "Tahsin Lanjutan") ||
   (program === "tahsin" && lvl === "Tahfizh");
+
+type MonthlyReportRecord = {
+  id?: string;
+  student_id: string;
+  month: number;
+  year: number;
+  program_type?: string | null;
+  iqra_level?: string | null;
+  end_iqra_level?: string | null;
+  start_page?: number | null;
+  end_page?: number | null;
+  present?: number | null;
+  sick?: number | null;
+  permission?: number | null;
+  absent?: number | null;
+  attendance_percentage?: number | null;
+  achievement_status?: string | null;
+  notes?: string | null;
+  poin_kehadiran_kesiapan?: number | null;
+  poin_kualitas_bacaan?: number | null;
+  poin_perbaikan_bacaan?: number | null;
+  pencapaian_target_bulan?: number | null;
+};
+
+type AttendanceRecord = {
+  id?: string;
+  student_id: string;
+  month: number;
+  year: number;
+  present?: number | null;
+  sick?: number | null;
+  permission?: number | null;
+  absent?: number | null;
+};
+
+type MonthlyReportPayload = {
+  student_id: string;
+  month: number;
+  year: number;
+  program_type: ReportProgram;
+  iqra_level: string;
+  end_iqra_level: string;
+  start_page: number;
+  end_page: number;
+  pages_read: number;
+  target_pages: number;
+  attendance_percentage: number;
+  poin_kehadiran_kesiapan: number;
+  poin_kualitas_bacaan: number;
+  poin_perbaikan_bacaan: number;
+  poin_konsistensi: number;
+  pencapaian_target_bulan: number;
+  poin_pencapaian: number;
+  nilai_dasar: number;
+  nilai_akhir_progresif: number;
+  kategori_progres: ProgressCategory;
+  achievement_status: string;
+  notes: string;
+};
+
+const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : String(error);
 
 const detectProgramFromLevel = (level: ReadingLevel | string | null | undefined): ReportProgram => {
   if (!level) return "iqra";
@@ -234,7 +303,7 @@ interface Row {
 }
 
 const SpreadsheetReport = () => {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const { data: students = [] } = useStudents();
   const { data: reports = [] } = useAllMonthlyReports();
   const { data: attendance = [] } = useAllAttendance();
@@ -253,6 +322,10 @@ const SpreadsheetReport = () => {
   const [studentSearch, setStudentSearch] = useState("");
   const [showGuide, setShowGuide] = useState(true);
   const [savingAll, setSavingAll] = useState(false);
+  const spreadsheetLayout = useSpreadsheetLayout({
+    userId: user?.id,
+    role: profile?.role,
+  });
 
   const filteredStudents = useMemo(
     () => students.filter(s => {
@@ -269,9 +342,11 @@ const SpreadsheetReport = () => {
   const [rows, setRows] = useState<Row[]>([]);
 
   useEffect(() => {
+    const reportRows = reports as MonthlyReportRecord[];
+    const attendanceRows = attendance as AttendanceRecord[];
     const newRows: Row[] = filteredStudents.map(s => {
       const defaultProgram = detectProgramFromLevel(s.level);
-      const latestPrev = (reports as any[])
+      const latestPrev = reportRows
         .filter(r => r.student_id === s.id)
         .sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month))
         .find(r => r.year * 12 + r.month < year * 12 + month);
@@ -279,7 +354,7 @@ const SpreadsheetReport = () => {
 
       // existing report is scoped by student + month + year so changing months never overwrites another report.
       const currentScopeKey = buildProgressiveReportScopeKey({ studentId: s.id, month, year });
-      const existing = (reports as any[]).find(
+      const existing = reportRows.find(
         r => buildProgressiveReportScopeKey({ studentId: r.student_id, month: r.month, year: r.year }) === currentScopeKey,
       );
       const inferredProgram: ReportProgram = previousEndLevel === "Tahfizh"
@@ -290,14 +365,14 @@ const SpreadsheetReport = () => {
       const program = normalizeProgramType(existing?.program_type, inferredProgram);
 
       // previous report (same program) for autofill
-      const prev = (reports as any[])
+      const prev = reportRows
         .filter(r => r.student_id === s.id && r.program_type === program)
         .sort((a, b) => (b.year * 12 + b.month) - (a.year * 12 + a.month))
         .find(r => r.year * 12 + r.month < year * 12 + month);
 
       const fallbackLvl = program === "tahfizh" ? "30" : program === "iqra" ? "1" : "Tahsin Lanjutan";
 
-      const att = (attendance as any[]).find(
+      const att = attendanceRows.find(
         a => a.student_id === s.id && a.month === month && a.year === year,
       );
 
@@ -484,6 +559,100 @@ const SpreadsheetReport = () => {
     });
   };
 
+  const isLayoutCellSelected = (studentId: string, columnKey: SpreadsheetColumnKey) => {
+    const selection = spreadsheetLayout.selection;
+    if (selection.type === "table") return true;
+    if (selection.type === "column") return selection.columnKey === columnKey;
+    if (selection.type === "row") return selection.studentId === studentId;
+    return selection.studentId === studentId && selection.columnKey === columnKey;
+  };
+
+  const layoutCellProps = (studentId: string, columnKey: SpreadsheetColumnKey) => ({
+    "data-layout-cell": `${studentId}:${columnKey}`,
+    "data-layout-selected": spreadsheetLayout.isEditing && isLayoutCellSelected(studentId, columnKey) ? true : undefined,
+    onClick: (event: ReactMouseEvent<HTMLElement>) => {
+      if (!spreadsheetLayout.isEditing) return;
+      event.preventDefault();
+      event.stopPropagation();
+      spreadsheetLayout.setSelection({ type: "cell", studentId, columnKey });
+    },
+    style: spreadsheetLayout.getCellStyle(studentId, columnKey),
+  });
+
+  const startRowResize = (event: ReactPointerEvent<HTMLElement>, studentId: string) => {
+    if (!spreadsheetLayout.isEditing) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const startY = event.clientY;
+    const startHeight = spreadsheetLayout.getRowHeight(studentId);
+    const handleMove = (moveEvent: PointerEvent) => {
+      spreadsheetLayout.setRowHeight(studentId, startHeight + moveEvent.clientY - startY);
+    };
+    const handleUp = () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    };
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+  };
+
+  const saveLayout = async (scope: "global" | "personal") => {
+    try {
+      if (scope === "global") await spreadsheetLayout.saveGlobal();
+      else await spreadsheetLayout.savePersonal();
+      toast({ title: "Layout berhasil disimpan" });
+    } catch (error: unknown) {
+      toast({ title: "Gagal menyimpan layout", description: getErrorMessage(error), variant: "destructive" });
+    }
+  };
+
+  const resetLayout = async (scope: "global" | "personal") => {
+    const label = scope === "global" ? "layout global" : "layout pribadi";
+    if (!window.confirm(`Reset ${label}? Perubahan layout tersimpan akan dihapus.`)) return;
+    try {
+      if (scope === "global") await spreadsheetLayout.resetGlobal();
+      else await spreadsheetLayout.resetPersonal();
+      toast({ title: `${label} berhasil direset` });
+    } catch (error: unknown) {
+      toast({ title: `Gagal reset ${label}`, description: getErrorMessage(error), variant: "destructive" });
+    }
+  };
+
+  const restoreDefaultLayout = () => {
+    if (!window.confirm("Kembalikan draft layout ke default bawaan?")) return;
+    spreadsheetLayout.resetDraftToDefault();
+  };
+
+  const toggleLayoutEdit = async () => {
+    if (!spreadsheetLayout.isEditing) {
+      spreadsheetLayout.setIsEditing(true);
+      spreadsheetLayout.setSelection({ type: "table" });
+      return;
+    }
+
+    if (!spreadsheetLayout.dirty) {
+      spreadsheetLayout.setIsEditing(false);
+      return;
+    }
+
+    if (window.confirm("Layout belum disimpan. Pilih OK untuk menyimpan sekarang, atau Cancel untuk pilihan lain.")) {
+      await saveLayout(spreadsheetLayout.isAdmin ? "global" : "personal");
+      spreadsheetLayout.setIsEditing(false);
+      return;
+    }
+
+    if (window.confirm("Buang perubahan layout yang belum disimpan? Pilih Cancel untuk tetap di mode edit.")) {
+      spreadsheetLayout.discardDraft();
+      spreadsheetLayout.setIsEditing(false);
+    }
+  };
+
+  const applyFont = (font: SpreadsheetFont) => spreadsheetLayout.applyStyleToSelection({ fontFamily: font });
+  const applyFontSize = (size: number) => spreadsheetLayout.applyStyleToSelection({ fontSize: Math.max(8, Math.min(24, Math.round(size))) });
+  const applyAlign = (align: SpreadsheetAlign) => spreadsheetLayout.applyStyleToSelection({ align });
+  const applyBold = () => spreadsheetLayout.applyStyleToSelection({ bold: true });
+  const applyWrap = () => spreadsheetLayout.applyStyleToSelection({ wrap: true });
+
   const saveRow = async (idx: number, silent = false): Promise<boolean> => {
     const r = rows[idx];
     if (!r.dirty || r.saving) return true;
@@ -501,7 +670,7 @@ const SpreadsheetReport = () => {
       const totalAttendance = r.present + r.sick + r.permission + r.absent;
       const attendancePercentage =
         totalAttendance > 0 ? Math.round((r.present / totalAttendance) * 100) : 0;
-      const payload: any = {
+      const payload: MonthlyReportPayload = {
         student_id: r.studentId,
         month, year, program_type: r.program,
         iqra_level: formatStoredLevel(r.program, r.startLevel),
@@ -534,8 +703,8 @@ const SpreadsheetReport = () => {
           student_id: r.studentId,
           month, year,
           present: r.present, sick: r.sick, permission: r.permission, absent: r.absent,
-        });
-        attId = (attSaved as any).id;
+        }) as { id?: string };
+        attId = attSaved.id;
       }
 
       const stu = filteredStudents.find(s => s.id === r.studentId);
@@ -551,9 +720,9 @@ const SpreadsheetReport = () => {
         saving: false,
       } : x));
       return true;
-    } catch (e: any) {
+    } catch (e: unknown) {
       setRows(prev => prev.map((x, i) => i === idx ? { ...x, saving: false } : x));
-      if (!silent) toast({ title: `Gagal menyimpan ${r.studentName}`, description: e.message, variant: "destructive" });
+      if (!silent) toast({ title: `Gagal menyimpan ${r.studentName}`, description: getErrorMessage(e), variant: "destructive" });
       return false;
     }
   };
@@ -676,6 +845,34 @@ const SpreadsheetReport = () => {
         </CardContent>
       </Card>
 
+      <SpreadsheetLayoutToolbar
+        isEditing={spreadsheetLayout.isEditing}
+        canEdit={spreadsheetLayout.canEdit}
+        isAdmin={spreadsheetLayout.isAdmin}
+        isTeacher={spreadsheetLayout.isTeacher}
+        dirty={spreadsheetLayout.dirty}
+        statusText={spreadsheetLayout.statusText}
+        tableFont={spreadsheetLayout.layout.tableFont}
+        tableFontSize={spreadsheetLayout.layout.tableFontSize}
+        defaultRowHeight={spreadsheetLayout.layout.defaultRowHeight}
+        selection={spreadsheetLayout.selection}
+        onToggleEdit={toggleLayoutEdit}
+        onSaveGlobal={() => saveLayout("global")}
+        onSavePersonal={() => saveLayout("personal")}
+        onResetGlobal={() => resetLayout("global")}
+        onResetPersonal={() => resetLayout("personal")}
+        onUseGlobal={() => resetLayout("personal")}
+        onRestoreDefault={restoreDefaultLayout}
+        onResetSelection={spreadsheetLayout.resetSelection}
+        onApplyFont={applyFont}
+        onApplyFontSize={applyFontSize}
+        onApplyBold={applyBold}
+        onApplyAlign={applyAlign}
+        onApplyWrap={applyWrap}
+        onDefaultRowHeightChange={spreadsheetLayout.setDefaultRowHeight}
+        isSaving={spreadsheetLayout.isSaving}
+      />
+
       <Card className="overflow-hidden rounded-2xl border border-amber-600/20 bg-amber-50/40 shadow-sm dark:bg-amber-950/10">
         <button
           type="button"
@@ -719,42 +916,76 @@ const SpreadsheetReport = () => {
           <table
             ref={tableRef}
             aria-label="Tabel input laporan bulanan dan penilaian progresif"
-            className="w-full min-w-[1880px] border-separate border-spacing-0 text-xs"
-            style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", zoom: zoom / 100 }}
+            className={`w-full border-separate border-spacing-0 text-xs ${spreadsheetLayout.isEditing ? "spreadsheet-layout-editing" : ""}`}
+            style={{
+              minWidth: spreadsheetLayout.tableMinWidth,
+              fontFamily: `"${spreadsheetLayout.layout.tableFont}", system-ui, sans-serif`,
+              fontSize: `${spreadsheetLayout.layout.tableFontSize}px`,
+              zoom: zoom / 100,
+            }}
+            onClick={(event) => {
+              if (!spreadsheetLayout.isEditing || event.target !== event.currentTarget) return;
+              spreadsheetLayout.setSelection({ type: "table" });
+            }}
           >
+            <colgroup>
+              {MONTHLY_REPORT_COLUMNS.map((column) => {
+                const width = spreadsheetLayout.getColumnWidth(column.key);
+                return <col key={column.key} style={{ width, minWidth: width, maxWidth: width }} />;
+              })}
+            </colgroup>
             <thead className="text-white">
               <tr className="text-center">
-                <th className="sticky left-0 top-0 z-[55] h-9 border border-white/20 bg-[#087047] px-2 py-2 text-center align-middle text-[10px] font-extrabold" colSpan={3}>
+                <th className="sticky left-0 top-0 z-[55] h-9 border border-white/20 bg-[#087047] px-2 py-2 text-center align-middle font-extrabold" colSpan={3} style={{ fontSize: spreadsheetLayout.layout.headerFontSize }}>
                   Identitas
                 </th>
-                <th className="sticky top-0 z-30 h-9 border border-white/20 bg-[#0a7950] px-2 py-2 text-center align-middle text-[10px] font-extrabold" colSpan={6}>
+                <th className="sticky top-0 z-30 h-9 border border-white/20 bg-[#0a7950] px-2 py-2 text-center align-middle font-extrabold" colSpan={6} style={{ fontSize: spreadsheetLayout.layout.headerFontSize }}>
                   Progres Bulanan
                 </th>
-                <th className="sticky top-0 z-30 h-9 border border-white/20 bg-[#8a650e] px-2 py-2 text-center align-middle text-[10px] font-extrabold" colSpan={5}>
+                <th className="sticky top-0 z-30 h-9 border border-white/20 bg-[#8a650e] px-2 py-2 text-center align-middle font-extrabold" colSpan={5} style={{ fontSize: spreadsheetLayout.layout.headerFontSize }}>
                   Penilaian Progresif
                 </th>
-                <th className="sticky top-0 z-30 h-9 border border-white/20 bg-[#32443a] px-2 py-2 text-center align-middle text-[10px] font-extrabold" colSpan={3}>
+                <th className="sticky top-0 z-30 h-9 border border-white/20 bg-[#32443a] px-2 py-2 text-center align-middle font-extrabold" colSpan={3} style={{ fontSize: spreadsheetLayout.layout.headerFontSize }}>
                   Hasil
                 </th>
               </tr>
               <tr className="text-center">
-                <th className="sticky left-0 top-9 z-[56] h-10 w-7 border border-white/20 bg-[#0a8251] px-1 py-2 text-center align-middle text-[10px] font-extrabold">No.</th>
-                <th className="sticky left-[28px] top-9 z-[56] h-10 w-[150px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Nama Siswa</th>
-                <th className="sticky top-9 z-30 h-10 w-[105px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Program</th>
-                <th className="sticky top-9 z-30 h-10 w-[75px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Awal</th>
-                <th className="sticky top-9 z-30 h-10 w-[82px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Hal. Awal</th>
-                <th className="sticky top-9 z-30 h-10 w-[75px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Akhir</th>
-                <th className="sticky top-9 z-30 h-10 w-[82px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Hal. Akhir</th>
-                <th className="sticky top-9 z-30 h-10 w-[58px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Total</th>
-                <th className="sticky top-9 z-30 h-10 w-[58px] border border-white/20 bg-[#0a8251] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Target</th>
-                <th className="sticky top-9 z-30 h-10 min-w-[172px] border border-white/20 bg-[#9a7418] px-2 py-2 text-center align-middle text-[10px] font-extrabold leading-snug">Kehadiran & Kesiapan Belajar</th>
-                <th className="sticky top-9 z-30 h-10 min-w-[172px] border border-white/20 bg-[#9a7418] px-2 py-2 text-center align-middle text-[10px] font-extrabold leading-snug">Kualitas Bacaan Harian</th>
-                <th className="sticky top-9 z-30 h-10 min-w-[172px] border border-white/20 bg-[#9a7418] px-2 py-2 text-center align-middle text-[10px] font-extrabold leading-snug">Perbaikan Bacaan Harian</th>
-                <th className="sticky top-9 z-30 h-10 w-[150px] border border-white/20 bg-[#9a7418] px-2 py-2 text-center align-middle text-[10px] font-extrabold leading-snug">Pencapaian Bulanan</th>
-                <th className="sticky top-9 z-30 h-10 w-[165px] border border-white/20 bg-[#9a7418] px-2 py-2 text-center align-middle text-[10px] font-extrabold leading-snug">Kategori Progres</th>
-                <th className="sticky top-9 z-30 h-10 w-[70px] border border-white/20 bg-[#3b5045] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Nilai</th>
-                <th className="sticky top-9 z-30 h-10 min-w-[210px] border border-white/20 bg-[#3b5045] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Catatan</th>
-                <th className="sticky top-9 z-30 h-10 w-[108px] border border-white/20 bg-[#3b5045] px-2 py-2 text-center align-middle text-[10px] font-extrabold">Status Simpan</th>
+                {MONTHLY_REPORT_COLUMNS.map((column) => {
+                  const width = spreadsheetLayout.getColumnWidth(column.key);
+                  const left = column.key === "number"
+                    ? spreadsheetLayout.stickyLeft.number
+                    : column.key === "studentName"
+                      ? spreadsheetLayout.stickyLeft.studentName
+                      : undefined;
+                  const bg = column.group === "progressiveAssessment"
+                    ? "bg-[#9a7418]"
+                    : column.group === "result"
+                      ? "bg-[#3b5045]"
+                      : "bg-[#0a8251]";
+                  const selected = spreadsheetLayout.isEditing && (
+                    spreadsheetLayout.selection.type === "table"
+                    || (spreadsheetLayout.selection.type === "column" && spreadsheetLayout.selection.columnKey === column.key)
+                  );
+                  return (
+                    <ResizableTableHeader
+                      key={column.key}
+                      column={column}
+                      width={width}
+                      left={left}
+                      top={36}
+                      isEditing={spreadsheetLayout.isEditing}
+                      selected={selected}
+                      className={bg}
+                      style={{
+                        fontSize: spreadsheetLayout.layout.headerFontSize,
+                        ...spreadsheetLayout.getColumnStyle(column.key),
+                      }}
+                      onSelect={() => spreadsheetLayout.setSelection({ type: "column", columnKey: column.key })}
+                      onResize={(nextWidth) => spreadsheetLayout.setColumnWidth(column.key, nextWidth)}
+                      onResetWidth={() => spreadsheetLayout.resetColumnWidth(column.key)}
+                    />
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
@@ -778,41 +1009,71 @@ const SpreadsheetReport = () => {
                     : "bg-card";
 
                 return (
-                  <tr key={r.studentId} className={`divide-x divide-blue-400 dark:divide-blue-700 ${r.dirty ? "bg-amber-50/50 dark:bg-amber-950/20" : decline ? "bg-red-50/30 dark:bg-red-950/20" : "hover:bg-blue-50/80 dark:hover:bg-blue-900/40 transition-colors"}`}>
-                    <td className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px] sticky left-0 z-10 ${rowBg}`}>{pageIndex + 1}</td>
-                    <td className={`p-0.5 px-1 border border-[1.5px] border-blue-400 dark:border-blue-700 border-r-[1.5px] border-r-blue-500 dark:border-r-blue-400 font-medium text-[10px] shadow-[1px_0_0_0_theme(colors.blue.500)] dark:shadow-[1px_0_0_0_theme(colors.blue.400)] truncate max-w-[130px] sticky left-[28px] z-10 ${rowBg}`} title={r.studentName}>
+                  <tr
+                    key={r.studentId}
+                    className={`divide-x divide-blue-400 dark:divide-blue-700 ${r.dirty ? "bg-amber-50/50 dark:bg-amber-950/20" : decline ? "bg-red-50/30 dark:bg-red-950/20" : "hover:bg-blue-50/80 dark:hover:bg-blue-900/40 transition-colors"}`}
+                    data-layout-selected={spreadsheetLayout.isEditing && (spreadsheetLayout.selection.type === "table" || (spreadsheetLayout.selection.type === "row" && spreadsheetLayout.selection.studentId === r.studentId)) ? true : undefined}
+                    style={spreadsheetLayout.getRowStyle(r.studentId)}
+                  >
+                    <td
+                      {...layoutCellProps(r.studentId, "number")}
+                      onClick={(event) => {
+                        if (!spreadsheetLayout.isEditing) return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        spreadsheetLayout.setSelection({ type: "row", studentId: r.studentId });
+                      }}
+                      className={`relative p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px] sticky left-0 z-10 ${rowBg}`}
+                      style={{ ...spreadsheetLayout.getCellStyle(r.studentId, "number"), left: spreadsheetLayout.stickyLeft.number }}
+                    >
+                      {pageIndex + 1}
+                      {spreadsheetLayout.isEditing && (
+                        <span
+                          aria-hidden="true"
+                          className="absolute bottom-[-4px] left-0 z-20 h-2 w-full cursor-row-resize touch-none"
+                          onPointerDown={(event) => startRowResize(event, r.studentId)}
+                        />
+                      )}
+                    </td>
+                    <td
+                      {...layoutCellProps(r.studentId, "studentName")}
+                      className={`p-0.5 px-1 border border-[1.5px] border-blue-400 dark:border-blue-700 border-r-[1.5px] border-r-blue-500 dark:border-r-blue-400 font-medium text-[10px] shadow-[1px_0_0_0_theme(colors.blue.500)] dark:shadow-[1px_0_0_0_theme(colors.blue.400)] truncate sticky z-10 ${rowBg}`}
+                      style={{ ...spreadsheetLayout.getCellStyle(r.studentId, "studentName"), left: spreadsheetLayout.stickyLeft.studentName }}
+                      title={r.studentName}
+                    >
                       {r.studentName}
                     </td>
-                    <td className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
-                      <Select value={r.program} onValueChange={(v: any) => updateRow(idx, { program: v })}>
+                    <td {...layoutCellProps(r.studentId, "program")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                      <Select value={r.program} onValueChange={(v) => updateRow(idx, { program: v as ReportProgram })} disabled={spreadsheetLayout.isEditing}>
                         <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
                         <SelectContent>{PROGRAMS.map(p => <SelectItem key={p.value} value={p.value} className="text-[10px]">{p.label}</SelectItem>)}</SelectContent>
                       </Select>
                     </td>
-                    <td className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                    <td {...layoutCellProps(r.studentId, "startLevel")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       {showStartLevelSelect ? (
-                        <Select value={r.startLevel} onValueChange={v => updateRow(idx, { startLevel: v })}>
+                        <Select value={r.startLevel} onValueChange={v => updateRow(idx, { startLevel: v })} disabled={spreadsheetLayout.isEditing}>
                           <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
                           <SelectContent>{lvlOpts.map(l => <SelectItem key={l} value={l} className="text-[10px]">{formatLevel(r.program, l)}</SelectItem>)}</SelectContent>
                         </Select>
                       ) : <span className="text-[10px] text-muted-foreground px-1">—</span>}
                     </td>
-                    <td className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                    <td {...layoutCellProps(r.studentId, "startPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <div className="flex items-center justify-center">
-                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, -1) })}><Minus className="w-2 h-2" /></Button>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, -1) })}><Minus className="w-2 h-2" /></Button>
                         <Input
                           type="number"
                           min={1}
                           max={getPageLimit(r.program, r.startLevel)}
                           value={r.startPage}
+                          disabled={spreadsheetLayout.isEditing}
                           onChange={e => updateRow(idx, { startPage: clampPage(r.program, parseInt(e.target.value) || 1, r.startLevel) })}
                           className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-50 dark:focus-visible:bg-blue-900/30"
                         />
-                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, 1) })}><Plus className="w-2 h-2" /></Button>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, 1) })}><Plus className="w-2 h-2" /></Button>
                       </div>
                     </td>
-                    <td className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
-                      <Select value={r.endLevel || END_NOT_SET} onValueChange={v => updateRow(idx, { endLevel: v === END_NOT_SET ? "" : v })}>
+                    <td {...layoutCellProps(r.studentId, "endLevel")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                      <Select value={r.endLevel || END_NOT_SET} onValueChange={v => updateRow(idx, { endLevel: v === END_NOT_SET ? "" : v })} disabled={spreadsheetLayout.isEditing}>
                         <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value={END_NOT_SET} className="text-[10px]">Akhir</SelectItem>
@@ -820,32 +1081,39 @@ const SpreadsheetReport = () => {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                    <td {...layoutCellProps(r.studentId, "endPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <div className="flex items-center justify-center">
-                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, -1) })}><Minus className="w-2 h-2" /></Button>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, -1) })}><Minus className="w-2 h-2" /></Button>
                         <Input
                           type="number"
                           min={1}
                           max={getPageLimit(r.program, r.endLevel)}
                           value={r.endPage ?? ""}
+                          disabled={spreadsheetLayout.isEditing}
                           placeholder="Isi"
                           onChange={e => updateRow(idx, {
                             endPage: e.target.value === "" ? null : clampPage(r.program, parseInt(e.target.value) || 1, r.endLevel),
                           })}
                           className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-50 dark:focus-visible:bg-blue-900/30"
                         />
-                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
                       </div>
                     </td>
-                    <td className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
-                    <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px]">{target}</td>
+                    <td {...layoutCellProps(r.studentId, "totalProgress")} className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
+                    <td {...layoutCellProps(r.studentId, "target")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px]">{target}</td>
                     {INDICATOR_GUIDES.map((guide) => {
                       const point = r[guide.field] as ProgressivePoint;
                       const tooltipText = `${formatPoint(point)} - ${guide.descriptions[point]}`;
+                      const columnKey = guide.key === "kehadiranKesiapan"
+                        ? "attendanceReadiness"
+                        : guide.key === "kualitasBacaan"
+                          ? "readingQuality"
+                          : "readingImprovement";
                       return (
-                        <td key={guide.key} className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                        <td key={guide.key} {...layoutCellProps(r.studentId, columnKey)} className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700">
                           <Select
                             value={String(point)}
+                            disabled={spreadsheetLayout.isEditing}
                             onValueChange={(value) => updateRow(idx, {
                               [guide.field]: normalizeProgressivePoint(Number(value)),
                             } as Partial<Row>)}
@@ -875,10 +1143,10 @@ const SpreadsheetReport = () => {
                         </td>
                       );
                     })}
-                    <td className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700 bg-amber-50/40 dark:bg-amber-950/10">
+                    <td {...layoutCellProps(r.studentId, "monthlyAchievement")} className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700 bg-amber-50/40 dark:bg-amber-950/10">
                       <Select
                         value={String(r.pencapaianTargetBulan)}
-                        disabled={r.program === "iqra"}
+                        disabled={r.program === "iqra" || spreadsheetLayout.isEditing}
                         onValueChange={(value) => updateRow(idx, { pencapaianTargetBulan: Number(value) })}
                       >
                         <SelectTrigger
@@ -900,20 +1168,21 @@ const SpreadsheetReport = () => {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">
+                    <td {...layoutCellProps(r.studentId, "progressCategory")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">
                       <Badge variant="outline" className={`py-0 px-1.5 text-[9px] ${getCategoryClass(progressiveScore.kategoriProgres)}`}>
                         {progressiveScore.kategoriProgres}
                       </Badge>
                     </td>
-                    <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">
+                    <td {...layoutCellProps(r.studentId, "finalScore")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">
                       <span className={`inline-flex min-h-7 min-w-10 items-center justify-center rounded-lg border px-2 text-[13px] font-black ${getScoreClass(progressiveScore.nilaiAkhir)}`}>
                         {progressiveScore.nilaiAkhir}
                       </span>
                     </td>
-                    <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                    <td {...layoutCellProps(r.studentId, "notes")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <div className="flex items-center gap-0.5">
                         <Textarea
                           value={r.notes}
+                          disabled={spreadsheetLayout.isEditing}
                           onChange={e => updateRowNotes(idx, e.target.value)}
                           placeholder="Catatan..."
                           className="min-h-[22px] h-6 w-full border-none bg-transparent shadow-none resize-none focus-visible:ring-0 focus-visible:bg-blue-50 dark:focus-visible:bg-blue-900/30 text-[10px] px-1 py-0"
@@ -921,7 +1190,7 @@ const SpreadsheetReport = () => {
                         />
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button size="icon" variant="ghost" className="h-5 w-5 shrink-0 p-0 hover:bg-muted" title="Template catatan">
+                            <Button size="icon" variant="ghost" className="h-5 w-5 shrink-0 p-0 hover:bg-muted" title="Template catatan" disabled={spreadsheetLayout.isEditing}>
                               <MessageSquarePlus className="w-3 h-3" />
                             </Button>
                           </PopoverTrigger>
@@ -952,7 +1221,7 @@ const SpreadsheetReport = () => {
                         </Popover>
                       </div>
                     </td>
-                    <td className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px]">
+                    <td {...layoutCellProps(r.studentId, "saveStatus")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px]">
                       {r.saving ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> :
                         r.dirty || !r.reportId ? <Badge variant="outline" className="text-amber-600 border-amber-300 py-0 px-1 text-[9px]">Belum Simpan</Badge> :
                         <Badge variant="outline" className="border-emerald-200 bg-emerald-50 py-0 px-1 text-[9px] text-emerald-700"><CheckCircle2 className="mr-0.5 h-2.5 w-2.5" />Tersimpan</Badge>}{/*
@@ -984,7 +1253,7 @@ const SpreadsheetReport = () => {
       <FixedHorizontalScrollbar
         scrollContainerRef={tableScrollRef}
         contentRef={tableRef}
-        refreshKey={`${zoom}-${page}-${currentPageRows.length}-${rows.length}`}
+        refreshKey={`${zoom}-${page}-${currentPageRows.length}-${rows.length}-${spreadsheetLayout.tableMinWidth}`}
       />
     </div>
   );
