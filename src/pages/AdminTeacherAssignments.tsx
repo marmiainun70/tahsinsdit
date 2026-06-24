@@ -54,6 +54,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
+import { getRoleLabel, isTeacherRole } from "@/lib/roleLabels";
 
 type Student = Pick<Database["public"]["Tables"]["students"]["Row"], "id" | "nama" | "kelas" | "rombel">;
 type Assignment = Database["public"]["Tables"]["teacher_students"]["Row"] & {
@@ -95,11 +96,6 @@ const statusText: Record<Assignment["status"], string> = {
   released: "Dilepas",
 };
 
-const teacherRoleLabel: Record<string, string> = {
-  guru: "Guru Tahsin & Tahfizh",
-  penguji: "Guru Tahsin & Tahfizh",
-};
-
 const summaryFilterLabels = {
   all: "Semua Guru",
   assigned: "Guru Sudah Memiliki Murid",
@@ -113,7 +109,7 @@ const getTeacherName = (teacher: Pick<TeacherAccount, "full_name" | "email" | "u
   teacher.full_name?.trim() || teacher.email?.trim() || teacher.username?.trim() || `Guru ${teacher.user_id.slice(0, 8)}`;
 
 const getTeacherMeta = (teacher: Pick<TeacherAccount, "email" | "username" | "role">) =>
-  teacher.email?.trim() || teacher.username?.trim() || teacherRoleLabel[teacher.role ?? ""] || "Akun guru aktif";
+  teacher.email?.trim() || teacher.username?.trim() || getRoleLabel(teacher.role) || "Akun guru aktif";
 
 const getStudentClassLabel = (student: Pick<Student, "kelas" | "rombel">) => `Kelas ${student.kelas}${student.rombel}`;
 
@@ -194,7 +190,11 @@ export default function AdminTeacherAssignments() {
       const [studentsResult, assignmentsResult, teachersResult] = await Promise.all([
         supabase.from("students").select("id,nama,kelas,rombel").order("kelas", { ascending: true }).order("nama", { ascending: true }),
         supabase.from("teacher_students").select("*").order("requested_at", { ascending: true }),
-        supabase.rpc("list_active_teacher_accounts"),
+        supabase
+          .from("profiles")
+          .select("user_id,full_name,role,status,username")
+          .eq("status", "approved")
+          .order("full_name", { ascending: true }),
       ]);
 
       if (studentsResult.error) throw studentsResult.error;
@@ -204,7 +204,7 @@ export default function AdminTeacherAssignments() {
       return {
         students: (studentsResult.data ?? []) as Student[],
         assignments: (assignmentsResult.data ?? []) as Assignment[],
-        teachers: teachersResult.data ?? [],
+        teachers: ((teachersResult.data ?? []) as TeacherAccount[]).filter((teacher) => isTeacherRole(teacher.role)),
       };
     },
   });
@@ -726,7 +726,7 @@ export default function AdminTeacherAssignments() {
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
                           <h2 className="truncate text-lg font-semibold text-foreground">{getTeacherName(teacher)}</h2>
-                          <Badge variant="secondary">{teacherRoleLabel[teacher.role ?? ""] ?? "Guru"}</Badge>
+                          <Badge variant="secondary">{getRoleLabel(teacher.role) || "Guru Tahsin & Tahfizh"}</Badge>
                           <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}>{status.label}</span>
                         </div>
                         <p className="mt-1 truncate text-sm text-muted-foreground">{getTeacherMeta(teacher)}</p>

@@ -13,7 +13,7 @@ import { UpcomingExamBanner } from "@/components/ExamScheduleNotification";
 import NotificationBell from "@/components/NotificationBell";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { getRoleLabel } from "@/lib/roleLabels";
+import { getRoleLabel, isTeacherRole } from "@/lib/roleLabels";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -72,7 +72,7 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
         <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-3">Menu Utama</p>
         {navItems
           .filter((item) => !item.adminOnly || profile?.role === "admin")
-          .filter((item) => !item.teacherOnly || profile?.role === "guru" || profile?.role === "penguji" || profile?.role === "admin")
+          .filter((item) => !item.teacherOnly || profile?.role === "admin" || isTeacherRole(profile?.role))
           .map(({ to, icon: Icon, label }) => {
           const active = location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
           return (

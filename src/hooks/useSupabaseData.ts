@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Database } from "@/integrations/supabase/types";
+import { isTeacherRole } from "@/lib/roleLabels";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 type ReadingStatus = Database["public"]["Enums"]["reading_status"];
@@ -65,9 +66,9 @@ export const getNextLevel = (current: ReadingLevel): ReadingLevel | null => {
 };
 
 export const fetchApprovedManagedStudentIds = async (userId?: string, role?: string) => {
-  if (!userId || (role !== "guru" && role !== "penguji")) return null;
+  if (!userId || !isTeacherRole(role)) return null;
 
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("teacher_students")
     .select("student_id")
     .eq("teacher_id", userId)
@@ -157,7 +158,7 @@ export const usePaginatedStudents = ({
         } else if (level === "tahfizh" || level === "Tahfizh") {
           query = query.eq("level", "Tahfizh");
         } else {
-          query = query.eq("level", level as any);
+          query = query.eq("level", level as ReadingLevel);
         }
       }
 

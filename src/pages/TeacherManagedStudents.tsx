@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
+import { isTeacherRole } from "@/lib/roleLabels";
 
 type Student = Pick<Database["public"]["Tables"]["students"]["Row"], "id" | "nama" | "kelas" | "rombel">;
 type Assignment = Database["public"]["Tables"]["teacher_students"]["Row"] & {
@@ -84,7 +85,7 @@ export default function TeacherManagedStudents() {
   const [requestClassFilter, setRequestClassFilter] = useState(ALL);
   const [requestPage, setRequestPage] = useState(1);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
-  const isTeacher = profile?.role === "guru" || profile?.role === "penguji";
+  const isTeacher = isTeacherRole(profile?.role);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setSearch(searchInput.trim()), 250);
