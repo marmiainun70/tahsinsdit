@@ -95,7 +95,7 @@ export default function ManageStudents() {
         } else if (level === "tahfizh" || level === "Tahfizh") {
           query = query.eq("level", "Tahfizh");
         } else {
-          query = query.eq("level", level);
+          query = query.eq("level", level as any);
         }
       }
 
