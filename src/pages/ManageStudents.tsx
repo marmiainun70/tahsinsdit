@@ -621,16 +621,16 @@ export default function ManageStudents() {
         ) : (
           <div>
             <div className="overflow-x-auto">
-              <table className="w-full hidden md:table md:[zoom:0.85]">
+              <table className="w-full hidden md:table">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
-                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">No</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">Nama Siswa</th>
-                    <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">Kelas</th>
-                    <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">Rombel</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">Level Bacaan</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">Progres Utama</th>
-                    <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">Aksi</th>
+                    <th className="text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-4">No</th>
+                    <th className="text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-4">Nama Siswa</th>
+                    <th className="text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-4">Kelas</th>
+                    <th className="text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-4">Rombel</th>
+                    <th className="text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-4">Level Bacaan</th>
+                    <th className="text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-4">Progres Utama</th>
+                    <th className="text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-4">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -639,48 +639,48 @@ export default function ManageStudents() {
                     const flagged = s.perlu_perhatian === true;
                     return (
                       <tr key={`desk-${s.id}`} className={`hover:bg-muted/30 transition-colors ${flagged ? "bg-destructive/5" : ""}`}>
-                        <td className="py-3.5 px-5 text-sm text-muted-foreground">{numberIdx}</td>
-                        <td className="py-3.5 px-5">
+                        <td className="py-2.5 px-4 text-xs text-muted-foreground">{numberIdx}</td>
+                        <td className="py-2.5 px-4">
                           <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full ${ROMBEL_COLORS[s.rombel as Rombel] ?? "bg-primary"} flex items-center justify-center flex-shrink-0 text-white font-bold text-xs`}>
+                            <div className={`w-7 h-7 rounded-full ${ROMBEL_COLORS[s.rombel as Rombel] ?? "bg-primary"} flex items-center justify-center flex-shrink-0 text-white font-bold text-[10px]`}>
                               {s.nama.charAt(0)}
                             </div>
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-semibold text-foreground">{s.nama}</span>
+                                <span className="text-xs font-semibold text-foreground">{s.nama}</span>
                                 {flagged && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-destructive/10 text-destructive border border-destructive/20">
-                                    <AlertTriangle className="w-2.5 h-2.5" /> Perlu Perhatian
+                                  <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-destructive/10 text-destructive border border-destructive/20">
+                                    <AlertTriangle className="w-2 h-2" /> Perlu Perhatian
                                   </span>
                                 )}
                               </div>
                               {(s.nis || s.nisn) && (
-                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                <p className="text-[10px] text-muted-foreground mt-0.5">
                                   {s.nis && `NIS: ${s.nis}`} {s.nis && s.nisn && "·"} {s.nisn && `NISN: ${s.nisn}`}
                                 </p>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="py-3.5 px-5 text-sm text-center font-bold text-foreground">{s.kelas}</td>
-                        <td className="py-3.5 px-5 text-center">
-                          <span className={`inline-flex px-2 py-0.5 text-xs font-bold text-white rounded-md ${ROMBEL_COLORS[s.rombel as Rombel] ?? "bg-primary"}`}>
+                        <td className="py-2.5 px-4 text-xs text-center font-bold text-foreground">{s.kelas}</td>
+                        <td className="py-2.5 px-4 text-center">
+                          <span className={`inline-flex px-1.5 py-0.5 text-[10px] font-bold text-white rounded-md ${ROMBEL_COLORS[s.rombel as Rombel] ?? "bg-primary"}`}>
                             {s.rombel}
                           </span>
                         </td>
-                        <td className="py-3.5 px-5">
-                          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${LEVEL_COLORS[s.level]}`}>
+                        <td className="py-2.5 px-4">
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${LEVEL_COLORS[s.level]}`}>
                             {s.level.startsWith("Iqro") ? `Tahsin Dasar — ${s.level}` : s.level}
                           </span>
                         </td>
-                        <td className="py-3.5 px-5 text-sm font-semibold text-foreground">
+                        <td className="py-2.5 px-4 text-xs font-semibold text-foreground">
                           {formatProgress(s.level, s.halaman_terakhir)}
                         </td>
-                        <td className="py-3.5 px-5">
-                          <div className="flex items-center justify-center gap-2">
+                        <td className="py-2.5 px-4">
+                          <div className="flex items-center justify-center gap-1.5">
                             <Link to={`/student/${s.id}`}>
-                              <button className="flex items-center gap-1 px-2.5 py-1.5 bg-secondary hover:bg-primary/10 hover:text-primary text-secondary-foreground rounded-lg text-xs font-medium transition-colors">
-                                <Eye className="w-3.5 h-3.5" />
+                              <button className="flex items-center gap-1 px-2 py-1 bg-secondary hover:bg-primary/10 hover:text-primary text-secondary-foreground rounded-md text-[10px] font-medium transition-colors">
+                                <Eye className="w-3 h-3" />
                                 Detail
                               </button>
                             </Link>
@@ -688,17 +688,17 @@ export default function ManageStudents() {
                               <>
                                 <button
                                   onClick={() => openEdit(s)}
-                                  className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                  className="p-1 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-colors"
                                   title="Edit Siswa"
                                 >
-                                  <Pencil className="w-4 h-4" />
+                                  <Pencil className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                   onClick={() => handleDelete(s.id, s.kelas)}
-                                  className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                                  className="p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors"
                                   title="Hapus Siswa"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                               </>
                             )}
