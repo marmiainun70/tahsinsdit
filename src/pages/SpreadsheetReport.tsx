@@ -464,13 +464,13 @@ const SpreadsheetReport = () => {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-2xl overflow-hidden border-2 border-blue-400/60 dark:border-blue-600/60 shadow-md shadow-blue-500/5 bg-background">
         <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-xs border-collapse min-w-[950px]" style={{ fontFamily: "'Carlito', 'Calibri', sans-serif", zoom: zoom / 100 }}>
-            <thead className="bg-blue-600 dark:bg-blue-800 text-white sticky top-0 z-10">
+          <table className="w-full text-xs border-separate border-spacing-0 min-w-[950px]" style={{ fontFamily: "'Carlito', 'Calibri', sans-serif", zoom: zoom / 100 }}>
+            <thead className="bg-[#107c41] text-white sticky top-0 z-30">
               <tr className="text-center">
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-7 text-center align-middle text-[10px] font-semibold sticky left-0 z-20 bg-blue-600 dark:bg-blue-800">#</th>
-                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 border-r-2 border-r-slate-300 dark:border-r-slate-700/80 w-[130px] text-center align-middle text-[10px] font-semibold sticky left-[28px] z-20 bg-blue-600 dark:bg-blue-800">Nama Siswa</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-7 text-center align-middle text-[10px] font-semibold sticky left-0 z-40 bg-[#107c41]">#</th>
+                <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 border-r-2 border-r-blue-500 dark:border-r-blue-400 w-[130px] text-center align-middle text-[10px] font-semibold sticky left-[28px] z-40 bg-[#107c41]">Nama Siswa</th>
                 <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[65px] text-center align-middle text-[10px] font-semibold">Program</th>
                 <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[55px] text-center align-middle text-[10px] font-semibold">Awal</th>
                 <th className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 w-[65px] text-center align-middle text-[10px] font-semibold">Hal. Awal</th>
@@ -518,7 +518,7 @@ const SpreadsheetReport = () => {
                 return (
                   <tr key={r.studentId} className={`divide-x divide-blue-400 dark:divide-blue-700 ${r.dirty ? "bg-amber-50/50 dark:bg-amber-950/20" : decline ? "bg-red-50/30 dark:bg-red-950/20" : "hover:bg-blue-50/80 dark:hover:bg-blue-900/40 transition-colors"}`}>
                     <td className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px] sticky left-0 z-10 ${rowBg}`}>{pageIndex + 1}</td>
-                    <td className={`p-0.5 px-1 border border-[1.5px] border-blue-400 dark:border-blue-700 border-r-2 border-r-slate-300 dark:border-r-slate-700/80 font-medium text-[10px] truncate max-w-[130px] sticky left-[28px] z-10 ${rowBg}`} title={r.studentName}>
+                    <td className={`p-0.5 px-1 border border-[1.5px] border-blue-400 dark:border-blue-700 border-r-[1.5px] border-r-blue-500 dark:border-r-blue-400 font-medium text-[10px] shadow-[1px_0_0_0_theme(colors.blue.500)] dark:shadow-[1px_0_0_0_theme(colors.blue.400)] truncate max-w-[130px] sticky left-[28px] z-10 ${rowBg}`} title={r.studentName}>
                       {r.studentName}
                     </td>
                     <td className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
