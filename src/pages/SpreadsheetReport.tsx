@@ -479,7 +479,7 @@ const SpreadsheetReport = () => {
                           max={getPageLimit(r.program, r.startLevel)}
                           value={r.startPage}
                           onChange={e => updateRow(idx, { startPage: clampPage(r.program, parseInt(e.target.value) || 1, r.startLevel) })}
-                          className="h-6 w-9 text-center text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
+                          className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
                         />
                         <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, 1) })}><Plus className="w-2 h-2" /></Button>
                       </div>
@@ -505,7 +505,7 @@ const SpreadsheetReport = () => {
                           onChange={e => updateRow(idx, {
                             endPage: e.target.value === "" ? null : clampPage(r.program, parseInt(e.target.value) || 1, r.endLevel),
                           })}
-                          className="h-6 w-9 text-center text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
+                          className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
                         />
                         <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
                       </div>
@@ -519,7 +519,7 @@ const SpreadsheetReport = () => {
                           type="number" min={0}
                           value={r[k]}
                           onChange={e => updateRow(idx, { [k]: Math.max(0, parseInt(e.target.value) || 0) } as any)}
-                          className="h-6 w-full text-center text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
+                          className="h-6 w-full text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
                         />
                       </td>
                     ))}
