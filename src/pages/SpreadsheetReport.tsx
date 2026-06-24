@@ -146,12 +146,7 @@ const SpreadsheetReport = () => {
   const updateReport = useUpdateMonthlyReport();
   const upsertAttendance = useUpsertAttendance();
   const ensureTS = useEnsureTeacherStudent();
-  const [zoom, setZoom] = useState<number>(() => {
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      return 50;
-    }
-    return 100;
-  });
+  const [zoom, setZoom] = useState<number>(100);
 
   const [kelas, setKelas] = useState<string>("1");
   const [rombel, setRombel] = useState("A");
@@ -431,7 +426,7 @@ const SpreadsheetReport = () => {
             <thead className="bg-[#107c41] text-white sticky top-0 z-10">
               <tr className="text-center">
                 <th className="p-0.5 border border-blue-300 dark:border-white/25 w-7 text-center align-middle text-[10px] font-semibold sticky left-0 z-20 bg-[#107c41]">#</th>
-                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[130px] text-center align-middle text-[10px] font-semibold sticky left-[28px] z-20 bg-[#107c41]">Nama Siswa</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 border-r-2 border-r-blue-500 dark:border-r-white/50 w-[130px] text-center align-middle text-[10px] font-semibold sticky left-[28px] z-20 bg-[#107c41]">Nama Siswa</th>
                 <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[65px] text-center align-middle text-[10px] font-semibold">Program</th>
                 <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[55px] text-center align-middle text-[10px] font-semibold">Awal</th>
                 <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[65px] text-center align-middle text-[10px] font-semibold">Hal. Awal</th>
@@ -479,7 +474,7 @@ const SpreadsheetReport = () => {
                 return (
                   <tr key={r.studentId} className={`divide-x divide-blue-300 dark:divide-white/20 ${r.dirty ? "bg-amber-50/50 dark:bg-amber-950/20" : decline ? "bg-red-50/30 dark:bg-red-950/20" : "hover:bg-muted/10"}`}>
                     <td className={`p-0.5 border border-blue-300 dark:border-white/20 text-center text-muted-foreground text-[10px] sticky left-0 z-10 ${rowBg}`}>{idx + 1}</td>
-                    <td className={`p-0.5 px-1 border border-blue-300 dark:border-white/20 font-medium text-[10px] truncate max-w-[130px] sticky left-[28px] z-10 ${rowBg}`} title={r.studentName}>
+                    <td className={`p-0.5 px-1 border border-blue-300 dark:border-white/20 border-r-2 border-r-blue-500 dark:border-r-white/50 font-medium text-[10px] truncate max-w-[130px] sticky left-[28px] z-10 ${rowBg}`} title={r.studentName}>
                       {r.studentName}
                     </td>
                     <td className="p-0 border border-blue-300 dark:border-white/20">
