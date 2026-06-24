@@ -92,7 +92,7 @@ export default function ManageStudents() {
         } else if (level === "tahfizh" || level === "Tahfizh") {
           query = query.eq("level", "Tahfizh");
         } else {
-          query = query.eq("level", level as any);
+          query = query.eq("level", level as ReadingLevel);
         }
       }
 
@@ -347,7 +347,7 @@ export default function ManageStudents() {
   const endRange = Math.min(page * 20, totalCount);
 
   return (
-    <div className="space-y-5">
+    <div className="manage-students-page space-y-5 min-w-0 max-w-full">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Link to="/" className="hover:text-primary transition-colors">Dashboard</Link>
@@ -588,7 +588,7 @@ export default function ManageStudents() {
       </div>
 
       {/* Student List Table */}
-      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden max-w-full">
         <div className="px-5 py-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-muted/30">
           <h2 className="font-bold text-foreground flex items-center gap-2">
             <Users className="w-5 h-5 text-primary" />
@@ -620,8 +620,8 @@ export default function ManageStudents() {
           </div>
         ) : (
           <div>
-            <div className="overflow-x-auto">
-              <table className="w-full hidden md:table">
+            <div className="manage-students-table-scroll overflow-x-auto max-w-full">
+              <table className="w-full min-w-[900px] hidden md:table">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
                     <th className="text-left text-[10px] font-semibold text-muted-foreground uppercase tracking-wider py-2.5 px-4">No</th>
@@ -710,7 +710,7 @@ export default function ManageStudents() {
                 </tbody>
               </table>
               {/* Mobile table – full size, no zoom */}
-              <table className="w-full md:hidden">
+              <table className="w-full min-w-[760px] md:hidden">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
                     <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">No</th>
