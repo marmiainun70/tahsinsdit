@@ -407,30 +407,30 @@ const SpreadsheetReport = () => {
 
       <Card>
         <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-xs border-collapse border border-blue-300 dark:border-white/20 min-w-[1150px]">
+          <table className="w-full text-xs border-collapse border border-blue-300 dark:border-white/20 min-w-[950px]">
             <thead className="bg-[#107c41] text-white sticky top-0 z-10">
               <tr className="text-center">
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-8 text-center align-middle text-[11px] font-semibold">#</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-[160px] text-center align-middle text-[11px] font-semibold">Nama Siswa</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-[75px] text-center align-middle text-[11px] font-semibold">Program</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-[70px] text-center align-middle text-[11px] font-semibold">Awal</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-[80px] text-center align-middle text-[11px] font-semibold">Hal. Awal</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-[70px] text-center align-middle text-[11px] font-semibold">Akhir</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-[80px] text-center align-middle text-[11px] font-semibold">Hal. Akhir</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-10 text-center align-middle text-[11px] font-semibold">Total</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-10 text-center align-middle text-[11px] font-semibold">Target</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-20 text-center align-middle text-[11px] font-semibold">Status</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-10 text-center align-middle text-[11px] font-semibold" title="Hadir">H</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-10 text-center align-middle text-[11px] font-semibold" title="Sakit">S</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-10 text-center align-middle text-[11px] font-semibold" title="Izin">I</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-10 text-center align-middle text-[11px] font-semibold" title="Alpha">A</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 min-w-[180px] text-center align-middle text-[11px] font-semibold">Catatan</th>
-                <th className="p-1 border border-blue-300 dark:border-white/25 w-24 text-center align-middle text-[11px] font-semibold">Status Simpan</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-7 text-center align-middle text-[10px] font-semibold">#</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[130px] text-center align-middle text-[10px] font-semibold">Nama Siswa</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[65px] text-center align-middle text-[10px] font-semibold">Program</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[55px] text-center align-middle text-[10px] font-semibold">Awal</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[65px] text-center align-middle text-[10px] font-semibold">Hal. Awal</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[55px] text-center align-middle text-[10px] font-semibold">Akhir</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[65px] text-center align-middle text-[10px] font-semibold">Hal. Akhir</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-8 text-center align-middle text-[10px] font-semibold">Total</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-8 text-center align-middle text-[10px] font-semibold">Target</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[70px] text-center align-middle text-[10px] font-semibold">Status</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-7 text-center align-middle text-[10px] font-semibold" title="Hadir">H</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-7 text-center align-middle text-[10px] font-semibold" title="Sakit">S</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-7 text-center align-middle text-[10px] font-semibold" title="Izin">I</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-7 text-center align-middle text-[10px] font-semibold" title="Alpha">A</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 min-w-[140px] text-center align-middle text-[10px] font-semibold">Catatan</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-20 text-center align-middle text-[10px] font-semibold">Status Simpan</th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={16} className="p-6 text-center text-muted-foreground border border-blue-300 dark:border-white/20">Belum ada siswa pada filter ini.</td></tr>
+                <tr><td colSpan={16} className="p-6 text-center text-muted-foreground border border-blue-300 dark:border-white/20 text-[10px]">Belum ada siswa pada filter ini.</td></tr>
               )}
               {rows.map((r, idx) => {
                 const target = getTarget(r.program);
@@ -444,58 +444,58 @@ const SpreadsheetReport = () => {
                 const endOpts = endLevelOptions(r.program);
                 const showStartLevelSelect = r.program !== "tahsin"; // Tahsin Lanjutan: 1 level, sembunyikan dropdown awal
                 const statusBadge = {
-                  achieved: <Badge className="bg-green-100 text-green-700 hover:bg-green-100 py-0 text-[10px]"><CheckCircle2 className="w-2.5 h-2.5 mr-1" />Tercapai</Badge>,
-                  not_achieved: <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 py-0 text-[10px]"><AlertTriangle className="w-2.5 h-2.5 mr-1" />Belum</Badge>,
-                  stagnant: <Badge className="bg-gray-200 text-gray-700 hover:bg-gray-200 py-0 text-[10px]"><Pause className="w-2.5 h-2.5 mr-1" />Stagnan</Badge>,
-                  decline: <Badge className="bg-red-100 text-red-700 hover:bg-red-100 py-0 text-[10px]"><TrendingDown className="w-2.5 h-2.5 mr-1" />Turun</Badge>,
+                  achieved: <Badge className="bg-green-100 text-green-700 hover:bg-green-100 py-0 px-1 text-[9px]"><CheckCircle2 className="w-2 h-2 mr-0.5" />Tercapai</Badge>,
+                  not_achieved: <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 py-0 px-1 text-[9px]"><AlertTriangle className="w-2 h-2 mr-0.5" />Belum</Badge>,
+                  stagnant: <Badge className="bg-gray-200 text-gray-700 hover:bg-gray-200 py-0 px-1 text-[9px]"><Pause className="w-2 h-2 mr-0.5" />Stagnan</Badge>,
+                  decline: <Badge className="bg-red-100 text-red-700 hover:bg-red-100 py-0 px-1 text-[9px]"><TrendingDown className="w-2 h-2 mr-0.5" />Turun</Badge>,
                 }[status || "stagnant"];
 
                 return (
                   <tr key={r.studentId} className={`divide-x divide-blue-300 dark:divide-white/20 ${r.dirty ? "bg-amber-50/50 dark:bg-amber-950/20" : decline ? "bg-red-50/30 dark:bg-red-950/20" : "hover:bg-muted/10"}`}>
-                    <td className="p-1 border border-blue-300 dark:border-white/20 text-center text-muted-foreground text-[11px]">{idx + 1}</td>
-                    <td className="p-1 border border-blue-300 dark:border-white/20 font-medium text-[11px]">
-                      <div>{r.studentName}</div>
+                    <td className="p-0.5 border border-blue-300 dark:border-white/20 text-center text-muted-foreground text-[10px]">{idx + 1}</td>
+                    <td className="p-0.5 px-1 border border-blue-300 dark:border-white/20 font-medium text-[10px] truncate max-w-[130px]" title={r.studentName}>
+                      {r.studentName}
                     </td>
                     <td className="p-0 border border-blue-300 dark:border-white/20">
                       <Select value={r.program} onValueChange={(v: any) => updateRow(idx, { program: v })}>
-                        <SelectTrigger className="h-7 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[11px] px-1.5 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
-                        <SelectContent>{PROGRAMS.map(p => <SelectItem key={p.value} value={p.value} className="text-xs">{p.label}</SelectItem>)}</SelectContent>
+                        <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
+                        <SelectContent>{PROGRAMS.map(p => <SelectItem key={p.value} value={p.value} className="text-[10px]">{p.label}</SelectItem>)}</SelectContent>
                       </Select>
                     </td>
                     <td className="p-0 border border-blue-300 dark:border-white/20">
                       {showStartLevelSelect ? (
                         <Select value={r.startLevel} onValueChange={v => updateRow(idx, { startLevel: v })}>
-                          <SelectTrigger className="h-7 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[11px] px-1.5 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
-                          <SelectContent>{lvlOpts.map(l => <SelectItem key={l} value={l} className="text-xs">{formatLevel(r.program, l)}</SelectItem>)}</SelectContent>
+                          <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
+                          <SelectContent>{lvlOpts.map(l => <SelectItem key={l} value={l} className="text-[10px]">{formatLevel(r.program, l)}</SelectItem>)}</SelectContent>
                         </Select>
-                      ) : <span className="text-[11px] text-muted-foreground px-2">—</span>}
+                      ) : <span className="text-[10px] text-muted-foreground px-1">—</span>}
                     </td>
-                    <td className="p-0.5 border border-blue-300 dark:border-white/20">
-                      <div className="flex items-center justify-center gap-0.5">
-                        <Button size="icon" variant="ghost" className="h-6 w-6 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, -1) })}><Minus className="w-2.5 h-2.5" /></Button>
+                    <td className="p-0 border border-blue-300 dark:border-white/20">
+                      <div className="flex items-center justify-center">
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, -1) })}><Minus className="w-2 h-2" /></Button>
                         <Input
                           type="number"
                           min={1}
                           max={getPageLimit(r.program, r.startLevel)}
                           value={r.startPage}
                           onChange={e => updateRow(idx, { startPage: clampPage(r.program, parseInt(e.target.value) || 1, r.startLevel) })}
-                          className="h-7 w-12 text-center text-[11px] px-0.5 font-mono border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
+                          className="h-6 w-9 text-center text-[10px] px-0.5 font-mono border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
                         />
-                        <Button size="icon" variant="ghost" className="h-6 w-6 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, 1) })}><Plus className="w-2.5 h-2.5" /></Button>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, 1) })}><Plus className="w-2 h-2" /></Button>
                       </div>
                     </td>
                     <td className="p-0 border border-blue-300 dark:border-white/20">
                       <Select value={r.endLevel || END_NOT_SET} onValueChange={v => updateRow(idx, { endLevel: v === END_NOT_SET ? "" : v })}>
-                        <SelectTrigger className="h-7 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[11px] px-1.5 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={END_NOT_SET} className="text-xs">Pilih akhir</SelectItem>
-                          {endOpts.map(l => <SelectItem key={l} value={l} className="text-xs">{formatLevel(r.program, l)}</SelectItem>)}
+                          <SelectItem value={END_NOT_SET} className="text-[10px]">Akhir</SelectItem>
+                          {endOpts.map(l => <SelectItem key={l} value={l} className="text-[10px]">{formatLevel(r.program, l)}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-0.5 border border-blue-300 dark:border-white/20">
-                      <div className="flex items-center justify-center gap-0.5">
-                        <Button size="icon" variant="ghost" className="h-6 w-6 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, -1) })}><Minus className="w-2.5 h-2.5" /></Button>
+                    <td className="p-0 border border-blue-300 dark:border-white/20">
+                      <div className="flex items-center justify-center">
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, -1) })}><Minus className="w-2 h-2" /></Button>
                         <Input
                           type="number"
                           min={1}
@@ -505,37 +505,37 @@ const SpreadsheetReport = () => {
                           onChange={e => updateRow(idx, {
                             endPage: e.target.value === "" ? null : clampPage(r.program, parseInt(e.target.value) || 1, r.endLevel),
                           })}
-                          className="h-7 w-12 text-center text-[11px] px-0.5 font-mono border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
+                          className="h-6 w-9 text-center text-[10px] px-0.5 font-mono border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background"
                         />
-                        <Button size="icon" variant="ghost" className="h-6 w-6 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, 1) })}><Plus className="w-2.5 h-2.5" /></Button>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
                       </div>
                     </td>
-                    <td className={`p-1 border border-blue-300 dark:border-white/20 text-center font-mono text-[11px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
-                    <td className="p-1 border border-blue-300 dark:border-white/20 text-center font-mono text-muted-foreground text-[11px]">{target}</td>
-                    <td className="p-1 border border-blue-300 dark:border-white/20 text-center">{hasEnd ? <span className="scale-90 inline-block">{statusBadge}</span> : <span className="text-muted-foreground text-[11px]">-</span>}</td>
+                    <td className={`p-0.5 border border-blue-300 dark:border-white/20 text-center font-mono text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
+                    <td className="p-0.5 border border-blue-300 dark:border-white/20 text-center font-mono text-muted-foreground text-[10px]">{target}</td>
+                    <td className="p-0.5 border border-blue-300 dark:border-white/20 text-center">{hasEnd ? <span className="scale-[0.85] inline-block">{statusBadge}</span> : <span className="text-muted-foreground text-[10px]">-</span>}</td>
                     {(["present", "sick", "permission", "absent"] as const).map(k => (
                       <td key={k} className="p-0 border border-blue-300 dark:border-white/20">
                         <Input
                           type="number" min={0}
                           value={r[k]}
                           onChange={e => updateRow(idx, { [k]: Math.max(0, parseInt(e.target.value) || 0) } as any)}
-                          className="h-7 w-full text-center text-[11px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background font-mono"
+                          className="h-6 w-full text-center text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-background font-mono"
                         />
                       </td>
                     ))}
-                    <td className="p-1 border border-blue-300 dark:border-white/20">
-                      <div className="flex items-center gap-1">
+                    <td className="p-0.5 border border-blue-300 dark:border-white/20">
+                      <div className="flex items-center gap-0.5">
                         <Textarea
                           value={r.notes}
                           onChange={e => updateRowNotes(idx, e.target.value)}
                           placeholder="Catatan..."
-                          className="min-h-[28px] h-7 w-full border-none bg-transparent shadow-none resize-none focus-visible:ring-0 focus-visible:bg-background text-[11px] px-1 py-0.5"
+                          className="min-h-[22px] h-6 w-full border-none bg-transparent shadow-none resize-none focus-visible:ring-0 focus-visible:bg-background text-[10px] px-1 py-0"
                           rows={1}
                         />
                         <Popover>
                           <PopoverTrigger asChild>
-                            <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0 p-0 hover:bg-muted" title="Template catatan">
-                              <MessageSquarePlus className="w-3.5 h-3.5" />
+                            <Button size="icon" variant="ghost" className="h-5 w-5 shrink-0 p-0 hover:bg-muted" title="Template catatan">
+                              <MessageSquarePlus className="w-3 h-3" />
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-[360px] p-2 space-y-1">
@@ -560,11 +560,11 @@ const SpreadsheetReport = () => {
                         </Popover>
                       </div>
                     </td>
-                    <td className="p-1 border border-blue-300 dark:border-white/20 text-center text-[11px]">
+                    <td className="p-0.5 border border-blue-300 dark:border-white/20 text-center text-[10px]">
                       {r.saving ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> :
-                        r.dirty ? <Badge variant="outline" className="text-amber-600 border-amber-300 py-0 text-[10px]">Belum Simpan</Badge> :
-                        r.reportId ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600 inline" /> :
-                        <span className="text-muted-foreground text-[11px]">—</span>}
+                        r.dirty ? <Badge variant="outline" className="text-amber-600 border-amber-300 py-0 px-1 text-[9px]">Belum Simpan</Badge> :
+                        r.reportId ? <CheckCircle2 className="w-3 h-3 text-green-600 inline" /> :
+                        <span className="text-muted-foreground text-[10px]">—</span>}
                     </td>
                   </tr>
                 );
