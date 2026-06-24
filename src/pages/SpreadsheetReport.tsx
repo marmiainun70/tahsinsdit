@@ -146,6 +146,12 @@ const SpreadsheetReport = () => {
   const updateReport = useUpdateMonthlyReport();
   const upsertAttendance = useUpsertAttendance();
   const ensureTS = useEnsureTeacherStudent();
+  const [zoom, setZoom] = useState<number>(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      return 50;
+    }
+    return 100;
+  });
 
   const [kelas, setKelas] = useState<string>("1");
   const [rombel, setRombel] = useState("A");
@@ -397,6 +403,20 @@ const SpreadsheetReport = () => {
               </div>
               <Progress value={progressPct} className="h-2" />
             </div>
+            <div className="flex items-center gap-1.5 bg-muted/60 p-0.5 rounded-md border border-border">
+              <span className="text-[10px] text-muted-foreground px-1.5 font-medium">Zoom:</span>
+              {([50, 75, 100] as const).map(z => (
+                <Button
+                  key={z}
+                  size="sm"
+                  variant={zoom === z ? "default" : "ghost"}
+                  className="h-6 px-1.5 text-[10px]"
+                  onClick={() => setZoom(z)}
+                >
+                  {z}%
+                </Button>
+              ))}
+            </div>
             <Button onClick={saveAll} disabled={savingAll} className="gap-2">
               {savingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               Simpan Semua
@@ -407,11 +427,11 @@ const SpreadsheetReport = () => {
 
       <Card>
         <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-xs border-collapse border border-blue-300 dark:border-white/20 min-w-[950px]" style={{ fontFamily: "'Carlito', 'Calibri', sans-serif" }}>
+          <table className="w-full text-xs border-collapse border border-blue-300 dark:border-white/20 min-w-[950px]" style={{ fontFamily: "'Carlito', 'Calibri', sans-serif", zoom: zoom / 100 }}>
             <thead className="bg-[#107c41] text-white sticky top-0 z-10">
               <tr className="text-center">
-                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-7 text-center align-middle text-[10px] font-semibold">#</th>
-                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[130px] text-center align-middle text-[10px] font-semibold">Nama Siswa</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-7 text-center align-middle text-[10px] font-semibold sticky left-0 z-20 bg-[#107c41]">#</th>
+                <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[130px] text-center align-middle text-[10px] font-semibold sticky left-[28px] z-20 bg-[#107c41]">Nama Siswa</th>
                 <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[65px] text-center align-middle text-[10px] font-semibold">Program</th>
                 <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[55px] text-center align-middle text-[10px] font-semibold">Awal</th>
                 <th className="p-0.5 border border-blue-300 dark:border-white/25 w-[65px] text-center align-middle text-[10px] font-semibold">Hal. Awal</th>
@@ -450,10 +470,16 @@ const SpreadsheetReport = () => {
                   decline: <Badge className="bg-red-100 text-red-700 hover:bg-red-100 py-0 px-1 text-[9px]"><TrendingDown className="w-2 h-2 mr-0.5" />Turun</Badge>,
                 }[status || "stagnant"];
 
+                const rowBg = r.dirty
+                  ? "bg-[#fffbeb] dark:bg-amber-950/40"
+                  : decline
+                    ? "bg-[#fef2f2] dark:bg-red-950/40"
+                    : "bg-white dark:bg-[#070b09]";
+
                 return (
                   <tr key={r.studentId} className={`divide-x divide-blue-300 dark:divide-white/20 ${r.dirty ? "bg-amber-50/50 dark:bg-amber-950/20" : decline ? "bg-red-50/30 dark:bg-red-950/20" : "hover:bg-muted/10"}`}>
-                    <td className="p-0.5 border border-blue-300 dark:border-white/20 text-center text-muted-foreground text-[10px]">{idx + 1}</td>
-                    <td className="p-0.5 px-1 border border-blue-300 dark:border-white/20 font-medium text-[10px] truncate max-w-[130px]" title={r.studentName}>
+                    <td className={`p-0.5 border border-blue-300 dark:border-white/20 text-center text-muted-foreground text-[10px] sticky left-0 z-10 ${rowBg}`}>{idx + 1}</td>
+                    <td className={`p-0.5 px-1 border border-blue-300 dark:border-white/20 font-medium text-[10px] truncate max-w-[130px] sticky left-[28px] z-10 ${rowBg}`} title={r.studentName}>
                       {r.studentName}
                     </td>
                     <td className="p-0 border border-blue-300 dark:border-white/20">
