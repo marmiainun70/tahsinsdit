@@ -34,6 +34,7 @@ import {
   type ProgressCategory,
   type ReportProgram,
 } from "@/utils/calculateProgressiveReportScore";
+import { generateIntegratedMonthlyNote } from "@/utils/generateIntegratedMonthlyNote";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -452,6 +453,35 @@ const SpreadsheetReport = () => {
     if (!r.endLevel || r.endPage === null) return "";
     const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage);
     return getAutoNoteByProgress(r.program, signed, getTarget(r.program));
+  };
+
+  const buildIntegratedNote = (r: Row): string => {
+    const score = scoreForRow(r);
+    const signedProgress = r.endLevel && r.endPage !== null
+      ? calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage)
+      : 0;
+
+    return generateIntegratedMonthlyNote({
+      studentId: r.studentId,
+      month,
+      year,
+      program: r.program,
+      kelas: r.kelas,
+      startLevel: r.startLevel,
+      endLevel: r.endLevel || r.startLevel,
+      pagesRead: signedProgress,
+      signedProgress,
+      targetPages: getTarget(r.program),
+      kehadiranKesiapan: r.poinKehadiranKesiapan,
+      kualitasBacaan: r.poinKualitasBacaan,
+      perbaikanBacaan: r.poinPerbaikanBacaan,
+      pencapaianTargetBulan: score.pencapaianTargetBulan,
+      nilaiDasar: score.nilaiDasar,
+      poinKonsistensi: score.poinKonsistensi,
+      poinPencapaian: score.poinPencapaian,
+      nilaiAkhir: score.nilaiAkhir,
+      kategoriProgres: score.kategoriProgres,
+    });
   };
 
   const saveRow = async (idx: number, silent = false): Promise<boolean> => {
@@ -910,6 +940,12 @@ const SpreadsheetReport = () => {
                               className="block w-full text-left text-xs p-2 rounded bg-primary/10 hover:bg-primary/20 font-medium"
                             >
                               Catatan otomatis berdasarkan progres
+                            </button>
+                            <button
+                              onClick={() => updateRowNotes(idx, buildIntegratedNote(r))}
+                              className="block w-full text-left text-xs p-2 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-900 dark:bg-emerald-950/30 dark:hover:bg-emerald-950/50 dark:text-emerald-100 font-medium"
+                            >
+                              Catatan terpadu berdasarkan nilai & progres
                             </button>
                           </PopoverContent>
                         </Popover>
