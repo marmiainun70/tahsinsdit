@@ -28,8 +28,8 @@ const YEARS = [2025, 2026, 2027, 2028, 2029, 2030];
 const ROMBELS = ["A", "B", "C", "D"];
 const KELAS_LIST = [1, 2, 3, 4, 5, 6];
 const PROGRAMS = [
-  { value: "iqra", label: "Iqra (Tahsin Dasar)" },
-  { value: "tahsin", label: "Tahsin Lanjutan" },
+  { value: "iqra", label: "Iqra" },
+  { value: "tahsin", label: "Tahsin" },
   { value: "tahfizh", label: "Tahfizh" },
 ];
 
@@ -407,30 +407,30 @@ const SpreadsheetReport = () => {
 
       <Card>
         <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-xs border-collapse border border-gray-200 dark:border-gray-800 min-w-[1150px]">
+          <table className="w-full text-xs border-collapse border border-black/20 dark:border-white/20 min-w-[1150px]">
             <thead className="bg-[#107c41] text-white sticky top-0 z-10">
               <tr className="text-center">
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-8 text-center text-[11px] font-semibold">#</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-[170px] text-left text-[11px] font-semibold">Nama Siswa</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-[130px] text-left text-[11px] font-semibold">Program</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-[120px] text-left text-[11px] font-semibold">Awal</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-[130px] text-center text-[11px] font-semibold">Hal. Awal</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-[140px] text-left text-[11px] font-semibold">Akhir</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-[130px] text-center text-[11px] font-semibold">Hal. Akhir</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-12 text-center text-[11px] font-semibold">Total</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-12 text-center text-[11px] font-semibold">Target</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-24 text-center text-[11px] font-semibold">Status</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-12 text-center text-[11px] font-semibold" title="Hadir">H</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-12 text-center text-[11px] font-semibold" title="Sakit">S</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-12 text-center text-[11px] font-semibold" title="Izin">I</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-12 text-center text-[11px] font-semibold" title="Alpha">A</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 min-w-[200px] text-left text-[11px] font-semibold">Catatan</th>
-                <th className="p-1 border border-gray-300 dark:border-gray-700 w-28 text-center text-[11px] font-semibold">Status Simpan</th>
+                <th className="p-1 border border-white/25 w-8 text-center text-[11px] font-semibold">#</th>
+                <th className="p-1 border border-white/25 w-[160px] text-left text-[11px] font-semibold">Nama Siswa</th>
+                <th className="p-1 border border-white/25 w-[75px] text-left text-[11px] font-semibold">Program</th>
+                <th className="p-1 border border-white/25 w-[85px] text-left text-[11px] font-semibold">Awal</th>
+                <th className="p-1 border border-white/25 w-[90px] text-center text-[11px] font-semibold">Hal. Awal</th>
+                <th className="p-1 border border-white/25 w-[95px] text-left text-[11px] font-semibold">Akhir</th>
+                <th className="p-1 border border-white/25 w-[90px] text-center text-[11px] font-semibold">Hal. Akhir</th>
+                <th className="p-1 border border-white/25 w-10 text-center text-[11px] font-semibold">Total</th>
+                <th className="p-1 border border-white/25 w-10 text-center text-[11px] font-semibold">Target</th>
+                <th className="p-1 border border-white/25 w-20 text-center text-[11px] font-semibold">Status</th>
+                <th className="p-1 border border-white/25 w-10 text-center text-[11px] font-semibold" title="Hadir">H</th>
+                <th className="p-1 border border-white/25 w-10 text-center text-[11px] font-semibold" title="Sakit">S</th>
+                <th className="p-1 border border-white/25 w-10 text-center text-[11px] font-semibold" title="Izin">I</th>
+                <th className="p-1 border border-white/25 w-10 text-center text-[11px] font-semibold" title="Alpha">A</th>
+                <th className="p-1 border border-white/25 min-w-[180px] text-left text-[11px] font-semibold">Catatan</th>
+                <th className="p-1 border border-white/25 w-24 text-center text-[11px] font-semibold">Status Simpan</th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={16} className="p-6 text-center text-muted-foreground border">Belum ada siswa pada filter ini.</td></tr>
+                <tr><td colSpan={16} className="p-6 text-center text-muted-foreground border border-black/20 dark:border-white/20">Belum ada siswa pada filter ini.</td></tr>
               )}
               {rows.map((r, idx) => {
                 const target = getTarget(r.program);
@@ -451,19 +451,19 @@ const SpreadsheetReport = () => {
                 }[status || "stagnant"];
 
                 return (
-                  <tr key={r.studentId} className={`divide-x ${r.dirty ? "bg-amber-50/50 dark:bg-amber-950/20" : decline ? "bg-red-50/30 dark:bg-red-950/20" : "hover:bg-muted/10"}`}>
-                    <td className="p-1 border border-gray-200 dark:border-gray-800 text-center text-muted-foreground text-[11px]">{idx + 1}</td>
-                    <td className="p-1 border border-gray-200 dark:border-gray-800 font-medium text-[11px]">
+                  <tr key={r.studentId} className={`divide-x divide-black/20 dark:divide-white/20 ${r.dirty ? "bg-amber-50/50 dark:bg-amber-950/20" : decline ? "bg-red-50/30 dark:bg-red-950/20" : "hover:bg-muted/10"}`}>
+                    <td className="p-1 border border-black/20 dark:border-white/20 text-center text-muted-foreground text-[11px]">{idx + 1}</td>
+                    <td className="p-1 border border-black/20 dark:border-white/20 font-medium text-[11px]">
                       <div>{r.studentName}</div>
                       <div className="text-[9px] text-muted-foreground">{r.studentLevel}</div>
                     </td>
-                    <td className="p-0 border border-gray-200 dark:border-gray-800">
+                    <td className="p-0 border border-black/20 dark:border-white/20">
                       <Select value={r.program} onValueChange={(v: any) => updateRow(idx, { program: v })}>
                         <SelectTrigger className="h-7 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[11px] px-1.5 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
                         <SelectContent>{PROGRAMS.map(p => <SelectItem key={p.value} value={p.value} className="text-xs">{p.label}</SelectItem>)}</SelectContent>
                       </Select>
                     </td>
-                    <td className="p-0 border border-gray-200 dark:border-gray-800">
+                    <td className="p-0 border border-black/20 dark:border-white/20">
                       {showStartLevelSelect ? (
                         <Select value={r.startLevel} onValueChange={v => updateRow(idx, { startLevel: v })}>
                           <SelectTrigger className="h-7 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[11px] px-1.5 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
@@ -471,7 +471,7 @@ const SpreadsheetReport = () => {
                         </Select>
                       ) : <span className="text-[11px] text-muted-foreground px-2">—</span>}
                     </td>
-                    <td className="p-0.5 border border-gray-200 dark:border-gray-800">
+                    <td className="p-0.5 border border-black/20 dark:border-white/20">
                       <div className="flex items-center justify-center gap-0.5">
                         <Button size="icon" variant="ghost" className="h-6 w-6 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, -1) })}><Minus className="w-2.5 h-2.5" /></Button>
                         <Input
@@ -485,7 +485,7 @@ const SpreadsheetReport = () => {
                         <Button size="icon" variant="ghost" className="h-6 w-6 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, 1) })}><Plus className="w-2.5 h-2.5" /></Button>
                       </div>
                     </td>
-                    <td className="p-0 border border-gray-200 dark:border-gray-800">
+                    <td className="p-0 border border-black/20 dark:border-white/20">
                       <Select value={r.endLevel || END_NOT_SET} onValueChange={v => updateRow(idx, { endLevel: v === END_NOT_SET ? "" : v })}>
                         <SelectTrigger className="h-7 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[11px] px-1.5 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
                         <SelectContent>
@@ -494,7 +494,7 @@ const SpreadsheetReport = () => {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-0.5 border border-gray-200 dark:border-gray-800">
+                    <td className="p-0.5 border border-black/20 dark:border-white/20">
                       <div className="flex items-center justify-center gap-0.5">
                         <Button size="icon" variant="ghost" className="h-6 w-6 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, -1) })}><Minus className="w-2.5 h-2.5" /></Button>
                         <Input
@@ -511,11 +511,11 @@ const SpreadsheetReport = () => {
                         <Button size="icon" variant="ghost" className="h-6 w-6 rounded-none p-0 hover:bg-muted" onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, 1) })}><Plus className="w-2.5 h-2.5" /></Button>
                       </div>
                     </td>
-                    <td className={`p-1 border border-gray-200 dark:border-gray-800 text-center font-mono text-[11px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
-                    <td className="p-1 border border-gray-200 dark:border-gray-800 text-center font-mono text-muted-foreground text-[11px]">{target}</td>
-                    <td className="p-1 border border-gray-200 dark:border-gray-800 text-center">{hasEnd ? <span className="scale-90 inline-block">{statusBadge}</span> : <span className="text-muted-foreground text-[11px]">-</span>}</td>
+                    <td className={`p-1 border border-black/20 dark:border-white/20 text-center font-mono text-[11px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
+                    <td className="p-1 border border-black/20 dark:border-white/20 text-center font-mono text-muted-foreground text-[11px]">{target}</td>
+                    <td className="p-1 border border-black/20 dark:border-white/20 text-center">{hasEnd ? <span className="scale-90 inline-block">{statusBadge}</span> : <span className="text-muted-foreground text-[11px]">-</span>}</td>
                     {(["present", "sick", "permission", "absent"] as const).map(k => (
-                      <td key={k} className="p-0 border border-gray-200 dark:border-gray-800">
+                      <td key={k} className="p-0 border border-black/20 dark:border-white/20">
                         <Input
                           type="number" min={0}
                           value={r[k]}
@@ -524,7 +524,7 @@ const SpreadsheetReport = () => {
                         />
                       </td>
                     ))}
-                    <td className="p-1 border border-gray-200 dark:border-gray-800">
+                    <td className="p-1 border border-black/20 dark:border-white/20">
                       <div className="flex items-center gap-1">
                         <Textarea
                           value={r.notes}
@@ -561,7 +561,7 @@ const SpreadsheetReport = () => {
                         </Popover>
                       </div>
                     </td>
-                    <td className="p-1 border border-gray-200 dark:border-gray-800 text-center text-[11px]">
+                    <td className="p-1 border border-black/20 dark:border-white/20 text-center text-[11px]">
                       {r.saving ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> :
                         r.dirty ? <Badge variant="outline" className="text-amber-600 border-amber-300 py-0 text-[10px]">Belum Simpan</Badge> :
                         r.reportId ? <CheckCircle2 className="w-3.5 h-3.5 text-green-600 inline" /> :
