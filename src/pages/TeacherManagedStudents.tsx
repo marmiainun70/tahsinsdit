@@ -338,12 +338,15 @@ export default function TeacherManagedStudents() {
       ) : (
         <>
           <div className="space-y-3">
-            {visibleRows.map(({ assignment, student }) => (
+            {visibleRows.map(({ assignment, student }, idx) => (
               <article key={assignment.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="font-semibold text-foreground">{student.nama}</h2>
+                      <span className="text-[12px] font-semibold text-muted-foreground min-w-[20px]">
+                        {(page - 1) * PAGE_SIZE + idx + 1}.
+                      </span>
+                      <h2 className="font-semibold text-foreground text-[12px]">{student.nama}</h2>
                       <Badge variant="secondary">{getStudentClassLabel(student)}</Badge>
                       <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass[assignment.status]}`}>
                         {statusText[assignment.status]}
