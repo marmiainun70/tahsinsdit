@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,9 +60,6 @@ export default function ManageStudents() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const tableContainerRef = useRef<HTMLDivElement>(null);
-  const [tableHeight, setTableHeight] = useState<number | "auto">("auto");
 
   const [exporting, setExporting] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -636,10 +633,8 @@ export default function ManageStudents() {
           </div>
         ) : (
           <div>
-            <div style={{ height: tableHeight, overflow: "hidden", position: "relative", width: "100%" }}>
-              <div ref={tableContainerRef} className="md:scale-[0.85] origin-top-left md:w-[117.647%] w-full">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
+            <div className="overflow-x-auto">
+              <table className="w-full hidden md:table" style={{ zoom: 0.85 }}>
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
                     <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">No</th>
@@ -656,7 +651,7 @@ export default function ManageStudents() {
                     const numberIdx = (page - 1) * 20 + i + 1;
                     const flagged = s.perlu_perhatian === true;
                     return (
-                      <tr key={s.id} className={`hover:bg-muted/30 transition-colors ${flagged ? "bg-destructive/5" : ""}`}>
+                      <tr key={`desk-${s.id}`} className={`hover:bg-muted/30 transition-colors ${flagged ? "bg-destructive/5" : ""}`}>
                         <td className="py-3.5 px-5 text-sm text-muted-foreground">{numberIdx}</td>
                         <td className="py-3.5 px-5">
                           <div className="flex items-center gap-3">
@@ -727,8 +722,95 @@ export default function ManageStudents() {
                   })}
                 </tbody>
               </table>
-                </div>
-              </div>
+              {/* Mobile table – full size, no zoom */}
+              <table className="w-full md:hidden">
+                <thead>
+                  <tr className="border-b border-border bg-muted/40">
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">No</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">Nama Siswa</th>
+                    <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">Kelas</th>
+                    <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">Rombel</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">Level Bacaan</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">Progres Utama</th>
+                    <th className="text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {students.map((s, i) => {
+                    const numberIdx = (page - 1) * 20 + i + 1;
+                    const flagged = s.perlu_perhatian === true;
+                    return (
+                      <tr key={`mob-${s.id}`} className={`hover:bg-muted/30 transition-colors ${flagged ? "bg-destructive/5" : ""}`}>
+                        <td className="py-3.5 px-5 text-sm text-muted-foreground">{numberIdx}</td>
+                        <td className="py-3.5 px-5">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full ${ROMBEL_COLORS[s.rombel as Rombel] ?? "bg-primary"} flex items-center justify-center flex-shrink-0 text-white font-bold text-xs`}>
+                              {s.nama.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-semibold text-foreground">{s.nama}</span>
+                                {flagged && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-destructive/10 text-destructive border border-destructive/20">
+                                    <AlertTriangle className="w-2.5 h-2.5" /> Perlu Perhatian
+                                  </span>
+                                )}
+                              </div>
+                              {(s.nis || s.nisn) && (
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                  {s.nis && `NIS: ${s.nis}`} {s.nis && s.nisn && "·"} {s.nisn && `NISN: ${s.nisn}`}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-5 text-sm text-center font-bold text-foreground">{s.kelas}</td>
+                        <td className="py-3.5 px-5 text-center">
+                          <span className={`inline-flex px-2 py-0.5 text-xs font-bold text-white rounded-md ${ROMBEL_COLORS[s.rombel as Rombel] ?? "bg-primary"}`}>
+                            {s.rombel}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-5">
+                          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${LEVEL_COLORS[s.level]}`}>
+                            {s.level.startsWith("Iqro") ? `Tahsin Dasar — ${s.level}` : s.level}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-5 text-sm font-semibold text-foreground">
+                          {formatProgress(s.level, s.halaman_terakhir)}
+                        </td>
+                        <td className="py-3.5 px-5">
+                          <div className="flex items-center justify-center gap-2">
+                            <Link to={`/student/${s.id}`}>
+                              <button className="flex items-center gap-1 px-2.5 py-1.5 bg-secondary hover:bg-primary/10 hover:text-primary text-secondary-foreground rounded-lg text-xs font-medium transition-colors">
+                                <Eye className="w-3.5 h-3.5" />
+                                Detail
+                              </button>
+                            </Link>
+                            {isAdmin && (
+                              <>
+                                <button
+                                  onClick={() => openEdit(s)}
+                                  className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                  title="Edit Siswa"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(s.id, s.kelas)}
+                                  className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                                  title="Hapus Siswa"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
             {/* Pagination controls */}
             <DataTablePagination
