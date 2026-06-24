@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           .select("full_name, role")
           .eq("user_id", userId)
           .single();
-        data = fallbackRes.data;
+        data = fallbackRes.data ? { ...fallbackRes.data, status: "approved" as const } : null;
         error = fallbackRes.error;
       }
 
