@@ -183,19 +183,6 @@ export default function ManageStudents() {
   const totalCount = data?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / 20);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const observer = new ResizeObserver((entries) => {
-      if (window.innerWidth >= 768) {
-        setTableHeight(entries[0].contentRect.height * 0.85);
-      } else {
-        setTableHeight("auto");
-      }
-    });
-    const el = tableContainerRef.current;
-    if (el) observer.observe(el);
-    return () => observer.disconnect();
-  }, [students]);
 
   // Actions
   const addStudent = useAddStudent();
