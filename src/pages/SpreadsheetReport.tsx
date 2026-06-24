@@ -497,6 +497,7 @@ const SpreadsheetReport = () => {
       const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage);
       const status = isPromotionEnd(r.program, r.endLevel) ? "achieved" : getProgressStatus(signed, target);
       const progressiveScore = scoreForRow(r);
+      const notesForSave = r.notes.trim() ? r.notes : buildIntegratedNote(r);
       const totalAttendance = r.present + r.sick + r.permission + r.absent;
       const attendancePercentage =
         totalAttendance > 0 ? Math.round((r.present / totalAttendance) * 100) : 0;
@@ -520,7 +521,7 @@ const SpreadsheetReport = () => {
         nilai_akhir_progresif: progressiveScore.nilaiAkhir,
         kategori_progres: progressiveScore.kategoriProgres,
         achievement_status: status,
-        notes: r.notes,
+        notes: notesForSave,
       };
       let saved;
       if (r.reportId) saved = await updateReport.mutateAsync({ id: r.reportId, ...payload });
@@ -545,6 +546,7 @@ const SpreadsheetReport = () => {
         reportId: saved.id,
         attendanceId: attId,
         pencapaianTargetBulan: progressiveScore.pencapaianTargetBulan,
+        notes: notesForSave,
         dirty: false,
         saving: false,
       } : x));
@@ -929,10 +931,9 @@ const SpreadsheetReport = () => {
                               <button
                                 key={option.key}
                                 onClick={() => updateRowNotes(idx, option.note)}
-                                className="block w-full text-left text-xs p-2 rounded hover:bg-accent"
+                                className="block w-full text-left text-xs p-2 rounded hover:bg-accent font-medium"
                               >
-                                <span className="font-semibold">{option.label}</span>
-                                <span className="block whitespace-pre-line text-muted-foreground mt-1">{option.note}</span>
+                                {option.label}
                               </button>
                             ))}
                             <button
