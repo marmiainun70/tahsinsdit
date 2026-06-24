@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,6 +60,23 @@ export default function ManageStudents() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const [tableHeight, setTableHeight] = useState<number | "auto">("auto");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const observer = new ResizeObserver((entries) => {
+      if (window.innerWidth >= 768) {
+        setTableHeight(entries[0].contentRect.height * 0.85);
+      } else {
+        setTableHeight("auto");
+      }
+    });
+    const el = tableContainerRef.current;
+    if (el) observer.observe(el);
+    return () => observer.disconnect();
+  }, [students]);
 
   const [exporting, setExporting] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -618,8 +635,10 @@ export default function ManageStudents() {
           </div>
         ) : (
           <div>
-            <div className="overflow-x-auto">
-              <table className="w-full md:[zoom:0.75]">
+            <div style={{ height: tableHeight, overflow: "hidden", position: "relative", width: "100%" }}>
+              <div ref={tableContainerRef} className="md:scale-[0.85] origin-top-left md:w-[117.647%] w-full">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
                     <th className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3.5 px-5">No</th>
@@ -707,6 +726,8 @@ export default function ManageStudents() {
                   })}
                 </tbody>
               </table>
+                </div>
+              </div>
             </div>
             {/* Pagination controls */}
             <DataTablePagination
