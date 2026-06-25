@@ -2123,14 +2123,14 @@ const StatCard = ({
           Aktif
         </Badge>
       )}
-      <CardContent className="flex flex-col items-center justify-center p-4 text-center h-full gap-2">
-        <div className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${color}`}>
-          {icon}
+      <CardContent className="flex flex-col items-center justify-center p-3 text-center h-full gap-1.5">
+        <div className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${color}`}>
+          <div className="scale-75">{icon}</div>
         </div>
-        <div className="flex flex-col items-center gap-0.5 mt-1">
-          <p className="text-xs text-muted-foreground line-clamp-3 leading-snug">{label}</p>
-          <p className="text-xl font-bold leading-tight text-foreground mt-1">{value}</p>
-          {subtitle && <p className="text-[11px] text-muted-foreground mt-0.5">{subtitle}</p>}
+        <div className="flex flex-col items-center gap-0.5">
+          <p className="text-[11px] text-muted-foreground line-clamp-3 leading-snug">{label}</p>
+          <p className="text-lg font-bold leading-none text-foreground mt-0.5">{value}</p>
+          {subtitle && <p className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</p>}
         </div>
       </CardContent>
     </Card>
