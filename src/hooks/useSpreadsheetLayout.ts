@@ -4,10 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { isTeacherRole } from "@/lib/roleLabels";
 import {
-  MONTHLY_REPORT_COLUMN_BY_KEY,
-  MONTHLY_REPORT_COLUMN_KEYS,
-  getColumnBounds,
-  getDefaultColumnWidth,
+  MONTHLY_REPORT_COLUMNS,
 } from "@/config/monthlyReportColumns";
 import {
   MONTHLY_REPORT_SPREADSHEET_PAGE_KEY,

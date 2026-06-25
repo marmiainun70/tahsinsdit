@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { Toggle } from "@/components/ui/toggle";
 import { SPREADSHEET_FONTS, type SpreadsheetAlign, type SpreadsheetFont, type SpreadsheetLayoutSelection } from "@/types/spreadsheetLayout";
 
-interface SpreadsheetLayoutToolbarProps {
+interface SpreadsheetLayoutToolbarProps<ColumnKey extends string = string> {
   isEditing: boolean;
   canEdit: boolean;
   isAdmin: boolean;
@@ -16,7 +16,7 @@ interface SpreadsheetLayoutToolbarProps {
   tableFont: SpreadsheetFont;
   tableFontSize: number;
   defaultRowHeight: number;
-  selection: SpreadsheetLayoutSelection;
+  selection: SpreadsheetLayoutSelection<ColumnKey>;
   onToggleEdit: () => void;
   onSaveGlobal: () => void;
   onSavePersonal: () => void;
@@ -34,14 +34,14 @@ interface SpreadsheetLayoutToolbarProps {
   isSaving?: boolean;
 }
 
-const selectionLabel = (selection: SpreadsheetLayoutSelection) => {
+const selectionLabel = <ColumnKey extends string = string>(selection: SpreadsheetLayoutSelection<ColumnKey>) => {
   if (selection.type === "table") return "Seluruh tabel";
   if (selection.type === "column") return `Kolom ${selection.columnKey}`;
   if (selection.type === "row") return "Baris siswa";
   return "Satu cell";
 };
 
-export const SpreadsheetLayoutToolbar = ({
+export const SpreadsheetLayoutToolbar = <ColumnKey extends string = string>({
   isEditing,
   canEdit,
   isAdmin,
@@ -67,7 +67,7 @@ export const SpreadsheetLayoutToolbar = ({
   onApplyWrap,
   onDefaultRowHeightChange,
   isSaving,
-}: SpreadsheetLayoutToolbarProps) => {
+}: SpreadsheetLayoutToolbarProps<ColumnKey>) => {
   if (!canEdit && !isEditing) return null;
 
   return (

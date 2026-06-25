@@ -3,11 +3,13 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { cn } from "@/lib/utils";
 import type { SpreadsheetColumnConfig } from "@/types/spreadsheetLayout";
 
-interface ResizableTableHeaderProps {
-  column: SpreadsheetColumnConfig;
+interface ResizableTableHeaderProps<ColumnKey extends string = string> {
+  column: SpreadsheetColumnConfig<ColumnKey>;
   width: number;
   left?: number;
   top?: number;
+  rowSpan?: number;
+  colSpan?: number;
   isEditing: boolean;
   selected?: boolean;
   className?: string;
@@ -17,11 +19,13 @@ interface ResizableTableHeaderProps {
   onResetWidth: () => void;
 }
 
-export const ResizableTableHeader = ({
+export const ResizableTableHeader = <ColumnKey extends string = string>({
   column,
   width,
   left,
   top = 0,
+  rowSpan,
+  colSpan,
   isEditing,
   selected,
   className,
@@ -29,7 +33,7 @@ export const ResizableTableHeader = ({
   onSelect,
   onResize,
   onResetWidth,
-}: ResizableTableHeaderProps) => {
+}: ResizableTableHeaderProps<ColumnKey>) => {
   const startRef = useRef({ x: 0, width: 0 });
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLSpanElement>) => {
@@ -51,6 +55,8 @@ export const ResizableTableHeader = ({
 
   return (
     <th
+      rowSpan={rowSpan}
+      colSpan={colSpan}
       data-layout-col={column.key}
       data-layout-selected={selected || undefined}
       onClick={(event) => {

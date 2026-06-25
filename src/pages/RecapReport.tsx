@@ -1,7 +1,8 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useAuth } from "@/contexts/AuthContext";
 import { useStudents, LEVEL_COLORS } from "@/hooks/useSupabaseData";
 import { useAllMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
 import {
@@ -24,6 +25,14 @@ import { toast } from "@/hooks/use-toast";
 import { removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 import { restoreApril2026Reports } from "@/lib/restoreApril2026";
 import { FixedHorizontalScrollbar } from "@/components/reports/FixedHorizontalScrollbar";
+import { SpreadsheetLayoutToolbar } from "@/components/reports/SpreadsheetLayoutToolbar";
+import { ResizableTableHeader } from "@/components/reports/ResizableTableHeader";
+import { useSpreadsheetLayout } from "@/hooks/useSpreadsheetLayout";
+import {
+  RECAP_REPORT_COLUMNS,
+  RECAP_REPORT_SPREADSHEET_PAGE_KEY,
+  type RecapReportColumnKey,
+} from "@/config/recapReportColumns";
 import {
   PROGRESS_CATEGORIES,
   buildRecapJoinedGroups,
@@ -189,14 +198,29 @@ const scoreMatchesFilter = (score: number | null, filter: FilterScoreType) => {
   return score < 70;
 };
 
+const RECAP_IDENTITY_COLUMNS = RECAP_REPORT_COLUMNS.filter((column) => column.group === "identity");
+const RECAP_DETAIL_COLUMNS = RECAP_REPORT_COLUMNS.filter((column) => column.group !== "identity");
+
+const getRecapHeaderClass = (group: "identity" | "monthlyProgress" | "attendance" | "progressiveAssessment" | "result") => {
+  if (group === "monthlyProgress") return "bg-emerald-50 text-emerald-800 border-emerald-200";
+  if (group === "attendance") return "bg-sky-50 text-sky-800 border-sky-200";
+  if (group === "progressiveAssessment") return "bg-amber-50 text-amber-800 border-amber-200";
+  if (group === "result") return "bg-violet-50 text-violet-800 border-violet-200";
+  return "bg-slate-50 text-slate-900 border-slate-200";
+};
+
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : "Terjadi kesalahan saat memproses layout.";
+
 const RecapReport = () => {
+  const { user, profile } = useAuth();
   const { data: students = [], isLoading: ls } = useStudents();
   const { data: reports = [], isLoading: lr } = useAllMonthlyReports();
   const { data: settings } = useInstitutionSettings();
   const profileMap = useProfileMap();
   const queryClient = useQueryClient();
   const tableScrollRef = useRef<HTMLDivElement>(null);
-  const tableContentRef = useRef<HTMLTableElement>(null);
+  const tableContentRef = useRef<HTMLDivElement>(null);
 
   const now = new Date();
   const [filterKelas, setFilterKelas] = useState<string>("all");
@@ -219,6 +243,12 @@ const RecapReport = () => {
   const [multiMonthDialogOpen, setMultiMonthDialogOpen] = useState(false);
   const [dialogYear, setDialogYear] = useState<string>(String(now.getFullYear()));
   const [dialogMonths, setDialogMonths] = useState<number[]>([Number(now.getMonth() + 1)]);
+  const recapLayout = useSpreadsheetLayout<RecapReportColumnKey>({
+    userId: user?.id,
+    role: profile?.role,
+    pageKey: RECAP_REPORT_SPREADSHEET_PAGE_KEY,
+    columns: RECAP_REPORT_COLUMNS,
+  });
   const selectedMonth = Number(filterMonth);
   const selectedYear = Number(filterYear);
 
@@ -459,6 +489,100 @@ const RecapReport = () => {
 
   const activePdfGroups = singleMonthPdfGroups;
   const activePeriodLabel = `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
+
+  const isLayoutCellSelected = (studentId: string, columnKey: RecapReportColumnKey) => {
+    const selection = recapLayout.selection;
+    if (selection.type === "table") return true;
+    if (selection.type === "column") return selection.columnKey === columnKey;
+    if (selection.type === "row") return selection.studentId === studentId;
+    return selection.studentId === studentId && selection.columnKey === columnKey;
+  };
+
+  const layoutCellProps = (studentId: string, columnKey: RecapReportColumnKey) => ({
+    "data-layout-cell": `${studentId}:${columnKey}`,
+    "data-layout-selected": recapLayout.isEditing && isLayoutCellSelected(studentId, columnKey) ? true : undefined,
+    onClick: (event: ReactMouseEvent<HTMLElement>) => {
+      if (!recapLayout.isEditing) return;
+      event.preventDefault();
+      event.stopPropagation();
+      recapLayout.setSelection({ type: "cell", studentId, columnKey });
+    },
+    style: recapLayout.getCellStyle(studentId, columnKey),
+  });
+
+  const startRowResize = (event: ReactPointerEvent<HTMLElement>, studentId: string) => {
+    if (!recapLayout.isEditing) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const startY = event.clientY;
+    const startHeight = recapLayout.getRowHeight(studentId);
+    const handleMove = (moveEvent: PointerEvent) => {
+      recapLayout.setRowHeight(studentId, startHeight + moveEvent.clientY - startY);
+    };
+    const handleUp = () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    };
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+  };
+
+  const saveLayout = async (scope: "global" | "personal") => {
+    try {
+      if (scope === "global") await recapLayout.saveGlobal();
+      else await recapLayout.savePersonal();
+      toast({ title: "Layout rekap berhasil disimpan" });
+    } catch (error: unknown) {
+      toast({ title: "Gagal menyimpan layout rekap", description: getErrorMessage(error), variant: "destructive" });
+    }
+  };
+
+  const resetLayout = async (scope: "global" | "personal") => {
+    const label = scope === "global" ? "layout global rekap" : "layout pribadi rekap";
+    if (!window.confirm(`Reset ${label}? Perubahan layout tersimpan akan dihapus.`)) return;
+    try {
+      if (scope === "global") await recapLayout.resetGlobal();
+      else await recapLayout.resetPersonal();
+      toast({ title: `${label} berhasil direset` });
+    } catch (error: unknown) {
+      toast({ title: `Gagal reset ${label}`, description: getErrorMessage(error), variant: "destructive" });
+    }
+  };
+
+  const restoreDefaultLayout = () => {
+    if (!window.confirm("Kembalikan draft layout rekap ke default bawaan?")) return;
+    recapLayout.resetDraftToDefault();
+  };
+
+  const toggleLayoutEdit = async () => {
+    if (!recapLayout.isEditing) {
+      recapLayout.setIsEditing(true);
+      recapLayout.setSelection({ type: "table" });
+      return;
+    }
+
+    if (!recapLayout.dirty) {
+      recapLayout.setIsEditing(false);
+      return;
+    }
+
+    if (window.confirm("Layout belum disimpan. Pilih OK untuk menyimpan sekarang, atau Cancel untuk pilihan lain.")) {
+      await saveLayout(recapLayout.isAdmin ? "global" : "personal");
+      recapLayout.setIsEditing(false);
+      return;
+    }
+
+    if (window.confirm("Buang perubahan layout yang belum disimpan? Pilih Cancel untuk tetap di mode edit.")) {
+      recapLayout.discardDraft();
+      recapLayout.setIsEditing(false);
+    }
+  };
+
+  const applyFont = (font: typeof recapLayout.layout.tableFont) => recapLayout.applyStyleToSelection({ fontFamily: font });
+  const applyFontSize = (fontSize: number) => recapLayout.applyStyleToSelection({ fontSize });
+  const applyBold = () => recapLayout.applyStyleToSelection({ bold: true });
+  const applyAlign = (align: "left" | "center" | "right") => recapLayout.applyStyleToSelection({ align });
+  const applyWrap = () => recapLayout.applyStyleToSelection({ wrap: true });
 
   const buildRowsForRombelMonth = useCallback((rombel: RombelOption, month: number, year: string): PdfRowData[] => {
     const studentsInRombel = filteredStudents
@@ -1469,6 +1593,36 @@ const RecapReport = () => {
             </CardHeader>
           </Card>
 
+          <div className="hidden md:block">
+            <SpreadsheetLayoutToolbar
+              isEditing={recapLayout.isEditing}
+              canEdit={recapLayout.canEdit}
+              isAdmin={recapLayout.isAdmin}
+              isTeacher={recapLayout.isTeacher}
+              dirty={recapLayout.dirty}
+              statusText={recapLayout.statusText}
+              tableFont={recapLayout.layout.tableFont}
+              tableFontSize={recapLayout.layout.tableFontSize}
+              defaultRowHeight={recapLayout.layout.defaultRowHeight}
+              selection={recapLayout.selection}
+              onToggleEdit={toggleLayoutEdit}
+              onSaveGlobal={() => saveLayout("global")}
+              onSavePersonal={() => saveLayout("personal")}
+              onResetGlobal={() => resetLayout("global")}
+              onResetPersonal={() => resetLayout("personal")}
+              onUseGlobal={() => resetLayout("personal")}
+              onRestoreDefault={restoreDefaultLayout}
+              onResetSelection={recapLayout.resetSelection}
+              onApplyFont={applyFont}
+              onApplyFontSize={applyFontSize}
+              onApplyBold={applyBold}
+              onApplyAlign={applyAlign}
+              onApplyWrap={applyWrap}
+              onDefaultRowHeightChange={recapLayout.setDefaultRowHeight}
+              isSaving={recapLayout.isSaving}
+            />
+          </div>
+
           {/* Tables grouped per rombel */}
           {displayGroups.length === 0 && (
             <Card>
@@ -1478,8 +1632,15 @@ const RecapReport = () => {
             </Card>
           )}
           {displayGroups.length > 0 && (
-            <div ref={tableScrollRef} className="overflow-x-visible md:overflow-x-auto">
-              <div ref={tableContentRef} className="space-y-6 md:min-w-[2200px]">
+            <div
+              ref={tableScrollRef}
+              className="overflow-x-visible md:overflow-x-auto"
+              onClick={(event) => {
+                if (!recapLayout.isEditing || event.target !== event.currentTarget) return;
+                recapLayout.setSelection({ type: "table" });
+              }}
+            >
+              <div ref={tableContentRef} className="space-y-6">
                 {displayGroups.map(grp => (
                   <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
               <CardHeader className="bg-emerald-50 dark:bg-emerald-950/20 py-3">
@@ -1498,38 +1659,82 @@ const RecapReport = () => {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="hidden md:block">
-                  <table className="w-full border-collapse text-[11px]">
+                  <table
+                    className={`w-full border-collapse ${recapLayout.isEditing ? "spreadsheet-layout-editing" : ""}`}
+                    style={{
+                      minWidth: recapLayout.tableMinWidth,
+                      fontFamily: `"${recapLayout.layout.tableFont}", system-ui, sans-serif`,
+                      fontSize: `${recapLayout.layout.tableFontSize}px`,
+                    }}
+                    onClick={(event) => {
+                      if (!recapLayout.isEditing || event.target !== event.currentTarget) return;
+                      recapLayout.setSelection({ type: "table" });
+                    }}
+                  >
+                    <colgroup>
+                      {RECAP_REPORT_COLUMNS.map((column) => {
+                        const width = recapLayout.getColumnWidth(column.key);
+                        return <col key={column.key} style={{ width, minWidth: width, maxWidth: width }} />;
+                      })}
+                    </colgroup>
                     <thead className="sticky top-0 z-10">
                       <tr className="text-center text-[11px] font-bold uppercase tracking-normal">
-                        <th rowSpan={2} className="w-9 border border-slate-200 bg-slate-50 px-2 py-3 align-middle">No.</th>
-                        <th rowSpan={2} className="min-w-[170px] border border-slate-200 bg-slate-50 px-2 py-3 align-middle text-left">Nama Siswa</th>
-                        <th rowSpan={2} className="min-w-[115px] border border-slate-200 bg-slate-50 px-2 py-3 align-middle">Program</th>
-                        <th rowSpan={2} className="min-w-[85px] border border-slate-200 bg-slate-50 px-2 py-3 align-middle">Level</th>
-                        <th colSpan={4} className="border border-emerald-200 bg-emerald-50 px-2 py-3 text-emerald-800">Progres Bulanan</th>
-                        <th colSpan={7} className="border border-sky-200 bg-sky-50 px-2 py-3 text-sky-800">Absensi Bulanan</th>
-                        <th colSpan={6} className="border border-amber-200 bg-amber-50 px-2 py-3 text-amber-800">Penilaian Progresif</th>
-                        <th colSpan={2} className="border border-violet-200 bg-violet-50 px-2 py-3 text-violet-800">Hasil</th>
+                        {RECAP_IDENTITY_COLUMNS.map((column) => {
+                          const width = recapLayout.getColumnWidth(column.key);
+                          const selected = recapLayout.isEditing && (
+                            recapLayout.selection.type === "table"
+                            || (recapLayout.selection.type === "column" && recapLayout.selection.columnKey === column.key)
+                          );
+                          return (
+                            <ResizableTableHeader
+                              key={column.key}
+                              column={column}
+                              width={width}
+                              rowSpan={2}
+                              isEditing={recapLayout.isEditing}
+                              selected={selected}
+                              className={`${getRecapHeaderClass(column.group)} ${column.key === "studentName" ? "text-left" : ""}`}
+                              style={{
+                                fontSize: recapLayout.layout.headerFontSize,
+                                ...recapLayout.getColumnStyle(column.key),
+                              }}
+                              onSelect={() => recapLayout.setSelection({ type: "column", columnKey: column.key })}
+                              onResize={(nextWidth) => recapLayout.setColumnWidth(column.key, nextWidth)}
+                              onResetWidth={() => recapLayout.resetColumnWidth(column.key)}
+                            />
+                          );
+                        })}
+                        <th colSpan={4} className="border border-emerald-200 bg-emerald-50 px-2 py-3 text-emerald-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Progres Bulanan</th>
+                        <th colSpan={7} className="border border-sky-200 bg-sky-50 px-2 py-3 text-sky-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Absensi Bulanan</th>
+                        <th colSpan={6} className="border border-amber-200 bg-amber-50 px-2 py-3 text-amber-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Penilaian Progresif</th>
+                        <th colSpan={2} className="border border-violet-200 bg-violet-50 px-2 py-3 text-violet-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Hasil</th>
                       </tr>
                       <tr className="text-center text-[10px] font-semibold">
-                        <th className="border border-emerald-200 bg-emerald-50 px-2 py-2">Awal</th>
-                        <th className="border border-emerald-200 bg-emerald-50 px-2 py-2">Akhir</th>
-                        <th className="border border-emerald-200 bg-emerald-50 px-2 py-2">Total</th>
-                        <th className="border border-emerald-200 bg-emerald-50 px-2 py-2">Target</th>
-                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">Hadir</th>
-                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">Sakit</th>
-                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">Izin</th>
-                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">Alfa</th>
-                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">Total</th>
-                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">% Hadir</th>
-                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">Status Absensi</th>
-                        <th className="border border-amber-200 bg-amber-50 px-2 py-2">Kehadiran & Kesiapan Belajar</th>
-                        <th className="border border-amber-200 bg-amber-50 px-2 py-2">Kualitas Bacaan Harian</th>
-                        <th className="border border-amber-200 bg-amber-50 px-2 py-2">Perbaikan Bacaan Harian</th>
-                        <th className="border border-amber-200 bg-amber-50 px-2 py-2">Pencapaian Bulanan</th>
-                        <th className="border border-amber-200 bg-amber-50 px-2 py-2">Kategori Progres</th>
-                        <th className="border border-amber-200 bg-amber-50 px-2 py-2">Nilai</th>
-                        <th className="border border-violet-200 bg-violet-50 px-2 py-2">Guru</th>
-                        <th className="border border-violet-200 bg-violet-50 px-2 py-2">Catatan</th>
+                        {RECAP_DETAIL_COLUMNS.map((column) => {
+                          const width = recapLayout.getColumnWidth(column.key);
+                          const selected = recapLayout.isEditing && (
+                            recapLayout.selection.type === "table"
+                            || (recapLayout.selection.type === "column" && recapLayout.selection.columnKey === column.key)
+                          );
+                          return (
+                            <ResizableTableHeader
+                              key={column.key}
+                              column={column}
+                              width={width}
+                              top={42}
+                              isEditing={recapLayout.isEditing}
+                              selected={selected}
+                              className={getRecapHeaderClass(column.group)}
+                              style={{
+                                fontSize: recapLayout.layout.headerFontSize,
+                                ...recapLayout.getColumnStyle(column.key),
+                              }}
+                              onSelect={() => recapLayout.setSelection({ type: "column", columnKey: column.key })}
+                              onResize={(nextWidth) => recapLayout.setColumnWidth(column.key, nextWidth)}
+                              onResetWidth={() => recapLayout.resetColumnWidth(column.key)}
+                            />
+                          );
+                        })}
                       </tr>
                     </thead>
                     <tbody>
@@ -1543,13 +1748,36 @@ const RecapReport = () => {
                                 ? "bg-rose-50/60 dark:bg-rose-950/20"
                                 : "hover:bg-muted/40"
                             }`}
+                            data-layout-selected={recapLayout.isEditing && (recapLayout.selection.type === "table" || (recapLayout.selection.type === "row" && recapLayout.selection.studentId === row.studentId)) ? true : undefined}
+                            style={recapLayout.getRowStyle(row.studentId)}
                           >
-                            <td className="border border-slate-200 px-2 py-3 text-center">{row.no}</td>
-                            <td className="border border-slate-200 px-2 py-3 font-medium">
+                            <td
+                              {...layoutCellProps(row.studentId, "number")}
+                              onClick={(event) => {
+                                if (!recapLayout.isEditing) return;
+                                event.preventDefault();
+                                event.stopPropagation();
+                                recapLayout.setSelection({ type: "row", studentId: row.studentId });
+                              }}
+                              className={`relative border border-slate-200 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}
+                            >
+                              {row.no}
+                              {recapLayout.isEditing && (
+                                <span
+                                  aria-hidden="true"
+                                  className="absolute bottom-[-4px] left-0 z-20 h-2 w-full cursor-row-resize touch-none"
+                                  onPointerDown={(event) => startRowResize(event, row.studentId)}
+                                />
+                              )}
+                            </td>
+                            <td
+                              {...layoutCellProps(row.studentId, "studentName")}
+                              className={`border border-slate-200 px-2 py-3 font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}
+                            >
                               {highlight(row.nama, search)}
                             </td>
-                            <td className="border border-slate-200 px-2 py-3">{row.program}</td>
-                            <td className="border border-slate-200 px-2 py-3 text-center">
+                            <td {...layoutCellProps(row.studentId, "program")} className={`border border-slate-200 px-2 py-3 ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.program}</td>
+                            <td {...layoutCellProps(row.studentId, "level")} className={`border border-slate-200 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               <Badge
                                 className={`text-[10px] ${
                                   LEVEL_COLORS[row.level as ReadingLevel] || ""
@@ -1558,33 +1786,33 @@ const RecapReport = () => {
                                 {row.level}
                               </Badge>
                             </td>
-                            <td className="border border-emerald-100 px-2 py-3 text-center">{row.awal}</td>
-                            <td className="border border-emerald-100 px-2 py-3 text-center">{row.akhir}</td>
-                            <td className="border border-emerald-100 px-2 py-3 text-center font-bold">
+                            <td {...layoutCellProps(row.studentId, "start")} className={`border border-emerald-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.awal}</td>
+                            <td {...layoutCellProps(row.studentId, "end")} className={`border border-emerald-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.akhir}</td>
+                            <td {...layoutCellProps(row.studentId, "totalProgress")} className={`border border-emerald-100 px-2 py-3 text-center font-bold ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               {formatRecapValue(row.total)}
                             </td>
-                            <td className="border border-emerald-100 px-2 py-3 text-center">
+                            <td {...layoutCellProps(row.studentId, "target")} className={`border border-emerald-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               {formatRecapValue(row.target)}
                             </td>
-                            <td className="border border-sky-100 px-2 py-3 text-center">{formatRecapValue(row.present)}</td>
-                            <td className="border border-sky-100 px-2 py-3 text-center">{formatRecapValue(row.sick)}</td>
-                            <td className="border border-sky-100 px-2 py-3 text-center">{formatRecapValue(row.permission)}</td>
-                            <td className="border border-sky-100 px-2 py-3 text-center">{formatRecapValue(row.absent)}</td>
-                            <td className="border border-sky-100 px-2 py-3 text-center">{formatRecapValue(row.totalAbsensi)}</td>
-                            <td className="border border-sky-100 px-2 py-3 text-center">{row.hasAttendance ? `${row.persentaseHadir ?? 0}%` : "-"}</td>
-                            <td className="border border-sky-100 px-2 py-3 text-center">
+                            <td {...layoutCellProps(row.studentId, "present")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.present)}</td>
+                            <td {...layoutCellProps(row.studentId, "sick")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.sick)}</td>
+                            <td {...layoutCellProps(row.studentId, "permission")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.permission)}</td>
+                            <td {...layoutCellProps(row.studentId, "absent")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.absent)}</td>
+                            <td {...layoutCellProps(row.studentId, "totalAttendance")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.totalAbsensi)}</td>
+                            <td {...layoutCellProps(row.studentId, "attendancePercentage")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.hasAttendance ? `${row.persentaseHadir ?? 0}%` : "-"}</td>
+                            <td {...layoutCellProps(row.studentId, "attendanceStatus")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               <Badge variant="outline" className={getAttendanceStatusClass(row.attendanceStatus)}>{row.attendanceStatus}</Badge>
                             </td>
-                            <td className="border border-amber-100 px-2 py-3 text-center font-medium">{formatProgressivePoint(row.poinKehadiranKesiapan)}</td>
-                            <td className="border border-amber-100 px-2 py-3 text-center font-medium">{formatProgressivePoint(row.poinKualitasBacaan)}</td>
-                            <td className="border border-amber-100 px-2 py-3 text-center font-medium">{formatProgressivePoint(row.poinPerbaikanBacaan)}</td>
-                            <td className="border border-amber-100 px-2 py-3 text-center">{formatRecapValue(row.pencapaianTargetBulan)}</td>
-                            <td className="border border-amber-100 px-2 py-3 text-center text-[10px] font-medium">{row.kategoriProgres ?? "-"}</td>
-                            <td className="border border-amber-100 px-2 py-3 text-center font-semibold">{formatRecapValue(row.nilaiAkhirProgresif)}</td>
-                            <td className="border border-violet-100 px-2 py-3 text-muted-foreground">
+                            <td {...layoutCellProps(row.studentId, "attendanceReadiness")} className={`border border-amber-100 px-2 py-3 text-center font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatProgressivePoint(row.poinKehadiranKesiapan)}</td>
+                            <td {...layoutCellProps(row.studentId, "readingQuality")} className={`border border-amber-100 px-2 py-3 text-center font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatProgressivePoint(row.poinKualitasBacaan)}</td>
+                            <td {...layoutCellProps(row.studentId, "readingImprovement")} className={`border border-amber-100 px-2 py-3 text-center font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatProgressivePoint(row.poinPerbaikanBacaan)}</td>
+                            <td {...layoutCellProps(row.studentId, "monthlyAchievement")} className={`border border-amber-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.pencapaianTargetBulan)}</td>
+                            <td {...layoutCellProps(row.studentId, "progressCategory")} className={`border border-amber-100 px-2 py-3 text-center text-[10px] font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.kategoriProgres ?? "-"}</td>
+                            <td {...layoutCellProps(row.studentId, "finalScore")} className={`border border-amber-100 px-2 py-3 text-center font-semibold ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.nilaiAkhirProgresif)}</td>
+                            <td {...layoutCellProps(row.studentId, "teacher")} className={`border border-violet-100 px-2 py-3 text-muted-foreground ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               {row.guru}
                             </td>
-                            <td className="border border-violet-100 px-2 py-3 whitespace-pre-wrap text-muted-foreground">
+                            <td {...layoutCellProps(row.studentId, "notes")} className={`border border-violet-100 px-2 py-3 whitespace-pre-wrap text-muted-foreground ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               {row.catatan || "-"}
                             </td>
                           </tr>
@@ -1663,7 +1891,7 @@ const RecapReport = () => {
             <FixedHorizontalScrollbar
               scrollContainerRef={tableScrollRef}
               contentRef={tableContentRef}
-              refreshKey={`${selectedMonth}-${selectedYear}-${displayGroups.length}-${displayGroups.map(grp => `${grp.kelas}-${grp.rombel}-${grp.rows.length}`).join("|")}`}
+              refreshKey={`${selectedMonth}-${selectedYear}-${displayGroups.length}-${displayGroups.map(grp => `${grp.kelas}-${grp.rombel}-${grp.rows.length}`).join("|")}-${recapLayout.tableMinWidth}-${recapLayout.layout.defaultRowHeight}-${recapLayout.layout.tableFontSize}-${recapLayout.isEditing}`}
               className="hidden md:flex"
             />
           )}

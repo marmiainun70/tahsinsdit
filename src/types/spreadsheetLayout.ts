@@ -66,7 +66,7 @@ export type SpreadsheetLayoutSelection<ColumnKey extends string = SpreadsheetCol
 export interface SpreadsheetColumnConfig<ColumnKey extends string = SpreadsheetColumnKey> {
   key: ColumnKey;
   label: string;
-  group: "identity" | "monthlyProgress" | "progressiveAssessment" | "result";
+  group: "identity" | "monthlyProgress" | "attendance" | "progressiveAssessment" | "result";
   defaultWidth: number;
   minWidth: number;
   maxWidth: number;
