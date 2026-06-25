@@ -48,7 +48,7 @@ export const RECAP_REPORT_COLUMNS: SpreadsheetColumnConfig<RecapReportColumnKey>
   { key: "readingImprovement", label: "Perbaikan Bacaan Harian", group: "progressiveAssessment", defaultWidth: 156, minWidth: 112, maxWidth: 250 },
   { key: "monthlyAchievement", label: "Pencapaian Bulanan", group: "progressiveAssessment", defaultWidth: 118, minWidth: 86, maxWidth: 180 },
   { key: "progressCategory", label: "Kategori Progres", group: "progressiveAssessment", defaultWidth: 148, minWidth: 110, maxWidth: 230 },
-  { key: "finalScore", label: "Nilai", group: "progressiveAssessment", defaultWidth: 78, minWidth: 56, maxWidth: 120 },
+  { key: "finalScore", label: "Nilai", group: "result", defaultWidth: 78, minWidth: 56, maxWidth: 120 },
   { key: "teacher", label: "Guru", group: "result", defaultWidth: 126, minWidth: 86, maxWidth: 220 },
   { key: "notes", label: "Catatan", group: "result", defaultWidth: 220, minWidth: 132, maxWidth: 420 },
 ];

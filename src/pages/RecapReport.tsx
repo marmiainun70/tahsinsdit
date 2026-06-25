@@ -1706,8 +1706,8 @@ const RecapReport = () => {
                         })}
                         <th colSpan={4} className="border border-emerald-200 bg-emerald-50 px-2 py-3 text-emerald-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Progres Bulanan</th>
                         <th colSpan={7} className="border border-sky-200 bg-sky-50 px-2 py-3 text-sky-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Absensi Bulanan</th>
-                        <th colSpan={6} className="border border-amber-200 bg-amber-50 px-2 py-3 text-amber-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Penilaian Progresif</th>
-                        <th colSpan={2} className="border border-violet-200 bg-violet-50 px-2 py-3 text-violet-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Hasil</th>
+                        <th colSpan={5} className="border border-amber-200 bg-amber-50 px-2 py-3 text-amber-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Penilaian Progresif</th>
+                        <th colSpan={3} className="border border-violet-200 bg-violet-50 px-2 py-3 text-violet-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Hasil</th>
                       </tr>
                       <tr className="text-center text-[10px] font-semibold">
                         {RECAP_DETAIL_COLUMNS.map((column) => {
