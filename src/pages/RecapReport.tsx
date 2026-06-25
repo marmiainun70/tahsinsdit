@@ -1,9 +1,15 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { useStudents, IQRO_LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
+import { useStudents, LEVEL_COLORS } from "@/hooks/useSupabaseData";
 import { useAllMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
+import {
+  useAttendanceForRecapPeriod,
+  useAttendanceForRecapPeriods,
+  useAttendancePeriodSettingsByGroups,
+  useAttendancePeriodSettingsByPeriods,
+} from "@/hooks/useAttendance";
 import { useProfileMap } from "@/hooks/useProfiles";
 import { useInstitutionSettings } from "@/hooks/useInstitutionSettings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +23,17 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "@/hooks/use-toast";
 import { removeBlockedNoteEmoticons } from "@/lib/noteValidation";
 import { restoreApril2026Reports } from "@/lib/restoreApril2026";
+import { FixedHorizontalScrollbar } from "@/components/reports/FixedHorizontalScrollbar";
+import {
+  PROGRESS_CATEGORIES,
+  buildRecapJoinedGroups,
+  formatAttendanceCompact,
+  formatProgressivePoint,
+  formatRecapValue,
+  type RecapAttendanceStatus,
+  type RecapJoinedGroup,
+  type RecapJoinedRow,
+} from "@/utils/recapMonthlyReportRows";
 import {
   Search, Loader2, Eye, Download, CheckCircle2,
   Users, ListChecks, AlertCircle, Percent, FileWarning, Calendar
@@ -39,8 +56,16 @@ interface PdfRowData {
   akhir: string;
   total: string;
   target: string;
-  kehadiran: string;
-  status: string;
+  absensi: string;
+  persentaseHadir: string;
+  statusAbsensi: string;
+  kehadiranKesiapan: string;
+  kualitasBacaan: string;
+  perbaikanBacaan: string;
+  pencapaianBulanan: string;
+  kategoriProgres: string;
+  nilai: string;
+  reportStatus: string;
   guru: string;
   catatan: string;
 }
@@ -68,18 +93,11 @@ interface RombelOption {
   label: string;
 }
 
-const getProgramLabel = (level: string) => {
-  if (IQRO_LEVELS.includes(level as ReadingLevel)) return "Tahsin Dasar (Iqra)";
-  if (level === "Tahsin Dasar") return "Tahsin Dasar";
-  if (level === "Tahsin Lanjutan") return "Tahsin Lanjutan";
-  if (level === "Tahfizh") return "Tahfizh";
-  return level || "-";
-};
-
 const cleanPdfText = (value: unknown) => {
   return removeBlockedNoteEmoticons(String(value ?? ""))
     .replace(/\r\n/g, "\n")
     .replace(/\r/g, "\n")
+    // eslint-disable-next-line no-misleading-character-class
     .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, "")
     .split("\n")
     .map(line => line.replace(/[ \t]+/g, " ").trim())
@@ -141,94 +159,12 @@ const loadImageAsBase64 = (url: string): Promise<string | null> =>
 
 const waitForUiFrame = () => new Promise(resolve => window.setTimeout(resolve, 0));
 
-const formatTahfizhLevel = (level: string | null | undefined, page: number) => {
-  if (!level) return `hal.${page}`;
-  const juz = Number(String(level).replace(/\D/g, "")) || null;
-  return juz ? `Juz ${juz} hal.${page}` : `hal.${page}`;
-};
+const getLastAutoTableFinalY = (doc: jsPDF, fallbackY: number) =>
+  (doc as unknown as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY ?? fallbackY;
 
-const getStatusLabel = (status: string) => {
-  if (status === "achieved") return "Tercapai";
-  if (status === "partial") return "Sebagian";
-  if (status === "not_achieved") return "Belum";
-  return "BELUM DIISI";
-};
-
-const isReportMeaningfullyFilled = (report: {
-  achievement_status?: string | null;
-  pages_read?: number | null;
-  start_page?: number | null;
-  end_page?: number | null;
-  iqra_level?: string | null;
-  end_iqra_level?: string | null;
-  notes?: string | null;
-  created_by?: string | null;
-  teacher_name?: string | null;
-}) => {
-  const status = String(report.achievement_status ?? "");
-  const notes = String(report.notes ?? "").trim();
-  const hasProgress =
-    Number(report.pages_read ?? 0) !== 0 ||
-    Number(report.start_page ?? 0) !== Number(report.end_page ?? 0);
-  const hasTeacherInput =
-    notes.length > 0 ||
-    Boolean(report.teacher_name) ||
-    Boolean(report.created_by);
-
-  if (status === "achieved" || status === "stagnant" || status === "decline") return true;
-  if (hasProgress) return true;
-  if ((status === "not_achieved" || status === "partial") && hasTeacherInput) return true;
-  return false;
-};
-
-interface RowData {
-  no: number;
-  studentId: string;
-  nama: string;
-  kelas: number;
-  rombel: string;
-  program: string;
-  level: string;
-  bulan: string;
-  awal: string;
-  akhir: string;
-  total: number;
-  target: number;
-  status: "achieved" | "not_achieved" | "empty";
-  guru: string;
-  catatan: string;
-}
-
-interface AggregatedReport {
-  studentId: string;
-  nama: string;
-  kelas: number;
-  rombel: string;
-  level: string;
-  program: string;
-  months: string[];
-  startPage: number;
-  endPage: number;
-  totalPages: number;
-  totalTarget: number;
-  averageAttendance: number;
-  status: 'achieved' | 'not_achieved' | 'partial' | 'empty';
-  guru: string;
-  catatan: string;
-  monthlyData: Array<{
-    month: string;
-    year: number;
-    startPage: number;
-    endPage: number;
-    pagesRead: number;
-    targetPages: number;
-    iqraLevel: string | null;
-    endIqraLevel: string | null;
-    attendancePercentage: number;
-    achievementStatus: string;
-    notes: string;
-  }>;
-}
+type FilterReportStatusType = "all" | "filled" | "empty";
+type FilterAttendanceStatusType = "all" | RecapAttendanceStatus;
+type FilterCategoryType = "all" | (typeof PROGRESS_CATEGORIES)[number];
 
 const RecapReport = () => {
   const { data: students = [], isLoading: ls } = useStudents();
@@ -236,6 +172,8 @@ const RecapReport = () => {
   const { data: settings } = useInstitutionSettings();
   const profileMap = useProfileMap();
   const queryClient = useQueryClient();
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const tableContentRef = useRef<HTMLTableElement>(null);
 
   const now = new Date();
   const [filterKelas, setFilterKelas] = useState<string>("all");
@@ -243,8 +181,9 @@ const RecapReport = () => {
   const [filterMonth, setFilterMonth] = useState<string>(String(now.getMonth() + 1));
   const [filterYear, setFilterYear] = useState<string>(String(now.getFullYear()));
   const [search, setSearch] = useState("");
-  type FilterStatusType = "all" | "filled" | "empty" | "achieved" | "not_achieved";
-  const [filterStatus, setFilterStatus] = useState<FilterStatusType>("all");
+  const [filterReportStatus, setFilterReportStatus] = useState<FilterReportStatusType>("all");
+  const [filterAttendanceStatus, setFilterAttendanceStatus] = useState<FilterAttendanceStatusType>("all");
+  const [filterCategory, setFilterCategory] = useState<FilterCategoryType>("all");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [pdfPreviewSize, setPdfPreviewSize] = useState<PdfPaperSize>("a4");
@@ -256,8 +195,8 @@ const RecapReport = () => {
   const [multiMonthDialogOpen, setMultiMonthDialogOpen] = useState(false);
   const [dialogYear, setDialogYear] = useState<string>(String(now.getFullYear()));
   const [dialogMonths, setDialogMonths] = useState<number[]>([Number(now.getMonth() + 1)]);
-  
-  // Multi-month export state
+  const selectedMonth = Number(filterMonth);
+  const selectedYear = Number(filterYear);
 
   // Filter siswa sesuai kelas/rombel/search
   const filteredStudents = useMemo(() => {
@@ -299,6 +238,33 @@ const RecapReport = () => {
   const allRombelsSelected =
     availableRombels.length > 0 && selectedRombelKeys.length === availableRombels.length;
 
+  const visibleGroupKeys = useMemo(
+    () => availableRombels.map(({ kelas, rombel }) => ({ kelas, rombel })),
+    [availableRombels],
+  );
+  const attendanceQuery = useAttendanceForRecapPeriod({
+    month: selectedMonth,
+    year: selectedYear,
+    enabled: true,
+  });
+  const attendanceSettingsQuery = useAttendancePeriodSettingsByGroups({
+    month: selectedMonth,
+    year: selectedYear,
+    groups: visibleGroupKeys,
+    enabled: visibleGroupKeys.length > 0,
+  });
+  const multiAttendanceQuery = useAttendanceForRecapPeriods({
+    months: dialogMonths,
+    year: Number(dialogYear),
+    enabled: dialogMonths.length > 0,
+  });
+  const multiAttendanceSettingsQuery = useAttendancePeriodSettingsByPeriods({
+    months: dialogMonths,
+    year: Number(dialogYear),
+    groups: visibleGroupKeys,
+    enabled: dialogMonths.length > 0 && visibleGroupKeys.length > 0,
+  });
+
   const toggleRombel = (key: string) => {
     setSelectedRombelKeys(current =>
       current.includes(key)
@@ -311,101 +277,54 @@ const RecapReport = () => {
     setSelectedRombelKeys(allRombelsSelected ? [] : availableRombels.map(item => item.key));
   };
 
-  // Group per rombel: kelas-rombel (single month mode)
-  const groups = useMemo(() => {
-    const map = new Map<string, { kelas: number; rombel: string; rows: RowData[] }>();
-    filteredStudents.forEach(st => {
-      const key = `${st.kelas}-${st.rombel}`;
-      if (!map.has(key)) map.set(key, { kelas: st.kelas, rombel: st.rombel, rows: [] });
-      const grp = map.get(key)!;
-
-      const rep = reports.find(r =>
-        r.student_id === st.id &&
-        r.month === Number(filterMonth) &&
-        r.year === Number(filterYear)
-      );
-
-      const monthLabel = `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
-
-      if (!rep || !isReportMeaningfullyFilled(rep)) {
-        grp.rows.push({
-          no: grp.rows.length + 1,
-          studentId: st.id,
-          nama: st.nama,
-          kelas: st.kelas,
-          rombel: st.rombel,
-          program: getProgramLabel(st.level),
-          level: st.level,
-          bulan: monthLabel,
-          awal: "-",
-          akhir: "-",
-          total: 0,
-          target: 0,
-          status: "empty",
-          guru: "-",
-          catatan: "",
-        });
-      } else {
-        const fmtTahfizh = (lvl: string | null | undefined, page: number) => {
-          const j = Number(String(lvl || "").replace(/\D/g, "")) || null;
-          return j ? `Juz ${j} hal.${page}` : `hal.${page}`;
-        };
-        const awal = rep.iqra_level
-          ? (rep.program_type === "tahfizh" ? fmtTahfizh(rep.iqra_level, rep.start_page) : `${rep.iqra_level} hal.${rep.start_page}`)
-          : String(rep.start_page);
-        const akhir = (rep as any).end_iqra_level
-          ? (rep.program_type === "tahfizh" ? fmtTahfizh((rep as any).end_iqra_level, rep.end_page) : `${(rep as any).end_iqra_level} hal.${rep.end_page}`)
-          : String(rep.end_page);
-        grp.rows.push({
-          no: grp.rows.length + 1,
-          studentId: st.id,
-          nama: st.nama,
-          kelas: st.kelas,
-          rombel: st.rombel,
-          program: getProgramLabel(st.level),
-          level: st.level,
-          bulan: monthLabel,
-          awal, akhir,
-          total: rep.pages_read,
-          target: rep.target_pages,
-          status: rep.achievement_status === "achieved" ? "achieved" : "not_achieved",
-          guru:
-            rep.teacher_name?.trim() ||
-            (rep.created_by ? profileMap.get(rep.created_by) || "-" : "-"),
-          catatan: rep.notes || "",
-        });
-      }
+  const groups = useMemo<RecapJoinedGroup[]>(() => {
+    return buildRecapJoinedGroups({
+      students: filteredStudents,
+      month: selectedMonth,
+      year: selectedYear,
+      monthName: MONTH_NAMES[selectedMonth - 1],
+      reports,
+      attendance: attendanceQuery.data ?? [],
+      attendanceSettings: attendanceSettingsQuery.data ?? [],
+      getTeacherName: (userId) => (userId ? profileMap.get(userId) : undefined),
     });
-    return Array.from(map.values()).sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
-  }, [filteredStudents, reports, filterMonth, filterYear, profileMap]);
+  }, [
+    attendanceQuery.data,
+    attendanceSettingsQuery.data,
+    filteredStudents,
+    profileMap,
+    reports,
+    selectedMonth,
+    selectedYear,
+  ]);
 
-  // Apply status filter (sudah/belum diisi) and renumber per rombel
   const displayGroups = useMemo(() => {
     return groups
       .map(g => {
         const filtered = g.rows.filter(r => {
-          if (filterStatus === "filled") return r.status !== "empty";
-          if (filterStatus === "empty") return r.status === "empty";
-          if (filterStatus === "achieved") return r.status === "achieved";
-          if (filterStatus === "not_achieved") return r.status === "not_achieved";
+          if (filterReportStatus === "filled" && r.reportStatus !== "filled") return false;
+          if (filterReportStatus === "empty" && r.reportStatus !== "empty") return false;
+          if (filterAttendanceStatus !== "all" && r.attendanceStatus !== filterAttendanceStatus) return false;
+          if (filterCategory !== "all" && r.kategoriProgres !== filterCategory) return false;
           return true;
         }).map((r, i) => ({ ...r, no: i + 1 }));
         return { ...g, rows: filtered };
       })
       .filter(g => g.rows.length > 0);
-  }, [groups, filterStatus]);
+  }, [filterAttendanceStatus, filterCategory, filterReportStatus, groups]);
 
-  // Statistik (selalu dari groups penuh, tidak dipengaruhi filterStatus)
   const stats = useMemo(() => {
     const all = groups.flatMap(g => g.rows);
     const total = all.length;
-    const filled = all.filter(r => r.status !== "empty").length;
+    const filled = all.filter(r => r.reportStatus === "filled").length;
     const empty = total - filled;
-    const achieved = all.filter(r => r.status === "achieved").length;
-    const notAchieved = all.filter(r => r.status === "not_achieved").length;
-    const completion = total ? Math.round((filled / total) * 100) : 0;
-    const achievementRate = filled ? Math.round((achieved / filled) * 100) : 0;
-    return { total, filled, empty, achieved, notAchieved, completion, achievementRate };
+    const attendanceComplete = all.filter(r => r.attendanceStatus === "Lengkap").length;
+    const attendanceIncomplete = all.filter(r => r.attendanceStatus !== "Lengkap").length;
+    const scoreRows = all.filter(r => r.nilaiAkhirProgresif !== null);
+    const averageScore = scoreRows.length
+      ? Math.round(scoreRows.reduce((sum, row) => sum + (row.nilaiAkhirProgresif ?? 0), 0) / scoreRows.length)
+      : 0;
+    return { total, filled, empty, attendanceComplete, attendanceIncomplete, averageScore };
   }, [groups]);
 
   useEffect(() => {
@@ -427,10 +346,10 @@ const RecapReport = () => {
             : "Data April diproses dari backup PDF lama.",
         });
       })
-      .catch((error: any) => {
+      .catch((error: unknown) => {
         toast({
           title: "Gagal memulihkan data April",
-          description: error?.message ?? "Akun login mungkin tidak punya izin update/insert laporan.",
+          description: error instanceof Error ? error.message : "Akun login mungkin tidak punya izin update/insert laporan.",
           variant: "destructive",
         });
       })
@@ -466,28 +385,38 @@ const RecapReport = () => {
     if (!open) cleanupPreviewUrl();
   }, [cleanupPreviewUrl]);
 
+  const toPdfRow = useCallback((row: RecapJoinedRow): PdfRowData => ({
+    no: row.no,
+    studentId: row.studentId,
+    nama: row.nama,
+    program: row.program,
+    level: row.level,
+    periode: row.periode,
+    awal: row.awal,
+    akhir: row.akhir,
+    total: formatRecapValue(row.total),
+    target: formatRecapValue(row.target),
+    absensi: formatAttendanceCompact(row),
+    persentaseHadir: row.hasAttendance ? `${row.persentaseHadir ?? 0}%` : "-",
+    statusAbsensi: row.attendanceStatus,
+    kehadiranKesiapan: formatProgressivePoint(row.poinKehadiranKesiapan),
+    kualitasBacaan: formatProgressivePoint(row.poinKualitasBacaan),
+    perbaikanBacaan: formatProgressivePoint(row.poinPerbaikanBacaan),
+    pencapaianBulanan: formatRecapValue(row.pencapaianTargetBulan),
+    kategoriProgres: row.kategoriProgres ?? "-",
+    nilai: formatRecapValue(row.nilaiAkhirProgresif),
+    reportStatus: row.reportStatus === "filled" ? "Sudah Diisi" : "Belum Diisi",
+    guru: row.guru,
+    catatan: row.catatan,
+  }), []);
+
   const singleMonthPdfGroups = useMemo<PdfGroupData[]>(() => {
     return displayGroups.map(group => ({
       kelas: group.kelas,
       rombel: group.rombel,
-      rows: group.rows.map(row => ({
-        no: row.no,
-        studentId: row.studentId,
-        nama: row.nama,
-        program: row.program,
-        level: row.level,
-        periode: row.bulan,
-        awal: row.awal,
-        akhir: row.akhir,
-        total: row.status === "empty" ? "-" : String(row.total),
-        target: row.status === "empty" ? "-" : String(row.target),
-        kehadiran: "-",
-        status: getStatusLabel(row.status),
-        guru: row.guru,
-        catatan: row.catatan,
-      })),
+      rows: group.rows.map(toPdfRow),
     }));
-  }, [displayGroups]);
+  }, [displayGroups, toPdfRow]);
 
   const activePdfGroups = singleMonthPdfGroups;
   const activePeriodLabel = `${MONTH_NAMES[Number(filterMonth) - 1]} ${filterYear}`;
@@ -497,67 +426,26 @@ const RecapReport = () => {
       .filter(student => student.kelas === rombel.kelas && student.rombel === rombel.rombel)
       .sort((a, b) => a.nama.localeCompare(b.nama));
 
-    const monthLabel = `${MONTH_NAMES[month - 1]} ${year}`;
-
-    return studentsInRombel.map((student, index) => {
-      const report = reports.find(item =>
-        item.student_id === student.id &&
-        item.month === month &&
-        item.year === Number(year)
-      );
-
-      if (!report || !isReportMeaningfullyFilled(report)) {
-        return {
-          no: index + 1,
-          studentId: student.id,
-          nama: student.nama,
-          program: getProgramLabel(student.level),
-          level: student.level,
-          periode: monthLabel,
-          awal: "-",
-          akhir: "-",
-          total: "-",
-          target: "-",
-          kehadiran: "-",
-          status: "Belum Diisi",
-          guru: "-",
-          catatan: "",
-        };
-      }
-
-      const awal = report.iqra_level
-        ? (report.program_type === "tahfizh"
-          ? formatTahfizhLevel(report.iqra_level, report.start_page)
-          : `${report.iqra_level} hal.${report.start_page}`)
-        : String(report.start_page);
-      const akhir = (report as any).end_iqra_level
-        ? (report.program_type === "tahfizh"
-          ? formatTahfizhLevel((report as any).end_iqra_level, report.end_page)
-          : `${(report as any).end_iqra_level} hal.${report.end_page}`)
-        : String(report.end_page);
-
-      return {
-        no: index + 1,
-        studentId: student.id,
-        nama: student.nama,
-        program: getProgramLabel(student.level),
-        level: student.level,
-        periode: monthLabel,
-        awal,
-        akhir,
-        total: String(report.pages_read),
-        target: String(report.target_pages),
-        kehadiran: report.attendance_percentage ? `${report.attendance_percentage}%` : "-",
-        status: report.achievement_status === "achieved" ? "Tercapai" : "Belum Tercapai",
-        guru:
-          report.teacher_name?.trim() ||
-          (report.created_by
-            ? profileMap.get(report.created_by) || "-"
-            : "-"),
-        catatan: report.notes || "",
-      };
+    const monthGroups = buildRecapJoinedGroups({
+      students: studentsInRombel,
+      month,
+      year: Number(year),
+      monthName: MONTH_NAMES[month - 1],
+      reports,
+      attendance: multiAttendanceQuery.data ?? [],
+      attendanceSettings: multiAttendanceSettingsQuery.data ?? [],
+      getTeacherName: (userId) => (userId ? profileMap.get(userId) : undefined),
     });
-  }, [filteredStudents, profileMap, reports]);
+
+    return (monthGroups[0]?.rows ?? []).map(toPdfRow);
+  }, [
+    filteredStudents,
+    multiAttendanceQuery.data,
+    multiAttendanceSettingsQuery.data,
+    profileMap,
+    reports,
+    toPdfRow,
+  ]);
 
   const buildSelectedRombelPDF = useCallback(async (rombel: RombelOption, months: number[], year: string) => {
     const exportSettings = (settings || {}) as ExportSettings;
@@ -584,7 +472,9 @@ const RecapReport = () => {
       if (logoB64) {
         try {
           doc.addImage(logoB64, "PNG", margin, y, 16, 16);
-        } catch {}
+        } catch {
+          // Ignore logo rendering failures; the PDF should still be generated.
+        }
       }
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
@@ -623,7 +513,9 @@ const RecapReport = () => {
         if (signature) {
           try {
             doc.addImage(signature, "PNG", xCenter - 16, sigY + 2, 32, 14);
-          } catch {}
+          } catch {
+            // Ignore signature image failures; text signature placeholders remain.
+          }
         }
         doc.setLineWidth(0.2);
         doc.setDrawColor(120);
@@ -641,13 +533,9 @@ const RecapReport = () => {
       drawHeader(month);
 
       const rows = buildRowsForRombelMonth(rombel, month, year);
-      const hasReportData = reports.some(item =>
-        item.month === month &&
-        item.year === Number(year) &&
-        rows.some(row => row.studentId === item.student_id)
-      );
+      const hasReportData = rows.some(row => row.reportStatus === "Sudah Diisi" || row.absensi !== "-");
 
-      let cursorY = margin + 34;
+      const cursorY = margin + 34;
       if (!hasReportData) {
         doc.setFillColor(255, 247, 237);
         doc.rect(margin, cursorY, pageW - margin * 2, 18, "F");
@@ -670,8 +558,15 @@ const RecapReport = () => {
           "Akhir",
           "Total",
           "Target",
-          "Kehadiran",
-          "Status",
+          "Absensi H/S/I/A",
+          "% Hadir",
+          "Status Absensi",
+          "Kehadiran & Kesiapan Belajar",
+          "Kualitas Bacaan Harian",
+          "Perbaikan Bacaan Harian",
+          "Pencapaian Bulanan",
+          "Kategori Progres",
+          "Nilai",
           "Guru",
           "Catatan",
         ]],
@@ -682,18 +577,25 @@ const RecapReport = () => {
           cleanPdfText(row.level),
           cleanPdfText(row.awal),
           cleanPdfText(row.akhir),
-          row.status === "Belum Diisi" ? "-" : row.total,
-          row.status === "Belum Diisi" ? "-" : row.target,
-          row.status === "Belum Diisi" ? "-" : row.kehadiran,
-          row.status,
+          row.total,
+          row.target,
+          row.absensi,
+          row.persentaseHadir,
+          row.statusAbsensi,
+          row.kehadiranKesiapan,
+          row.kualitasBacaan,
+          row.perbaikanBacaan,
+          row.pencapaianBulanan,
+          cleanPdfText(row.kategoriProgres),
+          row.nilai,
           cleanPdfText(row.guru),
           cleanPdfText(row.catatan || "-"),
         ]),
         styles: {
           font: "helvetica",
           fontStyle: "normal",
-          fontSize: 7,
-          cellPadding: 1.2,
+          fontSize: 5.6,
+          cellPadding: 0.9,
           overflow: "linebreak",
           valign: "top",
           lineColor: [220, 220, 220],
@@ -705,46 +607,50 @@ const RecapReport = () => {
           textColor: [255, 255, 255],
           fontStyle: "bold",
           halign: "center",
-          fontSize: 7,
+          fontSize: 5.4,
         },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: {
           0: { cellWidth: 8, halign: "center" },
-          1: { cellWidth: 34 },
-          2: { cellWidth: 23 },
-          3: { cellWidth: 21 },
-          4: { cellWidth: 19 },
-          5: { cellWidth: 19 },
-          6: { cellWidth: 11, halign: "center", fontStyle: "bold" },
-          7: { cellWidth: 11, halign: "center" },
-          8: { cellWidth: 16, halign: "center" },
-          9: { cellWidth: 20, halign: "center", fontStyle: "bold" },
-          10: { cellWidth: 22 },
-          11: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
+          1: { cellWidth: 28 },
+          2: { cellWidth: 18 },
+          3: { cellWidth: 16 },
+          4: { cellWidth: 15 },
+          5: { cellWidth: 15 },
+          6: { cellWidth: 9, halign: "center", fontStyle: "bold" },
+          7: { cellWidth: 9, halign: "center" },
+          8: { cellWidth: 23, halign: "center" },
+          9: { cellWidth: 10, halign: "center" },
+          10: { cellWidth: 22, halign: "center" },
+          11: { cellWidth: 15, halign: "center" },
+          12: { cellWidth: 15, halign: "center" },
+          13: { cellWidth: 15, halign: "center" },
+          14: { cellWidth: 15, halign: "center" },
+          15: { cellWidth: 24 },
+          16: { cellWidth: 9, halign: "center" },
+          17: { cellWidth: 17 },
+          18: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
         },
         didParseCell: data => {
-          if (data.section === "body" && data.column.index === 11) {
+          if (data.section === "body" && data.column.index === 18) {
             data.cell.styles.overflow = "linebreak";
             data.cell.styles.valign = "top";
             data.cell.styles.font = hasAmiriFont && hasArabicText(data.cell.raw) ? "Amiri" : "helvetica";
             data.cell.styles.fontStyle = "normal";
           }
-          if (data.section === "body" && data.column.index === 9) {
+          if (data.section === "body" && data.column.index === 10) {
             const value = String(data.cell.raw);
-            if (value === "Tercapai") data.cell.styles.textColor = [16, 124, 65];
-            else if (value === "Belum Tercapai") data.cell.styles.textColor = [185, 28, 28];
-            else if (value === "Belum Diisi") {
+            if (value === "Lengkap") data.cell.styles.textColor = [16, 124, 65];
+            else if (value === "Melebihi Hari Efektif") data.cell.styles.textColor = [185, 28, 28];
+            else if (value === "Belum Diisi" || value === "Belum Lengkap" || value === "Hari Efektif Belum Diatur") {
               data.cell.styles.textColor = [220, 38, 38];
-              Object.values(data.row.cells).forEach((cell: any) => {
-                cell.styles.fillColor = [255, 235, 238];
-              });
             }
           }
         },
         margin: { left: margin, right: margin, bottom: 22 },
       });
 
-      drawSignature((doc as any).lastAutoTable.finalY + 2);
+      drawSignature(getLastAutoTableFinalY(doc, cursorY) + 2);
     });
 
     const totalPages = doc.getNumberOfPages();
@@ -766,7 +672,7 @@ const RecapReport = () => {
     }
 
     return doc;
-  }, [buildRowsForRombelMonth, reports, settings]);
+  }, [buildRowsForRombelMonth, settings]);
 
   const downloadSelectedRombelPDFs = useCallback(async () => {
     if (dialogMonths.length === 0) {
@@ -834,7 +740,9 @@ const RecapReport = () => {
       if (logoB64) {
         try {
           doc.addImage(logoB64, "PNG", margin, y, 16, 16);
-        } catch {}
+        } catch {
+          // Ignore logo rendering failures; the PDF should still be generated.
+        }
       }
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
@@ -886,39 +794,44 @@ const RecapReport = () => {
           "Akhir",
           "Total",
           "Target",
-          "Status",
+          "Absensi H/S/I/A",
+          "% Hadir",
+          "Status Absensi",
+          "Kehadiran & Kesiapan Belajar",
+          "Kualitas Bacaan Harian",
+          "Perbaikan Bacaan Harian",
+          "Pencapaian Bulanan",
+          "Kategori Progres",
+          "Nilai",
           "Guru",
           "Catatan",
         ]],
-        body: group.rows.map(row => {
-          const status =
-            row.status === "Tercapai"
-              ? "Tercapai"
-              : row.status === "BELUM DIISI"
-              ? "Belum Diisi"
-              : row.status === "Sebagian"
-              ? "Sebagian"
-              : "Belum Tercapai";
-
-          return [
+        body: group.rows.map(row => [
             String(row.no),
             cleanPdfText(row.nama),
             cleanPdfText(row.program),
             cleanPdfText(row.level),
             cleanPdfText(row.awal),
             cleanPdfText(row.akhir),
-            row.status === "BELUM DIISI" ? "-" : String(row.total),
-            row.status === "BELUM DIISI" ? "-" : String(row.target),
-            status,
+            row.total,
+            row.target,
+            row.absensi,
+            row.persentaseHadir,
+            row.statusAbsensi,
+            row.kehadiranKesiapan,
+            row.kualitasBacaan,
+            row.perbaikanBacaan,
+            row.pencapaianBulanan,
+            cleanPdfText(row.kategoriProgres),
+            row.nilai,
             cleanPdfText(row.guru),
             cleanPdfText(row.catatan || "-"),
-          ];
-        }),
+          ]),
         styles: {
           font: "helvetica",
           fontStyle: "normal",
-          fontSize: isLegal ? 8 : 7,
-          cellPadding: isLegal ? 1.6 : 1.2,
+          fontSize: isLegal ? 6.2 : 5.4,
+          cellPadding: isLegal ? 1.1 : 0.8,
           overflow: "linebreak",
           valign: "top",
           lineColor: [220, 220, 220],
@@ -930,61 +843,73 @@ const RecapReport = () => {
           textColor: [255, 255, 255],
           fontStyle: "bold",
           halign: "center",
-          fontSize: isLegal ? 8 : 7,
+          fontSize: isLegal ? 6 : 5.2,
         },
         alternateRowStyles: { fillColor: [248, 250, 252] },
         columnStyles: isLegal
           ? {
               0: { cellWidth: 8, halign: "center" },
-              1: { cellWidth: 42 },
-              2: { cellWidth: 26 },
-              3: { cellWidth: 26 },
-              4: { cellWidth: 22 },
-              5: { cellWidth: 22 },
-              6: { cellWidth: 12, halign: "center", fontStyle: "bold" },
-              7: { cellWidth: 12, halign: "center" },
-              8: { cellWidth: 24, halign: "center", fontStyle: "bold" },
-              9: { cellWidth: 28 },
-              10: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
+              1: { cellWidth: 34 },
+              2: { cellWidth: 21 },
+              3: { cellWidth: 18 },
+              4: { cellWidth: 18 },
+              5: { cellWidth: 18 },
+              6: { cellWidth: 11, halign: "center", fontStyle: "bold" },
+              7: { cellWidth: 11, halign: "center" },
+              8: { cellWidth: 25, halign: "center" },
+              9: { cellWidth: 11, halign: "center" },
+              10: { cellWidth: 26, halign: "center", fontStyle: "bold" },
+              11: { cellWidth: 17, halign: "center" },
+              12: { cellWidth: 17, halign: "center" },
+              13: { cellWidth: 17, halign: "center" },
+              14: { cellWidth: 17, halign: "center" },
+              15: { cellWidth: 28 },
+              16: { cellWidth: 10, halign: "center" },
+              17: { cellWidth: 24 },
+              18: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
             }
           : {
               0: { cellWidth: 8, halign: "center" },
-              1: { cellWidth: 34 },
-              2: { cellWidth: 23 },
-              3: { cellWidth: 21 },
-              4: { cellWidth: 19 },
-              5: { cellWidth: 19 },
-              6: { cellWidth: 11, halign: "center", fontStyle: "bold" },
-              7: { cellWidth: 11, halign: "center" },
-              8: { cellWidth: 20, halign: "center", fontStyle: "bold" },
-              9: { cellWidth: 22 },
-              10: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
+              1: { cellWidth: 28 },
+              2: { cellWidth: 18 },
+              3: { cellWidth: 16 },
+              4: { cellWidth: 15 },
+              5: { cellWidth: 15 },
+              6: { cellWidth: 9, halign: "center", fontStyle: "bold" },
+              7: { cellWidth: 9, halign: "center" },
+              8: { cellWidth: 23, halign: "center" },
+              9: { cellWidth: 10, halign: "center" },
+              10: { cellWidth: 22, halign: "center", fontStyle: "bold" },
+              11: { cellWidth: 15, halign: "center" },
+              12: { cellWidth: 15, halign: "center" },
+              13: { cellWidth: 15, halign: "center" },
+              14: { cellWidth: 15, halign: "center" },
+              15: { cellWidth: 24 },
+              16: { cellWidth: 9, halign: "center" },
+              17: { cellWidth: 17 },
+              18: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
             },
         didParseCell: data => {
-          if (data.section === "body" && data.column.index === 10) {
+          if (data.section === "body" && data.column.index === 18) {
             data.cell.styles.overflow = "linebreak";
             data.cell.styles.valign = "top";
             data.cell.styles.font = hasAmiriFont && hasArabicText(data.cell.raw) ? "Amiri" : "helvetica";
             data.cell.styles.fontStyle = "normal";
           }
 
-          if (data.section === "body" && data.column.index === 8) {
+          if (data.section === "body" && data.column.index === 10) {
             const value = String(data.cell.raw);
-            if (value === "Tercapai") data.cell.styles.textColor = [16, 124, 65];
-            else if (value === "Sebagian") data.cell.styles.textColor = [245, 127, 23];
-            else if (value === "Belum Tercapai") data.cell.styles.textColor = [185, 28, 28];
-            else if (value === "Belum Diisi") {
+            if (value === "Lengkap") data.cell.styles.textColor = [16, 124, 65];
+            else if (value === "Melebihi Hari Efektif") data.cell.styles.textColor = [185, 28, 28];
+            else if (value === "Belum Diisi" || value === "Belum Lengkap" || value === "Hari Efektif Belum Diatur") {
               data.cell.styles.textColor = [220, 38, 38];
-              Object.values(data.row.cells).forEach((cell: any) => {
-                cell.styles.fillColor = [255, 235, 238];
-              });
             }
           }
         },
         margin: { left: margin, right: margin, bottom: 22 },
       });
 
-      cursorY = (doc as any).lastAutoTable.finalY + 4;
+      cursorY = getLastAutoTableFinalY(doc, cursorY) + 4;
     });
 
     const signatureHeight = 50;
@@ -995,8 +920,8 @@ const RecapReport = () => {
     }
 
     const allRows = activePdfGroups.flatMap(group => group.rows);
-    const filledRows = allRows.filter(row => row.status !== "BELUM DIISI");
-    const achievedRows = allRows.filter(row => row.status === "Tercapai");
+    const filledRows = allRows.filter(row => row.reportStatus === "Sudah Diisi");
+    const completeAttendanceRows = allRows.filter(row => row.statusAbsensi === "Lengkap");
     const totalPagesRead = filledRows.reduce((sum, row) => sum + (Number(row.total) || 0), 0);
 
     cursorY += 4;
@@ -1011,8 +936,8 @@ const RecapReport = () => {
     doc.setTextColor(60);
     [
       `Total Siswa: ${allRows.length}`,
-      `Sudah Diisi: ${filledRows.length} siswa`,
-      `Target Tercapai: ${achievedRows.length} siswa (${allRows.length > 0 ? Math.round((achievedRows.length / allRows.length) * 100) : 0}%)`,
+      `Laporan Sudah Diisi: ${filledRows.length} siswa`,
+      `Absensi Lengkap: ${completeAttendanceRows.length} siswa`,
       `Total Halaman Dibaca: ${totalPagesRead} hal.`,
     ].forEach(text => {
       doc.text(text, margin + 3, cursorY);
@@ -1031,7 +956,9 @@ const RecapReport = () => {
       if (signature) {
         try {
           doc.addImage(signature, "PNG", xCenter - 16, sigY + 2, 32, 14);
-        } catch {}
+        } catch {
+          // Ignore signature image failures; text signature placeholders remain.
+        }
       }
       doc.setLineWidth(0.2);
       doc.setDrawColor(120);
@@ -1124,7 +1051,9 @@ const RecapReport = () => {
     }
   }, [activePdfGroups.length, buildRecapPDF, cleanupPreviewUrl]);
 
-  if (ls || lr) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>;
+  if (ls || lr || attendanceQuery.isLoading || attendanceSettingsQuery.isLoading) {
+    return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>;
+  }
 
   return (
     <div className="space-y-4">
@@ -1153,69 +1082,86 @@ const RecapReport = () => {
 
       {/* Single Month Mode */}
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <StatCard
               icon={<Users className="w-4 h-4" />}
               label="Total Siswa"
               value={stats.total}
               color="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
-              onClick={() => setFilterStatus("all")}
-              isActive={filterStatus === "all"}
+              onClick={() => {
+                setFilterReportStatus("all");
+                setFilterAttendanceStatus("all");
+                setFilterCategory("all");
+              }}
+              isActive={filterReportStatus === "all" && filterAttendanceStatus === "all" && filterCategory === "all"}
               activeColor="border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/30 dark:bg-blue-950/20"
             />
             <StatCard
               icon={<ListChecks className="w-4 h-4" />}
-              label="Sudah Diisi"
+              label="Laporan Sudah Diisi"
               value={stats.filled}
               color="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-              onClick={() => setFilterStatus("filled")}
-              isActive={filterStatus === "filled"}
+              onClick={() => setFilterReportStatus("filled")}
+              isActive={filterReportStatus === "filled"}
               activeColor="border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/30 dark:bg-emerald-950/20"
             />
             <StatCard
               icon={<FileWarning className="w-4 h-4" />}
-              label="Belum Diisi"
+              label="Laporan Belum Diisi"
               value={stats.empty}
               color="bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
-              onClick={() => setFilterStatus("empty")}
-              isActive={filterStatus === "empty"}
+              onClick={() => setFilterReportStatus("empty")}
+              isActive={filterReportStatus === "empty"}
               activeColor="border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30 dark:bg-rose-950/20"
             />
             <StatCard
               icon={<Percent className="w-4 h-4" />}
-              label="Kelengkapan"
-              value={`${stats.completion}%`}
+              label="Absensi Lengkap"
+              value={stats.attendanceComplete}
               color="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-              onClick={() => setFilterStatus("filled")}
-              isActive={false}
+              onClick={() => setFilterAttendanceStatus("Lengkap")}
+              isActive={filterAttendanceStatus === "Lengkap"}
               activeColor="border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/30 dark:bg-amber-950/20"
             />
             <StatCard
               icon={<CheckCircle2 className="w-4 h-4" />}
-              label="Target Tercapai"
-              value={`${stats.achievementRate}%`}
+              label="Absensi Belum Lengkap/Belum Diisi"
+              value={stats.attendanceIncomplete}
               color="bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400"
-              onClick={() => setFilterStatus("achieved")}
-              isActive={filterStatus === "achieved"}
+              onClick={() => setFilterAttendanceStatus("Belum Lengkap")}
+              isActive={filterAttendanceStatus === "Belum Lengkap"}
               activeColor="border-violet-500 ring-2 ring-violet-500/20 bg-violet-50/30 dark:bg-violet-950/20"
+            />
+            <StatCard
+              icon={<Percent className="w-4 h-4" />}
+              label="Rata-rata Nilai Progresif"
+              value={stats.averageScore}
+              color="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400"
             />
           </div>
 
           {/* Active Filter Cues */}
-          {(filterStatus !== "all" || search.trim() || filterKelas !== "all" || filterRombel !== "all") && (
+          {(filterReportStatus !== "all" || filterAttendanceStatus !== "all" || filterCategory !== "all" || search.trim() || filterKelas !== "all" || filterRombel !== "all") && (
             <div className="flex flex-wrap items-center gap-2 p-2.5 bg-muted/40 border border-border rounded-lg text-xs transition-all duration-200">
               <span className="text-muted-foreground font-medium flex items-center gap-1">
                 Filter Aktif:
               </span>
-              {filterStatus !== "all" && (
+              {filterReportStatus !== "all" && (
                 <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
-                  Status: {
-                    filterStatus === "filled" ? "Sudah Diisi" :
-                    filterStatus === "empty" ? "Belum Diisi" :
-                    filterStatus === "achieved" ? "Target Tercapai" :
-                    filterStatus === "not_achieved" ? "Target Belum Tercapai" : ""
-                  }
-                  <button onClick={() => setFilterStatus("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">×</button>
+                  Status laporan: {filterReportStatus === "filled" ? "Sudah Diisi" : "Belum Diisi"}
+                  <button onClick={() => setFilterReportStatus("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
+                </Badge>
+              )}
+              {filterAttendanceStatus !== "all" && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Status absensi: {filterAttendanceStatus}
+                  <button onClick={() => setFilterAttendanceStatus("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
+                </Badge>
+              )}
+              {filterCategory !== "all" && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Kategori: {filterCategory}
+                  <button onClick={() => setFilterCategory("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
                 </Badge>
               )}
               {filterKelas !== "all" && (
@@ -1241,7 +1187,9 @@ const RecapReport = () => {
                 size="sm"
                 className="h-6 px-2 text-[11px] text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/20 ml-auto"
                 onClick={() => {
-                  setFilterStatus("all");
+                  setFilterReportStatus("all");
+                  setFilterAttendanceStatus("all");
+                  setFilterCategory("all");
                   setFilterKelas("all");
                   setFilterRombel("all");
                   setSearch("");
@@ -1263,7 +1211,7 @@ const RecapReport = () => {
 
           {/* Filters */}
           <Card>
-            <CardContent className="p-3 grid grid-cols-2 md:grid-cols-6 gap-2">
+            <CardContent className="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
               <div className="col-span-2">
                 <Label className="text-xs">Cari Siswa</Label>
                 <div className="relative">
@@ -1339,32 +1287,55 @@ const RecapReport = () => {
                 </Select>
               </div>
               <div>
-                <Label className="text-xs">Status Isi</Label>
+                <Label className="text-xs">Status laporan</Label>
                 <Select
-                  value={filterStatus}
-                  onValueChange={(v) => setFilterStatus(v as any)}
+                  value={filterReportStatus}
+                  onValueChange={(v) => setFilterReportStatus(v as FilterReportStatusType)}
                 >
-                  <SelectTrigger
-                    className={`h-9 transition-colors ${
-                      filterStatus === "empty"
-                        ? "border-rose-400 text-rose-700 bg-rose-50/50"
-                        : filterStatus === "filled"
-                        ? "border-emerald-400 text-emerald-700 bg-emerald-50/50"
-                        : filterStatus === "achieved"
-                        ? "border-violet-400 text-violet-700 bg-violet-50/50"
-                        : filterStatus === "not_achieved"
-                        ? "border-amber-400 text-amber-700 bg-amber-50/50"
-                        : ""
-                    }`}
-                  >
+                  <SelectTrigger className="h-9">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Semua</SelectItem>
                     <SelectItem value="filled">Sudah Diisi</SelectItem>
                     <SelectItem value="empty">Belum Diisi</SelectItem>
-                    <SelectItem value="achieved">Target Tercapai</SelectItem>
-                    <SelectItem value="not_achieved">Target Belum Tercapai</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Status absensi</Label>
+                <Select
+                  value={filterAttendanceStatus}
+                  onValueChange={(v) => setFilterAttendanceStatus(v as FilterAttendanceStatusType)}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua</SelectItem>
+                    <SelectItem value="Lengkap">Lengkap</SelectItem>
+                    <SelectItem value="Belum Lengkap">Belum Lengkap</SelectItem>
+                    <SelectItem value="Belum Diisi">Belum Diisi</SelectItem>
+                    <SelectItem value="Melebihi Hari Efektif">Melebihi Hari Efektif</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Kategori progres</Label>
+                <Select
+                  value={filterCategory}
+                  onValueChange={(v) => setFilterCategory(v as FilterCategoryType)}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua</SelectItem>
+                    {PROGRESS_CATEGORIES.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -1417,7 +1388,7 @@ const RecapReport = () => {
               </CardContent>
             </Card>
           )}
-          {displayGroups.map(grp => (
+          {displayGroups.map((grp, groupIndex) => (
             <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
               <CardHeader className="bg-emerald-50 dark:bg-emerald-950/20 py-3">
                 <CardTitle className="text-sm text-emerald-900 dark:text-emerald-300">
@@ -1429,36 +1400,48 @@ const RecapReport = () => {
                     variant="outline"
                     className="ml-1 bg-white dark:bg-background text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/50"
                   >
-                    {grp.rows.filter(r => r.status === "empty").length} belum diisi
+                    {grp.rows.filter(r => r.reportStatus === "empty").length} laporan belum diisi
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full text-xs border-collapse">
+                <div ref={tableScrollRef} className="spreadsheet-table-scroll hidden md:block overflow-x-auto">
+                  <table ref={tableContentRef} className="min-w-[1900px] w-full text-xs border-collapse">
                     <thead className="sticky top-0 bg-muted/80">
                       <tr className="text-left">
                         <th className="px-2 py-2 w-8">No</th>
-                        <th className="px-2 py-2 min-w-[140px]">Nama</th>
+                        <th className="px-2 py-2 min-w-[160px]">Nama Siswa</th>
                         <th className="px-2 py-2">Program</th>
                         <th className="px-2 py-2">Level</th>
                         <th className="px-2 py-2 text-center">Awal</th>
                         <th className="px-2 py-2 text-center">Akhir</th>
                         <th className="px-2 py-2 text-center">Total</th>
                         <th className="px-2 py-2 text-center">Target</th>
-                        <th className="px-2 py-2 text-center">Status</th>
+                        <th className="px-2 py-2 text-center">Hadir</th>
+                        <th className="px-2 py-2 text-center">Sakit</th>
+                        <th className="px-2 py-2 text-center">Izin</th>
+                        <th className="px-2 py-2 text-center">Alfa</th>
+                        <th className="px-2 py-2 text-center">Total Absensi</th>
+                        <th className="px-2 py-2 text-center">Persentase Hadir</th>
+                        <th className="px-2 py-2 text-center">Status Absensi</th>
+                        <th className="px-2 py-2 text-center">Kehadiran & Kesiapan Belajar</th>
+                        <th className="px-2 py-2 text-center">Kualitas Bacaan Harian</th>
+                        <th className="px-2 py-2 text-center">Perbaikan Bacaan Harian</th>
+                        <th className="px-2 py-2 text-center">Pencapaian Bulanan</th>
+                        <th className="px-2 py-2">Kategori Progres</th>
+                        <th className="px-2 py-2 text-center">Nilai</th>
                         <th className="px-2 py-2">Guru</th>
                         <th className="px-2 py-2 min-w-[200px]">Catatan</th>
                       </tr>
                     </thead>
                     <tbody>
                       {grp.rows.map(row => {
-                        const empty = row.status === "empty";
+                        const reportEmpty = row.reportStatus === "empty";
                         return (
                           <tr
                             key={row.studentId}
                             className={`border-t ${
-                              empty
+                              reportEmpty
                                 ? "bg-rose-50/60 dark:bg-rose-950/20"
                                 : "hover:bg-muted/40"
                             }`}
@@ -1480,26 +1463,26 @@ const RecapReport = () => {
                             <td className="px-2 py-2 text-center">{row.awal}</td>
                             <td className="px-2 py-2 text-center">{row.akhir}</td>
                             <td className="px-2 py-2 text-center font-bold">
-                              {empty ? "-" : row.total}
+                              {formatRecapValue(row.total)}
                             </td>
                             <td className="px-2 py-2 text-center">
-                              {empty ? "-" : row.target}
+                              {formatRecapValue(row.target)}
                             </td>
+                            <td className="px-2 py-2 text-center">{formatRecapValue(row.present)}</td>
+                            <td className="px-2 py-2 text-center">{formatRecapValue(row.sick)}</td>
+                            <td className="px-2 py-2 text-center">{formatRecapValue(row.permission)}</td>
+                            <td className="px-2 py-2 text-center">{formatRecapValue(row.absent)}</td>
+                            <td className="px-2 py-2 text-center">{formatRecapValue(row.totalAbsensi)}</td>
+                            <td className="px-2 py-2 text-center">{row.hasAttendance ? `${row.persentaseHadir ?? 0}%` : "-"}</td>
                             <td className="px-2 py-2 text-center">
-                              {row.status === "achieved" && (
-                                <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400">
-                                  Tercapai
-                                </Badge>
-                              )}
-                              {row.status === "not_achieved" && (
-                                <Badge variant="destructive">Belum</Badge>
-                              )}
-                              {empty && (
-                                <Badge className="bg-rose-200 text-rose-900 dark:bg-rose-950/40 dark:text-rose-400">
-                                  Belum diisi
-                                </Badge>
-                              )}
+                              <Badge variant={row.attendanceStatus === "Lengkap" ? "default" : "outline"}>{row.attendanceStatus}</Badge>
                             </td>
+                            <td className="px-2 py-2 text-center">{formatProgressivePoint(row.poinKehadiranKesiapan)}</td>
+                            <td className="px-2 py-2 text-center">{formatProgressivePoint(row.poinKualitasBacaan)}</td>
+                            <td className="px-2 py-2 text-center">{formatProgressivePoint(row.poinPerbaikanBacaan)}</td>
+                            <td className="px-2 py-2 text-center">{formatRecapValue(row.pencapaianTargetBulan)}</td>
+                            <td className="px-2 py-2">{row.kategoriProgres ?? "-"}</td>
+                            <td className="px-2 py-2 text-center font-semibold">{formatRecapValue(row.nilaiAkhirProgresif)}</td>
                             <td className="px-2 py-2 text-muted-foreground">
                               {row.guru}
                             </td>
@@ -1512,27 +1495,65 @@ const RecapReport = () => {
                     </tbody>
                   </table>
                 </div>
+                {groupIndex === displayGroups.length - 1 && (
+                  <FixedHorizontalScrollbar
+                    scrollContainerRef={tableScrollRef}
+                    contentRef={tableContentRef}
+                    refreshKey={`${selectedMonth}-${selectedYear}-${grp.kelas}-${grp.rombel}-${grp.rows.length}`}
+                    className="hidden md:flex"
+                  />
+                )}
                 <div className="md:hidden divide-y">
                   {grp.rows.map(row => {
-                    const empty = row.status === "empty";
+                    const reportEmpty = row.reportStatus === "empty";
                     return (
-                      <div key={row.studentId} className={`p-3 space-y-2 ${empty ? "bg-rose-50/60 dark:bg-rose-950/10" : ""}`}>
+                      <div key={row.studentId} className={`p-3 space-y-3 ${reportEmpty ? "bg-rose-50/60 dark:bg-rose-950/10" : ""}`}>
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="text-sm font-semibold text-foreground">{row.no}. {row.nama}</p>
                             <p className="text-xs text-muted-foreground">{row.program} - {row.level}</p>
                           </div>
-                          <Badge className={`text-[10px] ${empty ? "bg-rose-200 dark:bg-rose-950/40 text-rose-900 dark:text-rose-400" : row.status === "achieved" ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400" : "bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-400"}`}>
-                            {getStatusLabel(row.status)}
+                          <Badge className={`text-[10px] ${reportEmpty ? "bg-rose-200 dark:bg-rose-950/40 text-rose-900 dark:text-rose-400" : "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400"}`}>
+                            {reportEmpty ? "Belum Diisi" : "Sudah Diisi"}
                           </Badge>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div><span className="text-muted-foreground">Awal</span><p>{row.awal}</p></div>
-                          <div><span className="text-muted-foreground">Akhir</span><p>{row.akhir}</p></div>
-                          <div><span className="text-muted-foreground">Total</span><p className="font-semibold">{empty ? "-" : row.total}</p></div>
-                          <div><span className="text-muted-foreground">Target</span><p>{empty ? "-" : row.target}</p></div>
-                          <div><span className="text-muted-foreground">Status</span><p>{getStatusLabel(row.status)}</p></div>
-                          <div><span className="text-muted-foreground">Guru</span><p>{row.guru}</p></div>
+                        <div className="space-y-2 text-xs">
+                          <section>
+                            <p className="mb-1 font-semibold text-foreground">Progres Bulanan</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div><span className="text-muted-foreground">Awal</span><p>{row.awal}</p></div>
+                              <div><span className="text-muted-foreground">Akhir</span><p>{row.akhir}</p></div>
+                              <div><span className="text-muted-foreground">Total</span><p className="font-semibold">{formatRecapValue(row.total)}</p></div>
+                              <div><span className="text-muted-foreground">Target</span><p>{formatRecapValue(row.target)}</p></div>
+                            </div>
+                          </section>
+                          <section>
+                            <p className="mb-1 font-semibold text-foreground">Absensi Bulanan</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div><span className="text-muted-foreground">Hadir</span><p>{formatRecapValue(row.present)}</p></div>
+                              <div><span className="text-muted-foreground">Sakit</span><p>{formatRecapValue(row.sick)}</p></div>
+                              <div><span className="text-muted-foreground">Izin</span><p>{formatRecapValue(row.permission)}</p></div>
+                              <div><span className="text-muted-foreground">Alfa</span><p>{formatRecapValue(row.absent)}</p></div>
+                              <div><span className="text-muted-foreground">Total Absensi</span><p>{formatRecapValue(row.totalAbsensi)}</p></div>
+                              <div><span className="text-muted-foreground">Persentase Hadir</span><p>{row.hasAttendance ? `${row.persentaseHadir ?? 0}%` : "-"}</p></div>
+                              <div className="col-span-2"><span className="text-muted-foreground">Status Absensi</span><p>{row.attendanceStatus}</p></div>
+                            </div>
+                          </section>
+                          <section>
+                            <p className="mb-1 font-semibold text-foreground">Penilaian Progresif</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div><span className="text-muted-foreground">Kehadiran & Kesiapan Belajar</span><p>{formatProgressivePoint(row.poinKehadiranKesiapan)}</p></div>
+                              <div><span className="text-muted-foreground">Kualitas Bacaan Harian</span><p>{formatProgressivePoint(row.poinKualitasBacaan)}</p></div>
+                              <div><span className="text-muted-foreground">Perbaikan Bacaan Harian</span><p>{formatProgressivePoint(row.poinPerbaikanBacaan)}</p></div>
+                              <div><span className="text-muted-foreground">Pencapaian Bulanan</span><p>{formatRecapValue(row.pencapaianTargetBulan)}</p></div>
+                              <div><span className="text-muted-foreground">Kategori Progres</span><p>{row.kategoriProgres ?? "-"}</p></div>
+                              <div><span className="text-muted-foreground">Nilai</span><p className="font-semibold">{formatRecapValue(row.nilaiAkhirProgresif)}</p></div>
+                            </div>
+                          </section>
+                          <section>
+                            <p className="mb-1 font-semibold text-foreground">Guru dan Catatan</p>
+                            <div><span className="text-muted-foreground">Guru</span><p>{row.guru}</p></div>
+                          </section>
                         </div>
                         {row.catatan && (
                           <p className="text-xs text-muted-foreground whitespace-pre-wrap">{row.catatan}</p>

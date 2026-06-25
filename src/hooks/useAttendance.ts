@@ -48,6 +48,52 @@ export interface AttendancePeriodSettings {
 }
 
 const sb = supabase;
+const ATTENDANCE_PAGE_SIZE = 1000;
+
+const fetchAttendanceRows = async ({
+  userId,
+  role,
+  month,
+  year,
+  months,
+}: {
+  userId?: string;
+  role?: string;
+  month?: number;
+  year?: number;
+  months?: number[];
+}) => {
+  const managedStudentIds = await fetchApprovedManagedStudentIds(userId, role);
+  if (managedStudentIds && managedStudentIds.length === 0) return [];
+
+  const allRows: Attendance[] = [];
+  let from = 0;
+
+  while (true) {
+    let query = sb
+      .from("attendance")
+      .select("*")
+      .order("year", { ascending: false })
+      .order("month", { ascending: false })
+      .range(from, from + ATTENDANCE_PAGE_SIZE - 1);
+
+    if (managedStudentIds) query = query.in("student_id", managedStudentIds);
+    if (year) query = query.eq("year", year);
+    if (month) query = query.eq("month", month);
+    if (months && months.length > 0) query = query.in("month", months);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const batch = (data ?? []) as unknown as Attendance[];
+    allRows.push(...batch);
+
+    if (batch.length < ATTENDANCE_PAGE_SIZE) break;
+    from += ATTENDANCE_PAGE_SIZE;
+  }
+
+  return allRows;
+};
 
 export const useAttendance = (studentId?: string) =>
   {
@@ -87,6 +133,43 @@ export const useAllAttendance = () =>
       if (error) throw error;
       return (data ?? []) as unknown as (Attendance & { students: { nama: string; kelas: number; rombel: string } })[];
     },
+  });
+};
+
+export const useAttendanceForRecapPeriod = ({
+  month,
+  year,
+  enabled,
+}: {
+  month: number;
+  year: number;
+  enabled: boolean;
+}) => {
+  const { user, profile } = useAuth();
+
+  return useQuery({
+    queryKey: ["attendance", "recap-period", { month, year, userId: user?.id ?? "anon", role: profile?.role ?? "none" }],
+    enabled: enabled && !!month && !!year,
+    queryFn: () => fetchAttendanceRows({ userId: user?.id, role: profile?.role, month, year }),
+  });
+};
+
+export const useAttendanceForRecapPeriods = ({
+  months,
+  year,
+  enabled,
+}: {
+  months: number[];
+  year: number;
+  enabled: boolean;
+}) => {
+  const { user, profile } = useAuth();
+  const uniqueMonths = Array.from(new Set(months)).sort((a, b) => a - b);
+
+  return useQuery({
+    queryKey: ["attendance", "recap-periods", { months: uniqueMonths, year, userId: user?.id ?? "anon", role: profile?.role ?? "none" }],
+    enabled: enabled && uniqueMonths.length > 0 && !!year,
+    queryFn: () => fetchAttendanceRows({ userId: user?.id, role: profile?.role, months: uniqueMonths, year }),
   });
 };
 
@@ -244,6 +327,41 @@ export const useAttendancePeriodSettingsByGroups = ({
       );
     },
   });
+
+export const useAttendancePeriodSettingsByPeriods = ({
+  months,
+  year,
+  groups,
+  enabled,
+}: {
+  months: number[];
+  year: number;
+  groups: { kelas: number; rombel: string }[];
+  enabled: boolean;
+}) => {
+  const uniqueMonths = Array.from(new Set(months)).sort((a, b) => a - b);
+
+  return useQuery({
+    queryKey: ["attendance-period-settings", "periods", { months: uniqueMonths, year, groups }],
+    enabled: enabled && uniqueMonths.length > 0 && !!year && groups.length > 0,
+    queryFn: async () => {
+      const kelasList = Array.from(new Set(groups.map((group) => group.kelas)));
+      const { data, error } = await sb
+        .from("attendance_period_settings")
+        .select("*")
+        .eq("year", year)
+        .in("month", uniqueMonths)
+        .in("kelas", kelasList);
+
+      if (error) throw error;
+
+      const groupKeys = new Set(groups.map((group) => `${group.kelas}-${group.rombel}`));
+      return ((data ?? []) as AttendancePeriodSettings[]).filter((setting) =>
+        groupKeys.has(`${setting.kelas}-${setting.rombel}`)
+      );
+    },
+  });
+};
 
 export const useUpsertAttendance = () => {
   const qc = useQueryClient();
