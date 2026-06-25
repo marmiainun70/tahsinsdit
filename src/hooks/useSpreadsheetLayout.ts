@@ -327,7 +327,11 @@ export const useSpreadsheetLayout = <ColumnKey extends string = SpreadsheetColum
   const effectiveLayout = isEditing ? draft : loadedLayout;
 
   const getColumnWidth = useCallback(
-    (columnKey: ColumnKey) => effectiveLayout.columnWidths[columnKey] ?? columnMap[columnKey].defaultWidth,
+    (columnKey: ColumnKey) => {
+      const column = columnMap[columnKey];
+      if (!column) return 80;
+      return effectiveLayout.columnWidths[columnKey] ?? column.defaultWidth;
+    },
     [columnMap, effectiveLayout.columnWidths],
   );
 
@@ -351,11 +355,13 @@ export const useSpreadsheetLayout = <ColumnKey extends string = SpreadsheetColum
   }, [sanitize]);
 
   const setColumnWidth = useCallback((columnKey: ColumnKey, width: number) => {
-    const bounds = { min: columnMap[columnKey].minWidth, max: columnMap[columnKey].maxWidth };
+    const column = columnMap[columnKey];
+    if (!column) return;
+    const bounds = { min: column.minWidth, max: column.maxWidth };
     updateDraft((current) => {
       const next = { ...current, columnWidths: { ...current.columnWidths } };
       const cleanWidth = clamp(Math.round(width), bounds.min, bounds.max);
-      if (cleanWidth === columnMap[columnKey].defaultWidth) delete next.columnWidths[columnKey];
+      if (cleanWidth === column.defaultWidth) delete next.columnWidths[columnKey];
       else next.columnWidths[columnKey] = cleanWidth;
       return next;
     });
