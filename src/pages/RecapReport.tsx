@@ -1219,7 +1219,7 @@ const RecapReport = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 spreadsheet-report-page">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
@@ -1235,7 +1235,7 @@ const RecapReport = () => {
 
       {/* Single Month Mode */}
           {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
             <StatCard
               icon={<Users className="w-4 h-4" />}
               label="Total Siswa"
@@ -1634,13 +1634,13 @@ const RecapReport = () => {
           {displayGroups.length > 0 && (
             <div
               ref={tableScrollRef}
-              className="overflow-x-visible md:overflow-x-auto"
+              className="spreadsheet-table-scroll"
               onClick={(event) => {
                 if (!recapLayout.isEditing || event.target !== event.currentTarget) return;
                 recapLayout.setSelection({ type: "table" });
               }}
             >
-              <div ref={tableContentRef} className="space-y-6">
+              <div ref={tableContentRef} className="space-y-6" style={{ minWidth: recapLayout.tableMinWidth }}>
                 {displayGroups.map(grp => (
                   <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
               <CardHeader className="bg-emerald-50 dark:bg-emerald-950/20 py-3">
@@ -1892,7 +1892,6 @@ const RecapReport = () => {
               scrollContainerRef={tableScrollRef}
               contentRef={tableContentRef}
               refreshKey={`${selectedMonth}-${selectedYear}-${displayGroups.length}-${displayGroups.map(grp => `${grp.kelas}-${grp.rombel}-${grp.rows.length}`).join("|")}-${recapLayout.tableMinWidth}-${recapLayout.layout.defaultRowHeight}-${recapLayout.layout.tableFontSize}-${recapLayout.isEditing}`}
-              className="hidden md:flex"
             />
           )}
 
@@ -2115,25 +2114,23 @@ const StatCard = ({
   return (
     <Card
       onClick={onClick}
-      className={`transition-all duration-200 select-none ${
+      className={`relative h-full transition-all duration-200 select-none ${
         onClick ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:translate-y-0" : ""
       } ${activeClass}`}
     >
-      <CardContent className="flex items-center gap-4 p-4">
-          <div className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${color}`}>
-            {icon}
-          </div>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{label}</p>
-          <p className="text-2xl font-bold leading-tight text-foreground">{value}</p>
-          {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
+      {isActive && (
+        <Badge variant="secondary" className="absolute top-2 right-2 text-[9px] py-0 px-1.5 h-3.5 bg-primary/10 text-primary border-none font-semibold z-10">
+          Aktif
+        </Badge>
+      )}
+      <CardContent className="flex flex-col items-center justify-center p-4 text-center h-full gap-2">
+        <div className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${color}`}>
+          {icon}
         </div>
-        <div className="ml-auto self-start">
-          {isActive && (
-            <Badge variant="secondary" className="text-[9px] py-0 px-1.5 h-3.5 bg-primary/10 text-primary border-none font-semibold">
-              Aktif
-            </Badge>
-          )}
+        <div className="flex flex-col items-center gap-0.5 mt-1">
+          <p className="text-xs text-muted-foreground line-clamp-3 leading-snug">{label}</p>
+          <p className="text-xl font-bold leading-tight text-foreground mt-1">{value}</p>
+          {subtitle && <p className="text-[11px] text-muted-foreground mt-0.5">{subtitle}</p>}
         </div>
       </CardContent>
     </Card>
