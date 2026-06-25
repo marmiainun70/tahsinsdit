@@ -1205,12 +1205,13 @@ const MonthlyReport = () => {
                       <div className="block md:hidden">
                         <DataTablePagination currentPage={inputPage} totalPages={inputTotalPages} onPageChange={setInputPage} />
                       </div>
-                      <FixedHorizontalScrollbar
-                        scrollContainerRef={activeTableScrollRef}
-                        contentRef={activeTableRef}
-                        refreshKey={`${isMobile ? "mobile" : "desktop"}-${zoom}-${inputPage}-${pagedVisibleRows.length}-${attendanceLayout.tableMinWidth}`}
-                        className={isMobile ? "bottom-16" : undefined}
-                      />
+                      {!isMobile && (
+                        <FixedHorizontalScrollbar
+                          scrollContainerRef={activeTableScrollRef}
+                          contentRef={activeTableRef}
+                          refreshKey={`${isMobile ? "mobile" : "desktop"}-${zoom}-${inputPage}-${pagedVisibleRows.length}-${attendanceLayout.tableMinWidth}`}
+                        />
+                      )}
 
                       {/* Tombol Simpan Sticky untuk Mobile */}
                       <div className="block md:hidden sticky bottom-0 z-20 border-t bg-background/95 p-2 backdrop-blur -mx-6 -mb-6 mt-4">
