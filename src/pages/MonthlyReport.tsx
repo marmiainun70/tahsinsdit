@@ -132,8 +132,10 @@ const MonthlyReport = () => {
   const [historyPage, setHistoryPage] = useState(1);
   const [zoom, setZoom] = useState<number>(isMobile ? 75 : 100);
   const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
-  const tableScrollRef = useRef<HTMLDivElement>(null);
-  const tableRef = useRef<HTMLTableElement>(null);
+  const desktopTableScrollRef = useRef<HTMLDivElement>(null);
+  const desktopTableRef = useRef<HTMLTableElement>(null);
+  const mobileTableScrollRef = useRef<HTMLDivElement>(null);
+  const mobileTableRef = useRef<HTMLTableElement>(null);
 
   const hasClassFilter = Boolean(kelas && rombel);
   const hasAttendanceScope = teacherOverview || hasClassFilter;
@@ -561,6 +563,8 @@ const MonthlyReport = () => {
     number: attendanceLayout.stickyLeft.number,
     studentName: attendanceLayout.stickyLeft.studentName,
   };
+  const activeTableScrollRef = isMobile ? mobileTableScrollRef : desktopTableScrollRef;
+  const activeTableRef = isMobile ? mobileTableRef : desktopTableRef;
   const tableScaleStyle: CSSProperties = {
     transform: `scale(${zoom / 100})`,
     transformOrigin: "top left",
@@ -634,6 +638,7 @@ const MonthlyReport = () => {
           onChange={(event) => updateRow(row.studentId, field, event.target.value)}
           disabled={inputDisabled}
           className="h-8 w-full min-w-0 rounded-none border-0 px-1 text-center shadow-none focus-visible:ring-1"
+          style={{ fontSize: "inherit" }}
         />
       );
     }
@@ -981,9 +986,9 @@ const MonthlyReport = () => {
                   ) : (
                     <>
                       <div className="hidden md:block">
-                      <div ref={tableScrollRef} className="overflow-x-auto rounded-md border">
+                      <div ref={desktopTableScrollRef} className="spreadsheet-table-scroll rounded-md border">
                         <Table
-                          ref={tableRef}
+                          ref={desktopTableRef}
                           className={`w-full border-separate border-spacing-0 ${attendanceLayout.isEditing ? "spreadsheet-layout-editing" : ""}`}
                           style={{
                             minWidth: attendanceLayout.tableMinWidth,
@@ -1064,9 +1069,10 @@ const MonthlyReport = () => {
                                                 left,
                                                 height: attendanceLayout.getRowHeight(row.studentId),
                                                 ...attendanceLayout.getCellStyle(row.studentId, column.key),
+                                                ...(column.key === "studentName" ? { textAlign: "left" } : {}),
                                               }}
                                             >
-                                              <div className="flex h-full min-w-0 items-center justify-center px-1">
+                                              <div className={`flex h-full min-w-0 items-center px-1 ${column.key === "studentName" ? "justify-start" : "justify-center"}`}>
                                                 {renderAttendanceCell(row, column.key, rowNumber)}
                                               </div>
                                             </TableCell>
@@ -1082,20 +1088,15 @@ const MonthlyReport = () => {
                         </Table>
                       </div>
                       <DataTablePagination currentPage={inputPage} totalPages={inputTotalPages} onPageChange={setInputPage} />
-                      <FixedHorizontalScrollbar
-                        scrollContainerRef={tableScrollRef}
-                        contentRef={tableRef}
-                        refreshKey={`${zoom}-${inputPage}-${pagedVisibleRows.length}-${attendanceLayout.tableMinWidth}`}
-                      />
                       </div>
 
                       <div className="block md:hidden w-full rounded-md border">
                         <div className="text-[10px] text-muted-foreground px-2 py-1.5 border-b bg-muted/30 text-center font-medium">
                           H = Hadir · S = Sakit · I = Izin · A = Alfa
                         </div>
-                        <div ref={tableScrollRef} className="overflow-x-auto">
+                        <div ref={mobileTableScrollRef} className="spreadsheet-table-scroll">
                         <Table
-                          ref={tableRef}
+                          ref={mobileTableRef}
                           className={`border-separate border-spacing-0 text-[10px] ${attendanceLayout.isEditing ? "spreadsheet-layout-editing" : ""}`}
                           style={{
                             minWidth: attendanceLayout.tableMinWidth,
@@ -1152,7 +1153,6 @@ const MonthlyReport = () => {
                                   {group.rows.map((row) => {
                                     rowNumber += 1;
                                     const total = getTotal(row);
-                                    const status = getStatus(row, effectiveDays);
                                     const hasError = total !== effectiveDays;
                                     return (
                                       <TableRow
@@ -1183,9 +1183,10 @@ const MonthlyReport = () => {
                                                 left,
                                                 height: attendanceLayout.getRowHeight(row.studentId),
                                                 ...attendanceLayout.getCellStyle(row.studentId, column.key),
+                                                ...(column.key === "studentName" ? { textAlign: "left" } : {}),
                                               }}
                                             >
-                                              <div className="flex h-full min-w-0 items-center justify-center px-1">
+                                              <div className={`flex h-full min-w-0 items-center px-1 ${column.key === "studentName" ? "justify-start" : "justify-center"}`}>
                                                 {renderAttendanceCell(row, column.key, rowNumber)}
                                               </div>
                                             </TableCell>
@@ -1204,6 +1205,12 @@ const MonthlyReport = () => {
                       <div className="block md:hidden">
                         <DataTablePagination currentPage={inputPage} totalPages={inputTotalPages} onPageChange={setInputPage} />
                       </div>
+                      <FixedHorizontalScrollbar
+                        scrollContainerRef={activeTableScrollRef}
+                        contentRef={activeTableRef}
+                        refreshKey={`${isMobile ? "mobile" : "desktop"}-${zoom}-${inputPage}-${pagedVisibleRows.length}-${attendanceLayout.tableMinWidth}`}
+                        className={isMobile ? "bottom-16" : undefined}
+                      />
 
                       {/* Tombol Simpan Sticky untuk Mobile */}
                       <div className="block md:hidden sticky bottom-0 z-20 border-t bg-background/95 p-2 backdrop-blur -mx-6 -mb-6 mt-4">
