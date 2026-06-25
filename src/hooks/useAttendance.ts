@@ -16,7 +16,38 @@ export interface Attendance {
   created_at: string;
 }
 
-const sb = supabase as any;
+export interface AttendanceStudent {
+  id: string;
+  nama: string;
+  kelas: number;
+  rombel: string;
+  level: string;
+}
+
+export interface AttendanceWithStudent extends Attendance {
+  students: {
+    nama: string;
+    kelas: number;
+    rombel: string;
+  } | null;
+}
+
+export interface AttendancePeriodSettings {
+  id: string;
+  month: number;
+  year: number;
+  kelas: number;
+  rombel: string;
+  effective_days: number;
+  is_locked: boolean;
+  locked_by: string | null;
+  locked_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+const sb = supabase;
 
 export const useAttendance = (studentId?: string) =>
   {
@@ -59,6 +90,124 @@ export const useAllAttendance = () =>
   });
 };
 
+export const useStudentsForAttendance = ({
+  kelas,
+  rombel,
+  search,
+  enabled,
+}: {
+  kelas: string;
+  rombel: string;
+  search: string;
+  enabled: boolean;
+}) => {
+  const { user, profile } = useAuth();
+
+  return useQuery({
+    queryKey: ["attendance", "students", { kelas, rombel, search, userId: user?.id ?? "anon", role: profile?.role ?? "none" }],
+    enabled: enabled && !!kelas && !!rombel,
+    queryFn: async () => {
+      let query = sb
+        .from("students")
+        .select("id, nama, kelas, rombel, level")
+        .eq("kelas", Number(kelas))
+        .eq("rombel", rombel)
+        .order("nama", { ascending: true });
+
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && managedStudentIds.length === 0) return [];
+      if (managedStudentIds) query = query.in("id", managedStudentIds);
+
+      const keyword = search.trim();
+      if (keyword) query = query.ilike("nama", `%${keyword}%`);
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []) as AttendanceStudent[];
+    },
+  });
+};
+
+export const useAttendanceByPeriod = ({
+  month,
+  year,
+  kelas,
+  rombel,
+  enabled,
+}: {
+  month: number;
+  year: number;
+  kelas: string;
+  rombel: string;
+  enabled: boolean;
+}) => {
+  const { user, profile } = useAuth();
+
+  return useQuery({
+    queryKey: ["attendance", "period", { month, year, kelas, rombel, userId: user?.id ?? "anon", role: profile?.role ?? "none" }],
+    enabled: enabled && !!month && !!year && !!kelas && !!rombel,
+    queryFn: async () => {
+      let studentQuery = sb
+        .from("students")
+        .select("id")
+        .eq("kelas", Number(kelas))
+        .eq("rombel", rombel);
+
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && managedStudentIds.length === 0) return [];
+      if (managedStudentIds) studentQuery = studentQuery.in("id", managedStudentIds);
+
+      const { data: studentRows, error: studentError } = await studentQuery;
+      if (studentError) throw studentError;
+
+      const studentIds = (studentRows ?? []).map((student: { id: string }) => student.id);
+      if (studentIds.length === 0) return [];
+
+      const { data, error } = await sb
+        .from("attendance")
+        .select("id, student_id, month, year, present, sick, permission, absent, created_by, created_at, students(nama, kelas, rombel)")
+        .eq("month", month)
+        .eq("year", year)
+        .in("student_id", studentIds)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return (data ?? []) as AttendanceWithStudent[];
+    },
+  });
+};
+
+export const useAttendancePeriodSettings = ({
+  month,
+  year,
+  kelas,
+  rombel,
+  enabled,
+}: {
+  month: number;
+  year: number;
+  kelas: string;
+  rombel: string;
+  enabled: boolean;
+}) =>
+  useQuery({
+    queryKey: ["attendance-period-settings", { month, year, kelas, rombel }],
+    enabled: enabled && !!month && !!year && !!kelas && !!rombel,
+    queryFn: async () => {
+      const { data, error } = await sb
+        .from("attendance_period_settings")
+        .select("*")
+        .eq("month", month)
+        .eq("year", year)
+        .eq("kelas", Number(kelas))
+        .eq("rombel", rombel)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as AttendancePeriodSettings | null;
+    },
+  });
+
 export const useUpsertAttendance = () => {
   const qc = useQueryClient();
   const { user } = useAuth();
@@ -77,6 +226,60 @@ export const useUpsertAttendance = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["attendance"] });
+    },
+  });
+};
+
+export const useBulkUpsertAttendance = () => {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (rows: Omit<Attendance, "id" | "created_at" | "created_by">[]) => {
+      const payload = rows.map((row) => ({ ...row, created_by: user?.id ?? null }));
+      const { data, error } = await sb
+        .from("attendance")
+        .upsert(payload, { onConflict: "student_id,month,year" })
+        .select();
+      if (error) throw error;
+      return (data ?? []) as Attendance[];
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["attendance"] });
+    },
+  });
+};
+
+export const useUpsertAttendancePeriodSettings = () => {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (settings: {
+      month: number;
+      year: number;
+      kelas: number;
+      rombel: string;
+      effective_days: number;
+      is_locked?: boolean;
+      locked_by?: string | null;
+      locked_at?: string | null;
+    }) => {
+      const { data, error } = await sb
+        .from("attendance_period_settings")
+        .upsert(
+          {
+            ...settings,
+            created_by: user?.id ?? null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "month,year,kelas,rombel" }
+        )
+        .select()
+        .single();
+      if (error) throw error;
+      return data as AttendancePeriodSettings;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["attendance-period-settings"] });
     },
   });
 };

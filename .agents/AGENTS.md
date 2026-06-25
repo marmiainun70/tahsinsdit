@@ -55,6 +55,8 @@ Lakukan perubahan sekecil mungkin untuk memenuhi permintaan pengguna. Pertahanka
 - Pisahkan migration dari perubahan frontend.
 - Migration baru harus aman untuk data lama dan tidak boleh melakukan backfill spekulatif.
 - Jangan menjalankan query mutasi terhadap database live tanpa izin eksplisit.
+- Jika pengguna perlu menjalankan SQL manual di Supabase SQL Editor, buat file SQL terpisah di `outputs/<nama_tugas>_sql_parts/`.
+- Pecah SQL manual menjadi beberapa part jika melebihi sekitar 100-150 baris per sekali jalan, dan sertakan `README-URUTAN.txt` yang menjelaskan urutan eksekusi.
 
 ## Definisi selesai
 

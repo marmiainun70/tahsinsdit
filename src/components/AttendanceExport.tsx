@@ -7,7 +7,9 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-interface AttRow {
+type AutoTableDoc = jsPDF & { lastAutoTable?: { finalY: number } };
+
+export interface AttRow {
   id: string;
   month: number;
   year: number;
@@ -15,7 +17,7 @@ interface AttRow {
   sick: number;
   permission: number;
   absent: number;
-  students?: { nama: string; kelas: number; rombel: string };
+  students?: { nama: string; kelas: number; rombel: string } | null;
 }
 
 const loadImg = (url: string): Promise<string | null> =>
@@ -84,7 +86,7 @@ const AttendanceExport = ({ attendance, label = "Riwayat Absensi" }: Props) => {
     const pageH = doc.internal.pageSize.getHeight();
     const M = 12;
 
-    if (logo) { try { doc.addImage(logo, "PNG", M, M, 16, 16); } catch {} }
+    if (logo) { try { doc.addImage(logo, "PNG", M, M, 16, 16); } catch { /* ignore invalid image data */ } }
     doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(22, 101, 52);
     doc.text((settings?.nama_lembaga || "Lembaga").toUpperCase(), pageW / 2, M + 5, { align: "center" });
     if (settings?.alamat) {
@@ -119,13 +121,13 @@ const AttendanceExport = ({ attendance, label = "Riwayat Absensi" }: Props) => {
       margin: { left: M, right: M, bottom: 22 },
     });
 
-    let cursorY = (doc as any).lastAutoTable.finalY + 6;
+    let cursorY = ((doc as AutoTableDoc).lastAutoTable?.finalY ?? M + 28) + 6;
     if (cursorY + 40 > pageH - 14) { doc.addPage(); cursorY = M + 5; }
     const colW = (pageW - M * 2) / 2;
     const drawSig = (xC: number, lbl: string, nama: string, ttd: string | null) => {
       doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(40);
       doc.text(lbl, xC, cursorY, { align: "center" });
-      if (ttd) { try { doc.addImage(ttd, "PNG", xC - 18, cursorY + 3, 36, 16); } catch {} }
+      if (ttd) { try { doc.addImage(ttd, "PNG", xC - 18, cursorY + 3, 36, 16); } catch { /* ignore invalid image data */ } }
       doc.setDrawColor(120); doc.setLineWidth(0.2);
       doc.line(xC - 30, cursorY + 22, xC + 30, cursorY + 22);
       doc.setFont("helvetica", "bold"); doc.text(nama || "(.....................)", xC, cursorY + 27, { align: "center" });

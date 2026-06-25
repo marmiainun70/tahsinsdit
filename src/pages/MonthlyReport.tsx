@@ -1,1082 +1,549 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
-import { useStudents, useUpdateStudent, isTahsinDasar, IQRO_LEVELS, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AlertCircle, CheckCircle2, Loader2, Lock, Search, Unlock, Users } from "lucide-react";
+import { AttendanceStudent, AttendanceWithStudent, useAttendanceByPeriod, useAttendancePeriodSettings, useBulkUpsertAttendance, useStudentsForAttendance, useUpsertAttendancePeriodSettings } from "@/hooks/useAttendance";
+import { MONTH_NAMES } from "@/hooks/useMonthlyReports";
+import { useAuth } from "@/contexts/AuthContext";
+import { isTeacherRole } from "@/lib/roleLabels";
 import { useProfileMap } from "@/hooks/useProfiles";
-import {
-  useAllMonthlyReports, useAddMonthlyReport, useDeleteMonthlyReport, useUpdateMonthlyReport,
-  getAchievementStatus, getValidIqraPage, MONTH_NAMES, calcIqraPagesRead, calcIqraPagesSigned,
-  isIqraDecline, isIqraGraduated, getProgressStatus, buildIqraDeclineNote, buildTahfizhDeclineNote,
-  getTarget, detectDecline, DECLINE_AUTO_NOTE, getAutoNoteByProgress, getAutoNoteOptions,
-} from "@/hooks/useMonthlyReports";
-import { useAllAttendance, useUpsertAttendance } from "@/hooks/useAttendance";
-import { JUZ_LIST, JUZ_PAGE_LIST, JUZ_DATA, calcHafalanPages, calcHafalanPagesSigned, isTahfizhDecline } from "@/lib/juzData";
-import type { Database } from "@/integrations/supabase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import {
-  Plus, FileText, Loader2, Trash2, CheckCircle2, XCircle, Filter, Users, Pencil, Save, X,
-  AlertTriangle, Search, UserCheck, Thermometer, HandHeart, UserX, CalendarCheck, BookOpen, TrendingDown, MessageSquarePlus
-} from "lucide-react";
-import BulkMonthlyReportForm from "@/components/BulkMonthlyReportForm";
-import MonthlyReportExport from "@/components/MonthlyReportExport";
-import AttendanceExport from "@/components/AttendanceExport";
-import { NOTE_EMOTICON_WARNING, hasBlockedNoteEmoticon, removeBlockedNoteEmoticons } from "@/lib/noteValidation";
+import { DataTablePagination } from "@/components/DataTablePagination";
+import AttendanceExport, { type AttRow } from "@/components/AttendanceExport";
 
-type ReadingLevel = Database["public"]["Enums"]["reading_level"];
+type StatusFilter = "all" | "filled" | "empty";
 
-const IQRA_PAGES = [1, ...Array.from({ length: 29 }, (_, i) => i + 4)]; // 1, 4-32
+type AttendanceInputRow = {
+  studentId: string;
+  studentName: string;
+  level: string;
+  existingId?: string;
+  present: number;
+  sick: number;
+  permission: number;
+  absent: number;
+};
 
-const YEARS = [2026, 2027, 2028, 2029, 2030];
+const YEARS = [2025, 2026, 2027, 2028, 2029, 2030];
+const KELAS_LIST = [1, 2, 3, 4, 5, 6];
+const ROMBELS = ["A", "B", "C", "D"];
+const HISTORY_PAGE_SIZE = 25;
+
+const getTotal = (row: Pick<AttendanceInputRow, "present" | "sick" | "permission" | "absent">) =>
+  row.present + row.sick + row.permission + row.absent;
+
+const getStatus = (row: AttendanceInputRow, effectiveDays: number) => {
+  const total = getTotal(row);
+  if (!row.existingId && total === 0) return "Belum Diisi";
+  if (total === effectiveDays) return "Lengkap";
+  if (total < effectiveDays) return "Belum Lengkap";
+  return "Melebihi Hari Efektif";
+};
+
+const statusClass = (status: string) => {
+  if (status === "Lengkap") return "bg-emerald-100 text-emerald-700 border-emerald-200";
+  if (status === "Belum Lengkap") return "bg-yellow-100 text-yellow-800 border-yellow-200";
+  if (status === "Melebihi Hari Efektif") return "bg-red-100 text-red-700 border-red-200";
+  return "bg-muted text-muted-foreground border-border";
+};
+
+const normalizeNumber = (value: string) => Math.max(0, Math.floor(Number(value) || 0));
+
+const buildRows = (students: AttendanceStudent[], attendance: AttendanceWithStudent[]): AttendanceInputRow[] =>
+  students.map((student) => {
+    const existing = attendance.find((item) => item.student_id === student.id);
+    return {
+      studentId: student.id,
+      studentName: student.nama,
+      level: student.level,
+      existingId: existing?.id,
+      present: existing?.present ?? 0,
+      sick: existing?.sick ?? 0,
+      permission: existing?.permission ?? 0,
+      absent: existing?.absent ?? 0,
+    };
+  });
 
 const MonthlyReport = () => {
-  const { data: students = [], isLoading: loadingStudents } = useStudents();
-  const { data: reports = [], isLoading: loadingReports } = useAllMonthlyReports();
-  const { data: attendance = [], isLoading: loadingAtt } = useAllAttendance();
-  const addReport = useAddMonthlyReport();
-  const deleteReport = useDeleteMonthlyReport();
-  const updateReport = useUpdateMonthlyReport();
-  const updateStudent = useUpdateStudent();
-  const upsertAttendance = useUpsertAttendance();
+  const now = new Date();
+  const { user, profile } = useAuth();
   const profileMap = useProfileMap();
+  const isAdmin = profile?.role === "admin";
+  const teacherAccount = isTeacherRole(profile?.role);
 
-  // === Form state ===
-  const [selectedKelas, setSelectedKelas] = useState<string>("");
-  const [searchName, setSearchName] = useState("");
-  const [selectedStudentId, setSelectedStudentId] = useState("");
-  const [month, setMonth] = useState(new Date().getMonth() + 1);
-  const [year, setYear] = useState(2026);
-  const [startIqraLevel, setStartIqraLevel] = useState("1");
-  const [endIqraLevel, setEndIqraLevel] = useState("1");
-  const [startPage, setStartPage] = useState("1");
-  const [endPage, setEndPage] = useState("1");
-  // Tahfizh state
-  const [startJuz, setStartJuz] = useState("30");
-  const [endJuz, setEndJuz] = useState("30");
-  const [startJuzPage, setStartJuzPage] = useState("1");
-  const [endJuzPage, setEndJuzPage] = useState("1");
-  const [notes, setNotes] = useState("");
-  const [selectedLevel, setSelectedLevel] = useState<string>("");
+  const [month, setMonth] = useState(now.getMonth() + 1);
+  const [year, setYear] = useState(now.getFullYear());
+  const [kelas, setKelas] = useState("");
+  const [rombel, setRombel] = useState("");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [effectiveDays, setEffectiveDays] = useState(0);
+  const [rows, setRows] = useState<AttendanceInputRow[]>([]);
+  const [activeTab, setActiveTab] = useState("input");
+  const [historyPage, setHistoryPage] = useState(1);
+  const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
 
-  // Attendance fields
-  const [attPresent, setAttPresent] = useState(0);
-  const [attSick, setAttSick] = useState(0);
-  const [attPermission, setAttPermission] = useState(0);
-  const [attAbsent, setAttAbsent] = useState(0);
+  const hasClassFilter = Boolean(kelas && rombel);
 
-  // Level change confirmation
-  const [levelConfirmOpen, setLevelConfirmOpen] = useState(false);
-  const [pendingLevelChange, setPendingLevelChange] = useState<{ studentId: string; oldLevel: string; newLevel: string } | null>(null);
+  const studentsQuery = useStudentsForAttendance({
+    kelas,
+    rombel,
+    search,
+    enabled: hasClassFilter,
+  });
 
-  // Inline editing
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editData, setEditData] = useState<{ start_page: number; end_page: number; notes: string }>({ start_page: 1, end_page: 1, notes: "" });
+  const attendanceQuery = useAttendanceByPeriod({
+    month,
+    year,
+    kelas,
+    rombel,
+    enabled: hasClassFilter,
+  });
 
-  const showNoteEmoticonWarning = () => {
-    toast({ title: NOTE_EMOTICON_WARNING, variant: "destructive" });
-  };
+  const settingsQuery = useAttendancePeriodSettings({
+    month,
+    year,
+    kelas,
+    rombel,
+    enabled: hasClassFilter,
+  });
 
-  const handleNotesChange = (value: string) => {
-    if (hasBlockedNoteEmoticon(value)) {
-      showNoteEmoticonWarning();
-      setNotes(removeBlockedNoteEmoticons(value));
-      return;
-    }
-    setNotes(value);
-  };
+  const historyQuery = useAttendanceByPeriod({
+    month,
+    year,
+    kelas,
+    rombel,
+    enabled: activeTab === "history" && hasClassFilter,
+  });
 
-  const handleEditNotesChange = (value: string) => {
-    if (hasBlockedNoteEmoticon(value)) {
-      showNoteEmoticonWarning();
-      setEditData(d => ({ ...d, notes: removeBlockedNoteEmoticons(value) }));
-      return;
-    }
-    setEditData(d => ({ ...d, notes: value }));
-  };
+  const bulkUpsert = useBulkUpsertAttendance();
+  const upsertSettings = useUpsertAttendancePeriodSettings();
 
-  // Filters for history
-  const [filterKelas, setFilterKelas] = useState<string>("all");
-  const [filterMonth, setFilterMonth] = useState<string>("all");
-
-  // Bulk dialog
-  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
-
-  // === Derived ===
-  const studentsInKelas = useMemo(() => {
-    if (!selectedKelas) return [];
-    let s = students.filter(st => st.kelas === Number(selectedKelas));
-    if (searchName.trim()) {
-      const q = searchName.toLowerCase();
-      s = s.filter(st => st.nama.toLowerCase().includes(q));
-    }
-    return s.sort((a, b) => a.rombel.localeCompare(b.rombel) || a.nama.localeCompare(b.nama));
-  }, [students, selectedKelas, searchName]);
-
-  const selectedStudent = students.find(s => s.id === selectedStudentId);
-  const effectiveLevel = (selectedLevel || selectedStudent?.level || "Iqro 1") as ReadingLevel;
-  const isTahfizh = effectiveLevel === "Tahfizh";
-  const programType: "iqra" | "tahsin" | "tahfizh" = isTahfizh
-    ? "tahfizh"
-    : (isTahsinDasar(effectiveLevel) ? "iqra" : "tahsin");
-  const isIqra = programType === "iqra";
-  const target = getTarget(programType);
-
-  // Page calculations per program — SIGNED (bisa negatif = TURUN)
-  const validStart = isIqra ? getValidIqraPage(Number(startPage)) : Number(startPage);
-  const validEnd = isIqra ? getValidIqraPage(Number(endPage)) : Number(endPage);
-  const pagesSigned = isTahfizh
-    ? calcHafalanPagesSigned(Number(startJuz), Number(startJuzPage), Number(endJuz), Number(endJuzPage))
-    : isIqra
-      ? calcIqraPagesSigned(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
-      : (validEnd - validStart);
-  const pagesRead = pagesSigned; // simpan signed agar status TURUN tercatat
-  const progressStatus = getProgressStatus(pagesSigned, target); // achieved | not_achieved | stagnant | decline
-  const status = pagesSigned >= target ? "achieved" : pagesSigned < 0 ? "decline" : pagesSigned === 0 ? "stagnant" : "not_achieved";
-  const autoNoteOptions = getAutoNoteOptions(programType);
-  const progressAutoNote = getAutoNoteByProgress(programType, pagesSigned, target);
-
-  // Form-level decline detection (berdasarkan input awal vs akhir)
-  const isFormDecline = isTahfizh
-    ? isTahfizhDecline(Number(startJuz), Number(startJuzPage), Number(endJuz), Number(endJuzPage))
-    : isIqra
-      ? isIqraDecline(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
-      : (validEnd < validStart);
-
-  // Notif kenaikan level (Iqra hanya)
-  const isLevelGraduated = isIqra && isIqraGraduated(Number(endIqraLevel), validEnd);
-
-  // Find previous month report for this student (for carry-over & decline detection)
-  const prevReport = useMemo(() => {
-    if (!selectedStudentId) return null;
-    let pm = month - 1, py = year;
-    if (pm < 1) { pm = 12; py = year - 1; }
-    return reports.find(r => r.student_id === selectedStudentId && r.month === pm && r.year === py) || null;
-  }, [reports, selectedStudentId, month, year]);
-
-  // Detect decline (compared to previous month)
-  const isDecline = useMemo(() => detectDecline(
-    prevReport ? { program_type: prevReport.program_type, iqra_level: prevReport.iqra_level, end_iqra_level: (prevReport as any).end_iqra_level, end_page: prevReport.end_page } : null,
-    {
-      program_type: programType,
-      iqra_level: isIqra ? `Iqro ${startIqraLevel}` : effectiveLevel,
-      end_iqra_level: isIqra ? `Iqro ${endIqraLevel}` : effectiveLevel,
-      end_page: isTahfizh ? (Number(endJuz) - 1) * 20 + Number(endJuzPage) : validEnd,
-    }
-  ), [prevReport, programType, isIqra, isTahfizh, startIqraLevel, endIqraLevel, effectiveLevel, validEnd, endJuz, endJuzPage]);
-
-  const getProgramLabel = (level: string) => {
-    if (IQRO_LEVELS.includes(level as ReadingLevel)) return "Tahsin Dasar (Iqra)";
-    if (level === "Tahsin Dasar") return "Tahsin Dasar";
-    if (level === "Tahsin Lanjutan") return "Tahsin Lanjutan";
-    if (level === "Tahfizh") return "Tahfizh";
-    return level;
-  };
-
-  // History filters
-  const filteredReports = useMemo(() => {
-    let r = reports;
-    if (filterKelas !== "all") r = r.filter(rep => (rep as any).students?.kelas === Number(filterKelas));
-    if (filterMonth !== "all") r = r.filter(rep => rep.month === Number(filterMonth));
-    return r;
-  }, [reports, filterKelas, filterMonth]);
-
-  const filteredAttendance = useMemo(() => {
-    let a = attendance;
-    if (filterKelas !== "all") a = a.filter(att => (att as any).students?.kelas === Number(filterKelas));
-    if (filterMonth !== "all") a = a.filter(att => att.month === Number(filterMonth));
-    return a;
-  }, [attendance, filterKelas, filterMonth]);
-
-  // === Handlers ===
-  const resetForm = () => {
-    setSelectedStudentId("");
-    setSelectedLevel("");
-    setStartPage("1");
-    setEndPage("1");
-    setNotes("");
-    setStartIqraLevel("1");
-    setEndIqraLevel("1");
-    setStartJuz("30");
-    setEndJuz("30");
-    setStartJuzPage("1");
-    setEndJuzPage("1");
-    setAttPresent(0);
-    setAttSick(0);
-    setAttPermission(0);
-    setAttAbsent(0);
-  };
-
-  const handleSelectStudent = (id: string) => {
-    setSelectedStudentId(id);
-    setSelectedLevel("");
-    const st = students.find(s => s.id === id);
-    if (st && IQRO_LEVELS.includes(st.level as ReadingLevel)) {
-      const num = st.level.replace("Iqro ", "");
-      setStartIqraLevel(num);
-      setEndIqraLevel(num);
-    }
-  };
-
-  // === AUTO CARRY-OVER: prefill awal bulan dari akhir bulan lalu ===
   useEffect(() => {
-    if (!selectedStudentId || !prevReport) return;
-    if (prevReport.program_type === "iqra") {
-      const prevEndLevel = ((prevReport as any).end_iqra_level || prevReport.iqra_level || "Iqro 1").replace("Iqro ", "");
-      const prevEndPage = prevReport.end_page;
-      // lanjut ke halaman berikutnya
-      let nextLevel = prevEndLevel;
-      let nextPage = prevEndPage + 1;
-      // skip halaman 2,3 → 4
-      if (nextPage === 2 || nextPage === 3) nextPage = 4;
-      // jika sudah halaman > 32, lanjut ke level berikutnya
-      if (nextPage > 32) {
-        const lvNum = Number(prevEndLevel);
-        if (lvNum < 6) { nextLevel = String(lvNum + 1); nextPage = 1; }
-        else { nextPage = 32; }
-      }
-      setStartIqraLevel(nextLevel);
-      setStartPage(String(nextPage));
-      setEndIqraLevel(nextLevel);
-      setEndPage(String(nextPage));
-    } else if (prevReport.program_type === "tahfizh") {
-      // Ambil juz akhir & halaman akhir dari laporan sebelumnya
-      const prevEndJuzStr = (prevReport as any).end_iqra_level || prevReport.iqra_level || "Juz 30";
-      const prevEndJuz = Number(String(prevEndJuzStr).replace(/\D/g, "")) || 30;
-      const prevEndPage = Math.max(1, Math.min(20, prevReport.end_page || 1));
-      // Lanjut ke posisi linear berikutnya (naik = juz menurun atau halaman menurun dlm 1 juz)
-      // Default: lanjut +1 halaman dlm juz yang sama; jika sudah hal 20, pindah ke juz berikutnya (juz - 1)
-      let nextJuz = prevEndJuz;
-      let nextPage = prevEndPage + 1;
-      if (nextPage > 20) {
-        if (nextJuz > 1) { nextJuz = nextJuz - 1; nextPage = 1; }
-        else { nextPage = 20; }
-      }
-      setStartJuz(String(nextJuz));
-      setStartJuzPage(String(nextPage));
-      setEndJuz(String(nextJuz));
-      setEndJuzPage(String(nextPage));
-    } else {
-      const np = prevReport.end_page + 1;
-      setStartPage(String(np));
-      setEndPage(String(np));
-    }
-  }, [selectedStudentId, prevReport]);
+    setRows(buildRows(studentsQuery.data ?? [], attendanceQuery.data ?? []));
+  }, [studentsQuery.data, attendanceQuery.data]);
 
-  const handleSubmit = async () => {
-    if (!selectedStudentId) {
-      toast({ title: "Pilih siswa terlebih dahulu", variant: "destructive" });
+  useEffect(() => {
+    setEffectiveDays(settingsQuery.data?.effective_days ?? 0);
+  }, [settingsQuery.data?.id, settingsQuery.data?.effective_days]);
+
+  useEffect(() => {
+    setHistoryPage(1);
+  }, [month, year, kelas, rombel, activeTab]);
+
+  const visibleRows = useMemo(() => {
+    if (statusFilter === "all") return rows;
+    return rows.filter((row) => {
+      const status = getStatus(row, effectiveDays);
+      return statusFilter === "filled" ? status !== "Belum Diisi" : status === "Belum Diisi";
+    });
+  }, [rows, statusFilter, effectiveDays]);
+
+  const summary = useMemo(() => {
+    const total = rows.length;
+    const filled = rows.filter((row) => getStatus(row, effectiveDays) !== "Belum Diisi").length;
+    const empty = total - filled;
+    const pct = total ? Math.round((filled / total) * 100) : 0;
+    return { total, filled, empty, pct };
+  }, [rows, effectiveDays]);
+
+  const isLocked = Boolean(settingsQuery.data?.is_locked);
+  const saveDisabled = bulkUpsert.isPending || upsertSettings.isPending || (teacherAccount && isLocked);
+
+  const updateRow = (studentId: string, field: "present" | "sick" | "permission" | "absent", value: string) => {
+    setRows((current) =>
+      current.map((row) => row.studentId === studentId ? { ...row, [field]: normalizeNumber(value) } : row)
+    );
+  };
+
+  const scrollToRow = (studentId: string) => {
+    rowRefs.current[studentId]?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
+  const validateRows = () => {
+    if (!hasClassFilter) return "Pilih kelas dan rombel terlebih dahulu.";
+    if (effectiveDays <= 0) return "Jumlah Hari Efektif wajib lebih dari 0.";
+
+    for (const row of rows) {
+      const values = [row.present, row.sick, row.permission, row.absent];
+      if (values.some((value) => value < 0)) {
+        scrollToRow(row.studentId);
+        return `${row.studentName}: angka absensi tidak boleh negatif.`;
+      }
+
+      const total = getTotal(row);
+      if (total !== effectiveDays) {
+        scrollToRow(row.studentId);
+        if (total < effectiveDays) return `${row.studentName}: total absensi ${total}, masih kurang dari hari efektif ${effectiveDays}.`;
+        return `${row.studentName}: total absensi ${total}, melebihi hari efektif ${effectiveDays}.`;
+      }
+    }
+
+    return null;
+  };
+
+  const saveAll = async () => {
+    const validationError = validateRows();
+    if (validationError) {
+      toast({ title: "Absensi belum valid", description: validationError, variant: "destructive" });
       return;
     }
-    // CATATAN: data TURUN tetap boleh disimpan (sesuai aturan baru), hanya ditandai.
-    // Validasi keras dihapus untuk semua program; cukup tampilkan warning visual.
-
-    const hasLevelChange = selectedStudent && selectedLevel && selectedLevel !== selectedStudent.level;
-
-    // Susun catatan otomatis: penurunan vs antar bulan
-    let autoNote = "";
-    if (isFormDecline) {
-      autoNote = isTahfizh
-        ? buildTahfizhDeclineNote(Number(startJuz), Number(startJuzPage), Number(endJuz), Number(endJuzPage))
-        : isIqra
-          ? buildIqraDeclineNote(Number(startIqraLevel), validStart, Number(endIqraLevel), validEnd)
-          : DECLINE_AUTO_NOTE;
-    } else if (isDecline) {
-      autoNote = DECLINE_AUTO_NOTE;
-    }
-    if (isLevelGraduated) {
-      const grad = "Siswa sudah menyelesaikan Tahsin Dasar (Iqra 6). Bacaan dapat diarahkan ke tahap berikutnya, yaitu Tahsin Lanjutan atau Tahfizh, sesuai kesiapan siswa.";
-      autoNote = autoNote ? `${autoNote}\n\n${grad}` : grad;
-    }
-    const finalNotes = autoNote ? (notes ? `${notes}\n\n${autoNote}` : autoNote) : notes;
-    const totalAttendance = attPresent + attSick + attPermission + attAbsent;
-    const attendancePercentage =
-      totalAttendance > 0 ? Math.round((attPresent / totalAttendance) * 100) : 0;
 
     try {
-      // Save monthly report
-      await addReport.mutateAsync({
-        student_id: selectedStudentId,
-        month, year,
-        program_type: programType,
-        iqra_level: isIqra ? `Iqro ${startIqraLevel}` : (isTahfizh ? `Juz ${startJuz}` : null),
-        end_iqra_level: isIqra ? `Iqro ${endIqraLevel}` : (isTahfizh ? `Juz ${endJuz}` : null),
-        start_page: isTahfizh ? Number(startJuzPage) : validStart,
-        end_page: isTahfizh ? Number(endJuzPage) : validEnd,
-        pages_read: pagesRead,
-        target_pages: target,
-        attendance_percentage: attendancePercentage,
-        achievement_status: status,
-        notes: finalNotes,
+      await upsertSettings.mutateAsync({
+        month,
+        year,
+        kelas: Number(kelas),
+        rombel,
+        effective_days: effectiveDays,
+        is_locked: isLocked,
+        locked_by: settingsQuery.data?.locked_by ?? null,
+        locked_at: settingsQuery.data?.locked_at ?? null,
       });
 
-      // Save attendance if any value > 0
-      if (attPresent > 0 || attSick > 0 || attPermission > 0 || attAbsent > 0) {
-        await upsertAttendance.mutateAsync({
-          student_id: selectedStudentId,
-          month, year,
-          present: attPresent,
-          sick: attSick,
-          permission: attPermission,
-          absent: attAbsent,
-        });
-      }
+      const saved = await bulkUpsert.mutateAsync(rows.map((row) => ({
+        student_id: row.studentId,
+        month,
+        year,
+        present: row.present,
+        sick: row.sick,
+        permission: row.permission,
+        absent: row.absent,
+      })));
 
-      // Auto-update student level if end Iqra level is higher
-      if (isIqra && selectedStudent) {
-        const endLevelStr = `Iqro ${endIqraLevel}` as ReadingLevel;
-        const currentLevelIdx = LEVELS.indexOf(selectedStudent.level);
-        const endLevelIdx = LEVELS.indexOf(endLevelStr);
-        if (endLevelIdx > currentLevelIdx) {
-          await updateStudent.mutateAsync({
-            id: selectedStudent.id,
-            level: endLevelStr,
-          });
-          toast({ title: `Laporan disimpan. Level siswa otomatis naik ke ${endLevelStr}`, description: `${selectedStudent.nama}: ${selectedStudent.level} ke ${endLevelStr}` });
-          resetForm();
-          return;
-        }
-      }
-
-      // Manual level override confirmation
-      if (hasLevelChange && selectedStudent) {
-        setPendingLevelChange({
-          studentId: selectedStudent.id,
-          oldLevel: selectedStudent.level,
-          newLevel: selectedLevel,
-        });
-        setLevelConfirmOpen(true);
-      }
-
-      toast({ title: "Laporan dan absensi berhasil disimpan" });
-      resetForm();
-    } catch (e: any) {
-      if (e.message?.includes("duplicate") || e.message?.includes("unique")) {
-        toast({ title: "Laporan untuk bulan ini sudah ada", variant: "destructive" });
-      } else {
-        toast({ title: "Gagal menyimpan", description: e.message, variant: "destructive" });
-      }
-    }
-  };
-
-  const confirmLevelUpdate = async () => {
-    if (!pendingLevelChange) return;
-    try {
-      await updateStudent.mutateAsync({
-        id: pendingLevelChange.studentId,
-        level: pendingLevelChange.newLevel as ReadingLevel,
+      toast({ title: "Absensi berhasil disimpan", description: `${saved.length} data absensi tersimpan.` });
+      await Promise.all([attendanceQuery.refetch(), settingsQuery.refetch()]);
+    } catch (error: unknown) {
+      toast({
+        title: "Gagal menyimpan absensi",
+        description: error instanceof Error ? error.message : "Terjadi kesalahan saat menyimpan.",
+        variant: "destructive",
       });
-      toast({ title: `Level siswa berhasil diubah ke ${pendingLevelChange.newLevel}` });
-    } catch {
-      toast({ title: "Gagal mengubah level", variant: "destructive" });
     }
-    setLevelConfirmOpen(false);
-    setPendingLevelChange(null);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Hapus laporan ini?")) return;
-    await deleteReport.mutateAsync(id);
-    toast({ title: "Laporan dihapus" });
-  };
-
-  const startEdit = (report: any) => {
-    setEditingId(report.id);
-    setEditData({ start_page: report.start_page, end_page: report.end_page, notes: report.notes || "" });
-  };
-
-  const saveEdit = async (report: any) => {
-    const pt = report.program_type;
-    const isIq = pt === "iqra";
-    const vs = isIq ? getValidIqraPage(editData.start_page) : editData.start_page;
-    const ve = isIq ? getValidIqraPage(editData.end_page) : editData.end_page;
-    const pr = Math.max(0, ve - vs);
-    const st = getAchievementStatus(pr, report.target_pages);
+  const toggleLock = async () => {
+    if (!isAdmin || !hasClassFilter) return;
+    const nextLocked = !isLocked;
     try {
-      await updateReport.mutateAsync({ id: report.id, start_page: vs, end_page: ve, pages_read: pr, achievement_status: st, notes: editData.notes });
-      toast({ title: "Laporan diperbarui" });
-      setEditingId(null);
-    } catch (e: any) {
-      toast({ title: "Gagal memperbarui", description: e.message, variant: "destructive" });
+      await upsertSettings.mutateAsync({
+        month,
+        year,
+        kelas: Number(kelas),
+        rombel,
+        effective_days: effectiveDays,
+        is_locked: nextLocked,
+        locked_by: nextLocked ? user?.id ?? null : null,
+        locked_at: nextLocked ? new Date().toISOString() : null,
+      });
+      toast({ title: nextLocked ? "Periode absensi dikunci" : "Kunci periode dibuka" });
+      await settingsQuery.refetch();
+    } catch (error: unknown) {
+      toast({
+        title: "Gagal mengubah kunci periode",
+        description: error instanceof Error ? error.message : "Coba lagi beberapa saat.",
+        variant: "destructive",
+      });
     }
   };
 
-  if (loadingStudents || loadingReports || loadingAtt) {
-    return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>;
-  }
+  const historyRows = historyQuery.data ?? [];
+  const historyTotalPages = Math.max(1, Math.ceil(historyRows.length / HISTORY_PAGE_SIZE));
+  const pagedHistoryRows = historyRows.slice((historyPage - 1) * HISTORY_PAGE_SIZE, historyPage * HISTORY_PAGE_SIZE);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Laporan Bulanan & Absensi</h1>
-          <p className="text-sm text-muted-foreground">Catat progres bacaan dan kehadiran siswa</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-3xl font-bold text-foreground">Absensi Bulanan</h1>
+            {isLocked && <Badge className="bg-slate-700 text-white hover:bg-slate-700">Dikunci</Badge>}
+          </div>
+          <p className="text-muted-foreground mt-1">Input dan pantau kelengkapan absensi siswa setiap bulan.</p>
         </div>
-        <div className="flex gap-2">
-          <MonthlyReportExport reports={reports as any} />
-          <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="gap-2"><Users className="w-4 h-4" /> Input Massal</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader><DialogTitle>Input Laporan Massal</DialogTitle></DialogHeader>
-              <BulkMonthlyReportForm onClose={() => setBulkDialogOpen(false)} />
-            </DialogContent>
-          </Dialog>
-        </div>
+        {isAdmin && hasClassFilter && (
+          <Button type="button" variant={isLocked ? "outline" : "secondary"} onClick={toggleLock} disabled={upsertSettings.isPending}>
+            {upsertSettings.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : isLocked ? <Unlock className="w-4 h-4 mr-2" /> : <Lock className="w-4 h-4 mr-2" />}
+            {isLocked ? "Buka Kunci Periode" : "Kunci Absensi Periode Ini"}
+          </Button>
+        )}
       </div>
 
-      <Tabs defaultValue="input" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="input" className="gap-2"><Plus className="w-4 h-4" /> Input Laporan</TabsTrigger>
-          <TabsTrigger value="history" className="gap-2"><FileText className="w-4 h-4" /> Riwayat</TabsTrigger>
-        </TabsList>
-
-        {/* === TAB: INPUT === */}
-        <TabsContent value="input" className="space-y-4 mt-4">
-          {/* Step 1: Pilih Kelas */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">1</span>
-                Pilih Kelas & Siswa
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex gap-3 flex-wrap items-end">
-                <div className="w-40">
-                  <Label className="text-xs">Kelas</Label>
-                  <Select value={selectedKelas} onValueChange={v => { setSelectedKelas(v); setSelectedStudentId(""); setSearchName(""); }}>
-                    <SelectTrigger><SelectValue placeholder="Pilih Kelas" /></SelectTrigger>
-                    <SelectContent>
-                      {[1,2,3,4,5,6].map(k => <SelectItem key={k} value={String(k)}>Kelas {k}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {selectedKelas && (
-                  <div className="flex-1 min-w-[200px]">
-                    <Label className="text-xs">Cari Nama Siswa</Label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Ketik nama siswa..."
-                        value={searchName}
-                        onChange={e => setSearchName(e.target.value)}
-                        className="pl-9"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {selectedKelas && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border rounded-lg p-2">
-                  {studentsInKelas.length === 0 ? (
-                    <p className="text-sm text-muted-foreground col-span-full text-center py-4">Tidak ada siswa ditemukan</p>
-                  ) : (
-                    studentsInKelas.map(s => (
-                      <button
-                        key={s.id}
-                        onClick={() => handleSelectStudent(s.id)}
-                        className={`text-left px-3 py-2 rounded-lg text-sm transition-all border ${
-                          selectedStudentId === s.id
-                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                            : "bg-card hover:bg-muted border-border"
-                        }`}
-                      >
-                        <span className="font-medium">{s.nama}</span>
-                        <span className="text-xs ml-1 opacity-70">{s.rombel} · {s.level}</span>
-                      </button>
-                    ))
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Step 2: Bulan & Tahun */}
-          {selectedStudentId && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">2</span>
-                  Periode
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs">Bulan</Label>
-                    <Select value={String(month)} onValueChange={v => setMonth(Number(v))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {MONTH_NAMES.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Tahun</Label>
-                    <Select value={String(year)} onValueChange={v => setYear(Number(v))}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {YEARS.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Step 3: Halaman & Level */}
-          {selectedStudentId && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">3</span>
-                  Progres Bacaan
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Level / Program Override */}
-                <div>
-                  <Label className="text-xs">Level / Program <span className="text-muted-foreground">(bisa diubah)</span></Label>
-                  <Select value={effectiveLevel} onValueChange={v => setSelectedLevel(v)}>
-                    <SelectTrigger className={selectedLevel && selectedLevel !== selectedStudent?.level ? "ring-2 ring-amber-400 bg-amber-50" : ""}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LEVELS.map(l => (
-                        <SelectItem key={l} value={l}>{l} {l === selectedStudent?.level ? "(asal)" : ""}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedLevel && selectedLevel !== selectedStudent?.level && (
-                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                      <AlertTriangle className="w-3 h-3" /> Level akan diubah permanen setelah konfirmasi
-                    </p>
-                  )}
-                </div>
-
-                {/* Iqra Level + Page Selection */}
-                {isIqra && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Start: Level + Page */}
-                      <div className="space-y-2 p-3 border rounded-lg bg-muted/30">
-                        <Label className="text-xs font-semibold text-muted-foreground">📖 Halaman Awal</Label>
-                        <div>
-                          <Label className="text-xs">Tingkatan Iqra Awal</Label>
-                          <div className="flex gap-1 mt-1">
-                            {[1,2,3,4,5,6].map(lv => (
-                              <button
-                                key={lv}
-                                onClick={() => {
-                                  setStartIqraLevel(String(lv));
-                                  if (Number(endIqraLevel) < lv) setEndIqraLevel(String(lv));
-                                }}
-                                className={`w-9 h-9 rounded-lg text-sm font-bold transition-all ${
-                                  startIqraLevel === String(lv)
-                                    ? "bg-primary text-primary-foreground shadow-md"
-                                    : "bg-muted text-muted-foreground hover:bg-accent"
-                                }`}
-                              >
-                                {lv}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <Label className="text-xs">Halaman</Label>
-                          <Select value={startPage} onValueChange={setStartPage}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {IQRA_PAGES.map(p => <SelectItem key={p} value={String(p)}>Halaman {p}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      {/* End: Level + Page */}
-                      <div className="space-y-2 p-3 border rounded-lg bg-muted/30">
-                        <Label className="text-xs font-semibold text-muted-foreground">📕 Halaman Akhir</Label>
-                        <div>
-                          <Label className="text-xs">Tingkatan Iqra Akhir</Label>
-                          <div className="flex gap-1 mt-1">
-                            {[1,2,3,4,5,6].map(lv => (
-                              <button
-                                key={lv}
-                                onClick={() => setEndIqraLevel(String(lv))}
-                                className={`w-9 h-9 rounded-lg text-sm font-bold transition-all ${
-                                  endIqraLevel === String(lv)
-                                    ? "bg-primary text-primary-foreground shadow-md"
-                                    : "bg-muted text-muted-foreground hover:bg-accent"
-                                }`}
-                              >
-                                {lv}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <Label className="text-xs">Halaman</Label>
-                          <Select value={endPage} onValueChange={setEndPage}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {IQRA_PAGES.map(p => <SelectItem key={p} value={String(p)}>Halaman {p}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-
-                    {startIqraLevel !== endIqraLevel && (
-                      <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                        <span>Siswa naik level dari <strong>Iqro {startIqraLevel}</strong> ke <strong>Iqro {endIqraLevel}</strong> dalam bulan ini</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Tahsin (non-Iqra, non-Tahfizh) page inputs */}
-                {!isIqra && !isTahfizh && (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-xs">Halaman Awal</Label>
-                      <Input type="number" min={1} value={startPage} onChange={e => setStartPage(e.target.value)} />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Halaman Akhir</Label>
-                      <Input type="number" min={1} value={endPage} onChange={e => setEndPage(e.target.value)} />
-                    </div>
-                  </div>
-                )}
-
-                {/* TAHFIZH: Hafalan Awal & Hafalan Terakhir (Juz + Halaman 1-20) */}
-                {isTahfizh && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Hafalan Awal */}
-                      <div className="space-y-2 p-3 border-2 border-purple-200 rounded-lg bg-purple-50/50">
-                        <Label className="text-xs font-semibold text-purple-700 flex items-center gap-1">
-                          <BookOpen className="w-3 h-3" /> 📖 Hafalan Awal
-                        </Label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-xs">Juz</Label>
-                            <Select value={startJuz} onValueChange={setStartJuz}>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                              <SelectContent className="max-h-60">
-                                {JUZ_LIST.map(j => <SelectItem key={j} value={String(j)}>Juz {j}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label className="text-xs">Halaman</Label>
-                            <Select value={startJuzPage} onValueChange={setStartJuzPage}>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                              <SelectContent className="max-h-60">
-                                {JUZ_PAGE_LIST.map(p => <SelectItem key={p} value={String(p)}>Hal {p}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Hafalan Terakhir */}
-                      <div className="space-y-2 p-3 border-2 border-purple-200 rounded-lg bg-purple-50/50">
-                        <Label className="text-xs font-semibold text-purple-700 flex items-center gap-1">
-                          <BookOpen className="w-3 h-3" /> 📕 Hafalan Terakhir
-                        </Label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-xs">Juz</Label>
-                            <Select value={endJuz} onValueChange={setEndJuz}>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                              <SelectContent className="max-h-60">
-                                {JUZ_LIST.map(j => <SelectItem key={j} value={String(j)}>Juz {j}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label className="text-xs">Halaman</Label>
-                            <Select value={endJuzPage} onValueChange={setEndJuzPage}>
-                              <SelectTrigger><SelectValue /></SelectTrigger>
-                              <SelectContent className="max-h-60">
-                                {JUZ_PAGE_LIST.map(p => <SelectItem key={p} value={String(p)}>Hal {p}</SelectItem>)}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Daftar surah otomatis */}
-                    <div className="rounded-lg border border-purple-200 bg-white p-3">
-                      <p className="text-xs font-semibold text-purple-700 mb-2">📚 Surah dalam Juz {endJuz}</p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {(JUZ_DATA[Number(endJuz)] || []).map((s, i) => (
-                          <span key={i} className="text-xs bg-purple-100 text-purple-700 rounded px-2 py-0.5">{s.label}</span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Banner MUNDUR (input awal vs akhir) */}
-                {isFormDecline && (
-                  <div className="flex items-start gap-2 text-sm bg-red-50 border-2 border-red-300 rounded-lg px-3 py-2">
-                    <TrendingDown className="w-5 h-5 flex-shrink-0 text-red-600 mt-0.5" />
-                    <div className="text-red-700">
-                      <p className="font-semibold">Hafalan/Bacaan akhir lebih rendah dari awal (MUNDUR).</p>
-                      <p className="text-xs mt-1">Data tetap bisa disimpan. Catatan otomatis akan ditambahkan.</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Banner Penurunan antar bulan */}
-                {!isFormDecline && isDecline && (
-                  <div className="flex items-start gap-2 text-sm bg-amber-50 border-2 border-amber-200 rounded-lg px-3 py-2">
-                    <TrendingDown className="w-5 h-5 flex-shrink-0 text-amber-600 mt-0.5" />
-                    <div className="text-amber-700">
-                      <p className="font-semibold">Penurunan progres dibanding bulan sebelumnya.</p>
-                      <p className="text-xs mt-1">Catatan otomatis akan ditambahkan pada laporan ini.</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Banner NAIK LEVEL (Iqra selesai jilid 6 hal 32) */}
-                {isLevelGraduated && (
-                  <div className="flex items-start gap-2 text-sm bg-emerald-50 border-2 border-emerald-300 rounded-lg px-3 py-2">
-                    <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600 mt-0.5" />
-                    <div className="text-emerald-700">
-                      <p className="font-semibold">Siswa telah menyelesaikan Tahsin Dasar (Iqra 6).</p>
-                      <p className="text-xs mt-1">Naik ke level selanjutnya: Tahsin Lanjutan / Tahfizh.</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Summary */}
-                <div className="p-3 bg-muted rounded-xl grid grid-cols-3 gap-3 text-center text-sm">
-                  <div>
-                    <p className="text-muted-foreground text-xs">Total Halaman</p>
-                    <p className={`text-lg font-bold ${pagesSigned < 0 ? "text-red-600" : "text-foreground"}`}>
-                      {pagesSigned > 0 ? `+${pagesSigned}` : pagesSigned}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Target</p>
-                    <p className="text-lg font-bold text-foreground">{target}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Status</p>
-                    {progressStatus === "achieved" && (
-                      <Badge className="mt-1 bg-emerald-600 hover:bg-emerald-700">Tercapai</Badge>
-                    )}
-                    {progressStatus === "not_achieved" && (
-                      <Badge className="mt-1 bg-amber-500 hover:bg-amber-600 text-white">Belum Tercapai</Badge>
-                    )}
-                    {progressStatus === "stagnant" && (
-                      <Badge variant="secondary" className="mt-1">Tetap</Badge>
-                    )}
-                    {progressStatus === "decline" && (
-                      <Badge variant="destructive" className="mt-1">MUNDUR</Badge>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <Label className="text-xs">Catatan Guru</Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button type="button" variant="outline" size="sm" className="h-8 gap-1 text-xs">
-                          <MessageSquarePlus className="w-3.5 h-3.5" />
-                          Catatan Otomatis
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[360px] p-2 space-y-1">
-                        <p className="text-xs font-semibold px-1 py-1">Pilih catatan sesuai tingkatan</p>
-                        {autoNoteOptions.map(option => (
-                          <button
-                            key={option.key}
-                            type="button"
-                            onClick={() => handleNotesChange(option.note)}
-                            className="block w-full text-left text-xs p-2 rounded hover:bg-accent"
-                          >
-                            <span className="font-semibold">{option.label}</span>
-                            <span className="block whitespace-pre-line text-muted-foreground mt-1">{option.note}</span>
-                          </button>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => handleNotesChange(progressAutoNote)}
-                          className="block w-full text-left text-xs p-2 rounded bg-primary/10 hover:bg-primary/20 font-medium"
-                        >
-                          Gunakan sesuai progres saat ini
-                        </button>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <Textarea value={notes} onChange={e => handleNotesChange(e.target.value)} placeholder="Catatan perkembangan siswa..." rows={2} />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Step 4: Absensi */}
-          {selectedStudentId && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">4</span>
-                  <CalendarCheck className="w-4 h-4" /> Kehadiran / Absensi Bulan Ini
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div>
-                    <Label className="flex items-center gap-1 text-xs"><UserCheck className="w-3 h-3 text-emerald-500" /> Hadir</Label>
-                    <Input type="number" min={0} value={attPresent} onChange={e => setAttPresent(Number(e.target.value))} />
-                  </div>
-                  <div>
-                    <Label className="flex items-center gap-1 text-xs"><Thermometer className="w-3 h-3 text-amber-500" /> Sakit</Label>
-                    <Input type="number" min={0} value={attSick} onChange={e => setAttSick(Number(e.target.value))} />
-                  </div>
-                  <div>
-                    <Label className="flex items-center gap-1 text-xs"><HandHeart className="w-3 h-3 text-blue-500" /> Izin</Label>
-                    <Input type="number" min={0} value={attPermission} onChange={e => setAttPermission(Number(e.target.value))} />
-                  </div>
-                  <div>
-                    <Label className="flex items-center gap-1 text-xs"><UserX className="w-3 h-3 text-red-500" /> Alfa</Label>
-                    <Input type="number" min={0} value={attAbsent} onChange={e => setAttAbsent(Number(e.target.value))} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Submit */}
-          {selectedStudentId && (
-            <Button onClick={handleSubmit} disabled={addReport.isPending} className="w-full gap-2 h-12 text-base">
-              {addReport.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-              Simpan Laporan & Absensi
-            </Button>
-          )}
-        </TabsContent>
-
-        {/* === TAB: HISTORY === */}
-        <TabsContent value="history" className="space-y-4 mt-4">
-          {/* Filters */}
-          <div className="flex gap-3 flex-wrap">
-            <Select value={filterKelas} onValueChange={setFilterKelas}>
-              <SelectTrigger className="w-36"><Filter className="w-3 h-3 mr-1" /><SelectValue placeholder="Semua Kelas" /></SelectTrigger>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Filter Utama</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+          <div className="space-y-2">
+            <Label>Bulan</Label>
+            <Select value={String(month)} onValueChange={(value) => setMonth(Number(value))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Semua Kelas</SelectItem>
-                {[1,2,3,4,5,6].map(k => <SelectItem key={k} value={String(k)}>Kelas {k}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={filterMonth} onValueChange={setFilterMonth}>
-              <SelectTrigger className="w-40"><SelectValue placeholder="Semua Bulan" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Bulan</SelectItem>
-                {MONTH_NAMES.map((m, i) => <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>)}
+                {MONTH_NAMES.map((name, index) => (
+                  <SelectItem key={name} value={String(index + 1)}>{name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-
-          {/* Reports Table */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-2">
-              <CardTitle className="text-base">Riwayat Laporan ({filteredReports.length})</CardTitle>
-              <MonthlyReportExport reports={filteredReports as any} />
-            </CardHeader>
-            <CardContent>
-              {filteredReports.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">Belum ada laporan</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Siswa</TableHead>
-                        <TableHead>Kelas</TableHead>
-                        <TableHead>Level</TableHead>
-                        <TableHead>Bulan</TableHead>
-                        <TableHead className="text-center">Awal</TableHead>
-                        <TableHead className="text-center">Akhir</TableHead>
-                        <TableHead className="text-center">Total</TableHead>
-                        <TableHead className="text-center">Target</TableHead>
-                        <TableHead className="text-center">Status</TableHead>
-                        <TableHead>Catatan</TableHead>
-                        <TableHead className="w-20">Aksi</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredReports.map(r => {
-                        const st = (r as any).students;
-                        const levelColor = st?.level ? (LEVEL_COLORS[st.level as ReadingLevel] ?? "") : "";
-                        const isEditing = editingId === r.id;
-
-                        if (isEditing) {
-                          const isIq = r.program_type === "iqra";
-                          const vs = isIq ? getValidIqraPage(editData.start_page) : editData.start_page;
-                          const ve = isIq ? getValidIqraPage(editData.end_page) : editData.end_page;
-                          const pr = Math.max(0, ve - vs);
-                          const editStatus = getAchievementStatus(pr, r.target_pages);
-                          return (
-                            <TableRow key={r.id} className="bg-primary/5">
-                              <TableCell className="font-medium">{st?.nama ?? "-"}</TableCell>
-                              <TableCell>{st?.kelas ?? "-"}{st?.rombel ?? ""}</TableCell>
-                              <TableCell><Badge className={`text-xs ${levelColor}`}>{st?.level ?? r.iqra_level ?? r.program_type}</Badge></TableCell>
-                              <TableCell>{MONTH_NAMES[r.month - 1]} {r.year}</TableCell>
-                              <TableCell><Input type="number" className="h-8 w-16 text-center text-sm" value={editData.start_page} onChange={e => setEditData(d => ({...d, start_page: Number(e.target.value)}))} /></TableCell>
-                              <TableCell><Input type="number" className="h-8 w-16 text-center text-sm" value={editData.end_page} onChange={e => setEditData(d => ({...d, end_page: Number(e.target.value)}))} /></TableCell>
-                              <TableCell className="text-center font-bold">{pr}</TableCell>
-                              <TableCell className="text-center">{r.target_pages}</TableCell>
-                              <TableCell className="text-center">{editStatus === "achieved" ? <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" /> : <XCircle className="w-5 h-5 text-destructive mx-auto" />}</TableCell>
-                              <TableCell><Input className="h-8 text-sm min-w-[80px]" value={editData.notes} onChange={e => handleEditNotesChange(e.target.value)} /></TableCell>
-                              <TableCell>
-                                <div className="flex gap-1">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => saveEdit(r)}><Save className="w-4 h-4 text-emerald-600" /></Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingId(null)}><X className="w-4 h-4" /></Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        }
-
-                        return (
-                          <TableRow key={r.id}>
-                            <TableCell className="font-medium">{st?.nama ?? "-"}</TableCell>
-                            <TableCell>{st?.kelas ?? "-"}{st?.rombel ?? ""}</TableCell>
-                            <TableCell>
-                              <Badge className={`text-xs ${levelColor}`}>
-                                {r.iqra_level || r.program_type}
-                                {(r as any).end_iqra_level && (r as any).end_iqra_level !== r.iqra_level && ` → ${(r as any).end_iqra_level}`}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{MONTH_NAMES[r.month - 1]} {r.year}</TableCell>
-                            <TableCell className="text-center">{r.iqra_level ? `${r.iqra_level} hal.${r.start_page}` : r.start_page}</TableCell>
-                            <TableCell className="text-center">{(r as any).end_iqra_level ? `${(r as any).end_iqra_level} hal.${r.end_page}` : r.end_page}</TableCell>
-                            <TableCell className="text-center font-bold">{r.pages_read}</TableCell>
-                            <TableCell className="text-center">{r.target_pages}</TableCell>
-                            <TableCell className="text-center">
-                              {r.achievement_status === "achieved" && <Badge className="bg-emerald-600 hover:bg-emerald-700 text-xs">Tercapai</Badge>}
-                              {r.achievement_status === "not_achieved" && <Badge className="bg-amber-500 hover:bg-amber-600 text-white text-xs">Belum</Badge>}
-                              {r.achievement_status === "stagnant" && <Badge variant="secondary" className="text-xs">Tetap</Badge>}
-                              {r.achievement_status === "decline" && <Badge variant="destructive" className="text-xs">MUNDUR</Badge>}
-                            </TableCell>
-                            <TableCell className="max-w-[150px] text-xs text-muted-foreground">
-                              <div className="truncate">{r.notes || "-"}</div>
-                              {(r.teacher_name || (r.created_by && profileMap.get(r.created_by))) && (
-                                <div className="text-[10px] text-primary/70 mt-0.5">
-                                  👤 {r.teacher_name || profileMap.get(r.created_by!)}
-                                </div>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-1">
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEdit(r)}><Pencil className="w-4 h-4 text-muted-foreground" /></Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(r.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Attendance Table */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between gap-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <CalendarCheck className="w-4 h-4" /> Riwayat Absensi ({filteredAttendance.length})
-              </CardTitle>
-              <AttendanceExport attendance={filteredAttendance as any} />
-            </CardHeader>
-            <CardContent>
-              {filteredAttendance.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">Belum ada data absensi</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Siswa</TableHead>
-                        <TableHead>Kelas</TableHead>
-                        <TableHead>Bulan</TableHead>
-                        <TableHead className="text-center">Hadir</TableHead>
-                        <TableHead className="text-center">Sakit</TableHead>
-                        <TableHead className="text-center">Izin</TableHead>
-                        <TableHead className="text-center">Alfa</TableHead>
-                        <TableHead>Dicatat oleh</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredAttendance.map(a => {
-                        const st = (a as any).students;
-                        return (
-                          <TableRow key={a.id}>
-                            <TableCell className="font-medium">{st?.nama ?? "-"}</TableCell>
-                            <TableCell>{st?.kelas ?? "-"}{st?.rombel ?? ""}</TableCell>
-                            <TableCell>{MONTH_NAMES[a.month - 1]} {a.year}</TableCell>
-                            <TableCell className="text-center text-emerald-600 font-bold">{a.present}</TableCell>
-                            <TableCell className="text-center text-amber-600 font-bold">{a.sick}</TableCell>
-                            <TableCell className="text-center text-blue-600 font-bold">{a.permission}</TableCell>
-                            <TableCell className="text-center text-red-600 font-bold">{a.absent}</TableCell>
-                            <TableCell className="text-xs text-muted-foreground">
-                              {a.created_by && profileMap.get(a.created_by) ? <span>👤 {profileMap.get(a.created_by)}</span> : "-"}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Level Change Confirmation */}
-      <Dialog open={levelConfirmOpen} onOpenChange={setLevelConfirmOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-amber-500" /> Ubah Level Siswa?</DialogTitle>
-          </DialogHeader>
-          {pendingLevelChange && (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">Apakah ingin mengubah level secara <strong>permanen</strong>?</p>
-              <div className="flex items-center justify-center gap-3 py-2">
-                <Badge variant="outline">{pendingLevelChange.oldLevel}</Badge>
-                <span className="text-muted-foreground">→</span>
-                <Badge className="bg-amber-100 text-amber-800">{pendingLevelChange.newLevel}</Badge>
-              </div>
+          <div className="space-y-2">
+            <Label>Tahun</Label>
+            <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {YEARS.map((item) => <SelectItem key={item} value={String(item)}>{item}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Kelas</Label>
+            <Select value={kelas || undefined} onValueChange={setKelas}>
+              <SelectTrigger><SelectValue placeholder="Pilih kelas" /></SelectTrigger>
+              <SelectContent>
+                {KELAS_LIST.map((item) => <SelectItem key={item} value={String(item)}>Kelas {item}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Rombel</Label>
+            <Select value={rombel || undefined} onValueChange={setRombel}>
+              <SelectTrigger><SelectValue placeholder="Pilih rombel" /></SelectTrigger>
+              <SelectContent>
+                {ROMBELS.map((item) => <SelectItem key={item} value={item}>Rombel {item}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Status</Label>
+            <Select value={statusFilter} onValueChange={(value: StatusFilter) => setStatusFilter(value)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua</SelectItem>
+                <SelectItem value="filled">Sudah Diisi</SelectItem>
+                <SelectItem value="empty">Belum Diisi</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Cari Nama</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nama siswa" className="pl-9" />
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {!hasClassFilter ? (
+        <Alert>
+          <Users className="h-4 w-4" />
+          <AlertTitle>Pilih kelas dan rombel</AlertTitle>
+          <AlertDescription>Data siswa tidak dimuat sebelum kelas dan rombel dipilih agar halaman tetap ringan.</AlertDescription>
+        </Alert>
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Total Siswa</p>
+                <p className="text-3xl font-bold">{summary.total}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Sudah Diisi</p>
+                <p className="text-3xl font-bold text-emerald-600">{summary.filled}</p>
+              </CardContent>
+            </Card>
+            <Card className="cursor-pointer transition-colors hover:bg-muted/50" onClick={() => setStatusFilter("empty")}>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Belum Diisi</p>
+                <p className="text-3xl font-bold text-yellow-600">{summary.empty}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">Kelengkapan</p>
+                <p className="text-3xl font-bold">{summary.pct}%</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {summary.empty > 0 ? (
+            <Alert className="border-yellow-300 bg-yellow-50 text-yellow-900 dark:bg-yellow-950/30 dark:text-yellow-100">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Masih ada {summary.empty} siswa yang belum diisi absensinya untuk periode {MONTH_NAMES[month - 1]} {year}.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert className="border-emerald-300 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-100">
+              <CheckCircle2 className="h-4 w-4" />
+              <AlertDescription>Absensi seluruh siswa pada periode ini sudah lengkap.</AlertDescription>
+            </Alert>
           )}
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => { setLevelConfirmOpen(false); setPendingLevelChange(null); }}>Tidak</Button>
-            <Button onClick={confirmLevelUpdate} className="gap-2 bg-amber-600 hover:bg-amber-700">
-              <CheckCircle2 className="w-4 h-4" /> Ya, Ubah Permanen
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+          {teacherAccount && isLocked && (
+            <Alert>
+              <Lock className="h-4 w-4" />
+              <AlertDescription>Periode ini sudah dikunci. Guru tidak dapat mengubah absensi sampai admin membuka kembali periode.</AlertDescription>
+            </Alert>
+          )}
+
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="input">Input Absensi</TabsTrigger>
+              <TabsTrigger value="history">Riwayat Absensi</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="input" className="space-y-4">
+              <Card>
+                <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <CardTitle className="text-lg">Input Massal</CardTitle>
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <div className="space-y-2">
+                      <Label htmlFor="effective-days">Jumlah Hari Efektif</Label>
+                      <Input
+                        id="effective-days"
+                        type="number"
+                        min={0}
+                        value={effectiveDays}
+                        onChange={(event) => setEffectiveDays(normalizeNumber(event.target.value))}
+                        className="w-full sm:w-40"
+                        disabled={teacherAccount && isLocked}
+                      />
+                    </div>
+                    <Button type="button" onClick={saveAll} disabled={saveDisabled || rows.length === 0}>
+                      {bulkUpsert.isPending || upsertSettings.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Simpan Semua Absensi
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {studentsQuery.isLoading || attendanceQuery.isLoading ? (
+                    <div className="flex items-center justify-center py-12 text-muted-foreground">
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Memuat data absensi...
+                    </div>
+                  ) : visibleRows.length === 0 ? (
+                    <p className="py-10 text-center text-muted-foreground">Tidak ada siswa sesuai filter.</p>
+                  ) : (
+                    <div className="overflow-x-auto rounded-md border">
+                      <Table>
+                        <TableHeader className="sticky top-0 z-10 bg-background">
+                          <TableRow>
+                            <TableHead className="w-12">No</TableHead>
+                            <TableHead>Nama Siswa</TableHead>
+                            <TableHead>Level</TableHead>
+                            <TableHead className="w-24">Hadir</TableHead>
+                            <TableHead className="w-24">Sakit</TableHead>
+                            <TableHead className="w-24">Izin</TableHead>
+                            <TableHead className="w-24">Alfa</TableHead>
+                            <TableHead>Total</TableHead>
+                            <TableHead>Persentase Kehadiran</TableHead>
+                            <TableHead>Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {visibleRows.map((row, index) => {
+                            const total = getTotal(row);
+                            const percentage = effectiveDays > 0 ? Math.round((row.present / effectiveDays) * 100) : 0;
+                            const status = getStatus(row, effectiveDays);
+                            return (
+                              <TableRow key={row.studentId} ref={(element) => { rowRefs.current[row.studentId] = element; }}>
+                                <TableCell>{index + 1}</TableCell>
+                                <TableCell className="min-w-48 font-medium">{row.studentName}</TableCell>
+                                <TableCell>{row.level}</TableCell>
+                                {(["present", "sick", "permission", "absent"] as const).map((field) => (
+                                  <TableCell key={field}>
+                                    <Input
+                                      type="number"
+                                      min={0}
+                                      value={row[field]}
+                                      onChange={(event) => updateRow(row.studentId, field, event.target.value)}
+                                      disabled={teacherAccount && isLocked}
+                                      className="h-9 w-20"
+                                    />
+                                  </TableCell>
+                                ))}
+                                <TableCell className="font-semibold">{total}</TableCell>
+                                <TableCell>{percentage}%</TableCell>
+                                <TableCell><Badge variant="outline" className={statusClass(status)}>{status}</Badge></TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="history" className="space-y-4">
+              <Card>
+                <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <CardTitle className="text-lg">Riwayat Absensi</CardTitle>
+                  <AttendanceExport attendance={historyRows as AttRow[]} label={`Riwayat Absensi ${MONTH_NAMES[month - 1]} ${year}`} />
+                </CardHeader>
+                <CardContent>
+                  {historyQuery.isLoading ? (
+                    <div className="flex items-center justify-center py-12 text-muted-foreground">
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Memuat riwayat...
+                    </div>
+                  ) : historyRows.length === 0 ? (
+                    <p className="py-10 text-center text-muted-foreground">Belum ada data absensi pada filter ini.</p>
+                  ) : (
+                    <>
+                      <div className="overflow-x-auto rounded-md border">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Nama</TableHead>
+                              <TableHead>Kelas</TableHead>
+                              <TableHead>Bulan</TableHead>
+                              <TableHead>Hadir</TableHead>
+                              <TableHead>Sakit</TableHead>
+                              <TableHead>Izin</TableHead>
+                              <TableHead>Alfa</TableHead>
+                              <TableHead>Persentase</TableHead>
+                              <TableHead>Terakhir diubah oleh</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {pagedHistoryRows.map((item) => {
+                              const percentage = effectiveDays > 0 ? Math.round((item.present / effectiveDays) * 100) : 0;
+                              return (
+                                <TableRow key={item.id}>
+                                  <TableCell className="font-medium">{item.students?.nama ?? "-"}</TableCell>
+                                  <TableCell>{item.students ? `${item.students.kelas}${item.students.rombel}` : "-"}</TableCell>
+                                  <TableCell>{MONTH_NAMES[item.month - 1]} {item.year}</TableCell>
+                                  <TableCell>{item.present}</TableCell>
+                                  <TableCell>{item.sick}</TableCell>
+                                  <TableCell>{item.permission}</TableCell>
+                                  <TableCell>{item.absent}</TableCell>
+                                  <TableCell>{percentage}%</TableCell>
+                                  <TableCell>{item.created_by ? profileMap.get(item.created_by) ?? item.created_by : "-"}</TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                      <DataTablePagination currentPage={historyPage} totalPages={historyTotalPages} onPageChange={setHistoryPage} />
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </>
+      )}
     </div>
   );
 };

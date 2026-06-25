@@ -102,6 +102,51 @@ export type Database = {
           },
         ]
       }
+      attendance_period_settings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_days: number
+          id: string
+          is_locked: boolean
+          kelas: number
+          locked_at: string | null
+          locked_by: string | null
+          month: number
+          rombel: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_days?: number
+          id?: string
+          is_locked?: boolean
+          kelas: number
+          locked_at?: string | null
+          locked_by?: string | null
+          month: number
+          rombel: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_days?: number
+          id?: string
+          is_locked?: boolean
+          kelas?: number
+          locked_at?: string | null
+          locked_by?: string | null
+          month?: number
+          rombel?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
       exam_participants: {
         Row: {
           created_at: string

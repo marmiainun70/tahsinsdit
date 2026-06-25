@@ -6,7 +6,6 @@ import {
   MONTH_NAMES, calcIqraPagesSigned, getProgressStatus, getTarget,
   isIqraDecline, getAutoNoteByProgress, getAutoNoteOptions,
 } from "@/hooks/useMonthlyReports";
-import { useAllAttendance, useUpsertAttendance } from "@/hooks/useAttendance";
 import { JUZ_LIST, JUZ_PAGES_PER_JUZ, calcHafalanPagesSigned, isTahfizhDecline } from "@/lib/juzData";
 import { useEnsureTeacherStudent } from "@/hooks/useTeacherStudents";
 import { useAuth } from "@/contexts/AuthContext";
@@ -188,17 +187,6 @@ type MonthlyReportRecord = {
   pencapaian_target_bulan?: number | null;
 };
 
-type AttendanceRecord = {
-  id?: string;
-  student_id: string;
-  month: number;
-  year: number;
-  present?: number | null;
-  sick?: number | null;
-  permission?: number | null;
-  absent?: number | null;
-};
-
 type MonthlyReportPayload = {
   student_id: string;
   month: number;
@@ -283,7 +271,6 @@ interface Row {
   kelas: number;
   rombel: string;
   reportId?: string;
-  attendanceId?: string;
   program: ReportProgram;
   startLevel: string;
   startPage: number;
@@ -293,11 +280,8 @@ interface Row {
   poinKualitasBacaan: ProgressivePoint;
   poinPerbaikanBacaan: ProgressivePoint;
   pencapaianTargetBulan: number;
+  attendancePercentage: number;
   notes: string;
-  present: number;
-  sick: number;
-  permission: number;
-  absent: number;
   dirty: boolean;
   saving: boolean;
 }
@@ -306,10 +290,8 @@ const SpreadsheetReport = () => {
   const { user, profile } = useAuth();
   const { data: students = [] } = useStudents();
   const { data: reports = [] } = useAllMonthlyReports();
-  const { data: attendance = [] } = useAllAttendance();
   const addReport = useAddMonthlyReport();
   const updateReport = useUpdateMonthlyReport();
-  const upsertAttendance = useUpsertAttendance();
   const ensureTS = useEnsureTeacherStudent();
   const [zoom, setZoom] = useState<number>(100);
   const tableScrollRef = useRef<HTMLDivElement>(null);
@@ -343,7 +325,6 @@ const SpreadsheetReport = () => {
 
   useEffect(() => {
     const reportRows = reports as MonthlyReportRecord[];
-    const attendanceRows = attendance as AttendanceRecord[];
     const newRows: Row[] = filteredStudents.map(s => {
       const defaultProgram = detectProgramFromLevel(s.level);
       const latestPrev = reportRows
@@ -372,17 +353,6 @@ const SpreadsheetReport = () => {
 
       const fallbackLvl = program === "tahfizh" ? "30" : program === "iqra" ? "1" : "Tahsin Lanjutan";
 
-      const att = attendanceRows.find(
-        a => a.student_id === s.id && a.month === month && a.year === year,
-      );
-
-      const baseAtt = {
-        attendanceId: att?.id,
-        present: att?.present ?? 0,
-        sick: att?.sick ?? 0,
-        permission: att?.permission ?? 0,
-        absent: att?.absent ?? 0,
-      };
       const progressiveDefaults = {
         poinKehadiranKesiapan: normalizeProgressivePoint(Number(existing?.poin_kehadiran_kesiapan ?? 0)),
         poinKualitasBacaan: normalizeProgressivePoint(Number(existing?.poin_kualitas_bacaan ?? 0)),
@@ -406,8 +376,8 @@ const SpreadsheetReport = () => {
           endLevel: endLvlRaw,
           endPage: existing.end_page || 1,
           ...progressiveDefaults,
+          attendancePercentage: existing.attendance_percentage ?? 0,
           notes: existing.notes || "",
-          ...baseAtt,
           dirty: false,
           saving: false,
         };
@@ -433,15 +403,15 @@ const SpreadsheetReport = () => {
         endLevel: "",
         endPage: null,
         ...progressiveDefaults,
+        attendancePercentage: 0,
         notes: "",
-        ...baseAtt,
         dirty: false,
         saving: false,
       };
     });
     setRows(newRows);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredStudents.map(s => s.id).join(","), reports.length, attendance.length, month, year]);
+  }, [filteredStudents.map(s => s.id).join(","), reports.length, month, year]);
 
   const updateRow = useCallback((idx: number, patch: Partial<Row>) => {
     setRows(prev => prev.map((r, i) => {
@@ -667,9 +637,6 @@ const SpreadsheetReport = () => {
       const status = isPromotionEnd(r.program, r.endLevel) ? "achieved" : getProgressStatus(signed, target);
       const progressiveScore = scoreForRow(r);
       const notesForSave = r.notes.trim() ? r.notes : buildIntegratedNote(r);
-      const totalAttendance = r.present + r.sick + r.permission + r.absent;
-      const attendancePercentage =
-        totalAttendance > 0 ? Math.round((r.present / totalAttendance) * 100) : 0;
       const payload: MonthlyReportPayload = {
         student_id: r.studentId,
         month, year, program_type: r.program,
@@ -679,7 +646,7 @@ const SpreadsheetReport = () => {
         end_page: r.endPage,
         pages_read: signed,
         target_pages: target,
-        attendance_percentage: attendancePercentage,
+        attendance_percentage: r.attendancePercentage,
         poin_kehadiran_kesiapan: r.poinKehadiranKesiapan,
         poin_kualitas_bacaan: r.poinKualitasBacaan,
         poin_perbaikan_bacaan: r.poinPerbaikanBacaan,
@@ -696,24 +663,12 @@ const SpreadsheetReport = () => {
       if (r.reportId) saved = await updateReport.mutateAsync({ id: r.reportId, ...payload });
       else saved = await addReport.mutateAsync(payload);
 
-      // Save attendance if any value > 0 OR existing record
-      let attId = r.attendanceId;
-      if (r.present > 0 || r.sick > 0 || r.permission > 0 || r.absent > 0 || r.attendanceId) {
-        const attSaved = await upsertAttendance.mutateAsync({
-          student_id: r.studentId,
-          month, year,
-          present: r.present, sick: r.sick, permission: r.permission, absent: r.absent,
-        }) as { id?: string };
-        attId = attSaved.id;
-      }
-
       const stu = filteredStudents.find(s => s.id === r.studentId);
       await ensureTS.mutateAsync({ studentId: r.studentId, kelas: stu?.kelas, rombel: stu?.rombel });
 
       setRows(prev => prev.map((x, i) => i === idx ? {
         ...x,
         reportId: saved.id,
-        attendanceId: attId,
         pencapaianTargetBulan: progressiveScore.pencapaianTargetBulan,
         notes: notesForSave,
         dirty: false,
@@ -751,7 +706,7 @@ const SpreadsheetReport = () => {
       <Card className="rounded-2xl overflow-hidden border border-primary/15 shadow-lg shadow-primary/5 bg-background">
         <CardHeader className="pb-3 border-b border-border/70 bg-gradient-to-b from-background to-muted/20">
           <CardTitle className="flex items-center gap-2 text-base md:text-lg">
-            <FileSpreadsheet className="w-5 h-5 text-primary" /> Input Laporan Bulanan & Absensi (Spreadsheet)
+            <FileSpreadsheet className="w-5 h-5 text-primary" /> Input Laporan Bulanan
           </CardTitle>
           <p className="text-xs text-muted-foreground">
             Semua program (Iqra, Tahsin Lanjutan, Tahfizh) dalam satu tabel. Program otomatis sesuai level siswa, kolom menyesuaikan. Auto-fill dari bulan sebelumnya · Guru: <span className="font-medium text-foreground">{profile?.full_name || "—"}</span>

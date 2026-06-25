@@ -24,8 +24,8 @@ const navItems = [
   { to: "/kelola-siswa", icon: Users, label: "Kelola Siswa" },
   { to: "/murid-binaan", icon: UserCheck, label: "Murid Binaan", teacherOnly: true },
   { to: "/penugasan-guru", icon: UserCog, label: "Penugasan Guru", adminOnly: true },
-  { to: "/laporan-bulanan", icon: FileText, label: "Laporan & Absensi" },
-  { to: "/input-cepat", icon: FileSpreadsheet, label: "Input Laporan Bulanan & Absensi (Spreadsheet)" },
+  { to: "/laporan-bulanan", icon: FileText, label: "Absensi Bulanan" },
+  { to: "/input-cepat", icon: FileSpreadsheet, label: "Input Laporan Bulanan" },
   { to: "/rekap-laporan", icon: FileSpreadsheet, label: "Rekap Laporan" },
   { to: "/monitoring", icon: BarChart3, label: "Monitoring" },
   { to: "/jadwal-ujian", icon: GraduationCap, label: "Jadwal Ujian" },
@@ -180,9 +180,9 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
   if (pathname === "/statistik-ujian") return <h2 className="font-semibold text-foreground text-base">Statistik Ujian</h2>;
   if (pathname === "/ujian-tahsin-dasar") return <h2 className="font-semibold text-foreground text-base">Ujian Tahsin Dasar</h2>;
   if (pathname === "/ujian-tahsin-lanjutan") return <h2 className="font-semibold text-foreground text-base">Ujian Tahsin Lanjutan</h2>;
-  if (pathname === "/laporan-bulanan") return <h2 className="font-semibold text-foreground text-base">Laporan & Absensi</h2>;
+  if (pathname === "/laporan-bulanan") return <h2 className="font-semibold text-foreground text-base">Absensi Bulanan</h2>;
   if (pathname === "/rekap-laporan") return <h2 className="font-semibold text-foreground text-base">Rekap Laporan Bulanan</h2>;
-  if (pathname === "/input-cepat") return <h2 className="font-semibold text-foreground text-base">Input Laporan Bulanan & Absensi (Spreadsheet)</h2>;
+  if (pathname === "/input-cepat") return <h2 className="font-semibold text-foreground text-base">Input Laporan Bulanan</h2>;
   if (pathname === "/pengaturan-lembaga") return <h2 className="font-semibold text-foreground text-base">Pengaturan Lembaga</h2>;
   if (pathname === "/kelola-akun") return <h2 className="font-semibold text-foreground text-base">Persetujuan Akun</h2>;
   if (pathname.startsWith("/class/")) {
