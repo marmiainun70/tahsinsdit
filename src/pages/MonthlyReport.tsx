@@ -1,4 +1,5 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { AlertCircle, CheckCircle2, Loader2, Lock, Search, Unlock, Users } from "lucide-react";
 import { AttendanceStudent, AttendanceWithStudent, useAttendanceByPeriod, useAttendancePeriodSettings, useAttendancePeriodSettingsByGroups, useBulkUpsertAttendance, useStudentsForAttendance, useUpsertAttendancePeriodSettings } from "@/hooks/useAttendance";
 import { MONTH_NAMES } from "@/hooks/useMonthlyReports";
@@ -17,6 +18,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import AttendanceExport, { type AttRow } from "@/components/AttendanceExport";
+import { useSpreadsheetLayout } from "@/hooks/useSpreadsheetLayout";
+import { SpreadsheetLayoutToolbar } from "@/components/reports/SpreadsheetLayoutToolbar";
+import { ResizableTableHeader } from "@/components/reports/ResizableTableHeader";
+import { FixedHorizontalScrollbar } from "@/components/reports/FixedHorizontalScrollbar";
+import {
+  ATTENDANCE_COLUMNS,
+  ATTENDANCE_MOBILE_COLUMNS,
+  ATTENDANCE_SPREADSHEET_PAGE_KEY,
+  type AttendanceColumnKey,
+} from "@/config/attendanceColumns";
+import type { SpreadsheetAlign, SpreadsheetFont } from "@/types/spreadsheetLayout";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type StatusFilter = "all" | "filled" | "empty";
 
@@ -31,12 +44,15 @@ type AttendanceInputRow = {
   sick: number;
   permission: number;
   absent: number;
+  dirty: boolean;
+  saveStatus: "unchanged" | "dirty" | "saving" | "saved" | "failed";
 };
 
 const YEARS = [2025, 2026, 2027, 2028, 2029, 2030];
 const KELAS_LIST = [1, 2, 3, 4, 5, 6];
 const ROMBELS = ["A", "B", "C", "D"];
 const HISTORY_PAGE_SIZE = 25;
+const INPUT_PAGE_SIZE = 20;
 
 const getTotal = (row: Pick<AttendanceInputRow, "present" | "sick" | "permission" | "absent">) =>
   row.present + row.sick + row.permission + row.absent;
@@ -89,12 +105,15 @@ const buildRows = (students: AttendanceStudent[], attendance: AttendanceWithStud
       sick: existing?.sick ?? 0,
       permission: existing?.permission ?? 0,
       absent: existing?.absent ?? 0,
+      dirty: false,
+      saveStatus: "unchanged",
     };
   });
 
 const MonthlyReport = () => {
   const now = new Date();
   const { user, profile } = useAuth();
+  const isMobile = useIsMobile();
   const profileMap = useProfileMap();
   const isAdmin = profile?.role === "admin";
   const teacherAccount = isTeacherRole(profile?.role);
@@ -109,8 +128,12 @@ const MonthlyReport = () => {
   const [effectiveDays, setEffectiveDays] = useState(0);
   const [rows, setRows] = useState<AttendanceInputRow[]>([]);
   const [activeTab, setActiveTab] = useState("input");
+  const [inputPage, setInputPage] = useState(1);
   const [historyPage, setHistoryPage] = useState(1);
+  const [zoom, setZoom] = useState<number>(isMobile ? 75 : 100);
   const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
 
   const hasClassFilter = Boolean(kelas && rombel);
   const hasAttendanceScope = teacherOverview || hasClassFilter;
@@ -163,6 +186,12 @@ const MonthlyReport = () => {
 
   const bulkUpsert = useBulkUpsertAttendance();
   const upsertSettings = useUpsertAttendancePeriodSettings();
+  const attendanceLayout = useSpreadsheetLayout<AttendanceColumnKey>({
+    pageKey: ATTENDANCE_SPREADSHEET_PAGE_KEY,
+    columns: isMobile ? ATTENDANCE_MOBILE_COLUMNS : ATTENDANCE_COLUMNS,
+    userId: user?.id,
+    role: profile?.role,
+  });
 
   useEffect(() => {
     setRows(buildRows(studentsQuery.data ?? [], attendanceQuery.data ?? []));
@@ -182,6 +211,10 @@ const MonthlyReport = () => {
   useEffect(() => {
     setHistoryPage(1);
   }, [month, year, kelas, rombel, activeTab, teacherOverview]);
+
+  useEffect(() => {
+    setInputPage(1);
+  }, [month, year, kelas, rombel, search, statusFilter, teacherOverview]);
 
   const visibleRows = useMemo(() => {
     if (statusFilter === "all") return rows;
@@ -214,6 +247,23 @@ const MonthlyReport = () => {
       }));
   }, [visibleRows]);
 
+  const inputTotalPages = Math.max(1, Math.ceil(visibleRows.length / INPUT_PAGE_SIZE));
+  const pagedVisibleRows = visibleRows.slice((inputPage - 1) * INPUT_PAGE_SIZE, inputPage * INPUT_PAGE_SIZE);
+  const pagedGroupedVisibleRows = useMemo(() => {
+    const groups = new Map<number, AttendanceInputRow[]>();
+    for (const row of pagedVisibleRows) {
+      const current = groups.get(row.kelas) ?? [];
+      current.push(row);
+      groups.set(row.kelas, current);
+    }
+    return Array.from(groups.entries())
+      .sort(([kelasA], [kelasB]) => kelasA - kelasB)
+      .map(([kelas, classRows]) => ({
+        kelas,
+        rows: classRows.sort((a, b) => a.studentName.localeCompare(b.studentName)),
+      }));
+  }, [pagedVisibleRows]);
+
   const isLocked = teacherOverview
     ? Boolean(groupSettingsQuery.data?.some((setting) => setting.is_locked))
     : Boolean(settingsQuery.data?.is_locked);
@@ -221,7 +271,7 @@ const MonthlyReport = () => {
 
   const updateRow = (studentId: string, field: "present" | "sick" | "permission" | "absent", value: string) => {
     setRows((current) =>
-      current.map((row) => row.studentId === studentId ? { ...row, [field]: normalizeNumber(value) } : row)
+      current.map((row) => row.studentId === studentId ? { ...row, [field]: normalizeNumber(value), dirty: true, saveStatus: "dirty" } : row)
     );
   };
 
@@ -262,6 +312,51 @@ const MonthlyReport = () => {
     return null;
   };
 
+  const validateRow = (row: AttendanceInputRow) => {
+    if (effectiveDays <= 0) return "Jumlah Hari Efektif wajib lebih dari 0.";
+    const values = [row.present, row.sick, row.permission, row.absent];
+    if (values.some((value) => value < 0)) return `${row.studentName}: angka absensi tidak boleh negatif.`;
+    const total = getTotal(row);
+    if (total !== effectiveDays) {
+      if (total < effectiveDays) return `${row.studentName}: total absensi ${total}, masih kurang dari hari efektif ${effectiveDays}.`;
+      return `${row.studentName}: total absensi ${total}, melebihi hari efektif ${effectiveDays}.`;
+    }
+    return null;
+  };
+
+  const saveRow = async (row: AttendanceInputRow) => {
+    const validationError = validateRow(row);
+    if (validationError) {
+      scrollToRow(row.studentId);
+      toast({ title: "Absensi belum valid", description: validationError, variant: "destructive" });
+      return false;
+    }
+
+    setRows((current) => current.map((item) => item.studentId === row.studentId ? { ...item, saveStatus: "saving" } : item));
+    try {
+      await bulkUpsert.mutateAsync([{
+        student_id: row.studentId,
+        month,
+        year,
+        present: row.present,
+        sick: row.sick,
+        permission: row.permission,
+        absent: row.absent,
+      }]);
+      setRows((current) => current.map((item) => item.studentId === row.studentId ? { ...item, dirty: false, saveStatus: "saved" } : item));
+      toast({ title: `${row.studentName} tersimpan` });
+      return true;
+    } catch (error: unknown) {
+      setRows((current) => current.map((item) => item.studentId === row.studentId ? { ...item, saveStatus: "failed" } : item));
+      toast({
+        title: `Gagal menyimpan ${row.studentName}`,
+        description: error instanceof Error ? error.message : "Terjadi kesalahan saat menyimpan.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
   const saveAll = async () => {
     const validationError = validateRows();
     if (validationError) {
@@ -300,7 +395,13 @@ const MonthlyReport = () => {
         });
       }
 
-      const saved = await bulkUpsert.mutateAsync(rows.map((row) => ({
+      const dirtyRows = rows.filter((row) => row.dirty);
+      if (dirtyRows.length === 0) {
+        toast({ title: "Tidak ada perubahan absensi untuk disimpan" });
+        return;
+      }
+
+      const saved = await bulkUpsert.mutateAsync(dirtyRows.map((row) => ({
         student_id: row.studentId,
         month,
         year,
@@ -310,6 +411,7 @@ const MonthlyReport = () => {
         absent: row.absent,
       })));
 
+      setRows((current) => current.map((row) => row.dirty ? { ...row, dirty: false, saveStatus: "saved" } : row));
       toast({ title: "Absensi berhasil disimpan", description: `${saved.length} data absensi tersimpan.` });
       await Promise.all([
         attendanceQuery.refetch(),
@@ -349,9 +451,208 @@ const MonthlyReport = () => {
     }
   };
 
+  const saveLayout = async (scope: "global" | "personal") => {
+    try {
+      if (scope === "global") await attendanceLayout.saveGlobal();
+      else await attendanceLayout.savePersonal();
+      toast({ title: "Layout berhasil disimpan" });
+    } catch (error: unknown) {
+      toast({
+        title: "Gagal menyimpan layout",
+        description: error instanceof Error ? error.message : "Coba lagi beberapa saat.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const resetLayout = async (scope: "global" | "personal") => {
+    const label = scope === "global" ? "layout global" : "layout pribadi";
+    if (!window.confirm(`Reset ${label}? Perubahan layout tersimpan akan dihapus.`)) return;
+    try {
+      if (scope === "global") await attendanceLayout.resetGlobal();
+      else await attendanceLayout.resetPersonal();
+      toast({ title: `${label} berhasil direset` });
+    } catch (error: unknown) {
+      toast({
+        title: `Gagal reset ${label}`,
+        description: error instanceof Error ? error.message : "Coba lagi beberapa saat.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const restoreDefaultLayout = () => {
+    if (!window.confirm("Kembalikan draft layout ke default bawaan?")) return;
+    attendanceLayout.resetDraftToDefault();
+  };
+
+  const toggleLayoutEdit = async () => {
+    if (!attendanceLayout.isEditing) {
+      attendanceLayout.setIsEditing(true);
+      attendanceLayout.setSelection({ type: "table" });
+      return;
+    }
+
+    if (!attendanceLayout.dirty) {
+      attendanceLayout.setIsEditing(false);
+      return;
+    }
+
+    if (window.confirm("Layout belum disimpan. Pilih OK untuk menyimpan sekarang, atau Cancel untuk pilihan lain.")) {
+      await saveLayout(attendanceLayout.isAdmin ? "global" : "personal");
+      attendanceLayout.setIsEditing(false);
+      return;
+    }
+
+    if (window.confirm("Buang perubahan layout yang belum disimpan? Pilih Cancel untuk tetap di mode edit.")) {
+      attendanceLayout.discardDraft();
+      attendanceLayout.setIsEditing(false);
+    }
+  };
+
+  const applyFont = (font: SpreadsheetFont) => attendanceLayout.applyStyleToSelection({ fontFamily: font });
+  const applyFontSize = (size: number) => attendanceLayout.applyStyleToSelection({ fontSize: Math.max(8, Math.min(24, Math.round(size))) });
+  const applyAlign = (align: SpreadsheetAlign) => attendanceLayout.applyStyleToSelection({ align });
+  const applyBold = () => attendanceLayout.applyStyleToSelection({ bold: true });
+  const applyWrap = () => attendanceLayout.applyStyleToSelection({ wrap: true });
+
+  const isLayoutCellSelected = (studentId: string, columnKey: AttendanceColumnKey) => {
+    const selection = attendanceLayout.selection;
+    if (selection.type === "table") return true;
+    if (selection.type === "column") return selection.columnKey === columnKey;
+    if (selection.type === "row") return selection.studentId === studentId;
+    return selection.studentId === studentId && selection.columnKey === columnKey;
+  };
+
+  const layoutCellProps = (studentId: string, columnKey: AttendanceColumnKey) => ({
+    "data-layout-cell": `${studentId}:${columnKey}`,
+    "data-layout-selected": attendanceLayout.isEditing && isLayoutCellSelected(studentId, columnKey) ? true : undefined,
+    onClick: (event: React.MouseEvent<HTMLElement>) => {
+      if (!attendanceLayout.isEditing) return;
+      event.preventDefault();
+      event.stopPropagation();
+      attendanceLayout.setSelection({ type: "cell", studentId, columnKey });
+    },
+    style: attendanceLayout.getCellStyle(studentId, columnKey),
+  });
+
+  const startRowResize = (event: ReactPointerEvent<HTMLElement>, studentId: string) => {
+    if (!attendanceLayout.isEditing) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const startY = event.clientY;
+    const startHeight = attendanceLayout.getRowHeight(studentId);
+    const handleMove = (moveEvent: PointerEvent) => {
+      attendanceLayout.setRowHeight(studentId, startHeight + moveEvent.clientY - startY);
+    };
+    const handleUp = () => {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    };
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+  };
+
   const historyRows = historyQuery.data ?? [];
   const historyTotalPages = Math.max(1, Math.ceil(historyRows.length / HISTORY_PAGE_SIZE));
   const pagedHistoryRows = historyRows.slice((historyPage - 1) * HISTORY_PAGE_SIZE, historyPage * HISTORY_PAGE_SIZE);
+  const visibleColumns = isMobile ? ATTENDANCE_MOBILE_COLUMNS : ATTENDANCE_COLUMNS;
+  const stickyLeft = {
+    number: attendanceLayout.stickyLeft.number,
+    studentName: attendanceLayout.stickyLeft.studentName,
+  };
+  const tableScaleStyle: CSSProperties = {
+    transform: `scale(${zoom / 100})`,
+    transformOrigin: "top left",
+    width: `${10000 / zoom}%`,
+  };
+
+  const saveStatusLabel = (row: AttendanceInputRow) => {
+    if (row.saveStatus === "dirty") return "Belum disimpan";
+    if (row.saveStatus === "saving") return "Menyimpan";
+    if (row.saveStatus === "saved") return "Tersimpan";
+    if (row.saveStatus === "failed") return "Gagal";
+    return "Belum berubah";
+  };
+
+  const renderAttendanceCell = (row: AttendanceInputRow, columnKey: AttendanceColumnKey, rowNumber: number) => {
+    const total = getTotal(row);
+    const percentage = effectiveDays > 0 ? Math.round((row.present / effectiveDays) * 100) : 0;
+    const status = getStatus(row, effectiveDays);
+    const inputDisabled = (teacherAccount && isLocked) || attendanceLayout.isEditing;
+
+    if (columnKey === "number") {
+      return (
+        <button
+          type="button"
+          className="relative flex h-full w-full items-center justify-center font-medium"
+          onClick={(event) => {
+            if (!attendanceLayout.isEditing) return;
+            event.preventDefault();
+            event.stopPropagation();
+            attendanceLayout.setSelection({ type: "row", studentId: row.studentId });
+          }}
+        >
+          {rowNumber}
+          {attendanceLayout.isEditing && (
+            <span
+              aria-hidden="true"
+              className="absolute bottom-[-4px] left-0 z-[80] h-2 w-full cursor-row-resize touch-none"
+              onDoubleClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                attendanceLayout.setRowHeight(row.studentId, attendanceLayout.layout.defaultRowHeight);
+              }}
+              onPointerDown={(event) => startRowResize(event, row.studentId)}
+            />
+          )}
+        </button>
+      );
+    }
+
+    if (columnKey === "studentName") {
+      return (
+        <div className="flex min-w-0 items-center gap-1">
+          <span className="truncate font-medium">{row.studentName}</span>
+          {isMobile && row.saveStatus === "dirty" && <span className="h-2 w-2 rounded-full bg-yellow-500" title="Belum disimpan" />}
+          {isMobile && row.saveStatus === "saving" && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+          {isMobile && row.saveStatus === "saved" && <CheckCircle2 className="h-3 w-3 text-emerald-600" />}
+          {isMobile && row.saveStatus === "failed" && <AlertCircle className="h-3 w-3 text-red-600" />}
+        </div>
+      );
+    }
+
+    if (columnKey === "studentLevel") return row.level;
+
+    if (["present", "sick", "permission", "absent"].includes(columnKey)) {
+      const field = columnKey as "present" | "sick" | "permission" | "absent";
+      return (
+        <Input
+          type="number"
+          min={0}
+          value={row[field]}
+          onChange={(event) => updateRow(row.studentId, field, event.target.value)}
+          disabled={inputDisabled}
+          className="h-8 w-full min-w-0 rounded-none border-0 px-1 text-center shadow-none focus-visible:ring-1"
+        />
+      );
+    }
+
+    if (columnKey === "total") return <span className="font-semibold">{total}</span>;
+    if (columnKey === "percentage") return `${percentage}%`;
+    if (columnKey === "attendanceStatus") return <Badge variant="outline" className={statusClass(status)}>{isMobile ? status.replace("Belum ", "") : status}</Badge>;
+
+    return (
+      <div className="flex items-center justify-center gap-2">
+        <span className="text-xs text-muted-foreground">{saveStatusLabel(row)}</span>
+        {!isMobile && (
+          <Button type="button" size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={inputDisabled || row.saveStatus === "saving"} onClick={() => saveRow(row)}>
+            {row.saveStatus === "saving" ? <Loader2 className="h-3 w-3 animate-spin" /> : "Simpan"}
+          </Button>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -620,6 +921,34 @@ const MonthlyReport = () => {
             </TabsList>
 
             <TabsContent value="input" className="space-y-4">
+              <SpreadsheetLayoutToolbar
+                isEditing={attendanceLayout.isEditing}
+                canEdit={attendanceLayout.canEdit}
+                isAdmin={attendanceLayout.isAdmin}
+                isTeacher={attendanceLayout.isTeacher}
+                dirty={attendanceLayout.dirty}
+                statusText={attendanceLayout.statusText}
+                tableFont={attendanceLayout.layout.tableFont}
+                tableFontSize={attendanceLayout.layout.tableFontSize}
+                defaultRowHeight={attendanceLayout.layout.defaultRowHeight}
+                selection={attendanceLayout.selection}
+                onToggleEdit={toggleLayoutEdit}
+                onSaveGlobal={() => saveLayout("global")}
+                onSavePersonal={() => saveLayout("personal")}
+                onResetGlobal={() => resetLayout("global")}
+                onResetPersonal={() => resetLayout("personal")}
+                onUseGlobal={() => resetLayout("personal")}
+                onRestoreDefault={restoreDefaultLayout}
+                onResetSelection={attendanceLayout.resetSelection}
+                onApplyFont={applyFont}
+                onApplyFontSize={applyFontSize}
+                onApplyBold={applyBold}
+                onApplyAlign={applyAlign}
+                onApplyWrap={applyWrap}
+                onDefaultRowHeightChange={attendanceLayout.setDefaultRowHeight}
+                isSaving={attendanceLayout.isSaving}
+              />
+
               <Card>
                 <CardHeader className="hidden md:flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <CardTitle className="text-lg">Input Massal</CardTitle>
@@ -651,64 +980,98 @@ const MonthlyReport = () => {
                     <p className="py-10 text-center text-muted-foreground">Tidak ada siswa sesuai filter.</p>
                   ) : (
                     <>
-                      {/* Tabel Desktop */}
-                      <div className="hidden md:block overflow-x-auto rounded-md border">
-                        <Table>
-                          <TableHeader className="sticky top-0 z-10 bg-background">
+                      <div className="hidden md:block">
+                      <div ref={tableScrollRef} className="overflow-x-auto rounded-md border">
+                        <Table
+                          ref={tableRef}
+                          className={`w-full border-separate border-spacing-0 ${attendanceLayout.isEditing ? "spreadsheet-layout-editing" : ""}`}
+                          style={{
+                            minWidth: attendanceLayout.tableMinWidth,
+                            fontFamily: `"${attendanceLayout.layout.tableFont}", system-ui, sans-serif`,
+                            fontSize: `${attendanceLayout.layout.tableFontSize}px`,
+                            ...tableScaleStyle,
+                          }}
+                        >
+                          <TableHeader className="sticky top-0 z-30 bg-background">
                             <TableRow>
-                              <TableHead className="w-12">No</TableHead>
-                              <TableHead>Nama Siswa</TableHead>
-                              <TableHead>Level</TableHead>
-                              <TableHead className="w-24">Hadir</TableHead>
-                              <TableHead className="w-24">Sakit</TableHead>
-                              <TableHead className="w-24">Izin</TableHead>
-                              <TableHead className="w-24">Alfa</TableHead>
-                              <TableHead>Total</TableHead>
-                              <TableHead>Persentase Kehadiran</TableHead>
-                              <TableHead>Status</TableHead>
+                              {ATTENDANCE_COLUMNS.map((column) => {
+                                const width = attendanceLayout.getColumnWidth(column.key);
+                                const left = column.key === "number"
+                                  ? stickyLeft.number
+                                  : column.key === "studentName"
+                                    ? stickyLeft.studentName
+                                    : undefined;
+                                const selected = attendanceLayout.isEditing && (
+                                  attendanceLayout.selection.type === "table"
+                                  || (attendanceLayout.selection.type === "column" && attendanceLayout.selection.columnKey === column.key)
+                                );
+                                return (
+                                  <ResizableTableHeader
+                                    key={column.key}
+                                    column={column}
+                                    width={width}
+                                    left={left}
+                                    isEditing={attendanceLayout.isEditing}
+                                    selected={selected}
+                                    className={`bg-background ${column.key === "studentName" ? "shadow-[6px_0_10px_-10px_rgba(0,0,0,0.7)]" : ""}`}
+                                    style={{
+                                      fontSize: attendanceLayout.layout.headerFontSize,
+                                      ...attendanceLayout.getColumnStyle(column.key),
+                                    }}
+                                    onSelect={() => attendanceLayout.setSelection({ type: "column", columnKey: column.key })}
+                                    onResize={(nextWidth) => attendanceLayout.setColumnWidth(column.key, nextWidth)}
+                                    onResetWidth={() => attendanceLayout.resetColumnWidth(column.key)}
+                                  />
+                                );
+                              })}
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {(() => {
-                              let rowNumber = 0;
-                              const groups = teacherOverview ? groupedVisibleRows : [{ kelas: Number(kelas), rows: visibleRows }];
+                              let rowNumber = (inputPage - 1) * INPUT_PAGE_SIZE;
+                              const groups = teacherOverview ? pagedGroupedVisibleRows : [{ kelas: Number(kelas), rows: pagedVisibleRows }];
 
                               return groups.map((group) => (
                                 <Fragment key={group.kelas}>
                                   {teacherOverview && (
                                     <TableRow className="bg-muted/60 hover:bg-muted/60">
-                                      <TableCell colSpan={10} className="font-semibold text-foreground">Kelas {group.kelas}</TableCell>
+                                      <TableCell colSpan={ATTENDANCE_COLUMNS.length} className="font-semibold text-foreground">Kelas {group.kelas}</TableCell>
                                     </TableRow>
                                   )}
                                   {group.rows.map((row) => {
                                     rowNumber += 1;
-                                    const total = getTotal(row);
-                                    const percentage = effectiveDays > 0 ? Math.round((row.present / effectiveDays) * 100) : 0;
-                                    const status = getStatus(row, effectiveDays);
                                     return (
                                       <TableRow
                                         key={row.studentId}
                                         id={`row-desktop-${row.studentId}`}
                                         ref={(element) => { rowRefs.current[row.studentId] = element; }}
+                                        data-layout-selected={attendanceLayout.isEditing && (attendanceLayout.selection.type === "table" || (attendanceLayout.selection.type === "row" && attendanceLayout.selection.studentId === row.studentId)) ? true : undefined}
+                                        style={attendanceLayout.getRowStyle(row.studentId)}
                                       >
-                                        <TableCell>{rowNumber}</TableCell>
-                                        <TableCell className="min-w-48 font-medium">{row.studentName}</TableCell>
-                                        <TableCell>{row.level}</TableCell>
-                                        {(["present", "sick", "permission", "absent"] as const).map((field) => (
-                                          <TableCell key={field}>
-                                            <Input
-                                              type="number"
-                                              min={0}
-                                              value={row[field]}
-                                              onChange={(event) => updateRow(row.studentId, field, event.target.value)}
-                                              disabled={teacherAccount && isLocked}
-                                              className="h-9 w-20"
-                                            />
-                                          </TableCell>
-                                        ))}
-                                        <TableCell className="font-semibold">{total}</TableCell>
-                                        <TableCell>{percentage}%</TableCell>
-                                        <TableCell><Badge variant="outline" className={statusClass(status)}>{status}</Badge></TableCell>
+                                        {ATTENDANCE_COLUMNS.map((column) => {
+                                          const width = attendanceLayout.getColumnWidth(column.key);
+                                          const sticky = column.key === "number" || column.key === "studentName";
+                                          const left = column.key === "number" ? stickyLeft.number : column.key === "studentName" ? stickyLeft.studentName : undefined;
+                                          return (
+                                            <TableCell
+                                              key={column.key}
+                                              {...layoutCellProps(row.studentId, column.key)}
+                                              className={`border p-0 align-middle ${sticky ? "sticky z-20 bg-background" : ""} ${column.key === "studentName" ? "shadow-[6px_0_10px_-10px_rgba(0,0,0,0.7)]" : ""}`}
+                                              style={{
+                                                width,
+                                                minWidth: width,
+                                                maxWidth: width,
+                                                left,
+                                                height: attendanceLayout.getRowHeight(row.studentId),
+                                                ...attendanceLayout.getCellStyle(row.studentId, column.key),
+                                              }}
+                                            >
+                                              <div className="flex h-full min-w-0 items-center justify-center px-1">
+                                                {renderAttendanceCell(row, column.key, rowNumber)}
+                                              </div>
+                                            </TableCell>
+                                          );
+                                        })}
                                       </TableRow>
                                     );
                                   })}
@@ -717,6 +1080,13 @@ const MonthlyReport = () => {
                             })()}
                           </TableBody>
                         </Table>
+                      </div>
+                      <DataTablePagination currentPage={inputPage} totalPages={inputTotalPages} onPageChange={setInputPage} />
+                      <FixedHorizontalScrollbar
+                        scrollContainerRef={tableScrollRef}
+                        contentRef={tableRef}
+                        refreshKey={`${zoom}-${inputPage}-${pagedVisibleRows.length}-${attendanceLayout.tableMinWidth}`}
+                      />
                       </div>
 
                       {/* Tabel Mobile */}

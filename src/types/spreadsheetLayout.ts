@@ -44,27 +44,27 @@ export interface SpreadsheetCellStyle {
   wrap?: boolean;
 }
 
-export interface SpreadsheetLayoutSettings {
+export interface SpreadsheetLayoutSettings<ColumnKey extends string = SpreadsheetColumnKey> {
   version: number;
   tableFont: SpreadsheetFont;
   tableFontSize: number;
   headerFontSize: number;
   defaultRowHeight: number;
-  columnWidths: Partial<Record<SpreadsheetColumnKey, number>>;
+  columnWidths: Partial<Record<ColumnKey, number>>;
   rowHeights: Record<string, number>;
-  columnStyles: Partial<Record<SpreadsheetColumnKey, SpreadsheetCellStyle>>;
+  columnStyles: Partial<Record<ColumnKey, SpreadsheetCellStyle>>;
   rowStyles: Record<string, SpreadsheetCellStyle>;
   cellStyles: Record<string, SpreadsheetCellStyle>;
 }
 
-export type SpreadsheetLayoutSelection =
+export type SpreadsheetLayoutSelection<ColumnKey extends string = SpreadsheetColumnKey> =
   | { type: "table" }
-  | { type: "column"; columnKey: SpreadsheetColumnKey }
+  | { type: "column"; columnKey: ColumnKey }
   | { type: "row"; studentId: string }
-  | { type: "cell"; studentId: string; columnKey: SpreadsheetColumnKey };
+  | { type: "cell"; studentId: string; columnKey: ColumnKey };
 
-export interface SpreadsheetColumnConfig {
-  key: SpreadsheetColumnKey;
+export interface SpreadsheetColumnConfig<ColumnKey extends string = SpreadsheetColumnKey> {
+  key: ColumnKey;
   label: string;
   group: "identity" | "monthlyProgress" | "progressiveAssessment" | "result";
   defaultWidth: number;

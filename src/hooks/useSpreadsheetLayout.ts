@@ -16,6 +16,7 @@ import {
   type SpreadsheetAlign,
   type SpreadsheetCellStyle,
   type SpreadsheetColumnKey,
+  type SpreadsheetColumnConfig,
   type SpreadsheetFont,
   type SpreadsheetLayoutScope,
   type SpreadsheetLayoutSelection,
@@ -28,8 +29,14 @@ const MAX_ROW_HEIGHT = 160;
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-const isKnownColumnKey = (key: string): key is SpreadsheetColumnKey =>
-  Object.prototype.hasOwnProperty.call(MONTHLY_REPORT_COLUMN_BY_KEY, key);
+const createColumnMap = <ColumnKey extends string>(columns: SpreadsheetColumnConfig<ColumnKey>[]) =>
+  columns.reduce(
+    (acc, column) => {
+      acc[column.key] = column;
+      return acc;
+    },
+    {} as Record<ColumnKey, SpreadsheetColumnConfig<ColumnKey>>,
+  );
 
 const isFont = (value: unknown): value is SpreadsheetFont =>
   typeof value === "string" && SPREADSHEET_FONTS.includes(value as SpreadsheetFont);
@@ -51,7 +58,7 @@ const cleanStyle = (value: unknown): SpreadsheetCellStyle => {
 
 const hasStyle = (style: SpreadsheetCellStyle | undefined) => Boolean(style && Object.keys(style).length > 0);
 
-export const createDefaultSpreadsheetLayout = (): SpreadsheetLayoutSettings => ({
+export const createDefaultSpreadsheetLayout = <ColumnKey extends string = SpreadsheetColumnKey>(): SpreadsheetLayoutSettings<ColumnKey> => ({
   version: SPREADSHEET_LAYOUT_VERSION,
   tableFont: "Plus Jakarta Sans",
   tableFontSize: 10,
@@ -64,8 +71,16 @@ export const createDefaultSpreadsheetLayout = (): SpreadsheetLayoutSettings => (
   cellStyles: {},
 });
 
-export const sanitizeSpreadsheetLayout = (value: unknown): SpreadsheetLayoutSettings => {
-  const fallback = createDefaultSpreadsheetLayout();
+export const sanitizeSpreadsheetLayout = <ColumnKey extends string = SpreadsheetColumnKey>(
+  value: unknown,
+  columns: SpreadsheetColumnConfig<ColumnKey>[] = MONTHLY_REPORT_COLUMNS as SpreadsheetColumnConfig<ColumnKey>[],
+): SpreadsheetLayoutSettings<ColumnKey> => {
+  const fallback = createDefaultSpreadsheetLayout<ColumnKey>();
+  const columnMap = createColumnMap(columns);
+  const columnKeys = columns.map((column) => column.key);
+  const isKnownColumnKey = (key: string): key is ColumnKey => Object.prototype.hasOwnProperty.call(columnMap, key);
+  const getDefaultWidth = (key: ColumnKey) => columnMap[key].defaultWidth;
+  const getBounds = (key: ColumnKey) => ({ min: columnMap[key].minWidth, max: columnMap[key].maxWidth });
   if (!value || typeof value !== "object" || Array.isArray(value)) return fallback;
   const raw = value as Record<string, unknown>;
   const next = { ...fallback };
@@ -78,9 +93,9 @@ export const sanitizeSpreadsheetLayout = (value: unknown): SpreadsheetLayoutSett
   if (raw.columnWidths && typeof raw.columnWidths === "object" && !Array.isArray(raw.columnWidths)) {
     Object.entries(raw.columnWidths as Record<string, unknown>).forEach(([key, width]) => {
       if (!isKnownColumnKey(key) || typeof width !== "number") return;
-      const bounds = getColumnBounds(key);
+      const bounds = getBounds(key);
       const cleanWidth = clamp(Math.round(width), bounds.min, bounds.max);
-      if (cleanWidth !== getDefaultColumnWidth(key)) next.columnWidths[key] = cleanWidth;
+      if (cleanWidth !== getDefaultWidth(key)) next.columnWidths[key] = cleanWidth;
     });
   }
 
@@ -120,8 +135,8 @@ export const sanitizeSpreadsheetLayout = (value: unknown): SpreadsheetLayoutSett
   return next;
 };
 
-const mergeLayouts = (...layouts: SpreadsheetLayoutSettings[]) =>
-  layouts.reduce<SpreadsheetLayoutSettings>(
+const mergeLayouts = <ColumnKey extends string>(defaultLayout: SpreadsheetLayoutSettings<ColumnKey>, ...layouts: SpreadsheetLayoutSettings<ColumnKey>[]) =>
+  layouts.reduce<SpreadsheetLayoutSettings<ColumnKey>>(
     (acc, layout) => ({
       ...acc,
       tableFont: layout.tableFont ?? acc.tableFont,
@@ -134,10 +149,10 @@ const mergeLayouts = (...layouts: SpreadsheetLayoutSettings[]) =>
       rowStyles: { ...acc.rowStyles, ...layout.rowStyles },
       cellStyles: { ...acc.cellStyles, ...layout.cellStyles },
     }),
-    createDefaultSpreadsheetLayout(),
+    defaultLayout,
   );
 
-const getCellKey = (studentId: string, columnKey: SpreadsheetColumnKey) => `${studentId}:${columnKey}`;
+const getCellKey = <ColumnKey extends string>(studentId: string, columnKey: ColumnKey) => `${studentId}:${columnKey}`;
 
 interface SpreadsheetLayoutRow {
   id?: string;
@@ -167,13 +182,15 @@ const upsertLayout = async ({
   scope,
   userId,
   settings,
+  pageKey,
 }: {
   scope: SpreadsheetLayoutScope;
   userId: string | null;
-  settings: SpreadsheetLayoutSettings;
+  settings: SpreadsheetLayoutSettings<string>;
+  pageKey: string;
 }) => {
   const payload = {
-    page_key: MONTHLY_REPORT_SPREADSHEET_PAGE_KEY,
+    page_key: pageKey,
     scope,
     user_id: scope === "personal" ? userId : null,
     settings,
@@ -182,7 +199,7 @@ const upsertLayout = async ({
 
   let existingQuery = spreadsheetLayoutTable()
     .select("id")
-    .eq("page_key", MONTHLY_REPORT_SPREADSHEET_PAGE_KEY)
+    .eq("page_key", pageKey)
     .eq("scope", scope)
     .limit(1);
 
@@ -199,39 +216,49 @@ const upsertLayout = async ({
   if (error) throw error;
 };
 
-const deleteLayout = async (scope: SpreadsheetLayoutScope, userId: string | null) => {
+const deleteLayout = async (scope: SpreadsheetLayoutScope, userId: string | null, pageKey: string) => {
   let query = spreadsheetLayoutTable()
     .delete()
-    .eq("page_key", MONTHLY_REPORT_SPREADSHEET_PAGE_KEY)
+    .eq("page_key", pageKey)
     .eq("scope", scope);
   if (scope === "personal") query = query.eq("user_id", userId);
   const { error } = await query;
   if (error) throw error;
 };
 
-export const useSpreadsheetLayout = ({
+export const useSpreadsheetLayout = <ColumnKey extends string = SpreadsheetColumnKey>({
   userId,
   role,
+  pageKey = MONTHLY_REPORT_SPREADSHEET_PAGE_KEY,
+  columns = MONTHLY_REPORT_COLUMNS as SpreadsheetColumnConfig<ColumnKey>[],
+  defaultLayout,
 }: {
   userId?: string;
   role?: string | null;
+  pageKey?: string;
+  columns?: SpreadsheetColumnConfig<ColumnKey>[];
+  defaultLayout?: SpreadsheetLayoutSettings<ColumnKey>;
 }) => {
+  const columnMap = useMemo(() => createColumnMap(columns), [columns]);
+  const columnKeys = useMemo(() => columns.map((column) => column.key), [columns]);
+  const createDefault = useCallback(() => defaultLayout ?? createDefaultSpreadsheetLayout<ColumnKey>(), [defaultLayout]);
+  const sanitize = useCallback((value: unknown) => sanitizeSpreadsheetLayout<ColumnKey>(value, columns), [columns]);
   const queryClient = useQueryClient();
   const isAdmin = role === "admin";
   const isTeacher = isTeacherRole(role);
   const canEdit = isAdmin || isTeacher;
   const [isEditing, setIsEditing] = useState(false);
-  const [selection, setSelection] = useState<SpreadsheetLayoutSelection>({ type: "table" });
-  const [draft, setDraft] = useState<SpreadsheetLayoutSettings>(createDefaultSpreadsheetLayout);
+  const [selection, setSelection] = useState<SpreadsheetLayoutSelection<ColumnKey>>({ type: "table" });
+  const [draft, setDraft] = useState<SpreadsheetLayoutSettings<ColumnKey>>(createDefault);
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
 
   const query = useQuery({
-    queryKey: ["spreadsheet-layout", MONTHLY_REPORT_SPREADSHEET_PAGE_KEY, userId, role],
+    queryKey: ["spreadsheet-layout", pageKey, userId, role],
     enabled: Boolean(userId),
     queryFn: async () => {
       const { data, error } = await spreadsheetLayoutTable()
         .select("scope,user_id,settings")
-        .eq("page_key", MONTHLY_REPORT_SPREADSHEET_PAGE_KEY)
+        .eq("page_key", pageKey)
         .or(`scope.eq.global,user_id.eq.${userId}`);
       if (error) throw error;
       const rows = data ?? [];
@@ -243,13 +270,13 @@ export const useSpreadsheetLayout = ({
   });
 
   const loadedLayout = useMemo(() => {
-    const base = createDefaultSpreadsheetLayout();
-    const globalLayout = sanitizeSpreadsheetLayout(query.data?.global);
-    const personalLayout = sanitizeSpreadsheetLayout(query.data?.personal);
+    const base = createDefault();
+    const globalLayout = sanitize(query.data?.global);
+    const personalLayout = sanitize(query.data?.personal);
     if (isAdmin) return mergeLayouts(base, globalLayout);
     if (isTeacher) return mergeLayouts(base, globalLayout, personalLayout);
     return mergeLayouts(base, globalLayout);
-  }, [isAdmin, isTeacher, query.data?.global, query.data?.personal]);
+  }, [createDefault, isAdmin, isTeacher, query.data?.global, query.data?.personal, sanitize]);
 
   const layoutSource = useMemo(() => {
     if (isTeacher && query.data?.personal) return "personal";
@@ -263,10 +290,10 @@ export const useSpreadsheetLayout = ({
 
   const dirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(loadedLayout), [draft, loadedLayout]);
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["spreadsheet-layout", MONTHLY_REPORT_SPREADSHEET_PAGE_KEY] });
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["spreadsheet-layout", pageKey] });
 
   const saveGlobalMutation = useMutation({
-    mutationFn: () => upsertLayout({ scope: "global", userId: userId ?? null, settings: sanitizeSpreadsheetLayout(draft) }),
+    mutationFn: () => upsertLayout({ scope: "global", userId: userId ?? null, settings: sanitize(draft), pageKey }),
     onSuccess: async () => {
       setLastSavedAt(Date.now());
       await invalidate();
@@ -274,7 +301,7 @@ export const useSpreadsheetLayout = ({
   });
 
   const savePersonalMutation = useMutation({
-    mutationFn: () => upsertLayout({ scope: "personal", userId: userId ?? null, settings: sanitizeSpreadsheetLayout(draft) }),
+    mutationFn: () => upsertLayout({ scope: "personal", userId: userId ?? null, settings: sanitize(draft), pageKey }),
     onSuccess: async () => {
       setLastSavedAt(Date.now());
       await invalidate();
@@ -282,7 +309,7 @@ export const useSpreadsheetLayout = ({
   });
 
   const resetGlobalMutation = useMutation({
-    mutationFn: () => deleteLayout("global", null),
+    mutationFn: () => deleteLayout("global", null, pageKey),
     onSuccess: async () => {
       setLastSavedAt(null);
       await invalidate();
@@ -290,7 +317,7 @@ export const useSpreadsheetLayout = ({
   });
 
   const resetPersonalMutation = useMutation({
-    mutationFn: () => deleteLayout("personal", userId ?? null),
+    mutationFn: () => deleteLayout("personal", userId ?? null, pageKey),
     onSuccess: async () => {
       setLastSavedAt(null);
       await invalidate();
@@ -300,13 +327,13 @@ export const useSpreadsheetLayout = ({
   const effectiveLayout = isEditing ? draft : loadedLayout;
 
   const getColumnWidth = useCallback(
-    (columnKey: SpreadsheetColumnKey) => effectiveLayout.columnWidths[columnKey] ?? getDefaultColumnWidth(columnKey),
-    [effectiveLayout.columnWidths],
+    (columnKey: ColumnKey) => effectiveLayout.columnWidths[columnKey] ?? columnMap[columnKey].defaultWidth,
+    [columnMap, effectiveLayout.columnWidths],
   );
 
   const tableMinWidth = useMemo(
-    () => MONTHLY_REPORT_COLUMN_KEYS.reduce((total, key) => total + getColumnWidth(key), 0),
-    [getColumnWidth],
+    () => columnKeys.reduce((total, key) => total + getColumnWidth(key), 0),
+    [columnKeys, getColumnWidth],
   );
 
   const stickyLeft = useMemo(() => {
@@ -319,22 +346,22 @@ export const useSpreadsheetLayout = ({
     [effectiveLayout.defaultRowHeight, effectiveLayout.rowHeights],
   );
 
-  const updateDraft = useCallback((updater: (current: SpreadsheetLayoutSettings) => SpreadsheetLayoutSettings) => {
-    setDraft((current) => sanitizeSpreadsheetLayout(updater(current)));
-  }, []);
+  const updateDraft = useCallback((updater: (current: SpreadsheetLayoutSettings<ColumnKey>) => SpreadsheetLayoutSettings<ColumnKey>) => {
+    setDraft((current) => sanitize(updater(current)));
+  }, [sanitize]);
 
-  const setColumnWidth = useCallback((columnKey: SpreadsheetColumnKey, width: number) => {
-    const bounds = getColumnBounds(columnKey);
+  const setColumnWidth = useCallback((columnKey: ColumnKey, width: number) => {
+    const bounds = { min: columnMap[columnKey].minWidth, max: columnMap[columnKey].maxWidth };
     updateDraft((current) => {
       const next = { ...current, columnWidths: { ...current.columnWidths } };
       const cleanWidth = clamp(Math.round(width), bounds.min, bounds.max);
-      if (cleanWidth === getDefaultColumnWidth(columnKey)) delete next.columnWidths[columnKey];
+      if (cleanWidth === columnMap[columnKey].defaultWidth) delete next.columnWidths[columnKey];
       else next.columnWidths[columnKey] = cleanWidth;
       return next;
     });
-  }, [updateDraft]);
+  }, [columnMap, updateDraft]);
 
-  const resetColumnWidth = useCallback((columnKey: SpreadsheetColumnKey) => {
+  const resetColumnWidth = useCallback((columnKey: ColumnKey) => {
     updateDraft((current) => {
       const next = { ...current, columnWidths: { ...current.columnWidths } };
       delete next.columnWidths[columnKey];
@@ -372,7 +399,7 @@ export const useSpreadsheetLayout = ({
           wrap: style.wrap,
         };
         if (hasStyle(tableWideStyle)) {
-          MONTHLY_REPORT_COLUMN_KEYS.forEach((columnKey) => {
+          columnKeys.forEach((columnKey) => {
             const nextStyle = mergeStyle(next.columnStyles[columnKey]);
             next.columnStyles[columnKey] = nextStyle;
           });
@@ -400,7 +427,7 @@ export const useSpreadsheetLayout = ({
       else delete cellStyles[key];
       return { ...current, cellStyles };
     });
-  }, [selection, updateDraft]);
+  }, [columnKeys, selection, updateDraft]);
 
   const setDefaultRowHeight = useCallback((height: number) => {
     updateDraft((current) => ({ ...current, defaultRowHeight: clamp(Math.round(height), MIN_ROW_HEIGHT, MAX_ROW_HEIGHT) }));
@@ -408,7 +435,7 @@ export const useSpreadsheetLayout = ({
 
   const resetSelection = useCallback(() => {
     updateDraft((current) => {
-      if (selection.type === "table") return createDefaultSpreadsheetLayout();
+      if (selection.type === "table") return createDefault();
       if (selection.type === "column") {
         const next = { ...current, columnWidths: { ...current.columnWidths }, columnStyles: { ...current.columnStyles } };
         delete next.columnWidths[selection.columnKey];
@@ -425,13 +452,13 @@ export const useSpreadsheetLayout = ({
       delete next.cellStyles[getCellKey(selection.studentId, selection.columnKey)];
       return next;
     });
-  }, [selection, updateDraft]);
+  }, [createDefault, selection, updateDraft]);
 
-  const resetDraftToDefault = useCallback(() => setDraft(createDefaultSpreadsheetLayout()), []);
+  const resetDraftToDefault = useCallback(() => setDraft(createDefault()), [createDefault]);
   const discardDraft = useCallback(() => setDraft(loadedLayout), [loadedLayout]);
 
   const getColumnStyle = useCallback(
-    (columnKey: SpreadsheetColumnKey): CSSProperties => styleToCss(effectiveLayout.columnStyles[columnKey]),
+    (columnKey: ColumnKey): CSSProperties => styleToCss(effectiveLayout.columnStyles[columnKey]),
     [effectiveLayout.columnStyles],
   );
 
@@ -444,7 +471,7 @@ export const useSpreadsheetLayout = ({
   );
 
   const getCellStyle = useCallback(
-    (studentId: string, columnKey: SpreadsheetColumnKey): CSSProperties => ({
+    (studentId: string, columnKey: ColumnKey): CSSProperties => ({
       ...styleToCss(effectiveLayout.columnStyles[columnKey]),
       ...styleToCss(effectiveLayout.rowStyles[studentId]),
       ...styleToCss(effectiveLayout.cellStyles[getCellKey(studentId, columnKey)]),
