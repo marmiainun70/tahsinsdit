@@ -151,11 +151,12 @@ export const FixedHorizontalScrollbar = ({
     };
   }, [scrollContainerRef, contentRef, refreshKey]);
 
+  if (disabled) return null;
+
   return (
     <div
       className={cn(
         "fixed-horizontal-scrollbar fixed bottom-2 z-[90] flex min-h-[42px] items-center rounded-[14px] border border-primary/25 bg-gradient-to-r from-background/80 via-emerald-50/70 to-background/80 px-3 py-2 shadow-[0_12px_34px_rgba(15,62,42,0.18),0_2px_8px_rgba(15,62,42,0.08)] backdrop-blur-md dark:from-background/80 dark:via-emerald-950/50 dark:to-background/80",
-        disabled ? "hidden" : "flex",
         className,
       )}
       style={{ left: bounds.left, right: bounds.right }}
