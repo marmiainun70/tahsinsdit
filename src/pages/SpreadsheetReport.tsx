@@ -1078,7 +1078,7 @@ const SpreadsheetReport = () => {
                                 <SelectTrigger
                                   title={tooltipText}
                                   aria-label={`${guide.label}: ${tooltipText}`}
-                                  className="h-7 w-full border-amber-200 bg-amber-50/70 px-2 text-center text-[10px] font-bold shadow-none focus:ring-0 focus:ring-offset-0"
+                                  className="h-7 w-full border-amber-200/50 dark:border-amber-700/50 bg-amber-50/50 dark:bg-amber-950/50 hover:bg-amber-100/50 dark:hover:bg-amber-900/50 text-amber-950 dark:text-amber-50 px-2 text-center text-[10px] font-bold shadow-none focus:ring-0 focus:ring-offset-0"
                                 >
                                   <SelectValue />
                                 </SelectTrigger>
