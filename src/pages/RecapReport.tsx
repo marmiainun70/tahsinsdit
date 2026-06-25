@@ -53,7 +53,7 @@ import type { Database } from "@/integrations/supabase/types";
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
 const YEARS = [2024, 2025, 2026, 2027, 2028];
-type PdfPaperSize = "a4" | "legal";
+type PdfPaperSize = "a4" | "legal" | "f4";
 
 interface PdfRowData {
   no: number;
@@ -610,7 +610,7 @@ const RecapReport = () => {
     toPdfRow,
   ]);
 
-  const buildSelectedRombelPDF = useCallback(async (rombel: RombelOption, months: number[], year: string) => {
+  const buildSelectedRombelPDF = useCallback(async (rombel: RombelOption, months: number[], year: string, paperSize: PdfPaperSize = "a4") => {
     const exportSettings = (settings || {}) as ExportSettings;
     const [logoB64, koordTtdB64, kepsekTtdB64] = await Promise.all([
       exportSettings.logo_url ? loadImageAsBase64(exportSettings.logo_url) : Promise.resolve(null),
@@ -710,55 +710,34 @@ const RecapReport = () => {
         return;
       }
 
+      const headers = [
+        "No", "Nama", "Program", "Level", "Awal", "Akhir", "Total", "Target",
+        "Absensi H/S/I/A", "% Hadir", "Status Absensi", "Kehadiran & Kesiapan Belajar",
+        "Kualitas Bacaan Harian", "Perbaikan Bacaan Harian", "Pencapaian Bulanan",
+        "Kategori Progres", "Nilai", "Guru"
+      ];
+      if (!isF4) headers.push("Catatan");
+
       autoTable(doc, {
         startY: cursorY,
-        head: [[
-          "No",
-          "Nama",
-          "Program",
-          "Level",
-          "Awal",
-          "Akhir",
-          "Total",
-          "Target",
-          "Absensi H/S/I/A",
-          "% Hadir",
-          "Status Absensi",
-          "Kehadiran & Kesiapan Belajar",
-          "Kualitas Bacaan Harian",
-          "Perbaikan Bacaan Harian",
-          "Pencapaian Bulanan",
-          "Kategori Progres",
-          "Nilai",
-          "Guru",
-          "Catatan",
-        ]],
-        body: rows.map(row => [
-          String(row.no),
-          cleanPdfText(row.nama),
-          cleanPdfText(row.program),
-          cleanPdfText(row.level),
-          cleanPdfText(row.awal),
-          cleanPdfText(row.akhir),
-          row.total,
-          row.target,
-          row.absensi,
-          row.persentaseHadir,
-          row.statusAbsensi,
-          row.kehadiranKesiapan,
-          row.kualitasBacaan,
-          row.perbaikanBacaan,
-          row.pencapaianBulanan,
-          cleanPdfText(row.kategoriProgres),
-          row.nilai,
-          cleanPdfText(row.guru),
-          cleanPdfText(row.catatan || "-"),
-        ]),
+        head: [headers],
+        body: rows.map(row => {
+          const rowData = [
+            String(row.no), cleanPdfText(row.nama), cleanPdfText(row.program),
+            cleanPdfText(row.level), cleanPdfText(row.awal), cleanPdfText(row.akhir),
+            row.total, row.target, row.absensi, row.persentaseHadir, row.statusAbsensi,
+            row.kehadiranKesiapan, row.kualitasBacaan, row.perbaikanBacaan,
+            row.pencapaianBulanan, cleanPdfText(row.kategoriProgres), row.nilai,
+            cleanPdfText(row.guru)
+          ];
+          if (!isF4) rowData.push(cleanPdfText(row.catatan || "-"));
+          return rowData;
+        }),
         styles: {
           font: "helvetica",
           fontStyle: "normal",
-          fontSize: 5.6,
-          cellPadding: 0.9,
+          fontSize: isF4 ? 7 : 5.6,
+          cellPadding: isF4 ? 1.2 : 0.9,
           overflow: "linebreak",
           valign: "top",
           lineColor: [220, 220, 220],
@@ -770,10 +749,22 @@ const RecapReport = () => {
           textColor: [255, 255, 255],
           fontStyle: "bold",
           halign: "center",
-          fontSize: 5.4,
+          fontSize: isF4 ? 6.5 : 5.4,
         },
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: {
+        columnStyles: isF4 ? {
+          0: { cellWidth: 10, halign: "center" },
+          6: { cellWidth: 11, halign: "center", fontStyle: "bold" },
+          7: { cellWidth: 11, halign: "center" },
+          8: { cellWidth: 26, halign: "center" },
+          9: { cellWidth: 12, halign: "center" },
+          10: { cellWidth: 25, halign: "center" },
+          11: { cellWidth: 18, halign: "center" },
+          12: { cellWidth: 18, halign: "center" },
+          13: { cellWidth: 18, halign: "center" },
+          14: { cellWidth: 18, halign: "center" },
+          16: { cellWidth: 11, halign: "center" },
+        } : {
           0: { cellWidth: 8, halign: "center" },
           1: { cellWidth: 28 },
           2: { cellWidth: 18 },
@@ -795,7 +786,7 @@ const RecapReport = () => {
           18: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
         },
         didParseCell: data => {
-          if (data.section === "body" && data.column.index === 18) {
+          if (!isF4 && data.section === "body" && data.column.index === 18) {
             data.cell.styles.overflow = "linebreak";
             data.cell.styles.valign = "top";
             data.cell.styles.font = hasAmiriFont && hasArabicText(data.cell.raw) ? "Amiri" : "helvetica";
@@ -812,6 +803,41 @@ const RecapReport = () => {
         },
         margin: { left: margin, right: margin, bottom: 22 },
       });
+
+      if (isF4) {
+        doc.addPage();
+        drawHeader(month);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(27, 94, 32);
+        doc.text("Catatan Rombel", margin, margin + 34);
+
+        autoTable(doc, {
+          startY: margin + 40,
+          head: [["No", "Nama Siswa", "Kelas/Rombel", "Catatan"]],
+          body: rows.map(row => [
+            String(row.no),
+            cleanPdfText(row.nama),
+            "Kelas " + rombel.kelas + " " + rombel.rombel,
+            cleanPdfText(row.catatan || "-")
+          ]),
+          styles: { font: "helvetica", fontSize: 8, cellPadding: 1.5, overflow: "linebreak" },
+          headStyles: { fillColor: [34, 87, 122], textColor: [255, 255, 255], fontStyle: "bold" },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          columnStyles: {
+            0: { cellWidth: 10, halign: "center" },
+            1: { cellWidth: 50 },
+            2: { cellWidth: 40 },
+            3: { cellWidth: "auto" }
+          },
+          didParseCell: data => {
+            if (data.section === "body" && data.column.index === 3) {
+              data.cell.styles.font = hasAmiriFont && hasArabicText(data.cell.raw) ? "Amiri" : "helvetica";
+            }
+          },
+          margin: { left: margin, right: margin, bottom: 22 },
+        });
+      }
 
       drawSignature(getLastAutoTableFinalY(doc, cursorY) + 2);
     });
@@ -837,7 +863,7 @@ const RecapReport = () => {
     return doc;
   }, [buildRowsForRombelMonth, settings]);
 
-  const downloadSelectedRombelPDFs = useCallback(async () => {
+  const downloadSelectedRombelPDFs = useCallback(async (paperSize: PdfPaperSize = "a4") => {
     if (dialogMonths.length === 0) {
       toast({ title: "Pilih minimal satu bulan terlebih dahulu.", variant: "destructive" });
       return;
@@ -856,8 +882,9 @@ const RecapReport = () => {
         const rombel = selectedRombels[index];
         setMultiDownloadProgress(`Menyiapkan PDF ${index + 1} dari ${selectedRombels.length}...`);
         await waitForUiFrame();
-        const doc = await buildSelectedRombelPDF(rombel, dialogMonths, dialogYear);
-        doc.save(`Rekap_Tahsin_${safeFilePart(rombel.label)}_${safeFilePart(monthFilePart)}_${dialogYear}.pdf`);
+        const doc = await buildSelectedRombelPDF(rombel, dialogMonths, dialogYear, paperSize);
+        const suffix = paperSize === "f4" ? "_F4" : "";
+        doc.save(`Rekap_Tahsin_${safeFilePart(rombel.label)}_${safeFilePart(monthFilePart)}_${dialogYear}${suffix}.pdf`);
       }
       toast({ title: `${selectedRombels.length} file PDF rekap multi bulan berhasil diunduh.` });
     } catch (error) {
@@ -896,6 +923,7 @@ const RecapReport = () => {
     const pageH = doc.internal.pageSize.getHeight();
     const margin = 12;
     const isLegal = paperSize === "legal";
+    const isF4 = paperSize === "f4";
     const hasAmiriFont = await loadAmiriFont(doc);
 
     const drawHeader = () => {
@@ -946,55 +974,34 @@ const RecapReport = () => {
       doc.text(`Kelas ${group.kelas} - Rombel ${group.rombel}  (${group.rows.length} siswa)`, margin + 2, cursorY + 4.2);
       cursorY += 7;
 
+      const headers = [
+        "No", "Nama", "Program", "Level", "Awal", "Akhir", "Total", "Target",
+        "Absensi H/S/I/A", "% Hadir", "Status Absensi", "Kehadiran & Kesiapan Belajar",
+        "Kualitas Bacaan Harian", "Perbaikan Bacaan Harian", "Pencapaian Bulanan",
+        "Kategori Progres", "Nilai", "Guru"
+      ];
+      if (!isF4) headers.push("Catatan");
+
       autoTable(doc, {
         startY: cursorY,
-        head: [[
-          "No",
-          "Nama",
-          "Program",
-          "Level",
-          "Awal",
-          "Akhir",
-          "Total",
-          "Target",
-          "Absensi H/S/I/A",
-          "% Hadir",
-          "Status Absensi",
-          "Kehadiran & Kesiapan Belajar",
-          "Kualitas Bacaan Harian",
-          "Perbaikan Bacaan Harian",
-          "Pencapaian Bulanan",
-          "Kategori Progres",
-          "Nilai",
-          "Guru",
-          "Catatan",
-        ]],
-        body: group.rows.map(row => [
-            String(row.no),
-            cleanPdfText(row.nama),
-            cleanPdfText(row.program),
-            cleanPdfText(row.level),
-            cleanPdfText(row.awal),
-            cleanPdfText(row.akhir),
-            row.total,
-            row.target,
-            row.absensi,
-            row.persentaseHadir,
-            row.statusAbsensi,
-            row.kehadiranKesiapan,
-            row.kualitasBacaan,
-            row.perbaikanBacaan,
-            row.pencapaianBulanan,
-            cleanPdfText(row.kategoriProgres),
-            row.nilai,
-            cleanPdfText(row.guru),
-            cleanPdfText(row.catatan || "-"),
-          ]),
+        head: [headers],
+        body: group.rows.map(row => {
+          const rowData = [
+            String(row.no), cleanPdfText(row.nama), cleanPdfText(row.program),
+            cleanPdfText(row.level), cleanPdfText(row.awal), cleanPdfText(row.akhir),
+            row.total, row.target, row.absensi, row.persentaseHadir, row.statusAbsensi,
+            row.kehadiranKesiapan, row.kualitasBacaan, row.perbaikanBacaan,
+            row.pencapaianBulanan, cleanPdfText(row.kategoriProgres), row.nilai,
+            cleanPdfText(row.guru)
+          ];
+          if (!isF4) rowData.push(cleanPdfText(row.catatan || "-"));
+          return rowData;
+        }),
         styles: {
           font: "helvetica",
           fontStyle: "normal",
-          fontSize: isLegal ? 6.2 : 5.4,
-          cellPadding: isLegal ? 1.1 : 0.8,
+          fontSize: isF4 ? 7.2 : (isLegal ? 6.2 : 5.4),
+          cellPadding: isF4 ? 1.2 : (isLegal ? 1.1 : 0.8),
           overflow: "linebreak",
           valign: "top",
           lineColor: [220, 220, 220],
@@ -1006,60 +1013,49 @@ const RecapReport = () => {
           textColor: [255, 255, 255],
           fontStyle: "bold",
           halign: "center",
-          fontSize: isLegal ? 6 : 5.2,
+          fontSize: isF4 ? 6.8 : (isLegal ? 6 : 5.4),
         },
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: isLegal
-          ? {
-              0: { cellWidth: 8, halign: "center" },
-              1: { cellWidth: 34 },
-              2: { cellWidth: 21 },
-              3: { cellWidth: 18 },
-              4: { cellWidth: 18 },
-              5: { cellWidth: 18 },
-              6: { cellWidth: 11, halign: "center", fontStyle: "bold" },
-              7: { cellWidth: 11, halign: "center" },
-              8: { cellWidth: 25, halign: "center" },
-              9: { cellWidth: 11, halign: "center" },
-              10: { cellWidth: 26, halign: "center", fontStyle: "bold" },
-              11: { cellWidth: 17, halign: "center" },
-              12: { cellWidth: 17, halign: "center" },
-              13: { cellWidth: 17, halign: "center" },
-              14: { cellWidth: 17, halign: "center" },
-              15: { cellWidth: 28 },
-              16: { cellWidth: 10, halign: "center" },
-              17: { cellWidth: 24 },
-              18: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
-            }
-          : {
-              0: { cellWidth: 8, halign: "center" },
-              1: { cellWidth: 28 },
-              2: { cellWidth: 18 },
-              3: { cellWidth: 16 },
-              4: { cellWidth: 15 },
-              5: { cellWidth: 15 },
-              6: { cellWidth: 9, halign: "center", fontStyle: "bold" },
-              7: { cellWidth: 9, halign: "center" },
-              8: { cellWidth: 23, halign: "center" },
-              9: { cellWidth: 10, halign: "center" },
-              10: { cellWidth: 22, halign: "center", fontStyle: "bold" },
-              11: { cellWidth: 15, halign: "center" },
-              12: { cellWidth: 15, halign: "center" },
-              13: { cellWidth: 15, halign: "center" },
-              14: { cellWidth: 15, halign: "center" },
-              15: { cellWidth: 24 },
-              16: { cellWidth: 9, halign: "center" },
-              17: { cellWidth: 17 },
-              18: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
-            },
+        columnStyles: isF4 ? {
+          0: { cellWidth: 10, halign: "center" },
+          6: { cellWidth: 11, halign: "center", fontStyle: "bold" },
+          7: { cellWidth: 11, halign: "center" },
+          8: { cellWidth: 26, halign: "center" },
+          9: { cellWidth: 12, halign: "center" },
+          10: { cellWidth: 25, halign: "center" },
+          11: { cellWidth: 18, halign: "center" },
+          12: { cellWidth: 18, halign: "center" },
+          13: { cellWidth: 18, halign: "center" },
+          14: { cellWidth: 18, halign: "center" },
+          16: { cellWidth: 11, halign: "center" },
+        } : {
+          0: { cellWidth: isLegal ? 9 : 8, halign: "center" },
+          1: { cellWidth: isLegal ? 32 : 28 },
+          2: { cellWidth: isLegal ? 20 : 18 },
+          3: { cellWidth: isLegal ? 18 : 16 },
+          4: { cellWidth: isLegal ? 17 : 15 },
+          5: { cellWidth: isLegal ? 17 : 15 },
+          6: { cellWidth: isLegal ? 10 : 9, halign: "center", fontStyle: "bold" },
+          7: { cellWidth: isLegal ? 10 : 9, halign: "center" },
+          8: { cellWidth: isLegal ? 26 : 23, halign: "center" },
+          9: { cellWidth: isLegal ? 11 : 10, halign: "center" },
+          10: { cellWidth: isLegal ? 25 : 22, halign: "center", fontStyle: "bold" },
+          11: { cellWidth: isLegal ? 17 : 15, halign: "center" },
+          12: { cellWidth: isLegal ? 17 : 15, halign: "center" },
+          13: { cellWidth: isLegal ? 17 : 15, halign: "center" },
+          14: { cellWidth: isLegal ? 17 : 15, halign: "center" },
+          15: { cellWidth: isLegal ? 28 : 24 },
+          16: { cellWidth: isLegal ? 10 : 9, halign: "center" },
+          17: { cellWidth: isLegal ? 20 : 17 },
+          18: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
+        },
         didParseCell: data => {
-          if (data.section === "body" && data.column.index === 18) {
+          if (!isF4 && data.section === "body" && data.column.index === 18) {
             data.cell.styles.overflow = "linebreak";
             data.cell.styles.valign = "top";
             data.cell.styles.font = hasAmiriFont && hasArabicText(data.cell.raw) ? "Amiri" : "helvetica";
             data.cell.styles.fontStyle = "normal";
           }
-
           if (data.section === "body" && data.column.index === 10) {
             const value = String(data.cell.raw);
             if (value === "Lengkap") data.cell.styles.textColor = [16, 124, 65];
@@ -1071,6 +1067,41 @@ const RecapReport = () => {
         },
         margin: { left: margin, right: margin, bottom: 22 },
       });
+
+      if (isF4) {
+        doc.addPage();
+        drawHeader();
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(27, 94, 32);
+        doc.text("Catatan Rombel - Kelas " + group.kelas + " - Rombel " + group.rombel, margin, margin + 34);
+
+        autoTable(doc, {
+          startY: margin + 40,
+          head: [["No", "Nama Siswa", "Kelas/Rombel", "Catatan"]],
+          body: group.rows.map(row => [
+            String(row.no),
+            cleanPdfText(row.nama),
+            "Kelas " + group.kelas + " " + group.rombel,
+            cleanPdfText(row.catatan || "-")
+          ]),
+          styles: { font: "helvetica", fontSize: 8, cellPadding: 1.5, overflow: "linebreak" },
+          headStyles: { fillColor: [34, 87, 122], textColor: [255, 255, 255], fontStyle: "bold" },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          columnStyles: {
+            0: { cellWidth: 10, halign: "center" },
+            1: { cellWidth: 50 },
+            2: { cellWidth: 40 },
+            3: { cellWidth: "auto" }
+          },
+          didParseCell: data => {
+            if (data.section === "body" && data.column.index === 3) {
+              data.cell.styles.font = hasAmiriFont && hasArabicText(data.cell.raw) ? "Amiri" : "helvetica";
+            }
+          },
+          margin: { left: margin, right: margin, bottom: 22 },
+        });
+      }
 
       cursorY = getLastAutoTableFinalY(doc, cursorY) + 4;
     });
