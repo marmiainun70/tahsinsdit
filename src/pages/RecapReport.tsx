@@ -1774,7 +1774,10 @@ const RecapReport = () => {
                               {...layoutCellProps(row.studentId, "studentName")}
                               className={`border border-slate-200 px-2 py-3 font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}
                             >
-                              {highlight(row.nama, search)}
+                              <div>{highlight(row.nama, search)}</div>
+                              <div className="text-[10px] font-normal text-muted-foreground mt-0.5">
+                                Kelas {grp.kelas} {grp.rombel}
+                              </div>
                             </td>
                             <td {...layoutCellProps(row.studentId, "program")} className={`border border-slate-200 px-2 py-3 ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.program}</td>
                             <td {...layoutCellProps(row.studentId, "level")} className={`border border-slate-200 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
@@ -2123,14 +2126,14 @@ const StatCard = ({
           Aktif
         </Badge>
       )}
-      <CardContent className="flex flex-col items-center justify-center p-3 text-center h-full gap-1.5">
+      <CardContent className="flex items-center p-2 text-left h-full gap-2">
         <div className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${color}`}>
           <div className="scale-75">{icon}</div>
         </div>
-        <div className="flex flex-col items-center gap-0.5">
-          <p className="text-[11px] text-muted-foreground line-clamp-3 leading-snug">{label}</p>
-          <p className="text-lg font-bold leading-none text-foreground mt-0.5">{value}</p>
-          {subtitle && <p className="text-[10px] text-muted-foreground mt-0.5">{subtitle}</p>}
+        <div className="flex flex-col flex-1 min-w-0">
+          <p className="text-[10px] text-muted-foreground truncate leading-tight">{label}</p>
+          <p className="text-sm font-bold leading-tight text-foreground">{value}</p>
+          {subtitle && <p className="text-[9px] text-muted-foreground truncate mt-0.5">{subtitle}</p>}
         </div>
       </CardContent>
     </Card>
