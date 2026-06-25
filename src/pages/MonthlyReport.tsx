@@ -56,6 +56,23 @@ const statusClass = (status: string) => {
   return "bg-muted text-muted-foreground border-border";
 };
 
+const statusLabelMobile = (status: string, isLocked: boolean) => {
+  if (isLocked) return "Dikunci";
+  if (status === "Belum Diisi") return "Kosong";
+  if (status === "Lengkap") return "Lengkap";
+  if (status === "Belum Lengkap") return "Kurang";
+  if (status === "Melebihi Hari Efektif") return "Lebih";
+  return status;
+};
+
+const statusClassMobile = (status: string, isLocked: boolean) => {
+  if (isLocked) return "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900 hover:bg-blue-100 dark:hover:bg-blue-950/30";
+  if (status === "Lengkap") return "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900 hover:bg-emerald-100 dark:hover:bg-emerald-950/30";
+  if (status === "Belum Lengkap") return "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-950/30 dark:text-yellow-400 dark:border-yellow-900 hover:bg-yellow-100 dark:hover:bg-yellow-950/30";
+  if (status === "Melebihi Hari Efektif") return "bg-red-100 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900 hover:bg-red-100 dark:hover:bg-red-950/30";
+  return "bg-muted text-muted-foreground border-border dark:bg-muted/30 dark:text-muted-foreground dark:border-border hover:bg-muted dark:hover:bg-muted/30";
+};
+
 const normalizeNumber = (value: string) => Math.max(0, Math.floor(Number(value) || 0));
 
 const buildRows = (students: AttendanceStudent[], attendance: AttendanceWithStudent[]): AttendanceInputRow[] =>
@@ -209,7 +226,18 @@ const MonthlyReport = () => {
   };
 
   const scrollToRow = (studentId: string) => {
-    rowRefs.current[studentId]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const isMobile = window.innerWidth < 768;
+    const id = isMobile ? `row-mobile-${studentId}` : `row-desktop-${studentId}`;
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.classList.add("bg-yellow-100", "dark:bg-yellow-950/40");
+      setTimeout(() => {
+        element.classList.remove("bg-yellow-100", "dark:bg-yellow-950/40");
+      }, 2000);
+    } else {
+      rowRefs.current[studentId]?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   };
 
   const validateRows = () => {
@@ -343,7 +371,8 @@ const MonthlyReport = () => {
         )}
       </div>
 
-      <Card>
+      {/* Card Filter Utama - Desktop */}
+      <Card className="hidden md:block">
         <CardHeader>
           <CardTitle className="text-lg">Filter Utama</CardTitle>
         </CardHeader>
@@ -411,6 +440,95 @@ const MonthlyReport = () => {
         </CardContent>
       </Card>
 
+      {/* Card Filter Utama - Mobile */}
+      <Card className="block md:hidden">
+        <CardHeader className="p-4 pb-2">
+          <CardTitle className="text-base">Filter Utama</CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 pt-0 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            {/* Baris pertama: Bulan, Tahun */}
+            <div className="space-y-1">
+              <Label className="text-xs">Bulan</Label>
+              <Select value={String(month)} onValueChange={(value) => setMonth(Number(value))}>
+                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {MONTH_NAMES.map((name, index) => (
+                    <SelectItem key={name} value={String(index + 1)} className="text-xs">{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Tahun</Label>
+              <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
+                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {YEARS.map((item) => <SelectItem key={item} value={String(item)} className="text-xs">{item}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Baris kedua: Kelas, Rombel (jika bukan teacherOverview) */}
+            {!teacherOverview && (
+              <>
+                <div className="space-y-1">
+                  <Label className="text-xs">Kelas</Label>
+                  <Select value={kelas || undefined} onValueChange={setKelas}>
+                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Kelas" /></SelectTrigger>
+                    <SelectContent>
+                      {KELAS_LIST.map((item) => <SelectItem key={item} value={String(item)} className="text-xs">Kelas {item}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Rombel</Label>
+                  <Select value={rombel || undefined} onValueChange={setRombel}>
+                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Rombel" /></SelectTrigger>
+                    <SelectContent>
+                      {ROMBELS.map((item) => <SelectItem key={item} value={item} className="text-xs">Rombel {item}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
+
+            {/* Baris ketiga: Hari Efektif, Filter Status */}
+            <div className="space-y-1">
+              <Label className="text-xs">Hari Efektif</Label>
+              <Input
+                type="number"
+                min={0}
+                value={effectiveDays}
+                onChange={(event) => setEffectiveDays(normalizeNumber(event.target.value))}
+                className="h-9 text-xs"
+                disabled={teacherAccount && isLocked}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Status</Label>
+              <Select value={statusFilter} onValueChange={(value: StatusFilter) => setStatusFilter(value)}>
+                <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-xs">Semua</SelectItem>
+                  <SelectItem value="filled" className="text-xs">Sudah Diisi</SelectItem>
+                  <SelectItem value="empty" className="text-xs">Belum Diisi</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Pencarian siswa tampil satu baris penuh di bawahnya */}
+          <div className="space-y-1 pt-1">
+            <Label className="text-xs">Cari Nama</Label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Nama siswa" className="pl-9 h-9 text-xs" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {teacherOverview && (
         <Alert>
           <Users className="h-4 w-4" />
@@ -426,7 +544,8 @@ const MonthlyReport = () => {
         </Alert>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Ringkasan Statistik - Desktop */}
+          <div className="hidden md:grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardContent className="pt-6">
                 <p className="text-sm text-muted-foreground">Total Siswa</p>
@@ -450,6 +569,26 @@ const MonthlyReport = () => {
                 <p className="text-sm text-muted-foreground">Kelengkapan</p>
                 <p className="text-3xl font-bold">{summary.pct}%</p>
               </CardContent>
+            </Card>
+          </div>
+
+          {/* Ringkasan Statistik - Mobile */}
+          <div className="grid md:hidden grid-cols-4 gap-1.5">
+            <Card className="p-2 flex flex-col justify-between">
+              <p className="text-[10px] text-muted-foreground leading-tight">Total</p>
+              <p className="text-base font-bold leading-none mt-1">{summary.total}</p>
+            </Card>
+            <Card className="p-2 flex flex-col justify-between">
+              <p className="text-[10px] text-emerald-600 leading-tight">Selesai</p>
+              <p className="text-base font-bold text-emerald-600 leading-none mt-1">{summary.filled}</p>
+            </Card>
+            <Card className="p-2 flex flex-col justify-between cursor-pointer hover:bg-muted/50" onClick={() => setStatusFilter("empty")}>
+              <p className="text-[10px] text-yellow-600 leading-tight">Belum</p>
+              <p className="text-base font-bold text-yellow-600 leading-none mt-1">{summary.empty}</p>
+            </Card>
+            <Card className="p-2 flex flex-col justify-between">
+              <p className="text-[10px] text-muted-foreground leading-tight">Persen</p>
+              <p className="text-base font-bold leading-none mt-1">{summary.pct}%</p>
             </Card>
           </div>
 
@@ -482,7 +621,7 @@ const MonthlyReport = () => {
 
             <TabsContent value="input" className="space-y-4">
               <Card>
-                <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <CardHeader className="hidden md:flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <CardTitle className="text-lg">Input Massal</CardTitle>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div className="space-y-2">
@@ -503,7 +642,7 @@ const MonthlyReport = () => {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-2 md:p-6 pb-24 md:pb-6">
                   {studentsQuery.isLoading || attendanceQuery.isLoading ? (
                     <div className="flex items-center justify-center py-12 text-muted-foreground">
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Memuat data absensi...
@@ -511,68 +650,184 @@ const MonthlyReport = () => {
                   ) : visibleRows.length === 0 ? (
                     <p className="py-10 text-center text-muted-foreground">Tidak ada siswa sesuai filter.</p>
                   ) : (
-                    <div className="overflow-x-auto rounded-md border">
-                      <Table>
-                        <TableHeader className="sticky top-0 z-10 bg-background">
-                          <TableRow>
-                            <TableHead className="w-12">No</TableHead>
-                            <TableHead>Nama Siswa</TableHead>
-                            <TableHead>Level</TableHead>
-                            <TableHead className="w-24">Hadir</TableHead>
-                            <TableHead className="w-24">Sakit</TableHead>
-                            <TableHead className="w-24">Izin</TableHead>
-                            <TableHead className="w-24">Alfa</TableHead>
-                            <TableHead>Total</TableHead>
-                            <TableHead>Persentase Kehadiran</TableHead>
-                            <TableHead>Status</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {(() => {
-                            let rowNumber = 0;
-                            const groups = teacherOverview ? groupedVisibleRows : [{ kelas: Number(kelas), rows: visibleRows }];
+                    <>
+                      {/* Tabel Desktop */}
+                      <div className="hidden md:block overflow-x-auto rounded-md border">
+                        <Table>
+                          <TableHeader className="sticky top-0 z-10 bg-background">
+                            <TableRow>
+                              <TableHead className="w-12">No</TableHead>
+                              <TableHead>Nama Siswa</TableHead>
+                              <TableHead>Level</TableHead>
+                              <TableHead className="w-24">Hadir</TableHead>
+                              <TableHead className="w-24">Sakit</TableHead>
+                              <TableHead className="w-24">Izin</TableHead>
+                              <TableHead className="w-24">Alfa</TableHead>
+                              <TableHead>Total</TableHead>
+                              <TableHead>Persentase Kehadiran</TableHead>
+                              <TableHead>Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {(() => {
+                              let rowNumber = 0;
+                              const groups = teacherOverview ? groupedVisibleRows : [{ kelas: Number(kelas), rows: visibleRows }];
 
-                            return groups.map((group) => (
-                              <Fragment key={group.kelas}>
-                                {teacherOverview && (
-                                  <TableRow className="bg-muted/60 hover:bg-muted/60">
-                                    <TableCell colSpan={10} className="font-semibold text-foreground">Kelas {group.kelas}</TableCell>
-                                  </TableRow>
-                                )}
-                                {group.rows.map((row) => {
-                                  rowNumber += 1;
-                                  const total = getTotal(row);
-                                  const percentage = effectiveDays > 0 ? Math.round((row.present / effectiveDays) * 100) : 0;
-                                  const status = getStatus(row, effectiveDays);
-                                  return (
-                                    <TableRow key={row.studentId} ref={(element) => { rowRefs.current[row.studentId] = element; }}>
-                                      <TableCell>{rowNumber}</TableCell>
-                                      <TableCell className="min-w-48 font-medium">{row.studentName}</TableCell>
-                                      <TableCell>{row.level}</TableCell>
-                                      {(["present", "sick", "permission", "absent"] as const).map((field) => (
-                                        <TableCell key={field}>
-                                          <Input
-                                            type="number"
-                                            min={0}
-                                            value={row[field]}
-                                            onChange={(event) => updateRow(row.studentId, field, event.target.value)}
-                                            disabled={teacherAccount && isLocked}
-                                            className="h-9 w-20"
-                                          />
-                                        </TableCell>
-                                      ))}
-                                      <TableCell className="font-semibold">{total}</TableCell>
-                                      <TableCell>{percentage}%</TableCell>
-                                      <TableCell><Badge variant="outline" className={statusClass(status)}>{status}</Badge></TableCell>
+                              return groups.map((group) => (
+                                <Fragment key={group.kelas}>
+                                  {teacherOverview && (
+                                    <TableRow className="bg-muted/60 hover:bg-muted/60">
+                                      <TableCell colSpan={10} className="font-semibold text-foreground">Kelas {group.kelas}</TableCell>
                                     </TableRow>
-                                  );
-                                })}
-                              </Fragment>
-                            ));
-                          })()}
-                        </TableBody>
-                      </Table>
-                    </div>
+                                  )}
+                                  {group.rows.map((row) => {
+                                    rowNumber += 1;
+                                    const total = getTotal(row);
+                                    const percentage = effectiveDays > 0 ? Math.round((row.present / effectiveDays) * 100) : 0;
+                                    const status = getStatus(row, effectiveDays);
+                                    return (
+                                      <TableRow
+                                        key={row.studentId}
+                                        id={`row-desktop-${row.studentId}`}
+                                        ref={(element) => { rowRefs.current[row.studentId] = element; }}
+                                      >
+                                        <TableCell>{rowNumber}</TableCell>
+                                        <TableCell className="min-w-48 font-medium">{row.studentName}</TableCell>
+                                        <TableCell>{row.level}</TableCell>
+                                        {(["present", "sick", "permission", "absent"] as const).map((field) => (
+                                          <TableCell key={field}>
+                                            <Input
+                                              type="number"
+                                              min={0}
+                                              value={row[field]}
+                                              onChange={(event) => updateRow(row.studentId, field, event.target.value)}
+                                              disabled={teacherAccount && isLocked}
+                                              className="h-9 w-20"
+                                            />
+                                          </TableCell>
+                                        ))}
+                                        <TableCell className="font-semibold">{total}</TableCell>
+                                        <TableCell>{percentage}%</TableCell>
+                                        <TableCell><Badge variant="outline" className={statusClass(status)}>{status}</Badge></TableCell>
+                                      </TableRow>
+                                    );
+                                  })}
+                                </Fragment>
+                              ));
+                            })()}
+                          </TableBody>
+                        </Table>
+                      </div>
+
+                      {/* Tabel Mobile */}
+                      <div className="block md:hidden w-full overflow-hidden rounded-md border">
+                        <div className="text-[10px] text-muted-foreground px-2 py-1.5 border-b bg-muted/30 text-center font-medium">
+                          H = Hadir · S = Sakit · I = Izin · A = Alfa
+                        </div>
+                        <table className="w-full table-fixed text-[10px]">
+                          <colgroup>
+                            <col className="w-[6%]" />
+                            <col className="w-[34%]" />
+                            <col className="w-[10%]" />
+                            <col className="w-[10%]" />
+                            <col className="w-[10%]" />
+                            <col className="w-[10%]" />
+                            <col className="w-[20%]" />
+                          </colgroup>
+                          <thead className="bg-muted/50 border-b">
+                            <tr>
+                              <th className="py-2 px-0.5 text-center font-semibold text-muted-foreground text-[9px]">No</th>
+                              <th className="py-2 px-0.5 text-left font-semibold text-muted-foreground text-[9px]">Nama Siswa</th>
+                              <th className="py-2 px-0.5 text-center font-semibold text-muted-foreground text-[9px]">H</th>
+                              <th className="py-2 px-0.5 text-center font-semibold text-muted-foreground text-[9px]">S</th>
+                              <th className="py-2 px-0.5 text-center font-semibold text-muted-foreground text-[9px]">I</th>
+                              <th className="py-2 px-0.5 text-center font-semibold text-muted-foreground text-[9px]">A</th>
+                              <th className="py-2 px-0.5 text-center font-semibold text-muted-foreground text-[9px]">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(() => {
+                              let rowNumber = 0;
+                              const groups = teacherOverview ? groupedVisibleRows : [{ kelas: Number(kelas), rows: visibleRows }];
+
+                              return groups.map((group) => (
+                                <Fragment key={group.kelas}>
+                                  {teacherOverview && (
+                                    <tr className="bg-muted/60">
+                                      <td colSpan={7} className="font-semibold text-foreground py-1.5 px-2 text-[11px]">Kelas {group.kelas}</td>
+                                    </tr>
+                                  )}
+                                  {group.rows.map((row) => {
+                                    rowNumber += 1;
+                                    const total = getTotal(row);
+                                    const status = getStatus(row, effectiveDays);
+                                    const hasError = total !== effectiveDays;
+                                    return (
+                                      <tr
+                                        key={row.studentId}
+                                        id={`row-mobile-${row.studentId}`}
+                                        className={`border-b transition-colors hover:bg-muted/30 ${
+                                          hasError
+                                            ? (total > effectiveDays ? "bg-red-50/50 dark:bg-red-950/10" : "bg-yellow-50/50 dark:bg-yellow-950/10")
+                                            : ""
+                                        }`}
+                                      >
+                                        <td className="py-1.5 px-0.5 text-center text-muted-foreground">{rowNumber}</td>
+                                        <td className="py-1.5 px-0.5 align-middle min-w-0">
+                                          <span
+                                            title={row.studentName}
+                                            className="line-clamp-2 break-words leading-tight font-medium text-[10px]"
+                                          >
+                                            {row.studentName}
+                                          </span>
+                                          {hasError && (
+                                            <span className="text-[8px] text-red-500 dark:text-red-400 block leading-none mt-0.5">
+                                              {total > effectiveDays ? `Lebih: ${total}/${effectiveDays}` : `Kurang: ${total}/${effectiveDays}`}
+                                            </span>
+                                          )}
+                                        </td>
+                                        {(["present", "sick", "permission", "absent"] as const).map((field) => (
+                                          <td key={field} className="py-1.5 px-0.5 text-center">
+                                            <Input
+                                              type="number"
+                                              inputMode="numeric"
+                                              min={0}
+                                              value={row[field]}
+                                              onChange={(event) => updateRow(row.studentId, field, event.target.value)}
+                                              disabled={teacherAccount && isLocked}
+                                              className="h-8 w-full min-w-0 px-0.5 py-0 text-center text-[11px] rounded-md"
+                                              onFocus={(e) => e.target.select()}
+                                            />
+                                          </td>
+                                        ))}
+                                        <td className="py-1.5 px-0.5 text-center align-middle">
+                                          <Badge className={`px-1 py-0 text-[8px] leading-4 whitespace-normal text-center font-normal ${statusClassMobile(status, isLocked)}`}>
+                                            {statusLabelMobile(status, isLocked)}
+                                          </Badge>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </Fragment>
+                              ));
+                            })()}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Tombol Simpan Sticky untuk Mobile */}
+                      <div className="block md:hidden sticky bottom-0 z-20 border-t bg-background/95 p-2 backdrop-blur -mx-6 -mb-6 mt-4">
+                        <Button
+                          type="button"
+                          onClick={saveAll}
+                          disabled={saveDisabled || rows.length === 0}
+                          className="w-full"
+                        >
+                          {bulkUpsert.isPending || upsertSettings.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                          Simpan Absensi ({rows.length} Siswa)
+                        </Button>
+                      </div>
+                    </>
                   )}
                 </CardContent>
               </Card>
