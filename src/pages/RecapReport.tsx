@@ -36,7 +36,8 @@ import {
 } from "@/utils/recapMonthlyReportRows";
 import {
   Search, Loader2, Eye, Download, CheckCircle2,
-  Users, ListChecks, AlertCircle, Percent, FileWarning, Calendar
+  Users, ListChecks, AlertCircle, Percent, FileWarning, Calendar,
+  ClipboardList, Star, Filter, RotateCcw, FileText
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -165,6 +166,28 @@ const getLastAutoTableFinalY = (doc: jsPDF, fallbackY: number) =>
 type FilterReportStatusType = "all" | "filled" | "empty";
 type FilterAttendanceStatusType = "all" | RecapAttendanceStatus;
 type FilterCategoryType = "all" | (typeof PROGRESS_CATEGORIES)[number];
+type FilterScoreType = "all" | "good" | "medium" | "low" | "empty";
+
+const getReportStatusClass = (status: "filled" | "empty") =>
+  status === "filled"
+    ? "bg-emerald-100 text-emerald-800 border-emerald-200"
+    : "bg-amber-100 text-amber-800 border-amber-200";
+
+const getAttendanceStatusClass = (status: RecapAttendanceStatus) => {
+  if (status === "Lengkap") return "bg-emerald-100 text-emerald-800 border-emerald-200";
+  if (status === "Belum Diisi") return "bg-amber-100 text-amber-800 border-amber-200";
+  if (status === "Melebihi Hari Efektif") return "bg-rose-100 text-rose-800 border-rose-200";
+  return "bg-orange-100 text-orange-800 border-orange-200";
+};
+
+const scoreMatchesFilter = (score: number | null, filter: FilterScoreType) => {
+  if (filter === "all") return true;
+  if (filter === "empty") return score === null;
+  if (score === null) return false;
+  if (filter === "good") return score >= 85;
+  if (filter === "medium") return score >= 70 && score < 85;
+  return score < 70;
+};
 
 const RecapReport = () => {
   const { data: students = [], isLoading: ls } = useStudents();
@@ -184,6 +207,7 @@ const RecapReport = () => {
   const [filterReportStatus, setFilterReportStatus] = useState<FilterReportStatusType>("all");
   const [filterAttendanceStatus, setFilterAttendanceStatus] = useState<FilterAttendanceStatusType>("all");
   const [filterCategory, setFilterCategory] = useState<FilterCategoryType>("all");
+  const [filterScore, setFilterScore] = useState<FilterScoreType>("all");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [pdfPreviewSize, setPdfPreviewSize] = useState<PdfPaperSize>("a4");
@@ -306,12 +330,13 @@ const RecapReport = () => {
           if (filterReportStatus === "empty" && r.reportStatus !== "empty") return false;
           if (filterAttendanceStatus !== "all" && r.attendanceStatus !== filterAttendanceStatus) return false;
           if (filterCategory !== "all" && r.kategoriProgres !== filterCategory) return false;
+          if (!scoreMatchesFilter(r.nilaiAkhirProgresif, filterScore)) return false;
           return true;
         }).map((r, i) => ({ ...r, no: i + 1 }));
         return { ...g, rows: filtered };
       })
       .filter(g => g.rows.length > 0);
-  }, [filterAttendanceStatus, filterCategory, filterReportStatus, groups]);
+  }, [filterAttendanceStatus, filterCategory, filterReportStatus, filterScore, groups]);
 
   const stats = useMemo(() => {
     const all = groups.flatMap(g => g.rows);
@@ -324,7 +349,21 @@ const RecapReport = () => {
     const averageScore = scoreRows.length
       ? Math.round(scoreRows.reduce((sum, row) => sum + (row.nilaiAkhirProgresif ?? 0), 0) / scoreRows.length)
       : 0;
-    return { total, filled, empty, attendanceComplete, attendanceIncomplete, averageScore };
+    const percentOfTotal = (value: number) => total ? `${Math.round((value / total) * 100)}%` : "0%";
+    const scoreLabel = averageScore >= 85 ? "Sangat baik" : averageScore >= 70 ? "Baik" : averageScore > 0 ? "Perlu perhatian" : "Belum ada nilai";
+    return {
+      total,
+      filled,
+      empty,
+      attendanceComplete,
+      attendanceIncomplete,
+      averageScore,
+      filledPercent: percentOfTotal(filled),
+      emptyPercent: percentOfTotal(empty),
+      attendanceCompletePercent: percentOfTotal(attendanceComplete),
+      attendanceIncompletePercent: percentOfTotal(attendanceIncomplete),
+      scoreLabel,
+    };
   }, [groups]);
 
   useEffect(() => {
@@ -1065,18 +1104,8 @@ const RecapReport = () => {
             Rekap Laporan Bulanan
           </h1>
           <p className="text-sm text-muted-foreground">
-            Tahsin Dasar, Tahsin Lanjutan & Tahfizh — siap export PDF & Excel
+            Tahsin Dasar, Tahsin Lanjutan & Tahfizh - siap export PDF & Excel
           </p>
-        </div>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <Button
-            onClick={() => setMultiMonthDialogOpen(true)}
-            variant="outline"
-            className="gap-2 text-xs sm:text-sm"
-          >
-            <Download className="w-4 h-4" />
-            Download Multi Bulan per Rombel
-          </Button>
         </div>
       </div>
 
@@ -1092,9 +1121,11 @@ const RecapReport = () => {
                 setFilterReportStatus("all");
                 setFilterAttendanceStatus("all");
                 setFilterCategory("all");
+                setFilterScore("all");
               }}
-              isActive={filterReportStatus === "all" && filterAttendanceStatus === "all" && filterCategory === "all"}
+              isActive={filterReportStatus === "all" && filterAttendanceStatus === "all" && filterCategory === "all" && filterScore === "all"}
               activeColor="border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/30 dark:bg-blue-950/20"
+              subtitle="Semua siswa"
             />
             <StatCard
               icon={<ListChecks className="w-4 h-4" />}
@@ -1104,6 +1135,7 @@ const RecapReport = () => {
               onClick={() => setFilterReportStatus("filled")}
               isActive={filterReportStatus === "filled"}
               activeColor="border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/30 dark:bg-emerald-950/20"
+              subtitle={stats.filledPercent}
             />
             <StatCard
               icon={<FileWarning className="w-4 h-4" />}
@@ -1113,6 +1145,7 @@ const RecapReport = () => {
               onClick={() => setFilterReportStatus("empty")}
               isActive={filterReportStatus === "empty"}
               activeColor="border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30 dark:bg-rose-950/20"
+              subtitle={stats.emptyPercent}
             />
             <StatCard
               icon={<Percent className="w-4 h-4" />}
@@ -1122,6 +1155,7 @@ const RecapReport = () => {
               onClick={() => setFilterAttendanceStatus("Lengkap")}
               isActive={filterAttendanceStatus === "Lengkap"}
               activeColor="border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/30 dark:bg-amber-950/20"
+              subtitle={stats.attendanceCompletePercent}
             />
             <StatCard
               icon={<CheckCircle2 className="w-4 h-4" />}
@@ -1131,17 +1165,19 @@ const RecapReport = () => {
               onClick={() => setFilterAttendanceStatus("Belum Lengkap")}
               isActive={filterAttendanceStatus === "Belum Lengkap"}
               activeColor="border-violet-500 ring-2 ring-violet-500/20 bg-violet-50/30 dark:bg-violet-950/20"
+              subtitle={stats.attendanceIncompletePercent}
             />
             <StatCard
-              icon={<Percent className="w-4 h-4" />}
+              icon={<Star className="w-4 h-4" />}
               label="Rata-rata Nilai Progresif"
               value={stats.averageScore}
               color="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400"
+              subtitle={stats.scoreLabel}
             />
           </div>
 
           {/* Active Filter Cues */}
-          {(filterReportStatus !== "all" || filterAttendanceStatus !== "all" || filterCategory !== "all" || search.trim() || filterKelas !== "all" || filterRombel !== "all") && (
+          {(filterReportStatus !== "all" || filterAttendanceStatus !== "all" || filterCategory !== "all" || filterScore !== "all" || search.trim() || filterKelas !== "all" || filterRombel !== "all") && (
             <div className="flex flex-wrap items-center gap-2 p-2.5 bg-muted/40 border border-border rounded-lg text-xs transition-all duration-200">
               <span className="text-muted-foreground font-medium flex items-center gap-1">
                 Filter Aktif:
@@ -1164,22 +1200,32 @@ const RecapReport = () => {
                   <button onClick={() => setFilterCategory("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
                 </Badge>
               )}
+              {filterScore !== "all" && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Nilai: {
+                    filterScore === "good" ? ">= 85" :
+                    filterScore === "medium" ? "70 - 84" :
+                    filterScore === "low" ? "< 70" : "Belum ada nilai"
+                  }
+                  <button onClick={() => setFilterScore("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
+                </Badge>
+              )}
               {filterKelas !== "all" && (
                 <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
                   Kelas {filterKelas}
-                  <button onClick={() => setFilterKelas("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">×</button>
+                  <button onClick={() => setFilterKelas("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
                 </Badge>
               )}
               {filterRombel !== "all" && (
                 <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
                   Rombel {filterRombel}
-                  <button onClick={() => setFilterRombel("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">×</button>
+                  <button onClick={() => setFilterRombel("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
                 </Badge>
               )}
               {search.trim() && (
                 <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
                   Cari: "{search}"
-                  <button onClick={() => setSearch("")} className="hover:text-foreground text-muted-foreground font-bold ml-1">×</button>
+                  <button onClick={() => setSearch("")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
                 </Badge>
               )}
               <Button
@@ -1190,6 +1236,7 @@ const RecapReport = () => {
                   setFilterReportStatus("all");
                   setFilterAttendanceStatus("all");
                   setFilterCategory("all");
+                  setFilterScore("all");
                   setFilterKelas("all");
                   setFilterRombel("all");
                   setSearch("");
@@ -1211,7 +1258,7 @@ const RecapReport = () => {
 
           {/* Filters */}
           <Card>
-            <CardContent className="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
+            <CardContent className="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2">
               <div className="col-span-2">
                 <Label className="text-xs">Cari Siswa</Label>
                 <div className="relative">
@@ -1339,46 +1386,88 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label className="text-xs">Nilai</Label>
+                <Select
+                  value={filterScore}
+                  onValueChange={(v) => setFilterScore(v as FilterScoreType)}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua</SelectItem>
+                    <SelectItem value="good">85 ke atas</SelectItem>
+                    <SelectItem value="medium">70 - 84</SelectItem>
+                    <SelectItem value="low">Di bawah 70</SelectItem>
+                    <SelectItem value="empty">Belum ada nilai</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2 flex items-end gap-2 lg:col-span-2">
+                <Button
+                  className="h-9 flex-1 gap-2 bg-emerald-700 text-xs hover:bg-emerald-800"
+                  onClick={() => toast({ title: "Filter rekap sudah diterapkan." })}
+                >
+                  <Filter className="h-3.5 w-3.5" />
+                  Terapkan Filter
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-9 flex-1 gap-2 text-xs"
+                  onClick={() => {
+                    setFilterReportStatus("all");
+                    setFilterAttendanceStatus("all");
+                    setFilterCategory("all");
+                    setFilterScore("all");
+                    setFilterKelas("all");
+                    setFilterRombel("all");
+                    setSearch("");
+                  }}
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Reset
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              className="gap-2 text-xs sm:text-sm"
-              disabled={!!pdfLoading || activePdfGroups.length === 0}
-              onClick={() => previewPDF("a4")}
-            >
-              {pdfLoading === "preview-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-              Preview A4
-            </Button>
-            <Button
-              variant="outline"
-              className="gap-2 text-xs sm:text-sm"
-              disabled={!!pdfLoading || activePdfGroups.length === 0}
-              onClick={() => previewPDF("legal")}
-            >
-              {pdfLoading === "preview-legal" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-              Preview Legal
-            </Button>
-            <Button
-              variant="outline"
-              className="gap-2 text-xs sm:text-sm"
-              disabled={!!pdfLoading || activePdfGroups.length === 0}
-              onClick={() => exportPDF("a4")}
-            >
-              {pdfLoading === "download-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              PDF A4
-            </Button>
-            <Button
-              className="gap-2 text-xs sm:text-sm"
-              disabled={!!pdfLoading || activePdfGroups.length === 0}
-              onClick={() => exportPDF("legal")}
-            >
-              {pdfLoading === "download-legal" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              PDF Legal
-            </Button>
-          </div>
+          <Card className="overflow-hidden border-emerald-100 shadow-sm">
+            <CardHeader className="flex flex-col gap-3 border-b bg-white/80 py-3 dark:bg-background/80 lg:flex-row lg:items-center lg:justify-between">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <ClipboardList className="h-4 w-4 text-emerald-700" />
+                Data Rekap Laporan Bulanan
+              </CardTitle>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  className="gap-2 text-xs sm:text-sm"
+                  disabled={!!pdfLoading || activePdfGroups.length === 0}
+                  onClick={() => previewPDF("a4")}
+                >
+                  {pdfLoading === "preview-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                  Preview PDF (A4)
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2 text-xs sm:text-sm"
+                  disabled={!!pdfLoading || activePdfGroups.length === 0}
+                  onClick={() => exportPDF("a4")}
+                >
+                  {pdfLoading === "download-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                  Download PDF
+                </Button>
+                <Button
+                  className="gap-2 bg-emerald-700 text-xs hover:bg-emerald-800 sm:text-sm"
+                  disabled={!!pdfLoading || activePdfGroups.length === 0}
+                  onClick={() => setMultiMonthDialogOpen(true)}
+                >
+                  <Download className="w-4 h-4" />
+                  Download Per Rombel (Multi Bulan)
+                </Button>
+              </div>
+            </CardHeader>
+          </Card>
 
           {/* Tables grouped per rombel */}
           {displayGroups.length === 0 && (
@@ -1392,7 +1481,7 @@ const RecapReport = () => {
             <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
               <CardHeader className="bg-emerald-50 dark:bg-emerald-950/20 py-3">
                 <CardTitle className="text-sm text-emerald-900 dark:text-emerald-300">
-                  Kelas {grp.kelas} — Rombel {grp.rombel}{" "}
+                  Kelas {grp.kelas} - Rombel {grp.rombel}{" "}
                   <Badge variant="outline" className="ml-2 bg-white dark:bg-background">
                     {grp.rows.length} siswa
                   </Badge>
@@ -1406,32 +1495,38 @@ const RecapReport = () => {
               </CardHeader>
               <CardContent className="p-0">
                 <div ref={tableScrollRef} className="spreadsheet-table-scroll hidden md:block overflow-x-auto">
-                  <table ref={tableContentRef} className="min-w-[1900px] w-full text-xs border-collapse">
-                    <thead className="sticky top-0 bg-muted/80">
-                      <tr className="text-left">
-                        <th className="px-2 py-2 w-8">No</th>
-                        <th className="px-2 py-2 min-w-[160px]">Nama Siswa</th>
-                        <th className="px-2 py-2">Program</th>
-                        <th className="px-2 py-2">Level</th>
-                        <th className="px-2 py-2 text-center">Awal</th>
-                        <th className="px-2 py-2 text-center">Akhir</th>
-                        <th className="px-2 py-2 text-center">Total</th>
-                        <th className="px-2 py-2 text-center">Target</th>
-                        <th className="px-2 py-2 text-center">Hadir</th>
-                        <th className="px-2 py-2 text-center">Sakit</th>
-                        <th className="px-2 py-2 text-center">Izin</th>
-                        <th className="px-2 py-2 text-center">Alfa</th>
-                        <th className="px-2 py-2 text-center">Total Absensi</th>
-                        <th className="px-2 py-2 text-center">Persentase Hadir</th>
-                        <th className="px-2 py-2 text-center">Status Absensi</th>
-                        <th className="px-2 py-2 text-center">Kehadiran & Kesiapan Belajar</th>
-                        <th className="px-2 py-2 text-center">Kualitas Bacaan Harian</th>
-                        <th className="px-2 py-2 text-center">Perbaikan Bacaan Harian</th>
-                        <th className="px-2 py-2 text-center">Pencapaian Bulanan</th>
-                        <th className="px-2 py-2">Kategori Progres</th>
-                        <th className="px-2 py-2 text-center">Nilai</th>
-                        <th className="px-2 py-2">Guru</th>
-                        <th className="px-2 py-2 min-w-[200px]">Catatan</th>
+                  <table ref={tableContentRef} className="min-w-[2200px] w-full border-collapse text-[11px]">
+                    <thead className="sticky top-0 z-10">
+                      <tr className="text-center text-[11px] font-bold uppercase tracking-normal">
+                        <th rowSpan={2} className="w-9 border border-slate-200 bg-slate-50 px-2 py-3 align-middle">No.</th>
+                        <th rowSpan={2} className="min-w-[170px] border border-slate-200 bg-slate-50 px-2 py-3 align-middle text-left">Nama Siswa</th>
+                        <th rowSpan={2} className="min-w-[115px] border border-slate-200 bg-slate-50 px-2 py-3 align-middle">Program</th>
+                        <th rowSpan={2} className="min-w-[85px] border border-slate-200 bg-slate-50 px-2 py-3 align-middle">Level</th>
+                        <th colSpan={4} className="border border-emerald-200 bg-emerald-50 px-2 py-3 text-emerald-800">Progres Bulanan</th>
+                        <th colSpan={7} className="border border-sky-200 bg-sky-50 px-2 py-3 text-sky-800">Absensi Bulanan</th>
+                        <th colSpan={6} className="border border-amber-200 bg-amber-50 px-2 py-3 text-amber-800">Penilaian Progresif</th>
+                        <th colSpan={2} className="border border-violet-200 bg-violet-50 px-2 py-3 text-violet-800">Hasil</th>
+                      </tr>
+                      <tr className="text-center text-[10px] font-semibold">
+                        <th className="border border-emerald-200 bg-emerald-50 px-2 py-2">Awal</th>
+                        <th className="border border-emerald-200 bg-emerald-50 px-2 py-2">Akhir</th>
+                        <th className="border border-emerald-200 bg-emerald-50 px-2 py-2">Total</th>
+                        <th className="border border-emerald-200 bg-emerald-50 px-2 py-2">Target</th>
+                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">Hadir</th>
+                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">Sakit</th>
+                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">Izin</th>
+                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">Alfa</th>
+                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">Total</th>
+                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">% Hadir</th>
+                        <th className="border border-sky-200 bg-sky-50 px-2 py-2">Status Absensi</th>
+                        <th className="border border-amber-200 bg-amber-50 px-2 py-2">Kehadiran & Kesiapan Belajar</th>
+                        <th className="border border-amber-200 bg-amber-50 px-2 py-2">Kualitas Bacaan Harian</th>
+                        <th className="border border-amber-200 bg-amber-50 px-2 py-2">Perbaikan Bacaan Harian</th>
+                        <th className="border border-amber-200 bg-amber-50 px-2 py-2">Pencapaian Bulanan</th>
+                        <th className="border border-amber-200 bg-amber-50 px-2 py-2">Kategori Progres</th>
+                        <th className="border border-amber-200 bg-amber-50 px-2 py-2">Nilai</th>
+                        <th className="border border-violet-200 bg-violet-50 px-2 py-2">Guru</th>
+                        <th className="border border-violet-200 bg-violet-50 px-2 py-2">Catatan</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1440,18 +1535,18 @@ const RecapReport = () => {
                         return (
                           <tr
                             key={row.studentId}
-                            className={`border-t ${
+                            className={`transition-colors ${
                               reportEmpty
                                 ? "bg-rose-50/60 dark:bg-rose-950/20"
                                 : "hover:bg-muted/40"
                             }`}
                           >
-                            <td className="px-2 py-2">{row.no}</td>
-                            <td className="px-2 py-2 font-medium">
+                            <td className="border border-slate-200 px-2 py-3 text-center">{row.no}</td>
+                            <td className="border border-slate-200 px-2 py-3 font-medium">
                               {highlight(row.nama, search)}
                             </td>
-                            <td className="px-2 py-2">{row.program}</td>
-                            <td className="px-2 py-2">
+                            <td className="border border-slate-200 px-2 py-3">{row.program}</td>
+                            <td className="border border-slate-200 px-2 py-3 text-center">
                               <Badge
                                 className={`text-[10px] ${
                                   LEVEL_COLORS[row.level as ReadingLevel] || ""
@@ -1460,33 +1555,33 @@ const RecapReport = () => {
                                 {row.level}
                               </Badge>
                             </td>
-                            <td className="px-2 py-2 text-center">{row.awal}</td>
-                            <td className="px-2 py-2 text-center">{row.akhir}</td>
-                            <td className="px-2 py-2 text-center font-bold">
+                            <td className="border border-emerald-100 px-2 py-3 text-center">{row.awal}</td>
+                            <td className="border border-emerald-100 px-2 py-3 text-center">{row.akhir}</td>
+                            <td className="border border-emerald-100 px-2 py-3 text-center font-bold">
                               {formatRecapValue(row.total)}
                             </td>
-                            <td className="px-2 py-2 text-center">
+                            <td className="border border-emerald-100 px-2 py-3 text-center">
                               {formatRecapValue(row.target)}
                             </td>
-                            <td className="px-2 py-2 text-center">{formatRecapValue(row.present)}</td>
-                            <td className="px-2 py-2 text-center">{formatRecapValue(row.sick)}</td>
-                            <td className="px-2 py-2 text-center">{formatRecapValue(row.permission)}</td>
-                            <td className="px-2 py-2 text-center">{formatRecapValue(row.absent)}</td>
-                            <td className="px-2 py-2 text-center">{formatRecapValue(row.totalAbsensi)}</td>
-                            <td className="px-2 py-2 text-center">{row.hasAttendance ? `${row.persentaseHadir ?? 0}%` : "-"}</td>
-                            <td className="px-2 py-2 text-center">
-                              <Badge variant={row.attendanceStatus === "Lengkap" ? "default" : "outline"}>{row.attendanceStatus}</Badge>
+                            <td className="border border-sky-100 px-2 py-3 text-center">{formatRecapValue(row.present)}</td>
+                            <td className="border border-sky-100 px-2 py-3 text-center">{formatRecapValue(row.sick)}</td>
+                            <td className="border border-sky-100 px-2 py-3 text-center">{formatRecapValue(row.permission)}</td>
+                            <td className="border border-sky-100 px-2 py-3 text-center">{formatRecapValue(row.absent)}</td>
+                            <td className="border border-sky-100 px-2 py-3 text-center">{formatRecapValue(row.totalAbsensi)}</td>
+                            <td className="border border-sky-100 px-2 py-3 text-center">{row.hasAttendance ? `${row.persentaseHadir ?? 0}%` : "-"}</td>
+                            <td className="border border-sky-100 px-2 py-3 text-center">
+                              <Badge variant="outline" className={getAttendanceStatusClass(row.attendanceStatus)}>{row.attendanceStatus}</Badge>
                             </td>
-                            <td className="px-2 py-2 text-center">{formatProgressivePoint(row.poinKehadiranKesiapan)}</td>
-                            <td className="px-2 py-2 text-center">{formatProgressivePoint(row.poinKualitasBacaan)}</td>
-                            <td className="px-2 py-2 text-center">{formatProgressivePoint(row.poinPerbaikanBacaan)}</td>
-                            <td className="px-2 py-2 text-center">{formatRecapValue(row.pencapaianTargetBulan)}</td>
-                            <td className="px-2 py-2">{row.kategoriProgres ?? "-"}</td>
-                            <td className="px-2 py-2 text-center font-semibold">{formatRecapValue(row.nilaiAkhirProgresif)}</td>
-                            <td className="px-2 py-2 text-muted-foreground">
+                            <td className="border border-amber-100 px-2 py-3 text-center font-medium">{formatProgressivePoint(row.poinKehadiranKesiapan)}</td>
+                            <td className="border border-amber-100 px-2 py-3 text-center font-medium">{formatProgressivePoint(row.poinKualitasBacaan)}</td>
+                            <td className="border border-amber-100 px-2 py-3 text-center font-medium">{formatProgressivePoint(row.poinPerbaikanBacaan)}</td>
+                            <td className="border border-amber-100 px-2 py-3 text-center">{formatRecapValue(row.pencapaianTargetBulan)}</td>
+                            <td className="border border-amber-100 px-2 py-3 text-center text-[10px] font-medium">{row.kategoriProgres ?? "-"}</td>
+                            <td className="border border-amber-100 px-2 py-3 text-center font-semibold">{formatRecapValue(row.nilaiAkhirProgresif)}</td>
+                            <td className="border border-violet-100 px-2 py-3 text-muted-foreground">
                               {row.guru}
                             </td>
-                            <td className="px-2 py-2 whitespace-pre-wrap text-muted-foreground">
+                            <td className="border border-violet-100 px-2 py-3 whitespace-pre-wrap text-muted-foreground">
                               {row.catatan || "-"}
                             </td>
                           </tr>
@@ -1513,7 +1608,7 @@ const RecapReport = () => {
                             <p className="text-sm font-semibold text-foreground">{row.no}. {row.nama}</p>
                             <p className="text-xs text-muted-foreground">{row.program} - {row.level}</p>
                           </div>
-                          <Badge className={`text-[10px] ${reportEmpty ? "bg-rose-200 dark:bg-rose-950/40 text-rose-900 dark:text-rose-400" : "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400"}`}>
+                          <Badge variant="outline" className={`text-[10px] ${getReportStatusClass(row.reportStatus)}`}>
                             {reportEmpty ? "Belum Diisi" : "Sudah Diisi"}
                           </Badge>
                         </div>
@@ -1565,6 +1660,29 @@ const RecapReport = () => {
               </CardContent>
             </Card>
           ))}
+
+          {displayGroups.length > 0 && (
+            <div className="grid gap-4 rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 text-xs text-emerald-950 dark:bg-emerald-950/20 dark:text-emerald-100 md:grid-cols-2">
+              <div>
+                <p className="mb-2 font-semibold">Keterangan Status Absensi</p>
+                <ul className="space-y-1">
+                  <li><strong>Lengkap</strong> = Total absensi sama dengan hari efektif</li>
+                  <li><strong>Belum Lengkap</strong> = Total absensi kurang dari hari efektif</li>
+                  <li><strong>Melebihi Hari Efektif</strong> = Total absensi lebih dari hari efektif</li>
+                  <li><strong>Belum Diisi</strong> = Belum ada data absensi</li>
+                  <li><strong>Hari Efektif Belum Diatur</strong> = Pengaturan hari efektif belum tersedia</li>
+                </ul>
+              </div>
+              <div>
+                <p className="mb-2 font-semibold">Keterangan Status Laporan</p>
+                <ul className="space-y-1">
+                  <li><strong>Sudah Diisi</strong> = Laporan bulanan sudah tersimpan dan memiliki isi laporan</li>
+                  <li><strong>Belum Diisi</strong> = Laporan bulanan belum tersedia atau masih kosong</li>
+                  <li><strong>Nilai Progresif</strong> = Menggunakan nilai akhir progresif yang tersimpan di laporan</li>
+                </ul>
+              </div>
+            </div>
+          )}
 
       {/* Dialog Download Multi Bulan per Rombel */}
       <Dialog open={multiMonthDialogOpen} onOpenChange={setMultiMonthDialogOpen}>
@@ -1741,6 +1859,7 @@ const StatCard = ({
   label,
   value,
   color,
+  subtitle,
   onClick,
   isActive,
   activeColor,
@@ -1749,6 +1868,7 @@ const StatCard = ({
   label: string;
   value: number | string;
   color: string;
+  subtitle?: string;
   onClick?: () => void;
   isActive?: boolean;
   activeColor?: string;
@@ -1764,19 +1884,22 @@ const StatCard = ({
         onClick ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:translate-y-0" : ""
       } ${activeClass}`}
     >
-      <CardContent className="p-3">
-        <div className="flex justify-between items-start">
-          <div className={`inline-flex items-center justify-center w-8 h-8 rounded-lg ${color} mb-2`}>
+      <CardContent className="flex items-center gap-4 p-4">
+          <div className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${color}`}>
             {icon}
           </div>
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="text-2xl font-bold leading-tight text-foreground">{value}</p>
+          {subtitle && <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>}
+        </div>
+        <div className="ml-auto self-start">
           {isActive && (
             <Badge variant="secondary" className="text-[9px] py-0 px-1.5 h-3.5 bg-primary/10 text-primary border-none font-semibold">
               Aktif
             </Badge>
           )}
         </div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-xl font-bold text-foreground">{value}</p>
       </CardContent>
     </Card>
   );
