@@ -30,11 +30,11 @@ export const ATTENDANCE_COLUMNS: SpreadsheetColumnConfig<AttendanceColumnKey>[] 
 ];
 
 export const ATTENDANCE_MOBILE_COLUMNS: SpreadsheetColumnConfig<AttendanceColumnKey>[] = [
-  { key: "number", label: "No.", group: "identity", defaultWidth: 28, minWidth: 24, maxWidth: 36, sticky: true },
-  { key: "studentName", label: "Nama Siswa", group: "identity", defaultWidth: 86, minWidth: 70, maxWidth: 110, sticky: true },
-  { key: "present", label: "H", group: "monthlyProgress", defaultWidth: 32, minWidth: 28, maxWidth: 40 },
-  { key: "sick", label: "S", group: "monthlyProgress", defaultWidth: 32, minWidth: 28, maxWidth: 40 },
-  { key: "permission", label: "I", group: "monthlyProgress", defaultWidth: 32, minWidth: 28, maxWidth: 40 },
-  { key: "absent", label: "A", group: "monthlyProgress", defaultWidth: 32, minWidth: 28, maxWidth: 40 },
-  { key: "attendanceStatus", label: "Status", group: "result", defaultWidth: 68, minWidth: 54, maxWidth: 80 },
+  { key: "number", label: "No.", group: "identity", defaultWidth: 28, minWidth: 24, maxWidth: 42, sticky: true },
+  { key: "studentName", label: "Nama Siswa", group: "identity", defaultWidth: 112, minWidth: 78, maxWidth: 170, sticky: true },
+  { key: "present", label: "H", group: "monthlyProgress", defaultWidth: 42, minWidth: 32, maxWidth: 62 },
+  { key: "sick", label: "S", group: "monthlyProgress", defaultWidth: 42, minWidth: 32, maxWidth: 62 },
+  { key: "permission", label: "I", group: "monthlyProgress", defaultWidth: 42, minWidth: 32, maxWidth: 62 },
+  { key: "absent", label: "A", group: "monthlyProgress", defaultWidth: 42, minWidth: 32, maxWidth: 62 },
+  { key: "attendanceStatus", label: "Status", group: "result", defaultWidth: 78, minWidth: 58, maxWidth: 120 },
 ];

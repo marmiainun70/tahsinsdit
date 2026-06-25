@@ -187,7 +187,7 @@ const MonthlyReport = () => {
   const bulkUpsert = useBulkUpsertAttendance();
   const upsertSettings = useUpsertAttendancePeriodSettings();
   const attendanceLayout = useSpreadsheetLayout<AttendanceColumnKey>({
-    pageKey: ATTENDANCE_SPREADSHEET_PAGE_KEY,
+    pageKey: isMobile ? `${ATTENDANCE_SPREADSHEET_PAGE_KEY}-mobile` : ATTENDANCE_SPREADSHEET_PAGE_KEY,
     columns: isMobile ? ATTENDANCE_MOBILE_COLUMNS : ATTENDANCE_COLUMNS,
     userId: user?.id,
     role: profile?.role,
@@ -1089,43 +1089,65 @@ const MonthlyReport = () => {
                       />
                       </div>
 
-                      {/* Tabel Mobile */}
-                      <div className="block md:hidden w-full overflow-hidden rounded-md border">
+                      <div className="block md:hidden w-full rounded-md border">
                         <div className="text-[10px] text-muted-foreground px-2 py-1.5 border-b bg-muted/30 text-center font-medium">
                           H = Hadir · S = Sakit · I = Izin · A = Alfa
                         </div>
-                        <table className="w-full table-fixed text-[10px]">
-                          <colgroup>
-                            <col className="w-[6%]" />
-                            <col className="w-[34%]" />
-                            <col className="w-[10%]" />
-                            <col className="w-[10%]" />
-                            <col className="w-[10%]" />
-                            <col className="w-[10%]" />
-                            <col className="w-[20%]" />
-                          </colgroup>
-                          <thead className="bg-muted/50 border-b">
-                            <tr>
-                              <th className="py-2 px-0.5 text-center font-semibold text-muted-foreground text-[9px]">No</th>
-                              <th className="py-2 px-0.5 text-left font-semibold text-muted-foreground text-[9px]">Nama Siswa</th>
-                              <th className="py-2 px-0.5 text-center font-semibold text-muted-foreground text-[9px]">H</th>
-                              <th className="py-2 px-0.5 text-center font-semibold text-muted-foreground text-[9px]">S</th>
-                              <th className="py-2 px-0.5 text-center font-semibold text-muted-foreground text-[9px]">I</th>
-                              <th className="py-2 px-0.5 text-center font-semibold text-muted-foreground text-[9px]">A</th>
-                              <th className="py-2 px-0.5 text-center font-semibold text-muted-foreground text-[9px]">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
+                        <div ref={tableScrollRef} className="overflow-x-auto">
+                        <Table
+                          ref={tableRef}
+                          className={`border-separate border-spacing-0 text-[10px] ${attendanceLayout.isEditing ? "spreadsheet-layout-editing" : ""}`}
+                          style={{
+                            minWidth: attendanceLayout.tableMinWidth,
+                            fontFamily: `"${attendanceLayout.layout.tableFont}", system-ui, sans-serif`,
+                            fontSize: `${attendanceLayout.layout.tableFontSize}px`,
+                          }}
+                        >
+                          <TableHeader className="sticky top-0 z-30 bg-background">
+                            <TableRow>
+                              {ATTENDANCE_MOBILE_COLUMNS.map((column) => {
+                                const width = attendanceLayout.getColumnWidth(column.key);
+                                const left = column.key === "number"
+                                  ? stickyLeft.number
+                                  : column.key === "studentName"
+                                    ? stickyLeft.studentName
+                                    : undefined;
+                                const selected = attendanceLayout.isEditing && (
+                                  attendanceLayout.selection.type === "table"
+                                  || (attendanceLayout.selection.type === "column" && attendanceLayout.selection.columnKey === column.key)
+                                );
+                                return (
+                                  <ResizableTableHeader
+                                    key={column.key}
+                                    column={column}
+                                    width={width}
+                                    left={left}
+                                    isEditing={attendanceLayout.isEditing}
+                                    selected={selected}
+                                    className={`bg-background text-[9px] ${column.key === "studentName" ? "shadow-[6px_0_10px_-10px_rgba(0,0,0,0.7)]" : ""}`}
+                                    style={{
+                                      fontSize: attendanceLayout.layout.headerFontSize,
+                                      ...attendanceLayout.getColumnStyle(column.key),
+                                    }}
+                                    onSelect={() => attendanceLayout.setSelection({ type: "column", columnKey: column.key })}
+                                    onResize={(nextWidth) => attendanceLayout.setColumnWidth(column.key, nextWidth)}
+                                    onResetWidth={() => attendanceLayout.resetColumnWidth(column.key)}
+                                  />
+                                );
+                              })}
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
                             {(() => {
-                              let rowNumber = 0;
-                              const groups = teacherOverview ? groupedVisibleRows : [{ kelas: Number(kelas), rows: visibleRows }];
+                              let rowNumber = (inputPage - 1) * INPUT_PAGE_SIZE;
+                              const groups = teacherOverview ? pagedGroupedVisibleRows : [{ kelas: Number(kelas), rows: pagedVisibleRows }];
 
                               return groups.map((group) => (
                                 <Fragment key={group.kelas}>
                                   {teacherOverview && (
-                                    <tr className="bg-muted/60">
-                                      <td colSpan={7} className="font-semibold text-foreground py-1.5 px-2 text-[11px]">Kelas {group.kelas}</td>
-                                    </tr>
+                                    <TableRow className="bg-muted/60">
+                                      <TableCell colSpan={ATTENDANCE_MOBILE_COLUMNS.length} className="font-semibold text-foreground py-1.5 px-2 text-[11px]">Kelas {group.kelas}</TableCell>
+                                    </TableRow>
                                   )}
                                   {group.rows.map((row) => {
                                     rowNumber += 1;
@@ -1133,56 +1155,54 @@ const MonthlyReport = () => {
                                     const status = getStatus(row, effectiveDays);
                                     const hasError = total !== effectiveDays;
                                     return (
-                                      <tr
+                                      <TableRow
                                         key={row.studentId}
                                         id={`row-mobile-${row.studentId}`}
+                                        ref={(element) => { rowRefs.current[row.studentId] = element; }}
+                                        data-layout-selected={attendanceLayout.isEditing && (attendanceLayout.selection.type === "table" || (attendanceLayout.selection.type === "row" && attendanceLayout.selection.studentId === row.studentId)) ? true : undefined}
                                         className={`border-b transition-colors hover:bg-muted/30 ${
                                           hasError
                                             ? (total > effectiveDays ? "bg-red-50/50 dark:bg-red-950/10" : "bg-yellow-50/50 dark:bg-yellow-950/10")
                                             : ""
                                         }`}
+                                        style={attendanceLayout.getRowStyle(row.studentId)}
                                       >
-                                        <td className="py-1.5 px-0.5 text-center text-muted-foreground">{rowNumber}</td>
-                                        <td className="py-1.5 px-0.5 align-middle min-w-0">
-                                          <span
-                                            title={row.studentName}
-                                            className="line-clamp-2 break-words leading-tight font-medium text-[10px]"
-                                          >
-                                            {row.studentName}
-                                          </span>
-                                          {hasError && (
-                                            <span className="text-[8px] text-red-500 dark:text-red-400 block leading-none mt-0.5">
-                                              {total > effectiveDays ? `Lebih: ${total}/${effectiveDays}` : `Kurang: ${total}/${effectiveDays}`}
-                                            </span>
-                                          )}
-                                        </td>
-                                        {(["present", "sick", "permission", "absent"] as const).map((field) => (
-                                          <td key={field} className="py-1.5 px-0.5 text-center">
-                                            <Input
-                                              type="number"
-                                              inputMode="numeric"
-                                              min={0}
-                                              value={row[field]}
-                                              onChange={(event) => updateRow(row.studentId, field, event.target.value)}
-                                              disabled={teacherAccount && isLocked}
-                                              className="h-8 w-full min-w-0 px-0.5 py-0 text-center text-[11px] rounded-md"
-                                              onFocus={(e) => e.target.select()}
-                                            />
-                                          </td>
-                                        ))}
-                                        <td className="py-1.5 px-0.5 text-center align-middle">
-                                          <Badge className={`px-1 py-0 text-[8px] leading-4 whitespace-normal text-center font-normal ${statusClassMobile(status, isLocked)}`}>
-                                            {statusLabelMobile(status, isLocked)}
-                                          </Badge>
-                                        </td>
-                                      </tr>
+                                        {ATTENDANCE_MOBILE_COLUMNS.map((column) => {
+                                          const width = attendanceLayout.getColumnWidth(column.key);
+                                          const sticky = column.key === "number" || column.key === "studentName";
+                                          const left = column.key === "number" ? stickyLeft.number : column.key === "studentName" ? stickyLeft.studentName : undefined;
+                                          return (
+                                            <TableCell
+                                              key={column.key}
+                                              {...layoutCellProps(row.studentId, column.key)}
+                                              className={`border p-0 align-middle ${sticky ? "sticky z-20 bg-background" : ""} ${column.key === "studentName" ? "shadow-[6px_0_10px_-10px_rgba(0,0,0,0.7)]" : ""}`}
+                                              style={{
+                                                width,
+                                                minWidth: width,
+                                                maxWidth: width,
+                                                left,
+                                                height: attendanceLayout.getRowHeight(row.studentId),
+                                                ...attendanceLayout.getCellStyle(row.studentId, column.key),
+                                              }}
+                                            >
+                                              <div className="flex h-full min-w-0 items-center justify-center px-1">
+                                                {renderAttendanceCell(row, column.key, rowNumber)}
+                                              </div>
+                                            </TableCell>
+                                          );
+                                        })}
+                                      </TableRow>
                                     );
                                   })}
                                 </Fragment>
                               ));
                             })()}
-                          </tbody>
-                        </table>
+                          </TableBody>
+                        </Table>
+                        </div>
+                      </div>
+                      <div className="block md:hidden">
+                        <DataTablePagination currentPage={inputPage} totalPages={inputTotalPages} onPageChange={setInputPage} />
                       </div>
 
                       {/* Tombol Simpan Sticky untuk Mobile */}
