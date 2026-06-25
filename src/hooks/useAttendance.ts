@@ -105,14 +105,16 @@ export const useStudentsForAttendance = ({
 
   return useQuery({
     queryKey: ["attendance", "students", { kelas, rombel, search, userId: user?.id ?? "anon", role: profile?.role ?? "none" }],
-    enabled: enabled && !!kelas && !!rombel,
+    enabled,
     queryFn: async () => {
       let query = sb
         .from("students")
         .select("id, nama, kelas, rombel, level")
-        .eq("kelas", Number(kelas))
-        .eq("rombel", rombel)
+        .order("kelas", { ascending: true })
         .order("nama", { ascending: true });
+
+      if (kelas) query = query.eq("kelas", Number(kelas));
+      if (rombel) query = query.eq("rombel", rombel);
 
       const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
       if (managedStudentIds && managedStudentIds.length === 0) return [];
@@ -145,13 +147,16 @@ export const useAttendanceByPeriod = ({
 
   return useQuery({
     queryKey: ["attendance", "period", { month, year, kelas, rombel, userId: user?.id ?? "anon", role: profile?.role ?? "none" }],
-    enabled: enabled && !!month && !!year && !!kelas && !!rombel,
+    enabled: enabled && !!month && !!year,
     queryFn: async () => {
       let studentQuery = sb
         .from("students")
         .select("id")
-        .eq("kelas", Number(kelas))
-        .eq("rombel", rombel);
+        .order("kelas", { ascending: true })
+        .order("nama", { ascending: true });
+
+      if (kelas) studentQuery = studentQuery.eq("kelas", Number(kelas));
+      if (rombel) studentQuery = studentQuery.eq("rombel", rombel);
 
       const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
       if (managedStudentIds && managedStudentIds.length === 0) return [];
@@ -205,6 +210,38 @@ export const useAttendancePeriodSettings = ({
 
       if (error) throw error;
       return data as AttendancePeriodSettings | null;
+    },
+  });
+
+export const useAttendancePeriodSettingsByGroups = ({
+  month,
+  year,
+  groups,
+  enabled,
+}: {
+  month: number;
+  year: number;
+  groups: { kelas: number; rombel: string }[];
+  enabled: boolean;
+}) =>
+  useQuery({
+    queryKey: ["attendance-period-settings", "groups", { month, year, groups }],
+    enabled: enabled && !!month && !!year && groups.length > 0,
+    queryFn: async () => {
+      const kelasList = Array.from(new Set(groups.map((group) => group.kelas)));
+      const { data, error } = await sb
+        .from("attendance_period_settings")
+        .select("*")
+        .eq("month", month)
+        .eq("year", year)
+        .in("kelas", kelasList);
+
+      if (error) throw error;
+
+      const groupKeys = new Set(groups.map((group) => `${group.kelas}-${group.rombel}`));
+      return ((data ?? []) as AttendancePeriodSettings[]).filter((setting) =>
+        groupKeys.has(`${setting.kelas}-${setting.rombel}`)
+      );
     },
   });
 

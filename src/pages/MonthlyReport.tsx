@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, CheckCircle2, Loader2, Lock, Search, Unlock, Users } from "lucide-react";
-import { AttendanceStudent, AttendanceWithStudent, useAttendanceByPeriod, useAttendancePeriodSettings, useBulkUpsertAttendance, useStudentsForAttendance, useUpsertAttendancePeriodSettings } from "@/hooks/useAttendance";
+import { AttendanceStudent, AttendanceWithStudent, useAttendanceByPeriod, useAttendancePeriodSettings, useAttendancePeriodSettingsByGroups, useBulkUpsertAttendance, useStudentsForAttendance, useUpsertAttendancePeriodSettings } from "@/hooks/useAttendance";
 import { MONTH_NAMES } from "@/hooks/useMonthlyReports";
 import { useAuth } from "@/contexts/AuthContext";
 import { isTeacherRole } from "@/lib/roleLabels";
@@ -23,6 +23,8 @@ type StatusFilter = "all" | "filled" | "empty";
 type AttendanceInputRow = {
   studentId: string;
   studentName: string;
+  kelas: number;
+  rombel: string;
   level: string;
   existingId?: string;
   present: number;
@@ -62,6 +64,8 @@ const buildRows = (students: AttendanceStudent[], attendance: AttendanceWithStud
     return {
       studentId: student.id,
       studentName: student.nama,
+      kelas: student.kelas,
+      rombel: student.rombel,
       level: student.level,
       existingId: existing?.id,
       present: existing?.present ?? 0,
@@ -77,6 +81,7 @@ const MonthlyReport = () => {
   const profileMap = useProfileMap();
   const isAdmin = profile?.role === "admin";
   const teacherAccount = isTeacherRole(profile?.role);
+  const teacherOverview = teacherAccount && !isAdmin;
 
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
@@ -91,20 +96,21 @@ const MonthlyReport = () => {
   const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
 
   const hasClassFilter = Boolean(kelas && rombel);
+  const hasAttendanceScope = teacherOverview || hasClassFilter;
 
   const studentsQuery = useStudentsForAttendance({
-    kelas,
-    rombel,
+    kelas: teacherOverview ? "" : kelas,
+    rombel: teacherOverview ? "" : rombel,
     search,
-    enabled: hasClassFilter,
+    enabled: hasAttendanceScope,
   });
 
   const attendanceQuery = useAttendanceByPeriod({
     month,
     year,
-    kelas,
-    rombel,
-    enabled: hasClassFilter,
+    kelas: teacherOverview ? "" : kelas,
+    rombel: teacherOverview ? "" : rombel,
+    enabled: hasAttendanceScope,
   });
 
   const settingsQuery = useAttendancePeriodSettings({
@@ -112,15 +118,30 @@ const MonthlyReport = () => {
     year,
     kelas,
     rombel,
-    enabled: hasClassFilter,
+    enabled: hasClassFilter && !teacherOverview,
+  });
+
+  const visibleGroups = useMemo(() => {
+    const map = new Map<string, { kelas: number; rombel: string }>();
+    for (const row of rows) {
+      map.set(`${row.kelas}-${row.rombel}`, { kelas: row.kelas, rombel: row.rombel });
+    }
+    return Array.from(map.values()).sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
+  }, [rows]);
+
+  const groupSettingsQuery = useAttendancePeriodSettingsByGroups({
+    month,
+    year,
+    groups: visibleGroups,
+    enabled: teacherOverview && visibleGroups.length > 0,
   });
 
   const historyQuery = useAttendanceByPeriod({
     month,
     year,
-    kelas,
-    rombel,
-    enabled: activeTab === "history" && hasClassFilter,
+    kelas: teacherOverview ? "" : kelas,
+    rombel: teacherOverview ? "" : rombel,
+    enabled: activeTab === "history" && hasAttendanceScope,
   });
 
   const bulkUpsert = useBulkUpsertAttendance();
@@ -131,12 +152,19 @@ const MonthlyReport = () => {
   }, [studentsQuery.data, attendanceQuery.data]);
 
   useEffect(() => {
+    if (teacherOverview) {
+      const settings = groupSettingsQuery.data ?? [];
+      const uniqueEffectiveDays = Array.from(new Set(settings.map((setting) => setting.effective_days)));
+      setEffectiveDays(uniqueEffectiveDays.length === 1 ? uniqueEffectiveDays[0] : 0);
+      return;
+    }
+
     setEffectiveDays(settingsQuery.data?.effective_days ?? 0);
-  }, [settingsQuery.data?.id, settingsQuery.data?.effective_days]);
+  }, [teacherOverview, settingsQuery.data?.id, settingsQuery.data?.effective_days, groupSettingsQuery.data]);
 
   useEffect(() => {
     setHistoryPage(1);
-  }, [month, year, kelas, rombel, activeTab]);
+  }, [month, year, kelas, rombel, activeTab, teacherOverview]);
 
   const visibleRows = useMemo(() => {
     if (statusFilter === "all") return rows;
@@ -154,7 +182,24 @@ const MonthlyReport = () => {
     return { total, filled, empty, pct };
   }, [rows, effectiveDays]);
 
-  const isLocked = Boolean(settingsQuery.data?.is_locked);
+  const groupedVisibleRows = useMemo(() => {
+    const groups = new Map<number, AttendanceInputRow[]>();
+    for (const row of visibleRows) {
+      const current = groups.get(row.kelas) ?? [];
+      current.push(row);
+      groups.set(row.kelas, current);
+    }
+    return Array.from(groups.entries())
+      .sort(([kelasA], [kelasB]) => kelasA - kelasB)
+      .map(([kelas, classRows]) => ({
+        kelas,
+        rows: classRows.sort((a, b) => a.studentName.localeCompare(b.studentName)),
+      }));
+  }, [visibleRows]);
+
+  const isLocked = teacherOverview
+    ? Boolean(groupSettingsQuery.data?.some((setting) => setting.is_locked))
+    : Boolean(settingsQuery.data?.is_locked);
   const saveDisabled = bulkUpsert.isPending || upsertSettings.isPending || (teacherAccount && isLocked);
 
   const updateRow = (studentId: string, field: "present" | "sick" | "permission" | "absent", value: string) => {
@@ -168,7 +213,7 @@ const MonthlyReport = () => {
   };
 
   const validateRows = () => {
-    if (!hasClassFilter) return "Pilih kelas dan rombel terlebih dahulu.";
+    if (!hasAttendanceScope) return "Pilih kelas dan rombel terlebih dahulu.";
     if (effectiveDays <= 0) return "Jumlah Hari Efektif wajib lebih dari 0.";
 
     for (const row of rows) {
@@ -197,16 +242,35 @@ const MonthlyReport = () => {
     }
 
     try {
-      await upsertSettings.mutateAsync({
-        month,
-        year,
-        kelas: Number(kelas),
-        rombel,
-        effective_days: effectiveDays,
-        is_locked: isLocked,
-        locked_by: settingsQuery.data?.locked_by ?? null,
-        locked_at: settingsQuery.data?.locked_at ?? null,
-      });
+      if (teacherOverview) {
+        await Promise.all(visibleGroups.map((group) => {
+          const existing = groupSettingsQuery.data?.find(
+            (setting) => setting.kelas === group.kelas && setting.rombel === group.rombel
+          );
+
+          return upsertSettings.mutateAsync({
+            month,
+            year,
+            kelas: group.kelas,
+            rombel: group.rombel,
+            effective_days: effectiveDays,
+            is_locked: existing?.is_locked ?? false,
+            locked_by: existing?.locked_by ?? null,
+            locked_at: existing?.locked_at ?? null,
+          });
+        }));
+      } else {
+        await upsertSettings.mutateAsync({
+          month,
+          year,
+          kelas: Number(kelas),
+          rombel,
+          effective_days: effectiveDays,
+          is_locked: isLocked,
+          locked_by: settingsQuery.data?.locked_by ?? null,
+          locked_at: settingsQuery.data?.locked_at ?? null,
+        });
+      }
 
       const saved = await bulkUpsert.mutateAsync(rows.map((row) => ({
         student_id: row.studentId,
@@ -219,7 +283,10 @@ const MonthlyReport = () => {
       })));
 
       toast({ title: "Absensi berhasil disimpan", description: `${saved.length} data absensi tersimpan.` });
-      await Promise.all([attendanceQuery.refetch(), settingsQuery.refetch()]);
+      await Promise.all([
+        attendanceQuery.refetch(),
+        teacherOverview ? groupSettingsQuery.refetch() : settingsQuery.refetch(),
+      ]);
     } catch (error: unknown) {
       toast({
         title: "Gagal menyimpan absensi",
@@ -280,7 +347,7 @@ const MonthlyReport = () => {
         <CardHeader>
           <CardTitle className="text-lg">Filter Utama</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+        <CardContent className={`grid gap-4 md:grid-cols-3 ${teacherOverview ? "lg:grid-cols-4" : "lg:grid-cols-6"}`}>
           <div className="space-y-2">
             <Label>Bulan</Label>
             <Select value={String(month)} onValueChange={(value) => setMonth(Number(value))}>
@@ -301,24 +368,28 @@ const MonthlyReport = () => {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>Kelas</Label>
-            <Select value={kelas || undefined} onValueChange={setKelas}>
-              <SelectTrigger><SelectValue placeholder="Pilih kelas" /></SelectTrigger>
-              <SelectContent>
-                {KELAS_LIST.map((item) => <SelectItem key={item} value={String(item)}>Kelas {item}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Rombel</Label>
-            <Select value={rombel || undefined} onValueChange={setRombel}>
-              <SelectTrigger><SelectValue placeholder="Pilih rombel" /></SelectTrigger>
-              <SelectContent>
-                {ROMBELS.map((item) => <SelectItem key={item} value={item}>Rombel {item}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+          {!teacherOverview && (
+            <>
+              <div className="space-y-2">
+                <Label>Kelas</Label>
+                <Select value={kelas || undefined} onValueChange={setKelas}>
+                  <SelectTrigger><SelectValue placeholder="Pilih kelas" /></SelectTrigger>
+                  <SelectContent>
+                    {KELAS_LIST.map((item) => <SelectItem key={item} value={String(item)}>Kelas {item}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Rombel</Label>
+                <Select value={rombel || undefined} onValueChange={setRombel}>
+                  <SelectTrigger><SelectValue placeholder="Pilih rombel" /></SelectTrigger>
+                  <SelectContent>
+                    {ROMBELS.map((item) => <SelectItem key={item} value={item}>Rombel {item}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
           <div className="space-y-2">
             <Label>Status</Label>
             <Select value={statusFilter} onValueChange={(value: StatusFilter) => setStatusFilter(value)}>
@@ -340,7 +411,14 @@ const MonthlyReport = () => {
         </CardContent>
       </Card>
 
-      {!hasClassFilter ? (
+      {teacherOverview && (
+        <Alert>
+          <Users className="h-4 w-4" />
+          <AlertDescription>Menampilkan semua murid binaan yang sudah disetujui, dipisahkan berdasarkan kelas.</AlertDescription>
+        </Alert>
+      )}
+
+      {!hasAttendanceScope ? (
         <Alert>
           <Users className="h-4 w-4" />
           <AlertTitle>Pilih kelas dan rombel</AlertTitle>
@@ -450,33 +528,48 @@ const MonthlyReport = () => {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {visibleRows.map((row, index) => {
-                            const total = getTotal(row);
-                            const percentage = effectiveDays > 0 ? Math.round((row.present / effectiveDays) * 100) : 0;
-                            const status = getStatus(row, effectiveDays);
-                            return (
-                              <TableRow key={row.studentId} ref={(element) => { rowRefs.current[row.studentId] = element; }}>
-                                <TableCell>{index + 1}</TableCell>
-                                <TableCell className="min-w-48 font-medium">{row.studentName}</TableCell>
-                                <TableCell>{row.level}</TableCell>
-                                {(["present", "sick", "permission", "absent"] as const).map((field) => (
-                                  <TableCell key={field}>
-                                    <Input
-                                      type="number"
-                                      min={0}
-                                      value={row[field]}
-                                      onChange={(event) => updateRow(row.studentId, field, event.target.value)}
-                                      disabled={teacherAccount && isLocked}
-                                      className="h-9 w-20"
-                                    />
-                                  </TableCell>
-                                ))}
-                                <TableCell className="font-semibold">{total}</TableCell>
-                                <TableCell>{percentage}%</TableCell>
-                                <TableCell><Badge variant="outline" className={statusClass(status)}>{status}</Badge></TableCell>
-                              </TableRow>
-                            );
-                          })}
+                          {(() => {
+                            let rowNumber = 0;
+                            const groups = teacherOverview ? groupedVisibleRows : [{ kelas: Number(kelas), rows: visibleRows }];
+
+                            return groups.map((group) => (
+                              <Fragment key={group.kelas}>
+                                {teacherOverview && (
+                                  <TableRow className="bg-muted/60 hover:bg-muted/60">
+                                    <TableCell colSpan={10} className="font-semibold text-foreground">Kelas {group.kelas}</TableCell>
+                                  </TableRow>
+                                )}
+                                {group.rows.map((row) => {
+                                  rowNumber += 1;
+                                  const total = getTotal(row);
+                                  const percentage = effectiveDays > 0 ? Math.round((row.present / effectiveDays) * 100) : 0;
+                                  const status = getStatus(row, effectiveDays);
+                                  return (
+                                    <TableRow key={row.studentId} ref={(element) => { rowRefs.current[row.studentId] = element; }}>
+                                      <TableCell>{rowNumber}</TableCell>
+                                      <TableCell className="min-w-48 font-medium">{row.studentName}</TableCell>
+                                      <TableCell>{row.level}</TableCell>
+                                      {(["present", "sick", "permission", "absent"] as const).map((field) => (
+                                        <TableCell key={field}>
+                                          <Input
+                                            type="number"
+                                            min={0}
+                                            value={row[field]}
+                                            onChange={(event) => updateRow(row.studentId, field, event.target.value)}
+                                            disabled={teacherAccount && isLocked}
+                                            className="h-9 w-20"
+                                          />
+                                        </TableCell>
+                                      ))}
+                                      <TableCell className="font-semibold">{total}</TableCell>
+                                      <TableCell>{percentage}%</TableCell>
+                                      <TableCell><Badge variant="outline" className={statusClass(status)}>{status}</Badge></TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                              </Fragment>
+                            ));
+                          })()}
                         </TableBody>
                       </Table>
                     </div>
