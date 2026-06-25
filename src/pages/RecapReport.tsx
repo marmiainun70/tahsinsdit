@@ -1477,8 +1477,11 @@ const RecapReport = () => {
               </CardContent>
             </Card>
           )}
-          {displayGroups.map((grp, groupIndex) => (
-            <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
+          {displayGroups.length > 0 && (
+            <div ref={tableScrollRef} className="overflow-x-visible md:overflow-x-auto">
+              <div ref={tableContentRef} className="space-y-6 md:min-w-[2200px]">
+                {displayGroups.map(grp => (
+                  <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
               <CardHeader className="bg-emerald-50 dark:bg-emerald-950/20 py-3">
                 <CardTitle className="text-sm text-emerald-900 dark:text-emerald-300">
                   Kelas {grp.kelas} - Rombel {grp.rombel}{" "}
@@ -1494,8 +1497,8 @@ const RecapReport = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <div ref={tableScrollRef} className="spreadsheet-table-scroll hidden md:block overflow-x-auto">
-                  <table ref={tableContentRef} className="min-w-[2200px] w-full border-collapse text-[11px]">
+                <div className="hidden md:block">
+                  <table className="w-full border-collapse text-[11px]">
                     <thead className="sticky top-0 z-10">
                       <tr className="text-center text-[11px] font-bold uppercase tracking-normal">
                         <th rowSpan={2} className="w-9 border border-slate-200 bg-slate-50 px-2 py-3 align-middle">No.</th>
@@ -1590,14 +1593,6 @@ const RecapReport = () => {
                     </tbody>
                   </table>
                 </div>
-                {groupIndex === displayGroups.length - 1 && (
-                  <FixedHorizontalScrollbar
-                    scrollContainerRef={tableScrollRef}
-                    contentRef={tableContentRef}
-                    refreshKey={`${selectedMonth}-${selectedYear}-${grp.kelas}-${grp.rombel}-${grp.rows.length}`}
-                    className="hidden md:flex"
-                  />
-                )}
                 <div className="md:hidden divide-y">
                   {grp.rows.map(row => {
                     const reportEmpty = row.reportStatus === "empty";
@@ -1658,8 +1653,20 @@ const RecapReport = () => {
                   })}
                 </div>
               </CardContent>
-            </Card>
-          ))}
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {displayGroups.length > 0 && (
+            <FixedHorizontalScrollbar
+              scrollContainerRef={tableScrollRef}
+              contentRef={tableContentRef}
+              refreshKey={`${selectedMonth}-${selectedYear}-${displayGroups.length}-${displayGroups.map(grp => `${grp.kelas}-${grp.rombel}-${grp.rows.length}`).join("|")}`}
+              className="hidden md:flex"
+            />
+          )}
 
           {displayGroups.length > 0 && (
             <div className="grid gap-4 rounded-lg border border-emerald-200 bg-emerald-50/60 p-4 text-xs text-emerald-950 dark:bg-emerald-950/20 dark:text-emerald-100 md:grid-cols-2">
