@@ -43,6 +43,7 @@ Lakukan perubahan sekecil mungkin untuk memenuhi permintaan pengguna. Pertahanka
 
 ## Aturan UI
 
+- Untuk pekerjaan UI/desain, baca dan ikuti `desain.md` di root repository sebagai design system resmi proyek Tahsin.
 - Utamakan tampilan ringkas, responsif, dan nyaman pada mobile.
 - Gunakan token warna dari `src/index.css` dan komponen yang sudah tersedia.
 - Pastikan perubahan tema memakai satu provider yang sama.
