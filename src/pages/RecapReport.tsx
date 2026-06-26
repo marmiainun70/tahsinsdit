@@ -1788,7 +1788,7 @@ const RecapReport = () => {
                             key={row.studentId}
                             className={`transition-colors ${
                               reportEmpty
-                                ? "bg-rose-50/60 dark:bg-rose-950/20"
+                                ? "bg-rose-50/60 dark:bg-slate-900/40"
                                 : "hover:bg-muted/40"
                             }`}
                             data-layout-selected={recapLayout.isEditing && (recapLayout.selection.type === "table" || (recapLayout.selection.type === "row" && recapLayout.selection.studentId === row.studentId)) ? true : undefined}
@@ -1878,7 +1878,7 @@ const RecapReport = () => {
                   {grp.rows.map(row => {
                     const reportEmpty = row.reportStatus === "empty";
                     return (
-                      <div key={row.studentId} className={`p-3 space-y-3 ${reportEmpty ? "bg-rose-50/60 dark:bg-rose-950/10" : ""}`}>
+                      <div key={row.studentId} className={`p-3 space-y-3 ${reportEmpty ? "bg-rose-50/60 dark:bg-slate-900/40" : ""}`}>
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="text-sm font-semibold text-foreground">{row.no}. {row.nama}</p>
