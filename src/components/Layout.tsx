@@ -93,7 +93,7 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
           );
         })}
 
-        <div className="pt-3">
+        <div className="pt-3 hidden">
           <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-3">Data Kelas</p>
           {[1, 2, 3, 4, 5, 6].map(k => {
             const isClassActive = location.pathname === `/class/${k}`;
