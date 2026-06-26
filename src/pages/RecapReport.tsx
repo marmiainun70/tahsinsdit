@@ -44,9 +44,9 @@ import {
   type RecapJoinedRow,
 } from "@/utils/recapMonthlyReportRows";
 import {
-  Search, Loader2, Eye, Download, CheckCircle2,
-  Users, ListChecks, AlertCircle, Percent, FileWarning, Calendar,
-  ClipboardList, Star, Filter, RotateCcw, FileText
+  Search, Loader2, Eye, Download,
+  Users, ListChecks, AlertCircle, FileWarning, Calendar,
+  ClipboardList, Star, Filter, RotateCcw, FileText, ShieldCheck
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -202,11 +202,11 @@ const RECAP_IDENTITY_COLUMNS = RECAP_REPORT_COLUMNS.filter((column) => column.gr
 const RECAP_DETAIL_COLUMNS = RECAP_REPORT_COLUMNS.filter((column) => column.group !== "identity");
 
 const getRecapHeaderClass = (group: "identity" | "monthlyProgress" | "attendance" | "progressiveAssessment" | "result") => {
-  if (group === "monthlyProgress") return "bg-emerald-50 text-emerald-800 border-emerald-200";
-  if (group === "attendance") return "bg-sky-50 text-sky-800 border-sky-200";
-  if (group === "progressiveAssessment") return "bg-amber-50 text-amber-800 border-amber-200";
-  if (group === "result") return "bg-violet-50 text-violet-800 border-violet-200";
-  return "bg-slate-50 text-slate-900 border-slate-200";
+  if (group === "monthlyProgress") return "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/70 dark:bg-emerald-950/50 dark:text-emerald-200";
+  if (group === "attendance") return "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-800/70 dark:bg-sky-950/50 dark:text-sky-200";
+  if (group === "progressiveAssessment") return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/70 dark:bg-amber-950/50 dark:text-amber-200";
+  if (group === "result") return "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-800/70 dark:bg-violet-950/50 dark:text-violet-200";
+  return "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100";
 };
 
 const getErrorMessage = (error: unknown) =>
@@ -395,6 +395,16 @@ const RecapReport = () => {
       scoreLabel,
     };
   }, [groups]);
+
+  const resetFilters = () => {
+    setFilterReportStatus("all");
+    setFilterAttendanceStatus("all");
+    setFilterCategory("all");
+    setFilterScore("all");
+    setFilterKelas("all");
+    setFilterRombel("all");
+    setSearch("");
+  };
 
   useEffect(() => {
     if (lr || ls) return;
@@ -1266,161 +1276,15 @@ const RecapReport = () => {
       </div>
 
       {/* Single Month Mode */}
-          {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
-            <StatCard
-              icon={<Users className="w-4 h-4" />}
-              label="Total Siswa"
-              value={stats.total}
-              color="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
-              onClick={() => {
-                setFilterReportStatus("all");
-                setFilterAttendanceStatus("all");
-                setFilterCategory("all");
-                setFilterScore("all");
-              }}
-              isActive={filterReportStatus === "all" && filterAttendanceStatus === "all" && filterCategory === "all" && filterScore === "all"}
-              activeColor="border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/30 dark:bg-blue-950/20"
-              subtitle="Semua siswa"
-            />
-            <StatCard
-              icon={<ListChecks className="w-4 h-4" />}
-              label="Laporan Sudah Diisi"
-              value={stats.filled}
-              color="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-              onClick={() => setFilterReportStatus("filled")}
-              isActive={filterReportStatus === "filled"}
-              activeColor="border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/30 dark:bg-emerald-950/20"
-              subtitle={stats.filledPercent}
-            />
-            <StatCard
-              icon={<FileWarning className="w-4 h-4" />}
-              label="Laporan Belum Diisi"
-              value={stats.empty}
-              color="bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
-              onClick={() => setFilterReportStatus("empty")}
-              isActive={filterReportStatus === "empty"}
-              activeColor="border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30 dark:bg-rose-950/20"
-              subtitle={stats.emptyPercent}
-            />
-            <StatCard
-              icon={<Percent className="w-4 h-4" />}
-              label="Absensi Lengkap"
-              value={stats.attendanceComplete}
-              color="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-              onClick={() => setFilterAttendanceStatus("Lengkap")}
-              isActive={filterAttendanceStatus === "Lengkap"}
-              activeColor="border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/30 dark:bg-amber-950/20"
-              subtitle={stats.attendanceCompletePercent}
-            />
-            <StatCard
-              icon={<CheckCircle2 className="w-4 h-4" />}
-              label="Absensi Belum Lengkap/Belum Diisi"
-              value={stats.attendanceIncomplete}
-              color="bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400"
-              onClick={() => setFilterAttendanceStatus("Belum Lengkap")}
-              isActive={filterAttendanceStatus === "Belum Lengkap"}
-              activeColor="border-violet-500 ring-2 ring-violet-500/20 bg-violet-50/30 dark:bg-violet-950/20"
-              subtitle={stats.attendanceIncompletePercent}
-            />
-            <StatCard
-              icon={<Star className="w-4 h-4" />}
-              label="Rata-rata Nilai Progresif"
-              value={stats.averageScore}
-              color="bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400"
-              subtitle={stats.scoreLabel}
-            />
-          </div>
-
-          {/* Active Filter Cues */}
-          {(filterReportStatus !== "all" || filterAttendanceStatus !== "all" || filterCategory !== "all" || filterScore !== "all" || search.trim() || filterKelas !== "all" || filterRombel !== "all") && (
-            <div className="flex flex-wrap items-center gap-2 p-2.5 bg-muted/40 border border-border rounded-lg text-xs transition-all duration-200">
-              <span className="text-muted-foreground font-medium flex items-center gap-1">
-                Filter Aktif:
-              </span>
-              {filterReportStatus !== "all" && (
-                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
-                  Status laporan: {filterReportStatus === "filled" ? "Sudah Diisi" : "Belum Diisi"}
-                  <button onClick={() => setFilterReportStatus("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
-                </Badge>
-              )}
-              {filterAttendanceStatus !== "all" && (
-                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
-                  Status absensi: {filterAttendanceStatus}
-                  <button onClick={() => setFilterAttendanceStatus("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
-                </Badge>
-              )}
-              {filterCategory !== "all" && (
-                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
-                  Kategori: {filterCategory}
-                  <button onClick={() => setFilterCategory("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
-                </Badge>
-              )}
-              {filterScore !== "all" && (
-                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
-                  Nilai: {
-                    filterScore === "good" ? ">= 85" :
-                    filterScore === "medium" ? "70 - 84" :
-                    filterScore === "low" ? "< 70" : "Belum ada nilai"
-                  }
-                  <button onClick={() => setFilterScore("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
-                </Badge>
-              )}
-              {filterKelas !== "all" && (
-                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
-                  Kelas {filterKelas}
-                  <button onClick={() => setFilterKelas("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
-                </Badge>
-              )}
-              {filterRombel !== "all" && (
-                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
-                  Rombel {filterRombel}
-                  <button onClick={() => setFilterRombel("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
-                </Badge>
-              )}
-              {search.trim() && (
-                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
-                  Cari: "{search}"
-                  <button onClick={() => setSearch("")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
-                </Badge>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-[11px] text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/20 ml-auto"
-                onClick={() => {
-                  setFilterReportStatus("all");
-                  setFilterAttendanceStatus("all");
-                  setFilterCategory("all");
-                  setFilterScore("all");
-                  setFilterKelas("all");
-                  setFilterRombel("all");
-                  setSearch("");
-                }}
-              >
-                Reset Semua Filter
-              </Button>
-            </div>
-          )}
-
-          {stats.empty > 0 && (
-            <div className="flex items-start gap-2 p-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/50 rounded-lg text-sm text-rose-800 dark:text-rose-300">
-              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>
-                Masih ada <strong>{stats.empty} siswa</strong> yang belum diisi laporannya untuk periode ini.
-              </span>
-            </div>
-          )}
-
           {/* Filters */}
-          <Card>
-            <CardContent className="p-3 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2">
+          <Card className="border-emerald-100 bg-white/90 shadow-sm dark:border-emerald-900/60 dark:bg-emerald-950/20">
+            <CardContent className="grid grid-cols-2 gap-2 p-3 md:grid-cols-4 xl:grid-cols-12">
               <div className="col-span-2">
                 <Label className="text-xs">Cari Siswa</Label>
                 <div className="relative">
-                  <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    className="pl-7 h-9"
+                    className="h-9 pl-7"
                     placeholder="Nama siswa..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
@@ -1438,6 +1302,21 @@ const RecapReport = () => {
                     {[1, 2, 3, 4, 5, 6].map(k => (
                       <SelectItem key={k} value={String(k)}>
                         Kelas {k}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Tahun</Label>
+                <Select value={filterYear} onValueChange={setFilterYear}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEARS.map(y => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1469,21 +1348,6 @@ const RecapReport = () => {
                     {MONTH_NAMES.map((m, i) => (
                       <SelectItem key={i} value={String(i + 1)}>
                         {m}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-xs">Tahun</Label>
-                <Select value={filterYear} onValueChange={setFilterYear}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {YEARS.map(y => (
-                      <SelectItem key={y} value={String(y)}>
-                        {y}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1560,7 +1424,7 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-2 flex items-end gap-2 lg:col-span-2">
+              <div className="col-span-2 flex items-end gap-2">
                 <Button
                   className="h-9 flex-1 gap-2 bg-emerald-700 text-xs hover:bg-emerald-800"
                   onClick={() => toast({ title: "Filter rekap sudah diterapkan." })}
@@ -1571,15 +1435,7 @@ const RecapReport = () => {
                 <Button
                   variant="outline"
                   className="h-9 flex-1 gap-2 text-xs"
-                  onClick={() => {
-                    setFilterReportStatus("all");
-                    setFilterAttendanceStatus("all");
-                    setFilterCategory("all");
-                    setFilterScore("all");
-                    setFilterKelas("all");
-                    setFilterRombel("all");
-                    setSearch("");
-                  }}
+                  onClick={resetFilters}
                 >
                   <RotateCcw className="h-3.5 w-3.5" />
                   Reset
@@ -1588,8 +1444,146 @@ const RecapReport = () => {
             </CardContent>
           </Card>
 
-          <Card className="overflow-hidden border-emerald-100 shadow-sm">
-            <CardHeader className="flex flex-col gap-3 border-b bg-white/80 py-3 dark:bg-background/80 lg:flex-row lg:items-center lg:justify-between">
+          {/* Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+            <StatCard
+              icon={<Users className="w-4 h-4" />}
+              label="Total Siswa"
+              value={stats.total}
+              color="bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400"
+              onClick={() => {
+                setFilterReportStatus("all");
+                setFilterAttendanceStatus("all");
+                setFilterCategory("all");
+                setFilterScore("all");
+              }}
+              isActive={filterReportStatus === "all" && filterAttendanceStatus === "all" && filterCategory === "all" && filterScore === "all"}
+              activeColor="border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/30 dark:bg-blue-950/20"
+              subtitle="Semua siswa"
+            />
+            <StatCard
+              icon={<ListChecks className="w-4 h-4" />}
+              label="Laporan Sudah Diisi"
+              value={stats.filled}
+              color="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+              onClick={() => setFilterReportStatus("filled")}
+              isActive={filterReportStatus === "filled"}
+              activeColor="border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/30 dark:bg-emerald-950/20"
+              subtitle={stats.filledPercent}
+            />
+            <StatCard
+              icon={<FileWarning className="w-4 h-4" />}
+              label="Laporan Belum Diisi"
+              value={stats.empty}
+              color="bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+              onClick={() => setFilterReportStatus("empty")}
+              isActive={filterReportStatus === "empty"}
+              activeColor="border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/30 dark:bg-amber-950/20"
+              subtitle={stats.emptyPercent}
+            />
+            <StatCard
+              icon={<ShieldCheck className="w-4 h-4" />}
+              label="Absensi Lengkap"
+              value={stats.attendanceComplete}
+              color="bg-violet-50 text-violet-700 dark:bg-violet-950/40 dark:text-violet-400"
+              onClick={() => setFilterAttendanceStatus("Lengkap")}
+              isActive={filterAttendanceStatus === "Lengkap"}
+              activeColor="border-violet-500 ring-2 ring-violet-500/20 bg-violet-50/30 dark:bg-violet-950/20"
+              subtitle={stats.attendanceCompletePercent}
+            />
+            <StatCard
+              icon={<AlertCircle className="w-4 h-4" />}
+              label="Absensi Belum Lengkap/Belum Diisi"
+              value={stats.attendanceIncomplete}
+              color="bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
+              onClick={() => setFilterAttendanceStatus("Belum Lengkap")}
+              isActive={filterAttendanceStatus === "Belum Lengkap"}
+              activeColor="border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30 dark:bg-rose-950/20"
+              subtitle={stats.attendanceIncompletePercent}
+            />
+            <StatCard
+              icon={<Star className="w-4 h-4" />}
+              label="Rata-rata Nilai Progresif"
+              value={stats.averageScore}
+              color="bg-teal-50 text-teal-700 dark:bg-teal-950/40 dark:text-teal-400"
+              subtitle={stats.scoreLabel}
+            />
+          </div>
+
+          {/* Active Filter Cues */}
+          {(filterReportStatus !== "all" || filterAttendanceStatus !== "all" || filterCategory !== "all" || filterScore !== "all" || search.trim() || filterKelas !== "all" || filterRombel !== "all") && (
+            <div className="flex flex-wrap items-center gap-2 p-2.5 bg-muted/40 border border-border rounded-lg text-xs transition-all duration-200">
+              <span className="text-muted-foreground font-medium flex items-center gap-1">
+                Filter Aktif:
+              </span>
+              {filterReportStatus !== "all" && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Status laporan: {filterReportStatus === "filled" ? "Sudah Diisi" : "Belum Diisi"}
+                  <button onClick={() => setFilterReportStatus("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
+                </Badge>
+              )}
+              {filterAttendanceStatus !== "all" && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Status absensi: {filterAttendanceStatus}
+                  <button onClick={() => setFilterAttendanceStatus("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
+                </Badge>
+              )}
+              {filterCategory !== "all" && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Kategori: {filterCategory}
+                  <button onClick={() => setFilterCategory("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
+                </Badge>
+              )}
+              {filterScore !== "all" && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Nilai: {
+                    filterScore === "good" ? ">= 85" :
+                    filterScore === "medium" ? "70 - 84" :
+                    filterScore === "low" ? "< 70" : "Belum ada nilai"
+                  }
+                  <button onClick={() => setFilterScore("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
+                </Badge>
+              )}
+              {filterKelas !== "all" && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Kelas {filterKelas}
+                  <button onClick={() => setFilterKelas("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
+                </Badge>
+              )}
+              {filterRombel !== "all" && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Rombel {filterRombel}
+                  <button onClick={() => setFilterRombel("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
+                </Badge>
+              )}
+              {search.trim() && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Cari: "{search}"
+                  <button onClick={() => setSearch("")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-[11px] text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/20 ml-auto"
+                onClick={resetFilters}
+              >
+                Reset Semua Filter
+              </Button>
+            </div>
+          )}
+
+          {stats.empty > 0 && (
+            <div className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50/80 p-3 text-sm text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-200">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <span>
+                Masih ada <strong>{stats.empty} siswa</strong> yang belum diisi laporannya untuk periode ini.
+              </span>
+            </div>
+          )}
+
+          <Card className="overflow-hidden border-emerald-100 shadow-sm dark:border-emerald-900/60">
+            <CardHeader className="flex flex-col gap-3 border-b border-emerald-100 bg-white/80 py-3 dark:border-emerald-900/60 dark:bg-emerald-950/20 lg:flex-row lg:items-center lg:justify-between">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <ClipboardList className="h-4 w-4 text-emerald-700" />
                 Data Rekap Laporan Bulanan
@@ -1615,7 +1609,7 @@ const RecapReport = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  className="gap-2 text-xs sm:text-sm"
+                  className="gap-2 border-emerald-200 bg-emerald-50/70 text-xs text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 sm:text-sm"
                   disabled={!!pdfLoading || activePdfGroups.length === 0}
                   onClick={() => previewPDF("f4")}
                 >
@@ -1624,7 +1618,7 @@ const RecapReport = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  className="gap-2 text-xs sm:text-sm"
+                  className="gap-2 border-emerald-200 bg-emerald-50/70 text-xs text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 sm:text-sm"
                   disabled={!!pdfLoading || activePdfGroups.length === 0}
                   onClick={() => exportPDF("f4")}
                 >
@@ -1641,37 +1635,36 @@ const RecapReport = () => {
                 </Button>
               </div>
             </CardHeader>
+            <CardContent className="hidden p-3 md:block">
+              <SpreadsheetLayoutToolbar
+                isEditing={recapLayout.isEditing}
+                canEdit={recapLayout.canEdit}
+                isAdmin={recapLayout.isAdmin}
+                isTeacher={recapLayout.isTeacher}
+                dirty={recapLayout.dirty}
+                statusText={recapLayout.statusText}
+                tableFont={recapLayout.layout.tableFont}
+                tableFontSize={recapLayout.layout.tableFontSize}
+                defaultRowHeight={recapLayout.layout.defaultRowHeight}
+                selection={recapLayout.selection}
+                onToggleEdit={toggleLayoutEdit}
+                onSaveGlobal={() => saveLayout("global")}
+                onSavePersonal={() => saveLayout("personal")}
+                onResetGlobal={() => resetLayout("global")}
+                onResetPersonal={() => resetLayout("personal")}
+                onUseGlobal={() => resetLayout("personal")}
+                onRestoreDefault={restoreDefaultLayout}
+                onResetSelection={recapLayout.resetSelection}
+                onApplyFont={applyFont}
+                onApplyFontSize={applyFontSize}
+                onApplyBold={applyBold}
+                onApplyAlign={applyAlign}
+                onApplyWrap={applyWrap}
+                onDefaultRowHeightChange={recapLayout.setDefaultRowHeight}
+                isSaving={recapLayout.isSaving}
+              />
+            </CardContent>
           </Card>
-
-          <div className="hidden md:block">
-            <SpreadsheetLayoutToolbar
-              isEditing={recapLayout.isEditing}
-              canEdit={recapLayout.canEdit}
-              isAdmin={recapLayout.isAdmin}
-              isTeacher={recapLayout.isTeacher}
-              dirty={recapLayout.dirty}
-              statusText={recapLayout.statusText}
-              tableFont={recapLayout.layout.tableFont}
-              tableFontSize={recapLayout.layout.tableFontSize}
-              defaultRowHeight={recapLayout.layout.defaultRowHeight}
-              selection={recapLayout.selection}
-              onToggleEdit={toggleLayoutEdit}
-              onSaveGlobal={() => saveLayout("global")}
-              onSavePersonal={() => saveLayout("personal")}
-              onResetGlobal={() => resetLayout("global")}
-              onResetPersonal={() => resetLayout("personal")}
-              onUseGlobal={() => resetLayout("personal")}
-              onRestoreDefault={restoreDefaultLayout}
-              onResetSelection={recapLayout.resetSelection}
-              onApplyFont={applyFont}
-              onApplyFontSize={applyFontSize}
-              onApplyBold={applyBold}
-              onApplyAlign={applyAlign}
-              onApplyWrap={applyWrap}
-              onDefaultRowHeightChange={recapLayout.setDefaultRowHeight}
-              isSaving={recapLayout.isSaving}
-            />
-          </div>
 
           {/* Tables grouped per rombel */}
           {displayGroups.length === 0 && (
@@ -1692,8 +1685,8 @@ const RecapReport = () => {
             >
               <div ref={tableContentRef} className="space-y-6" style={{ minWidth: recapLayout.tableMinWidth }}>
                 {displayGroups.map(grp => (
-                  <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden">
-              <CardHeader className="bg-emerald-50 dark:bg-emerald-950/20 py-3">
+                  <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden border-emerald-100 shadow-sm dark:border-emerald-900/60">
+              <CardHeader className="border-b border-emerald-100 bg-emerald-50/70 py-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
                 <CardTitle className="text-sm text-emerald-900 dark:text-emerald-300">
                   Kelas {grp.kelas} - Rombel {grp.rombel}{" "}
                   <Badge variant="outline" className="ml-2 bg-white dark:bg-background">
@@ -1754,10 +1747,10 @@ const RecapReport = () => {
                             />
                           );
                         })}
-                        <th colSpan={4} className="border border-emerald-200 bg-emerald-50 px-2 py-3 text-emerald-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Progres Bulanan</th>
-                        <th colSpan={7} className="border border-sky-200 bg-sky-50 px-2 py-3 text-sky-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Absensi Bulanan</th>
-                        <th colSpan={5} className="border border-amber-200 bg-amber-50 px-2 py-3 text-amber-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Penilaian Progresif</th>
-                        <th colSpan={3} className="border border-violet-200 bg-violet-50 px-2 py-3 text-violet-800" style={{ fontSize: recapLayout.layout.headerFontSize }}>Hasil</th>
+                        <th colSpan={4} className="border border-emerald-200 bg-emerald-50 px-2 py-3 text-emerald-800 dark:border-emerald-800/70 dark:bg-emerald-950/50 dark:text-emerald-200" style={{ fontSize: recapLayout.layout.headerFontSize }}>Progres Bulanan</th>
+                        <th colSpan={7} className="border border-sky-200 bg-sky-50 px-2 py-3 text-sky-800 dark:border-sky-800/70 dark:bg-sky-950/50 dark:text-sky-200" style={{ fontSize: recapLayout.layout.headerFontSize }}>Absensi Bulanan</th>
+                        <th colSpan={5} className="border border-amber-200 bg-amber-50 px-2 py-3 text-amber-800 dark:border-amber-800/70 dark:bg-amber-950/50 dark:text-amber-200" style={{ fontSize: recapLayout.layout.headerFontSize }}>Penilaian Progresif</th>
+                        <th colSpan={3} className="border border-violet-200 bg-violet-50 px-2 py-3 text-violet-800 dark:border-violet-800/70 dark:bg-violet-950/50 dark:text-violet-200" style={{ fontSize: recapLayout.layout.headerFontSize }}>Hasil</th>
                       </tr>
                       <tr className="text-center text-[10px] font-semibold">
                         {RECAP_DETAIL_COLUMNS.map((column) => {
@@ -2179,8 +2172,8 @@ const StatCard = ({
   return (
     <Card
       onClick={onClick}
-      className={`relative h-full transition-all duration-200 select-none ${
-        onClick ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:translate-y-0" : ""
+      className={`relative h-full min-h-[112px] border bg-card/95 shadow-sm transition-all duration-200 select-none dark:bg-card/80 ${
+        onClick ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:translate-y-0" : ""
       } ${activeClass}`}
     >
       {isActive && (
@@ -2188,14 +2181,14 @@ const StatCard = ({
           Aktif
         </Badge>
       )}
-      <CardContent className="flex items-center p-2 text-left h-full gap-2">
-        <div className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${color}`}>
-          <div className="scale-75">{icon}</div>
+      <CardContent className="flex h-full items-center gap-4 p-4 text-left">
+        <div className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${color}`}>
+          <div className="scale-125">{icon}</div>
         </div>
         <div className="flex flex-col flex-1 min-w-0">
-          <p className="text-[10px] text-muted-foreground truncate leading-tight">{label}</p>
-          <p className="text-sm font-bold leading-tight text-foreground">{value}</p>
-          {subtitle && <p className="text-[9px] text-muted-foreground truncate mt-0.5">{subtitle}</p>}
+          <p className="text-xs font-semibold leading-snug text-foreground">{label}</p>
+          <p className="mt-1 text-2xl font-extrabold leading-none text-foreground">{value}</p>
+          {subtitle && <p className="mt-2 text-[11px] leading-tight text-muted-foreground">{subtitle}</p>}
         </div>
       </CardContent>
     </Card>
