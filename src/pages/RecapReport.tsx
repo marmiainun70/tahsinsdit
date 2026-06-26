@@ -202,11 +202,11 @@ const RECAP_IDENTITY_COLUMNS = RECAP_REPORT_COLUMNS.filter((column) => column.gr
 const RECAP_DETAIL_COLUMNS = RECAP_REPORT_COLUMNS.filter((column) => column.group !== "identity");
 
 const getRecapHeaderClass = (group: "identity" | "monthlyProgress" | "attendance" | "progressiveAssessment" | "result") => {
-  if (group === "monthlyProgress") return "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/80 dark:text-emerald-300";
-  if (group === "attendance") return "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/80 dark:text-sky-300";
-  if (group === "progressiveAssessment") return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/80 dark:text-amber-300";
-  if (group === "result") return "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-800/50 dark:bg-violet-950/80 dark:text-violet-300";
-  return "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-700/80 dark:bg-slate-900/80 dark:text-slate-300";
+  if (group === "monthlyProgress") return "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-200";
+  if (group === "attendance") return "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-800/40 dark:bg-sky-950/40 dark:text-sky-200";
+  if (group === "progressiveAssessment") return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/40 dark:text-amber-200";
+  if (group === "result") return "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-800/40 dark:bg-violet-950/40 dark:text-violet-200";
+  return "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-700/40 dark:bg-slate-900/40 dark:text-slate-200";
 };
 
 const getErrorMessage = (error: unknown) =>
@@ -1747,10 +1747,10 @@ const RecapReport = () => {
                             />
                           );
                         })}
-                        <th colSpan={4} className="border border-emerald-200 bg-emerald-50 px-2 py-3 text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/80 dark:text-emerald-400 tracking-wider" style={{ fontSize: recapLayout.layout.headerFontSize }}>PROGRES BULANAN</th>
-                        <th colSpan={7} className="border border-sky-200 bg-sky-50 px-2 py-3 text-sky-800 dark:border-sky-800/50 dark:bg-sky-950/80 dark:text-sky-400 tracking-wider" style={{ fontSize: recapLayout.layout.headerFontSize }}>ABSENSI BULANAN</th>
-                        <th colSpan={5} className="border border-amber-200 bg-amber-50 px-2 py-3 text-amber-800 dark:border-amber-800/50 dark:bg-amber-950/80 dark:text-amber-400 tracking-wider" style={{ fontSize: recapLayout.layout.headerFontSize }}>PENILAIAN PROGRESIF</th>
-                        <th colSpan={3} className="border border-violet-200 bg-violet-50 px-2 py-3 text-violet-800 dark:border-violet-800/50 dark:bg-violet-950/80 dark:text-violet-400 tracking-wider" style={{ fontSize: recapLayout.layout.headerFontSize }}>HASIL</th>
+                        <th colSpan={4} className="border border-emerald-200 bg-emerald-50 px-2 py-3 text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-200 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>PROGRES BULANAN</th>
+                        <th colSpan={7} className="border border-sky-200 bg-sky-50 px-2 py-3 text-sky-800 dark:border-sky-800/40 dark:bg-sky-950/40 dark:text-sky-200 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>ABSENSI BULANAN</th>
+                        <th colSpan={5} className="border border-amber-200 bg-amber-50 px-2 py-3 text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/40 dark:text-amber-200 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>PENILAIAN PROGRESIF</th>
+                        <th colSpan={3} className="border border-violet-200 bg-violet-50 px-2 py-3 text-violet-800 dark:border-violet-800/40 dark:bg-violet-950/40 dark:text-violet-200 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>HASIL</th>
                       </tr>
                       <tr className="text-center text-[10px] font-semibold">
                         {RECAP_DETAIL_COLUMNS.map((column) => {
@@ -1822,7 +1822,14 @@ const RecapReport = () => {
                                 Kelas {grp.kelas} {grp.rombel}
                               </div>
                             </td>
-                            <td {...layoutCellProps(row.studentId, "program")} className={`border border-slate-200 px-2 py-3 ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.program}</td>
+                            <td {...layoutCellProps(row.studentId, "program")} className={`border border-slate-200 px-2 py-3 text-center leading-tight ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
+                              {row.program === "Tahsin Dasar" || row.program?.includes("Tahsin Dasar") ? (
+                                <>
+                                  <span className="block">Tahsin Dasar</span>
+                                  <span className="block text-[10px] opacity-80 mt-0.5">(Iqra)</span>
+                                </>
+                              ) : row.program}
+                            </td>
                             <td {...layoutCellProps(row.studentId, "level")} className={`border border-slate-200 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               <Badge
                                 className={`text-[10px] ${

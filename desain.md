@@ -1,4 +1,4 @@
-﻿# DESIGN SYSTEM — TAHSIN SDIT
+# DESIGN SYSTEM — TAHSIN SDIT
 
 > Panduan UI/UX resmi untuk website Tahsin SDIT Luqmanul Hakim.  
 > Dokumen ini menjadi acuan untuk seluruh halaman, komponen, tabel, filter, form, dashboard, laporan, PDF, dan fitur baru.  
@@ -627,13 +627,15 @@ Grup:
 
 ## Warna header grup
 
-| Grup | Light | Dark |
+Gunakan warna yang *soft* (tidak pure/terlalu kaku) agar menyatu dengan latar belakang dark theme. Gunakan opacity seperti `/30` atau `/40` pada background, dan text yang lebih kalem (misalnya `-200` atau `-300`).
+
+| Grup | Light | Dark (Soft Colors) |
 |---|---|---|
-| Identitas | Slate 100 | Slate 900 |
-| Progres | Emerald 100 | Emerald 950 |
-| Absensi | Blue 100 | Blue 950 |
-| Penilaian | Amber 100 | Amber 950 |
-| Hasil | Purple 100 | Purple 950 |
+| Identitas | Slate 100 | `dark:bg-slate-900/40 dark:text-slate-200` |
+| Progres | Emerald 100 | `dark:bg-emerald-950/40 dark:text-emerald-200` |
+| Absensi | Blue 100 | `dark:bg-sky-950/40 dark:text-sky-200` |
+| Penilaian | Amber 100 | `dark:bg-amber-950/40 dark:text-amber-200` |
+| Hasil | Purple 100 | `dark:bg-violet-950/40 dark:text-violet-200` |
 
 ## Aturan
 
