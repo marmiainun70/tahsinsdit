@@ -174,12 +174,8 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
   if (pathname === "/murid-binaan") return <h2 className="font-semibold text-foreground text-base">Murid Binaan</h2>;
   if (pathname === "/penugasan-guru") return <h2 className="font-semibold text-foreground text-base">Penugasan Guru</h2>;
   if (pathname === "/monitoring") return <h2 className="font-semibold text-foreground text-base">Monitoring Seluruh Siswa</h2>;
-  if (pathname === "/exam-list") return <h2 className="font-semibold text-foreground text-base">Daftar Ujian</h2>;
+  if (pathname === "/jadwal-ujian") return <h2 className="font-semibold text-foreground text-base">Jadwal Ujian</h2>;
   if (pathname === "/report/class") return <h2 className="font-semibold text-foreground text-base">Rekap Nilai Kelas</h2>;
-  if (pathname === "/jadwal-ujian") return <h2 className="font-semibold text-foreground text-base">Jadwal Ujian Kenaikan</h2>;
-  if (pathname === "/statistik-ujian") return <h2 className="font-semibold text-foreground text-base">Statistik Ujian</h2>;
-  if (pathname === "/ujian-tahsin-dasar") return <h2 className="font-semibold text-foreground text-base">Ujian Tahsin Dasar</h2>;
-  if (pathname === "/ujian-tahsin-lanjutan") return <h2 className="font-semibold text-foreground text-base">Ujian Tahsin Lanjutan</h2>;
   if (pathname === "/laporan-bulanan") return <h2 className="font-semibold text-foreground text-base">Absensi Bulanan</h2>;
   if (pathname === "/rekap-laporan") return <h2 className="font-semibold text-foreground text-base">Rekap Laporan Bulanan</h2>;
   if (pathname === "/input-cepat") return <h2 className="font-semibold text-foreground text-base">Input Laporan Bulanan</h2>;
@@ -190,7 +186,6 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
     return <h2 className="font-semibold text-foreground text-base">Data Siswa — Kelas {k}</h2>;
   }
   if (pathname.startsWith("/student/")) return <h2 className="font-semibold text-foreground text-base">Progres Siswa</h2>;
-  if (pathname.startsWith("/exam/")) return <h2 className="font-semibold text-foreground text-base">Ujian Kenaikan Level</h2>;
   if (pathname.startsWith("/tahsin/")) return <h2 className="font-semibold text-foreground text-base">Penilaian Tahsin</h2>;
   return <h2 className="font-semibold text-foreground text-base">Sistem Monitoring</h2>;
 };

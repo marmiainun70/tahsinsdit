@@ -11,12 +11,9 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Student = Database["public"]["Tables"]["students"]["Row"];
 type ProgressEntry = Database["public"]["Tables"]["progress_entries"]["Row"];
-type ExamRecord = Database["public"]["Tables"]["exam_records"]["Row"];
-
 interface Props {
   student: Student;
   progres: ProgressEntry[];
-  ujian: ExamRecord[];
   tahsinData: TahsinAssessment[];
 }
 
@@ -100,7 +97,7 @@ const MiniBar = ({ value, color }: { value: number; color: string }) => (
 );
 
 const StudentReportPDF = React.forwardRef<HTMLDivElement, Props>(
-  ({ student, progres, ujian, tahsinData }, ref) => {
+  ({ student, progres, tahsinData }, ref) => {
     const today = new Date().toLocaleDateString("id-ID", {
       day: "numeric",
       month: "long",
@@ -433,79 +430,7 @@ const StudentReportPDF = React.forwardRef<HTMLDivElement, Props>(
             </>
           )}
 
-          {/* ── UJIAN KENAIKAN ── */}
-          {ujian.length > 0 && (
-            <>
-              <SectionTitle color="#7c3aed">🏆 Riwayat Ujian Kenaikan Level</SectionTitle>
-              <div style={{ display: "grid", gridTemplateColumns: ujian.length === 1 ? "1fr" : "1fr 1fr", gap: 10 }}>
-                {ujian.slice(0, 4).map((u) => (
-                  <div
-                    key={u.id}
-                    style={{
-                      border: `1px solid ${u.hasil === "Lulus" ? "#bbf7d0" : "#fde68a"}`,
-                      borderRadius: 10,
-                      padding: "12px 14px",
-                      background: u.hasil === "Lulus" ? "#f0fdf4" : "#fffbeb",
-                    }}
-                  >
-                    <div
-                      style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}
-                    >
-                      <div>
-                        <p style={{ fontSize: 12, fontWeight: 700, margin: 0 }}>
-                          Ujian {u.level_diuji.startsWith("Iqro") ? `Tahsin Dasar — ${u.level_diuji}` : u.level_diuji}
-                        </p>
-                        <p style={{ fontSize: 10, color: "#6b7280", margin: 0, marginTop: 2 }}>{u.tanggal}</p>
-                      </div>
-                      <span
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 700,
-                          padding: "3px 10px",
-                          borderRadius: 20,
-                          background: u.hasil === "Lulus" ? "#bbf7d0" : "#fde68a",
-                          color: u.hasil === "Lulus" ? "#166534" : "#92400e",
-                        }}
-                      >
-                        {u.hasil === "Lulus" ? "✓ Lulus" : "✗ Belum Lulus"}
-                      </span>
-                    </div>
-                    {[
-                      { label: "Kelancaran", value: u.kelancaran },
-                      { label: "Makhraj", value: u.makhraj },
-                      { label: "Tajwid", value: u.tajwid },
-                      { label: "Adab", value: u.adab },
-                    ].map(({ label, value }) => (
-                      <div
-                        key={label}
-                        style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}
-                      >
-                        <span style={{ width: 64, fontSize: 10, color: "#6b7280", flexShrink: 0 }}>{label}</span>
-                        <MiniBar
-                          value={value}
-                          color={value >= 80 ? "#10b981" : value >= 65 ? "#f59e0b" : "#ef4444"}
-                        />
-                      </div>
-                    ))}
-                    {u.catatan && (
-                      <p
-                        style={{
-                          marginTop: 8,
-                          fontSize: 10,
-                          color: "#6b7280",
-                          fontStyle: "italic",
-                          borderTop: "1px solid #e5e7eb",
-                          paddingTop: 6,
-                        }}
-                      >
-                        Catatan guru: "{u.catatan}"
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
+
 
           {/* ── FOOTER ── */}
           <div

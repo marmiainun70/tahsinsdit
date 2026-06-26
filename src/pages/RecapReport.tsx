@@ -621,13 +621,14 @@ const RecapReport = () => {
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
-      format: "a4",
+      format: paperSize === "f4" ? [330, 210] : "a4",
       compress: true,
       putOnlyUsedFonts: true,
     });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
     const margin = 12;
+    const isF4 = paperSize === "f4";
     const hasAmiriFont = await loadAmiriFont(doc);
 
     const drawHeader = (month: number) => {
@@ -915,7 +916,7 @@ const RecapReport = () => {
     const doc = new jsPDF({
       orientation: "landscape",
       unit: "mm",
-      format: paperSize,
+      format: paperSize === "f4" ? [330, 210] : paperSize,
       compress: true,
       putOnlyUsedFonts: true,
     });
@@ -1610,7 +1611,25 @@ const RecapReport = () => {
                   onClick={() => exportPDF("a4")}
                 >
                   {pdfLoading === "download-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                  Download PDF
+                  Download PDF (A4)
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2 text-xs sm:text-sm"
+                  disabled={!!pdfLoading || activePdfGroups.length === 0}
+                  onClick={() => previewPDF("f4")}
+                >
+                  {pdfLoading === "preview-f4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                  Preview PDF (F4)
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2 text-xs sm:text-sm"
+                  disabled={!!pdfLoading || activePdfGroups.length === 0}
+                  onClick={() => exportPDF("f4")}
+                >
+                  {pdfLoading === "download-f4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                  Download/Cetak PDF (F4)
                 </Button>
                 <Button
                   className="gap-2 bg-emerald-700 text-xs hover:bg-emerald-800 sm:text-sm"
@@ -2063,15 +2082,27 @@ const RecapReport = () => {
               Tutup
             </Button>
             <Button
+              variant="outline"
               disabled={pdfLoading === "multi-rombel"}
-              onClick={downloadSelectedRombelPDFs}
+              onClick={() => downloadSelectedRombelPDFs("a4")}
             >
               {pdfLoading === "multi-rombel" ? (
                 <Loader2 className="w-4 h-4 animate-spin mr-2" />
               ) : (
                 <Download className="w-4 h-4 mr-2" />
               )}
-              Download Rekap Terpilih
+              Download (A4)
+            </Button>
+            <Button
+              disabled={pdfLoading === "multi-rombel"}
+              onClick={() => downloadSelectedRombelPDFs("f4")}
+            >
+              {pdfLoading === "multi-rombel" ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Download className="w-4 h-4 mr-2" />
+              )}
+              Download (F4)
             </Button>
           </div>
         </DialogContent>

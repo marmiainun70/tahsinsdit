@@ -329,69 +329,6 @@ export const useAddProgress = () => {
   });
 };
 
-// ─── EXAM RECORDS ─────────────────────────────────────────────────────────────
-export const useExamRecords = (studentId: string) => {
-  const { user, profile } = useAuth();
-
-  return useQuery({
-    queryKey: ["exams", studentId, user?.id ?? "anon", profile?.role ?? "none"],
-    queryFn: async () => {
-      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
-      if (managedStudentIds && !managedStudentIds.includes(studentId)) return [];
-
-      const { data, error } = await supabase
-        .from("exam_records")
-        .select("*")
-        .eq("student_id", studentId)
-        .order("tanggal", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!studentId,
-  });
-};
-
-export const useAllExamRecords = () => {
-  const { user, profile } = useAuth();
-
-  return useQuery({
-    queryKey: ["exams", "all", user?.id ?? "anon", profile?.role ?? "none"],
-    queryFn: async () => {
-      let query = supabase
-        .from("exam_records")
-        .select("*, students(nama, kelas)")
-        .order("created_at", { ascending: false });
-
-      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
-      if (managedStudentIds && managedStudentIds.length === 0) return [];
-      if (managedStudentIds) query = query.in("student_id", managedStudentIds);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-  });
-};
-
-export const useAddExam = () => {
-  const qc = useQueryClient();
-  const { user } = useAuth();
-  return useMutation({
-    mutationFn: async (exam: Database["public"]["Tables"]["exam_records"]["Insert"]) => {
-      const { data, error } = await supabase
-        .from("exam_records")
-        .insert({ ...exam, created_by: user?.id ?? null })
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      qc.invalidateQueries({ queryKey: ["exams", data.student_id] });
-      qc.invalidateQueries({ queryKey: ["exams", "all"] });
-    },
-  });
-};
 
 // ─── TAHSIN ASSESSMENTS ───────────────────────────────────────────────────────
 export interface TahsinAssessment {

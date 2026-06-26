@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  useStudent, useProgressEntries, useExamRecords,
+  useStudent, useProgressEntries,
   useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS,
   useTahsinAssessments, getLevelDisplayLabel, isTahsinDasar,
 } from "@/hooks/useSupabaseData";
@@ -60,7 +60,6 @@ const StudentProgress = () => {
   const { studentId } = useParams();
   const { data: student, isLoading: loadingStudent } = useStudent(studentId ?? "");
   const { data: progres = [], isLoading: loadingProgress } = useProgressEntries(studentId ?? "");
-  const { data: ujian = [] } = useExamRecords(studentId ?? "");
   const { data: tahsinData = [] } = useTahsinAssessments(studentId ?? "");
   const addProgress = useAddProgress();
   const updateStudent = useUpdateStudent();
@@ -216,14 +215,8 @@ const StudentProgress = () => {
                 </button>
               </Link>
             )}
-            <Link to={`/exam/${student.id}`}>
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-gold text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-gold">
-                <ClipboardList className="w-4 h-4" />
-                Ujian Kenaikan
-              </button>
-            </Link>
             <button
-              onClick={() => exportPDF(student, progres, ujian, tahsinData)}
+              onClick={() => exportPDF(student, progres, [], tahsinData)}
               disabled={exporting}
               className="flex items-center gap-2 px-4 py-2.5 bg-card border border-border text-foreground rounded-xl text-sm font-medium hover:bg-muted transition-colors disabled:opacity-60"
             >
@@ -415,35 +408,6 @@ const StudentProgress = () => {
         </div>
       )}
 
-      {/* Exam History */}
-      {ujian.length > 0 && (
-        <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-border flex items-center gap-2">
-            <Award className="w-5 h-5 text-gold" />
-            <h2 className="font-bold text-foreground">Riwayat Ujian Kenaikan</h2>
-          </div>
-          <div className="p-5 space-y-4">
-            {ujian.map(u => (
-              <div key={u.id} className="border border-border rounded-xl p-4">
-                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-                  <div>
-                    <p className="font-semibold text-foreground">Ujian {u.level_diuji}</p>
-                    <p className="text-xs text-muted-foreground">{u.tanggal}</p>
-                  </div>
-                  <span className={`text-sm font-bold px-3 py-1 rounded-full ${u.hasil === "Lulus" ? "bg-emerald-100 text-emerald-700" : "bg-yellow-100 text-yellow-700"}`}>{u.hasil}</span>
-                </div>
-                <div className="space-y-2">
-                  <ScoreBar value={u.kelancaran} label="Kelancaran" />
-                  <ScoreBar value={u.makhraj} label="Makhraj" />
-                  <ScoreBar value={u.tajwid} label="Tajwid" />
-                  <ScoreBar value={u.adab} label="Adab Membaca" />
-                </div>
-                {u.catatan && <p className="mt-3 text-xs text-muted-foreground bg-muted rounded-lg px-3 py-2 italic">"{u.catatan}"</p>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Activity Log */}
       <ActivityLogPanel studentId={student.id} />
@@ -463,7 +427,7 @@ const StudentProgress = () => {
           ref={reportRef}
           student={student}
           progres={progres}
-          ujian={ujian}
+          ujian={[]}
           tahsinData={tahsinData}
         />
       </div>

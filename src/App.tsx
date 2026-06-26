@@ -15,17 +15,12 @@ import TeacherManagedStudents from "@/pages/TeacherManagedStudents";
 import Dashboard from "@/pages/Dashboard";
 import ClassStudents from "@/pages/ClassStudents";
 import StudentProgress from "@/pages/StudentProgress";
-import Examination from "@/pages/Examination";
-import ExamList from "@/pages/ExamList";
 import Monitoring from "@/pages/Monitoring";
 import TahsinAssessment from "@/pages/TahsinAssessment";
 import ClassReport from "@/pages/ClassReport";
 import ExamSchedule from "@/pages/ExamSchedule";
 import ExamScheduleDetail from "@/pages/ExamScheduleDetail";
-import ExamStats from "@/pages/ExamStats";
 import MonthlyReport from "@/pages/MonthlyReport";
-import TahsinDasarExam from "@/pages/TahsinDasarExam";
-import TahsinLanjutanExam from "@/pages/TahsinLanjutanExam";
 import RecapReport from "@/pages/RecapReport";
 import SpreadsheetReport from "@/pages/SpreadsheetReport";
 import InstitutionSettings from "@/pages/InstitutionSettings";
@@ -36,7 +31,6 @@ import Landing from "@/pages/Landing";
 
 import NotFound from "@/pages/NotFound";
 import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotification";
-
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -98,17 +92,12 @@ const AppRoutes = () => {
       <Route path="/penugasan-guru" element={<ProtectedRoute><AdminTeacherAssignments /></ProtectedRoute>} />
       <Route path="/class/:classId" element={<ProtectedRoute><ClassStudents /></ProtectedRoute>} />
       <Route path="/student/:studentId" element={<ProtectedRoute><StudentProgress /></ProtectedRoute>} />
-      <Route path="/exam/:studentId" element={<ProtectedRoute><Examination /></ProtectedRoute>} />
-      <Route path="/exam-list" element={<ProtectedRoute><ExamList /></ProtectedRoute>} />
       <Route path="/monitoring" element={<ProtectedRoute><Monitoring /></ProtectedRoute>} />
       <Route path="/tahsin/:studentId" element={<ProtectedRoute><TahsinAssessment /></ProtectedRoute>} />
       <Route path="/report/class" element={<ProtectedRoute><ClassReport /></ProtectedRoute>} />
       <Route path="/jadwal-ujian" element={<ProtectedRoute><ExamSchedule /></ProtectedRoute>} />
       <Route path="/jadwal-ujian/:scheduleId" element={<ProtectedRoute><ExamScheduleDetail /></ProtectedRoute>} />
-      <Route path="/statistik-ujian" element={<ProtectedRoute><ExamStats /></ProtectedRoute>} />
       <Route path="/laporan-bulanan" element={<ProtectedRoute><MonthlyReport /></ProtectedRoute>} />
-      <Route path="/ujian-tahsin-dasar" element={<ProtectedRoute><TahsinDasarExam /></ProtectedRoute>} />
-      <Route path="/ujian-tahsin-lanjutan" element={<ProtectedRoute><TahsinLanjutanExam /></ProtectedRoute>} />
       <Route path="/rekap-laporan" element={<ProtectedRoute><RecapReport /></ProtectedRoute>} />
       <Route path="/restore-april-2026" element={<ProtectedRoute><RestoreAprilReports /></ProtectedRoute>} />
       <Route path="/input-cepat" element={<ProtectedRoute><SpreadsheetReport /></ProtectedRoute>} />
