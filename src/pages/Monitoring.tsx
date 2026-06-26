@@ -44,6 +44,10 @@ import {
   Users,
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { useAuth } from "@/contexts/AuthContext";
+import { isTeacherRole } from "@/lib/roleLabels";
+import { useTeacherStudents } from "@/hooks/useTeacherStudents";
+import { useEffect } from "react";
 
 type Student = Database["public"]["Tables"]["students"]["Row"];
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -425,9 +429,29 @@ const renderPieLabel = ({
 const hideZeroLabel = (value: number) => (value > 0 ? value : "");
 
 const Monitoring = () => {
-  const { data: students = [], isLoading: loadingStudents } = useStudents();
-  const { data: monthlyReports = [], isLoading: loadingReports } =
-    useAllMonthlyReports();
+  const { user, profile } = useAuth();
+  const isTeacher = isTeacherRole(profile?.role);
+
+  const { data: allStudents = [], isLoading: loadingStudents, refetch: refetchStudents } = useStudents();
+  const { data: assignments = [], isLoading: loadingAssignments, refetch: refetchAssignments } = useTeacherStudents(user?.id, "approved");
+  const {
+    data: allMonthlyReports = [],
+    isLoading: loadingReports,
+    refetch: refetchReports,
+  } = useAllMonthlyReports();
+
+  const isLoading = loadingStudents || loadingReports || (isTeacher && loadingAssignments);
+
+  useEffect(() => {
+    refetchStudents();
+    refetchReports();
+    if (isTeacher) refetchAssignments();
+  }, [refetchStudents, refetchReports, refetchAssignments, isTeacher]);
+
+  const myStudentIds = new Set(assignments.map((a) => a.student_id));
+  const students = isTeacher ? allStudents.filter((s) => myStudentIds.has(s.id)) : allStudents;
+  const monthlyReports = isTeacher ? allMonthlyReports.filter((r) => myStudentIds.has(r.student_id)) : allMonthlyReports;
+
   const [presentationMode, setPresentationMode] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(ALL_TEACHERS);
   const [selectedClassStatus, setSelectedClassStatus] =
@@ -622,10 +646,44 @@ const Monitoring = () => {
 
   const chartHeight = presentationMode ? 340 : 270;
 
-  if (loadingStudents || loadingReports) {
+  if (loadingStudents || loadingReports || (isTeacher && loadingAssignments)) {
     return (
       <div className="flex h-64 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (students.length === 0) {
+    return (
+      <div className={presentationMode ? "space-y-8" : "space-y-7"}>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`rounded-2xl bg-gradient-hero text-primary-foreground ${
+            presentationMode ? "p-8" : "p-6"
+          }`}
+        >
+          <div>
+            <h1 className={presentationMode ? "text-3xl font-bold" : "text-2xl font-bold"}>
+              Dashboard Koordinator
+            </h1>
+            <p className="mt-1 text-sm text-primary-foreground/70">
+              Monitoring program Tahsin dan Tahfizh per kelas
+            </p>
+          </div>
+        </motion.div>
+        <div className="bg-card rounded-2xl border border-border p-10 text-center">
+          <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+          <p className="font-semibold text-foreground mb-1">
+            {isTeacher ? "Belum ada siswa binaan" : "Belum ada data siswa"}
+          </p>
+          <p className="text-sm text-muted-foreground mb-4">
+            {isTeacher
+              ? "Silakan ajukan siswa kepada Koordinator Tahfizh."
+              : "Mulai tambahkan siswa untuk melihat pemantauan."}
+          </p>
+        </div>
       </div>
     );
   }
@@ -735,23 +793,25 @@ const Monitoring = () => {
                 ))}
               </select>
             </label>
-            <label className="space-y-1">
-              <span className="text-xs font-medium text-primary-foreground/80">
-                Guru Tahsin & Tahfizh
-              </span>
-              <select
-                value={selectedTeacher}
-                onChange={(event) => setSelectedTeacher(event.target.value)}
-                className="h-10 w-full rounded-xl border border-white/30 bg-white px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-white/50"
-              >
-                <option value={ALL_TEACHERS}>Semua Guru Tahsin & Tahfizh</option>
-                {teacherNames.map((teacherName) => (
-                  <option key={teacherName} value={teacherName}>
-                    {teacherName}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {!isTeacher && (
+              <label className="space-y-1">
+                <span className="text-xs font-medium text-primary-foreground/80">
+                  Guru Tahsin & Tahfizh
+                </span>
+                <select
+                  value={selectedTeacher}
+                  onChange={(event) => setSelectedTeacher(event.target.value)}
+                  className="h-10 w-full rounded-xl border border-white/30 bg-white px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-white/50"
+                >
+                  <option value={ALL_TEACHERS}>Semua Guru Tahsin & Tahfizh</option>
+                  {teacherNames.map((teacherName) => (
+                    <option key={teacherName} value={teacherName}>
+                      {teacherName}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <button
               type="button"
               onClick={() => setPresentationMode((active) => !active)}

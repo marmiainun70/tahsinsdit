@@ -555,6 +555,7 @@ Gunakan alert untuk:
 - gunakan background warna 5–10% opacity;
 - border 25–35% opacity;
 - teks lebih terang.
+- **KHUSUS MONITORING & DASHBOARD GURU**: Jangan gunakan warna merah gelap murni (`bg-red-950` atau `bg-rose-950`) untuk kondisi "kosong/terkunci". Gunakan warna slate/emerald yang soft (contoh: `dark:bg-slate-900/40` atau `dark:bg-emerald-950/20`) agar menyatu dengan background utama.
 
 ---
 
