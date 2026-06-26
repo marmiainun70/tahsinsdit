@@ -202,11 +202,11 @@ const RECAP_IDENTITY_COLUMNS = RECAP_REPORT_COLUMNS.filter((column) => column.gr
 const RECAP_DETAIL_COLUMNS = RECAP_REPORT_COLUMNS.filter((column) => column.group !== "identity");
 
 const getRecapHeaderClass = (group: "identity" | "monthlyProgress" | "attendance" | "progressiveAssessment" | "result") => {
-  if (group === "monthlyProgress") return "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/40 dark:bg-slate-900/60 dark:text-emerald-300/80";
-  if (group === "attendance") return "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-900/40 dark:bg-slate-900/60 dark:text-sky-300/80";
-  if (group === "progressiveAssessment") return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/40 dark:bg-slate-900/60 dark:text-amber-300/80";
-  if (group === "result") return "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-900/40 dark:bg-slate-900/60 dark:text-violet-300/80";
-  return "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800/60 dark:bg-slate-900/60 dark:text-slate-300/90";
+  if (group === "monthlyProgress") return "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/50 dark:text-emerald-300/90";
+  if (group === "attendance") return "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-900/40 dark:bg-sky-950/50 dark:text-sky-300/90";
+  if (group === "progressiveAssessment") return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/50 dark:text-amber-300/90";
+  if (group === "result") return "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-900/40 dark:bg-violet-950/50 dark:text-violet-300/90";
+  return "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800/60 dark:bg-slate-900/50 dark:text-slate-300/90";
 };
 
 const getErrorMessage = (error: unknown) =>
