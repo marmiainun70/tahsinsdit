@@ -202,11 +202,11 @@ const RECAP_IDENTITY_COLUMNS = RECAP_REPORT_COLUMNS.filter((column) => column.gr
 const RECAP_DETAIL_COLUMNS = RECAP_REPORT_COLUMNS.filter((column) => column.group !== "identity");
 
 const getRecapHeaderClass = (group: "identity" | "monthlyProgress" | "attendance" | "progressiveAssessment" | "result") => {
-  if (group === "monthlyProgress") return "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-200";
-  if (group === "attendance") return "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-800/40 dark:bg-sky-950/40 dark:text-sky-200";
-  if (group === "progressiveAssessment") return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/40 dark:text-amber-200";
-  if (group === "result") return "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-800/40 dark:bg-violet-950/40 dark:text-violet-200";
-  return "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-700/40 dark:bg-slate-900/40 dark:text-slate-200";
+  if (group === "monthlyProgress") return "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/50 dark:text-emerald-300/90";
+  if (group === "attendance") return "border-sky-200 bg-sky-50 text-sky-800 dark:border-sky-900/40 dark:bg-sky-950/50 dark:text-sky-300/90";
+  if (group === "progressiveAssessment") return "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/50 dark:text-amber-300/90";
+  if (group === "result") return "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-900/40 dark:bg-violet-950/50 dark:text-violet-300/90";
+  return "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800/60 dark:bg-slate-900/50 dark:text-slate-300/90";
 };
 
 const getErrorMessage = (error: unknown) =>
@@ -1747,10 +1747,10 @@ const RecapReport = () => {
                             />
                           );
                         })}
-                        <th colSpan={4} className="border border-emerald-200 bg-emerald-50 px-2 py-3 text-emerald-800 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-200 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>PROGRES BULANAN</th>
-                        <th colSpan={7} className="border border-sky-200 bg-sky-50 px-2 py-3 text-sky-800 dark:border-sky-800/40 dark:bg-sky-950/40 dark:text-sky-200 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>ABSENSI BULANAN</th>
-                        <th colSpan={5} className="border border-amber-200 bg-amber-50 px-2 py-3 text-amber-800 dark:border-amber-800/40 dark:bg-amber-950/40 dark:text-amber-200 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>PENILAIAN PROGRESIF</th>
-                        <th colSpan={3} className="border border-violet-200 bg-violet-50 px-2 py-3 text-violet-800 dark:border-violet-800/40 dark:bg-violet-950/40 dark:text-violet-200 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>HASIL</th>
+                        <th colSpan={4} className="border border-emerald-200 bg-emerald-50 px-2 py-3 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/50 dark:text-emerald-300/90 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>PROGRES BULANAN</th>
+                        <th colSpan={7} className="border border-sky-200 bg-sky-50 px-2 py-3 text-sky-800 dark:border-sky-900/40 dark:bg-sky-950/50 dark:text-sky-300/90 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>ABSENSI BULANAN</th>
+                        <th colSpan={5} className="border border-amber-200 bg-amber-50 px-2 py-3 text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/50 dark:text-amber-300/90 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>PENILAIAN PROGRESIF</th>
+                        <th colSpan={3} className="border border-violet-200 bg-violet-50 px-2 py-3 text-violet-800 dark:border-violet-900/40 dark:bg-violet-950/50 dark:text-violet-300/90 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>HASIL</th>
                       </tr>
                       <tr className="text-center text-[10px] font-semibold">
                         {RECAP_DETAIL_COLUMNS.map((column) => {
@@ -1802,7 +1802,7 @@ const RecapReport = () => {
                                 event.stopPropagation();
                                 recapLayout.setSelection({ type: "row", studentId: row.studentId });
                               }}
-                              className={`relative border border-slate-200 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}
+                              className={`relative border border-slate-200 dark:border-slate-800/60 dark:border-slate-800/60 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}
                             >
                               {row.no}
                               {recapLayout.isEditing && (
@@ -1815,14 +1815,14 @@ const RecapReport = () => {
                             </td>
                             <td
                               {...layoutCellProps(row.studentId, "studentName")}
-                              className={`border border-slate-200 px-2 py-3 font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}
+                              className={`border border-slate-200 dark:border-slate-800/60 dark:border-slate-800/60 px-2 py-3 font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}
                             >
                               <div>{highlight(row.nama, search)}</div>
                               <div className="text-[10px] font-normal text-muted-foreground mt-0.5">
                                 Kelas {grp.kelas} {grp.rombel}
                               </div>
                             </td>
-                            <td {...layoutCellProps(row.studentId, "program")} className={`border border-slate-200 px-2 py-3 text-center leading-tight ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
+                            <td {...layoutCellProps(row.studentId, "program")} className={`border border-slate-200 dark:border-slate-800/60 dark:border-slate-800/60 px-2 py-3 text-center leading-tight ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               {row.program === "Tahsin Dasar" || row.program?.includes("Tahsin Dasar") ? (
                                 <>
                                   <span className="block">Tahsin Dasar</span>
@@ -1830,7 +1830,7 @@ const RecapReport = () => {
                                 </>
                               ) : row.program}
                             </td>
-                            <td {...layoutCellProps(row.studentId, "level")} className={`border border-slate-200 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
+                            <td {...layoutCellProps(row.studentId, "level")} className={`border border-slate-200 dark:border-slate-800/60 dark:border-slate-800/60 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               <Badge
                                 className={`text-[10px] ${
                                   LEVEL_COLORS[row.level as ReadingLevel] || ""
@@ -1839,33 +1839,33 @@ const RecapReport = () => {
                                 {row.level}
                               </Badge>
                             </td>
-                            <td {...layoutCellProps(row.studentId, "start")} className={`border border-emerald-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.awal}</td>
-                            <td {...layoutCellProps(row.studentId, "end")} className={`border border-emerald-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.akhir}</td>
-                            <td {...layoutCellProps(row.studentId, "totalProgress")} className={`border border-emerald-100 px-2 py-3 text-center font-bold ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
+                            <td {...layoutCellProps(row.studentId, "start")} className={`border border-emerald-100 dark:border-emerald-900/40 dark:border-emerald-900/40 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.awal}</td>
+                            <td {...layoutCellProps(row.studentId, "end")} className={`border border-emerald-100 dark:border-emerald-900/40 dark:border-emerald-900/40 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.akhir}</td>
+                            <td {...layoutCellProps(row.studentId, "totalProgress")} className={`border border-emerald-100 dark:border-emerald-900/40 dark:border-emerald-900/40 px-2 py-3 text-center font-bold ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               {formatRecapValue(row.total)}
                             </td>
-                            <td {...layoutCellProps(row.studentId, "target")} className={`border border-emerald-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
+                            <td {...layoutCellProps(row.studentId, "target")} className={`border border-emerald-100 dark:border-emerald-900/40 dark:border-emerald-900/40 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               {formatRecapValue(row.target)}
                             </td>
-                            <td {...layoutCellProps(row.studentId, "present")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.present)}</td>
-                            <td {...layoutCellProps(row.studentId, "sick")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.sick)}</td>
-                            <td {...layoutCellProps(row.studentId, "permission")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.permission)}</td>
-                            <td {...layoutCellProps(row.studentId, "absent")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.absent)}</td>
-                            <td {...layoutCellProps(row.studentId, "totalAttendance")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.totalAbsensi)}</td>
-                            <td {...layoutCellProps(row.studentId, "attendancePercentage")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.hasAttendance ? `${row.persentaseHadir ?? 0}%` : "-"}</td>
-                            <td {...layoutCellProps(row.studentId, "attendanceStatus")} className={`border border-sky-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
+                            <td {...layoutCellProps(row.studentId, "present")} className={`border border-sky-100 dark:border-sky-900/40 dark:border-sky-900/40 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.present)}</td>
+                            <td {...layoutCellProps(row.studentId, "sick")} className={`border border-sky-100 dark:border-sky-900/40 dark:border-sky-900/40 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.sick)}</td>
+                            <td {...layoutCellProps(row.studentId, "permission")} className={`border border-sky-100 dark:border-sky-900/40 dark:border-sky-900/40 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.permission)}</td>
+                            <td {...layoutCellProps(row.studentId, "absent")} className={`border border-sky-100 dark:border-sky-900/40 dark:border-sky-900/40 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.absent)}</td>
+                            <td {...layoutCellProps(row.studentId, "totalAttendance")} className={`border border-sky-100 dark:border-sky-900/40 dark:border-sky-900/40 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.totalAbsensi)}</td>
+                            <td {...layoutCellProps(row.studentId, "attendancePercentage")} className={`border border-sky-100 dark:border-sky-900/40 dark:border-sky-900/40 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.hasAttendance ? `${row.persentaseHadir ?? 0}%` : "-"}</td>
+                            <td {...layoutCellProps(row.studentId, "attendanceStatus")} className={`border border-sky-100 dark:border-sky-900/40 dark:border-sky-900/40 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               <Badge variant="outline" className={getAttendanceStatusClass(row.attendanceStatus)}>{row.attendanceStatus}</Badge>
                             </td>
-                            <td {...layoutCellProps(row.studentId, "attendanceReadiness")} className={`border border-amber-100 px-2 py-3 text-center font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatProgressivePoint(row.poinKehadiranKesiapan)}</td>
-                            <td {...layoutCellProps(row.studentId, "readingQuality")} className={`border border-amber-100 px-2 py-3 text-center font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatProgressivePoint(row.poinKualitasBacaan)}</td>
-                            <td {...layoutCellProps(row.studentId, "readingImprovement")} className={`border border-amber-100 px-2 py-3 text-center font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatProgressivePoint(row.poinPerbaikanBacaan)}</td>
-                            <td {...layoutCellProps(row.studentId, "monthlyAchievement")} className={`border border-amber-100 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.pencapaianTargetBulan)}</td>
-                            <td {...layoutCellProps(row.studentId, "progressCategory")} className={`border border-amber-100 px-2 py-3 text-center text-[10px] font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.kategoriProgres ?? "-"}</td>
-                            <td {...layoutCellProps(row.studentId, "finalScore")} className={`border border-amber-100 px-2 py-3 text-center font-semibold ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.nilaiAkhirProgresif)}</td>
-                            <td {...layoutCellProps(row.studentId, "teacher")} className={`border border-violet-100 px-2 py-3 text-muted-foreground ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
+                            <td {...layoutCellProps(row.studentId, "attendanceReadiness")} className={`border border-amber-100 dark:border-amber-900/40 dark:border-amber-900/40 px-2 py-3 text-center font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatProgressivePoint(row.poinKehadiranKesiapan)}</td>
+                            <td {...layoutCellProps(row.studentId, "readingQuality")} className={`border border-amber-100 dark:border-amber-900/40 dark:border-amber-900/40 px-2 py-3 text-center font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatProgressivePoint(row.poinKualitasBacaan)}</td>
+                            <td {...layoutCellProps(row.studentId, "readingImprovement")} className={`border border-amber-100 dark:border-amber-900/40 dark:border-amber-900/40 px-2 py-3 text-center font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatProgressivePoint(row.poinPerbaikanBacaan)}</td>
+                            <td {...layoutCellProps(row.studentId, "monthlyAchievement")} className={`border border-amber-100 dark:border-amber-900/40 dark:border-amber-900/40 px-2 py-3 text-center ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.pencapaianTargetBulan)}</td>
+                            <td {...layoutCellProps(row.studentId, "progressCategory")} className={`border border-amber-100 dark:border-amber-900/40 dark:border-amber-900/40 px-2 py-3 text-center text-[10px] font-medium ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{row.kategoriProgres ?? "-"}</td>
+                            <td {...layoutCellProps(row.studentId, "finalScore")} className={`border border-amber-100 dark:border-amber-900/40 dark:border-amber-900/40 px-2 py-3 text-center font-semibold ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>{formatRecapValue(row.nilaiAkhirProgresif)}</td>
+                            <td {...layoutCellProps(row.studentId, "teacher")} className={`border border-violet-100 dark:border-violet-900/40 dark:border-violet-900/40 px-2 py-3 text-muted-foreground ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               {row.guru}
                             </td>
-                            <td {...layoutCellProps(row.studentId, "notes")} className={`border border-violet-100 px-2 py-3 whitespace-pre-wrap text-muted-foreground ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
+                            <td {...layoutCellProps(row.studentId, "notes")} className={`border border-violet-100 dark:border-violet-900/40 dark:border-violet-900/40 px-2 py-3 whitespace-pre-wrap text-muted-foreground ${recapLayout.isEditing ? "cursor-cell select-none" : ""}`}>
                               {row.catatan || "-"}
                             </td>
                           </tr>
