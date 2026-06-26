@@ -1750,7 +1750,9 @@ const RecapReport = () => {
                         <th colSpan={4} className="border border-emerald-200 bg-emerald-50 px-2 py-3 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/50 dark:text-emerald-300/90 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>PROGRES BULANAN</th>
                         <th colSpan={7} className="border border-sky-200 bg-sky-50 px-2 py-3 text-sky-800 dark:border-sky-900/40 dark:bg-sky-950/50 dark:text-sky-300/90 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>ABSENSI BULANAN</th>
                         <th colSpan={5} className="border border-amber-200 bg-amber-50 px-2 py-3 text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/50 dark:text-amber-300/90 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>PENILAIAN PROGRESIF</th>
-                        <th colSpan={3} className="border border-violet-200 bg-violet-50 px-2 py-3 text-violet-800 dark:border-violet-900/40 dark:bg-violet-950/50 dark:text-violet-300/90 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>HASIL</th>
+                        <th className="border-y border-l border-violet-200 bg-violet-50 dark:border-violet-900/40 dark:bg-violet-950/50"></th>
+                        <th className="border-y border-violet-200 bg-violet-50 px-2 py-3 text-violet-800 dark:border-violet-900/40 dark:bg-violet-950/50 dark:text-violet-300/90 tracking-wider text-center" style={{ fontSize: recapLayout.layout.headerFontSize }}>HASIL</th>
+                        <th className="border-y border-r border-violet-200 bg-violet-50 dark:border-violet-900/40 dark:bg-violet-950/50"></th>
                       </tr>
                       <tr className="text-center text-[10px] font-semibold">
                         {RECAP_DETAIL_COLUMNS.map((column) => {
