@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStudents, LEVELS, LEVEL_COLORS, getLevelDisplayLabel, getLevelGroup, IQRO_LEVELS, IQRO_JILID_COLORS } from "@/hooks/useSupabaseData";
-import { Users, BookOpen, Star, TrendingUp, Award, Loader2, AlertTriangle, ChevronRight, BookOpenCheck } from "lucide-react";
+import { Users, BookOpen, Star, TrendingUp, Award, Loader2, AlertTriangle, ChevronRight, BookOpenCheck, Lock } from "lucide-react";
 import StudentRanking from "@/components/StudentRanking";
 import RelatedSystemCard from "@/components/RelatedSystemCard";
 import type { Database } from "@/integrations/supabase/types";
-
-type ReadingLevel = Database["public"]["Enums"]["reading_level"];
+import { useAuth } from "@/contexts/AuthContext";
+import { isTeacherRole } from "@/lib/roleLabels";
+import { useTeacherStudents } from "@/hooks/useTeacherStudents";
 
 const classColors = [
 "from-blue-500 to-blue-600",
@@ -18,7 +19,16 @@ const classColors = [
 
 
 const Dashboard = () => {
-  const { data: students = [], isLoading } = useStudents();
+  const { user, profile } = useAuth();
+  const isTeacher = isTeacherRole(profile?.role);
+
+  const { data: allStudents = [], isLoading: loadingStudents } = useStudents();
+  const { data: assignments = [], isLoading: loadingAssignments } = useTeacherStudents(user?.id, "approved");
+
+  const isLoading = loadingStudents || (isTeacher && loadingAssignments);
+
+  const myStudentIds = new Set(assignments.map((a) => a.student_id));
+  const students = isTeacher ? allStudents.filter((s) => myStudentIds.has(s.id)) : allStudents;
 
   const total = students.length;
   // Tahsin Dasar = semua Iqro 1-6 (mereka adalah sub-level Tahsin Dasar)
@@ -181,6 +191,61 @@ const Dashboard = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.07 }}>
                 
+                {isTeacher && stats.total === 0 ? (
+                  <div className="bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden opacity-60 relative cursor-not-allowed group">
+                    <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center text-center p-4">
+                      <Lock className="w-8 h-8 text-muted-foreground mb-2" />
+                      <p className="text-sm font-semibold text-foreground">Kelas {kelas} Terkunci</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">Kamu belum diberi akses.<br/>Silakan ajukan siswa ke Koordinator Tahfizh.</p>
+                    </div>
+                    <div className={`h-2 bg-gradient-to-r ${classColors[i]}`} />
+                    <div className="p-5 blur-[2px]">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <p className="text-xs text-muted-foreground font-medium">KELAS</p>
+                          <h3 className="text-2xl font-bold text-foreground">{kelas}</h3>
+                        </div>
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${classColors[i]} flex items-center justify-center`}>
+                          <Users className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+                       <div className="mb-3">
+                         <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                           <span>Tahsin Dasar (Iqro)</span>
+                           <span>0%</span>
+                         </div>
+                         <div className="h-2 bg-muted rounded-full overflow-hidden">
+                           <div className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-700" style={{ width: '0%' }} />
+                         </div>
+                       </div>
+                       <div className="grid grid-cols-4 gap-1.5 mb-3">
+                         {(["A", "B", "C", "D"] as const).map((r, ri) => {
+                          const rombelColors = ["bg-blue-500", "bg-emerald-500", "bg-violet-500", "bg-orange-500"];
+                          return (
+                            <div key={r} className="rounded-xl p-2 text-center bg-muted/60">
+                               <div className={`w-4 h-1 rounded-full ${rombelColors[ri]} mx-auto mb-1`} />
+                               <p className="text-xs font-bold text-foreground">0</p>
+                               <p className="text-xs text-muted-foreground">{r}</p>
+                             </div>);
+                        })}
+                       </div>
+                       <div className="grid grid-cols-2 gap-2">
+                         <div className="bg-muted rounded-xl p-2.5 text-center">
+                           <p className="text-lg font-bold text-foreground">0</p>
+                           <p className="text-xs text-muted-foreground">Total</p>
+                         </div>
+                         <div className="bg-muted rounded-xl p-2.5 text-center">
+                           <p className="text-lg font-bold text-foreground">0</p>
+                           <p className="text-xs text-muted-foreground">Tahsin</p>
+                         </div>
+                       </div>
+                      <div className="mt-3 flex items-center gap-1 text-muted-foreground text-xs font-medium">
+                        <TrendingUp className="w-3.5 h-3.5" />
+                        Lihat detail kelas {kelas}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                 <Link to={`/class/${kelas}`}>
                   <div className="bg-card rounded-2xl border border-border shadow-sm hover:shadow-green transition-all duration-300 hover:-translate-y-1 overflow-hidden group">
                     <div className={`h-2 bg-gradient-to-r ${classColors[i]}`} />
@@ -233,6 +298,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </Link>
+                )}
               </motion.div>);
 
           })}
@@ -306,13 +372,19 @@ const Dashboard = () => {
       {students.length === 0 && !isLoading &&
       <div className="bg-card rounded-2xl border border-border p-10 text-center">
           <Users className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-          <p className="font-semibold text-foreground mb-1">Belum ada data siswa</p>
-          <p className="text-sm text-muted-foreground mb-4">Mulai tambahkan siswa melalui halaman kelas</p>
-          <Link to="/class/1">
-            <button className="px-5 py-2.5 bg-gradient-hero text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-green">
-              Tambah Siswa Pertama
-            </button>
-          </Link>
+          <p className="font-semibold text-foreground mb-1">
+            {isTeacher ? "Belum ada siswa binaan" : "Belum ada data siswa"}
+          </p>
+          <p className="text-sm text-muted-foreground mb-4">
+            {isTeacher ? "Silakan ajukan siswa kepada Koordinator Tahfizh." : "Mulai tambahkan siswa melalui halaman kelas"}
+          </p>
+          {!isTeacher && (
+            <Link to="/class/1">
+              <button className="px-5 py-2.5 bg-gradient-hero text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-green">
+                Tambah Siswa Pertama
+              </button>
+            </Link>
+          )}
         </div>
       }
     </div>);

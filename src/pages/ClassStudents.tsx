@@ -6,6 +6,10 @@ import { useRecentLevelUpsByClass } from "@/hooks/useActivityLog";
 import { ChevronRight, Search, UserPlus, FileText, Eye, Trash2, Loader2, X, AlertTriangle, Upload } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import BulkImportStudents from "@/components/BulkImportStudents";
+import { useAuth } from "@/contexts/AuthContext";
+import { isTeacherRole } from "@/lib/roleLabels";
+import { useTeacherStudents } from "@/hooks/useTeacherStudents";
+import { useEffect } from "react";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 
@@ -37,10 +41,25 @@ const ClassStudents = () => {
   const { classId } = useParams();
   const navigate = useNavigate();
   const kelas = parseInt(classId || "1");
-  const { data: students = [], isLoading } = useStudentsByClass(kelas);
+  const { data: allStudents = [], isLoading: loadingStudents } = useStudentsByClass(kelas);
   const { data: levelUps = {} } = useRecentLevelUpsByClass(kelas);
   const addStudent = useAddStudent();
   const deleteStudent = useDeleteStudent();
+
+  const { user, profile } = useAuth();
+  const isTeacher = isTeacherRole(profile?.role);
+  const { data: assignments = [], isLoading: loadingAssignments } = useTeacherStudents(user?.id, "approved");
+
+  const isLoading = loadingStudents || (isTeacher && loadingAssignments);
+
+  const myStudentIds = new Set(assignments.map((a) => a.student_id));
+  const students = isTeacher ? allStudents.filter((s) => myStudentIds.has(s.id)) : allStudents;
+
+  useEffect(() => {
+    if (isTeacher && !isLoading && students.length === 0) {
+      navigate("/", { replace: true });
+    }
+  }, [isTeacher, isLoading, students.length, navigate]);
 
   const [activeRombel, setActiveRombel] = useState<Rombel>("A");
   const [search, setSearch] = useState("");
