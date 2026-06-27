@@ -49,14 +49,14 @@ const Login = () => {
   };
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-[#06251F] px-[1.5vw] py-[2.5vh] text-[#123F35] lg:h-screen lg:overflow-hidden">
+    <main className="login-page min-h-screen w-full overflow-x-hidden bg-[#06251F] px-[1.5vw] py-[2.5vh] text-[#123F35] lg:h-screen lg:overflow-hidden">
       <motion.section
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.65, ease: "easeOut" }}
-        className="mx-auto flex min-h-[92vh] w-[97vw] max-w-[1640px] flex-col-reverse overflow-hidden rounded-[30px] border border-[#D9A328]/85 bg-[#082D27] shadow-[0_26px_80px_rgba(0,0,0,0.28)] lg:h-[94vh] lg:min-h-0 lg:flex-row"
+        className="login-shell mx-auto flex min-h-[92vh] w-[97vw] max-w-[1640px] flex-col-reverse overflow-hidden rounded-[30px] border border-[#D9A328]/85 bg-[#082D27] shadow-[0_26px_80px_rgba(0,0,0,0.28)] lg:h-[94vh] lg:min-h-0 lg:flex-row"
       >
-        <section className="relative flex min-h-[640px] flex-col overflow-hidden bg-[radial-gradient(circle_at_52%_66%,rgba(217,163,40,0.22),transparent_18%),linear-gradient(145deg,#0B4A3B_0%,#0A3A31_45%,#082D27_76%,#06251F_100%)] px-6 py-7 text-[#FBF8F1] sm:px-10 lg:h-full lg:min-h-0 lg:w-[52%] lg:px-12 lg:py-10 xl:px-16">
+        <section className="login-left-panel relative flex min-h-[640px] flex-col overflow-hidden bg-[radial-gradient(circle_at_52%_66%,rgba(217,163,40,0.22),transparent_18%),linear-gradient(145deg,#0B4A3B_0%,#0A3A31_45%,#082D27_76%,#06251F_100%)] px-6 py-7 text-[#FBF8F1] sm:px-10 lg:h-full lg:min-h-0 lg:w-[52%] lg:px-12 lg:py-10 xl:px-16">
           <div
             aria-hidden="true"
             className="absolute inset-0 opacity-[0.055]"
@@ -73,19 +73,19 @@ const Login = () => {
           <div aria-hidden="true" className="absolute -left-8 bottom-28 h-52 w-44 rotate-[-18deg] rounded-[80%_20%_70%_30%] bg-[#031C18]/45 blur-sm sm:h-64 sm:w-56" />
           <div aria-hidden="true" className="absolute -right-8 bottom-24 h-56 w-44 rotate-[18deg] rounded-[20%_80%_30%_70%] bg-[#031C18]/45 blur-sm sm:h-72 sm:w-56" />
 
-          <div className="relative z-10 flex items-center gap-3">
-            <img src="/logo.png" alt="Logo SDIT Luqmanul Hakim" className="h-11 w-11 object-contain lg:h-12 lg:w-12" />
-            <p className="font-['Georgia',serif] text-[22px] leading-none text-[#FBF8F1] lg:text-[26px]">
+          <div className="login-brand relative z-10 flex items-center gap-3">
+            <img src="/logo.png" alt="Logo SDIT Luqmanul Hakim" className="login-logo h-11 w-11 object-contain lg:h-12 lg:w-12" />
+            <p className="login-brand-text font-['Georgia',serif] text-[22px] leading-none text-[#FBF8F1] lg:text-[26px]">
               Tahsin SDIT Luqmanul Hakim
             </p>
           </div>
 
-          <div className="relative z-10 mt-10 max-w-[590px] md:mt-9 lg:mt-10 xl:mt-12">
-            <h1 className="font-['Georgia',serif] text-[50px] font-semibold leading-[0.98] tracking-normal text-[#FBF8F1] sm:text-[62px] lg:text-[58px] xl:text-[68px]">
-              Selamat Datang
+          <div className="login-left-copy relative z-10 mt-10 max-w-[590px] md:mt-9 lg:mt-10 xl:mt-12">
+            <h1 className="login-left-title font-['Georgia',serif] text-[50px] font-semibold leading-[0.98] tracking-normal text-[#FBF8F1] sm:text-[62px] lg:text-[58px] xl:text-[68px]">
+              <span className="whitespace-nowrap">Selamat Datang</span>
               <span className="block text-[#EACB7B]">di Tahsin SDIT</span>
             </h1>
-            <p className="mt-5 max-w-[500px] text-[16px] leading-7 text-[#FBF8F1]/86 lg:text-[17px]">
+            <p className="login-description mt-5 max-w-[500px] text-[16px] leading-7 text-[#FBF8F1]/86 lg:text-[17px]">
               Portal terpadu untuk memantau
               <br />
               perkembangan tahsin dan evaluasi belajar
@@ -94,7 +94,7 @@ const Login = () => {
             </p>
           </div>
 
-          <div className="relative z-10 mt-6 flex max-w-[600px] items-center gap-4 overflow-hidden text-[#FBF8F1] sm:gap-6">
+          <div className="login-benefits relative z-10 mt-6 flex max-w-[600px] items-center gap-4 overflow-hidden text-[#FBF8F1] sm:gap-6">
             <Benefit icon={ClipboardCheck} first="Progres" second="tersimpan" />
             <div className="h-11 w-px bg-[#D9A328]/70" />
             <Benefit icon={Users} first="Mudah" second="dipantau" />
@@ -102,7 +102,7 @@ const Login = () => {
             <Benefit icon={ShieldCheck} first="Akses" second="aman" />
           </div>
 
-          <div className="relative z-10 mx-auto mt-0 flex w-full max-w-[540px] flex-1 items-center justify-center pb-1">
+          <div className="login-illustration relative z-10 mx-auto mt-0 flex w-full max-w-[540px] flex-1 items-center justify-center pb-1">
             <div className="absolute bottom-4 h-24 w-[78%] rounded-[50%] bg-[#0B4A3B]/75 shadow-[0_0_70px_rgba(217,163,40,0.18)]" />
             <img
               src="/login-quran-illustration-crop.png"
@@ -119,7 +119,7 @@ const Login = () => {
             <Sparkle className="absolute right-[21%] top-[43%] h-4 w-4 text-[#EACB7B]/75" />
           </div>
 
-          <div className="relative z-10 mx-auto mb-2 w-full max-w-[600px] text-center font-['Georgia',serif] italic text-[#EACB7B]">
+          <div className="login-quote relative z-10 mx-auto mb-2 w-full max-w-[600px] text-center font-['Georgia',serif] italic text-[#EACB7B]">
             <div className="mb-3 flex items-center justify-center gap-4">
               <span className="h-px flex-1 bg-[#D9A328]/65" />
               <span className="text-3xl font-semibold leading-none">&ldquo;</span>
@@ -134,21 +134,21 @@ const Login = () => {
           </div>
         </section>
 
-        <section className="relative flex min-h-[620px] flex-1 items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_48%_8%,#FFFFFF_0%,#FBF8F1_34%,#F8F4EA_100%)] px-5 py-7 sm:px-10 lg:h-full lg:min-h-0 lg:w-[48%] lg:items-start lg:rounded-l-[32px] lg:px-12 lg:pb-7 lg:pt-14 xl:px-16 xl:pt-16">
+        <section className="login-right-panel relative flex min-h-[620px] flex-1 items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_48%_8%,#FFFFFF_0%,#FBF8F1_34%,#F8F4EA_100%)] px-5 py-7 sm:px-10 lg:h-full lg:min-h-0 lg:w-[48%] lg:items-start lg:rounded-l-[32px] lg:px-12 lg:pb-7 lg:pt-14 xl:px-16 xl:pt-16">
           <RightPanelDecor />
-          <div className="relative z-10 w-full max-w-[600px]">
+          <div className="login-form-panel relative z-10 w-full max-w-[600px]">
             <div className="text-center">
-              <h2 className="font-['Georgia',serif] text-[38px] font-semibold leading-tight text-[#073E34] sm:text-[46px] lg:text-[46px] xl:text-[52px]">
+              <h2 className="login-title font-['Georgia',serif] text-[38px] font-semibold leading-tight text-[#073E34] sm:text-[46px] lg:text-[46px] xl:text-[52px]">
                 Masuk ke Portal
               </h2>
-              <p className="mt-3 text-[15px] font-medium text-[#315E55] sm:text-[17px]">
+              <p className="login-subtitle mt-3 text-[15px] font-medium text-[#315E55] sm:text-[17px]">
                 Akses terpadu untuk Orang Tua, Guru, dan Admin.
               </p>
             </div>
 
-            <BismillahDivider className="my-7" />
+            <BismillahDivider className="login-bismillah my-7" />
 
-            <form onSubmit={handleLogin} className="space-y-5">
+            <form onSubmit={handleLogin} className="login-form space-y-5">
               <InputGroup
                 label="Alamat Email"
                 icon={<Mail className="h-6 w-6" />}
@@ -159,7 +159,7 @@ const Login = () => {
               />
 
               <div>
-                <label className="mb-3 block text-[16px] font-semibold text-[#103F35]">
+                <label className="login-input-label mb-3 block text-[16px] font-semibold text-[#103F35]">
                   Password
                 </label>
                 <div className="relative">
@@ -169,7 +169,7 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password Anda"
-                    className="h-[58px] w-full rounded-[14px] border border-[#CABDA9] bg-[#FBF8F1]/80 pl-14 pr-14 text-[16px] text-[#103F35] outline-none transition placeholder:text-[#9CA39F] focus:border-[#0B4A3B] focus:ring-4 focus:ring-[#0B4A3B]/12"
+                    className="login-input h-[58px] w-full rounded-[14px] border border-[#CABDA9] bg-[#FBF8F1]/80 pl-14 pr-14 text-[16px] text-[#103F35] outline-none transition placeholder:text-[#9CA39F] focus:border-[#0B4A3B] focus:ring-4 focus:ring-[#0B4A3B]/12"
                   />
                   <button
                     type="button"
@@ -185,7 +185,7 @@ const Login = () => {
                   </button>
                 </div>
                 <div className="mt-2 flex justify-end">
-                  <button type="button" className="text-sm font-medium text-[#0B4A3B] hover:text-[#D9A328]">
+                  <button type="button" className="login-forgot text-sm font-medium text-[#0B4A3B] hover:text-[#D9A328]">
                     Lupa password?
                   </button>
                 </div>
@@ -215,7 +215,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="relative mt-1 flex h-[64px] w-full items-center justify-center gap-4 overflow-hidden rounded-[15px] bg-[linear-gradient(100deg,#D9A328_0%,#E1B64E_54%,#EACB7B_100%)] font-['Georgia',serif] text-[21px] font-semibold text-[#073E34] shadow-[0_14px_24px_rgba(217,163,40,0.24)] transition hover:brightness-105 active:scale-[0.99] disabled:opacity-60"
+                className="login-submit relative mt-1 flex h-[64px] w-full items-center justify-center gap-4 overflow-hidden rounded-[15px] bg-[linear-gradient(100deg,#D9A328_0%,#E1B64E_54%,#EACB7B_100%)] font-['Georgia',serif] text-[21px] font-semibold text-[#073E34] shadow-[0_14px_24px_rgba(217,163,40,0.24)] transition hover:brightness-105 active:scale-[0.99] disabled:opacity-60"
               >
                 <span
                   aria-hidden="true"
@@ -240,9 +240,9 @@ const Login = () => {
               </button>
             </form>
 
-            <OrnamentDivider className="my-6" />
+            <OrnamentDivider className="login-register-divider my-6" />
 
-            <div className="flex w-full flex-col gap-4 rounded-[16px] border border-[#D9A328]/38 bg-[#FBF8F1]/68 p-4 sm:flex-row sm:items-center lg:p-5">
+            <div className="login-register-card flex w-full flex-col gap-4 rounded-[16px] border border-[#D9A328]/38 bg-[#FBF8F1]/68 p-4 sm:flex-row sm:items-center lg:p-5">
               <div className="flex h-14 w-14 flex-none items-center justify-center rounded-full bg-[#063F34] text-[#EACB7B] shadow-[inset_0_0_0_1px_rgba(234,203,123,0.28)]">
                 <UserPlus className="h-7 w-7" />
               </div>
@@ -261,7 +261,7 @@ const Login = () => {
               </Link>
             </div>
 
-            <p className="mt-5 flex items-center justify-center gap-3 text-center text-sm text-[#315E55]">
+            <p className="login-help mt-5 flex items-center justify-center gap-3 text-center text-sm text-[#315E55]">
               <Headphones className="h-5 w-5 text-[#0B4A3B]" />
               <span>
                 Kesulitan masuk? <span className="font-semibold text-[#073E34]">Hubungi admin.</span>
@@ -283,11 +283,11 @@ const Benefit = ({
   first: string;
   second: string;
 }) => (
-  <div className="flex min-w-0 flex-1 items-center gap-3">
-    <span className="flex h-14 w-14 flex-none items-center justify-center rounded-full border border-[#D9A328] text-[#D9A328]">
+  <div className="login-benefit flex min-w-0 flex-1 items-center gap-3">
+    <span className="login-benefit-icon flex h-14 w-14 flex-none items-center justify-center rounded-full border border-[#D9A328] text-[#D9A328]">
       <Icon className="h-7 w-7" />
     </span>
-    <span className="min-w-0 text-[16px] leading-5 sm:text-[18px]">
+    <span className="login-benefit-text min-w-0 text-[16px] leading-5 sm:text-[18px]">
       {first}
       <br />
       {second}
@@ -375,7 +375,7 @@ const InputGroup = ({
 }) => {
   return (
     <div>
-      <label className="mb-3 block text-[16px] font-semibold text-[#103F35]">
+      <label className="login-input-label mb-3 block text-[16px] font-semibold text-[#103F35]">
         {label}
       </label>
       <div className="relative">
@@ -387,7 +387,7 @@ const InputGroup = ({
         <input
           {...inputProps}
           className={[
-            "h-[58px] w-full rounded-[14px] border border-[#CABDA9] bg-[#FBF8F1]/80 text-[16px] text-[#103F35] outline-none transition placeholder:text-[#9CA39F] focus:border-[#0B4A3B] focus:ring-4 focus:ring-[#0B4A3B]/12",
+            "login-input h-[58px] w-full rounded-[14px] border border-[#CABDA9] bg-[#FBF8F1]/80 text-[16px] text-[#103F35] outline-none transition placeholder:text-[#9CA39F] focus:border-[#0B4A3B] focus:ring-4 focus:ring-[#0B4A3B]/12",
             icon ? "pl-14 pr-5" : "px-5",
           ].join(" ")}
         />
