@@ -24,6 +24,7 @@ const navItems = [
   { to: "/kelola-siswa", icon: Users, label: "Kelola Siswa" },
   { to: "/murid-binaan", icon: UserCheck, label: "Murid Binaan", teacherOnly: true },
   { to: "/penugasan-guru", icon: UserCog, label: "Penugasan Guru", adminOnly: true },
+  { to: "/profil-diagnostik-guru", icon: BookOpen, label: "Profil Kompetensi Guru", teacherOnly: true },
   { to: "/laporan-bulanan", icon: FileText, label: "Absensi Bulanan" },
   { to: "/input-cepat", icon: FileSpreadsheet, label: "Input Laporan Bulanan" },
   { to: "/rekap-laporan", icon: FileSpreadsheet, label: "Rekap Laporan" },
