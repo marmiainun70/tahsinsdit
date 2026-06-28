@@ -674,9 +674,13 @@ export default function Monitoring() {
       const assigned = teachersForClassRombel.get(`${g.kelas}-${g.rombel}`) || [];
       const t1Name = assigned[0] || null;
       const t2Name = assigned[1] || null;
+      const t3Name = assigned[2] || null;
+      const t4Name = assigned[3] || null;
 
       if (t1Name) map.set(t1Name, { total: 0, td: 0, tl: 0, tfz: 0 });
       if (t2Name) map.set(t2Name, { total: 0, td: 0, tl: 0, tfz: 0 });
+      if (t3Name) map.set(t3Name, { total: 0, td: 0, tl: 0, tfz: 0 });
+      if (t4Name) map.set(t4Name, { total: 0, td: 0, tl: 0, tfz: 0 });
 
       g.rows.forEach((r) => {
         let teacher = r.guru && r.guru !== "-" ? r.guru : "Tidak Diketahui";
@@ -690,6 +694,10 @@ export default function Monitoring() {
                teacher = t1Name;
            } else if (t2Name && teacher.toLowerCase().includes(t2Name.toLowerCase().split(' ')[0])) {
                teacher = t2Name;
+           } else if (t3Name && teacher.toLowerCase().includes(t3Name.toLowerCase().split(' ')[0])) {
+               teacher = t3Name;
+           } else if (t4Name && teacher.toLowerCase().includes(t4Name.toLowerCase().split(' ')[0])) {
+               teacher = t4Name;
            }
         }
 
@@ -709,16 +717,22 @@ export default function Monitoring() {
 
       let teacher1 = null;
       let teacher2 = null;
+      let teacher3 = null;
+      let teacher4 = null;
 
       if (assigned.length > 0) {
         teacher1 = t1Name ? [t1Name, map.get(t1Name)!] : null;
         teacher2 = t2Name ? [t2Name, map.get(t2Name)!] : null;
+        teacher3 = t3Name ? [t3Name, map.get(t3Name)!] : null;
+        teacher4 = t4Name ? [t4Name, map.get(t4Name)!] : null;
       } else {
         const sortedTeachers = Array.from(map.entries()).sort(
           (a, b) => b[1].total - a[1].total,
         );
         teacher1 = sortedTeachers[0] || null;
         teacher2 = sortedTeachers[1] || null;
+        teacher3 = sortedTeachers[2] || null;
+        teacher4 = sortedTeachers[3] || null;
       }
 
       return {
@@ -729,6 +743,10 @@ export default function Monitoring() {
         teacher1,
         // @ts-expect-error generic tuple
         teacher2,
+        // @ts-expect-error generic tuple
+        teacher3,
+        // @ts-expect-error generic tuple
+        teacher4,
       };
     }).sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
   }, [groups, teachersForClassRombel]);
@@ -1495,6 +1513,10 @@ export default function Monitoring() {
                 <th className="text-left whitespace-nowrap">Total Siswa Binaan 1</th>
                 <th className="text-left whitespace-nowrap border-l border-slate-200">Pengampu 2</th>
                 <th className="text-left whitespace-nowrap">Total Siswa Binaan 2</th>
+                <th className="text-left whitespace-nowrap border-l border-slate-200">Pengampu 3</th>
+                <th className="text-left whitespace-nowrap">Total Siswa Binaan 3</th>
+                <th className="text-left whitespace-nowrap border-l border-slate-200">Pengampu 4</th>
+                <th className="text-left whitespace-nowrap">Total Siswa Binaan 4</th>
                 <th className="whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
@@ -1512,6 +1534,8 @@ export default function Monitoring() {
                   
                   const t1 = row.teacher1;
                   const t2 = row.teacher2;
+                  const t3 = row.teacher3;
+                  const t4 = row.teacher4;
 
                   return (
                     <Fragment key={`jenjang-group-${rombelKey}`}>
@@ -1549,6 +1573,32 @@ export default function Monitoring() {
                               <span className="text-[11px] text-slate-500 font-medium">
                                 (TD: {t2[1].td}, TL: {t2[1].tl}, TFZ: {t2[1].tfz})
                               </span>
+                            </div>
+                          ) : "-"}
+                        </td>
+
+                        <td className="text-left font-bold text-emerald-800 max-w-[150px] truncate border-l border-slate-100" title={t3?.[0]}>
+                          {t3 ? t3[0] : "-"}
+                        </td>
+                        <td className="text-left">
+                          {t3 ? (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-0">
+                                {t3[1].total} Siswa
+                              </Badge>
+                            </div>
+                          ) : "-"}
+                        </td>
+
+                        <td className="text-left font-bold text-emerald-800 max-w-[150px] truncate border-l border-slate-100" title={t4?.[0]}>
+                          {t4 ? t4[0] : "-"}
+                        </td>
+                        <td className="text-left">
+                          {t4 ? (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-0">
+                                {t4[1].total} Siswa
+                              </Badge>
                             </div>
                           ) : "-"}
                         </td>
