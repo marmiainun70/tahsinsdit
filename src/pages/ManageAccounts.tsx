@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Loader2, ShieldCheck, UserX, Search, Filter, X, SearchX } from "lucide-react";
+import { CheckCircle2, Loader2, ShieldCheck, UserX, Search, Filter, X, SearchX, MessageSquare, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRoleLabel } from "@/lib/roleLabels";
@@ -14,6 +14,8 @@ type AccountRow = {
   status: "pending" | "approved" | "rejected" | "inactive";
   registered_at: string;
 };
+
+type AccountWithChildren = AccountRow & { children: string[] };
 
 type ParentStudentRow = {
   user_id: string;
@@ -35,6 +37,8 @@ export default function ManageAccounts() {
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const [actionError, setActionError] = useState("");
+  const [recentUpdatedAccount, setRecentUpdatedAccount] = useState<AccountWithChildren | null>(null);
+  const [copyFeedbackId, setCopyFeedbackId] = useState<string | null>(null);
   
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -94,6 +98,11 @@ export default function ManageAccounts() {
       setActionError(error.message);
       setUpdatingUserId(null);
       return;
+    }
+
+    const updatedAccount = accounts.find(a => a.user_id === userId);
+    if (updatedAccount) {
+      setRecentUpdatedAccount({ ...updatedAccount, status } as AccountWithChildren);
     }
 
     await queryClient.invalidateQueries({ queryKey: ["managed-accounts"] });
@@ -170,6 +179,55 @@ export default function ManageAccounts() {
 
     await queryClient.invalidateQueries({ queryKey: ["managed-accounts"] });
     setIsBulkUpdating(false);
+  };
+
+  const normalizeWhatsappNumber = (raw: string | null) => {
+    if (!raw) return null;
+    const digits = raw.replace(/\D/g, "");
+    if (!digits) return null;
+    if (digits.length < 9) return null;
+    
+    if (digits.startsWith("08")) return "628" + digits.slice(2);
+    if (digits.startsWith("8")) return "628" + digits.slice(1);
+    if (digits.startsWith("62")) return digits;
+    return null;
+  };
+
+  const generateAccountMessage = (account: AccountWithChildren) => {
+    let statusMsg = "";
+    if (account.status === "pending") statusMsg = "sedang menunggu persetujuan admin";
+    else if (account.status === "approved") statusMsg = "sudah disetujui dan boleh login kembali";
+    else if (account.status === "rejected") statusMsg = "belum dapat disetujui, hubungi admin/koordinator";
+    else if (account.status === "inactive") statusMsg = "dinonaktifkan sementara, hubungi admin/koordinator";
+
+    let msg = `Assalamu’alaikum warahmatullahi wabarakatuh.\n\nBapak/Ibu ${account.full_name}, akun Anda di Sistem Tahsin & Tahfizh SDIT Luqmanul Hakim ${statusMsg}.\n\nBarakallahu fiikum.`;
+
+    if (account.role === "parent") {
+      if (account.children && account.children.length > 0) {
+        msg += `\n\nData anak terhubung:\n` + account.children.map(c => `- ${c}`).join("\n");
+      } else {
+        msg += `\n\nData anak belum ditemukan/terhubung. Mohon pastikan kembali data anak kepada admin.`;
+      }
+    }
+    return msg;
+  };
+
+  const buildWhatsappUrl = (account: AccountWithChildren) => {
+    const no = normalizeWhatsappNumber(account.whatsapp);
+    if (!no) return null;
+    const msg = generateAccountMessage(account);
+    return `https://wa.me/${no}?text=${encodeURIComponent(msg)}`;
+  };
+
+  const copyToClipboard = async (account: AccountWithChildren) => {
+    try {
+      const msg = generateAccountMessage(account);
+      await navigator.clipboard.writeText(msg);
+      setCopyFeedbackId(account.user_id);
+      setTimeout(() => setCopyFeedbackId(null), 2000);
+    } catch (err) {
+      alert("Gagal menyalin pesan");
+    }
   };
 
   const getStatusDisplay = (status: AccountRow["status"]) => {
@@ -299,10 +357,57 @@ export default function ManageAccounts() {
         </div>
       </div>
 
+      {recentUpdatedAccount && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-900/40 dark:bg-emerald-950/20 p-4 shadow-sm relative">
+          <button 
+            onClick={() => setRecentUpdatedAccount(null)}
+            className="absolute top-2 right-2 p-1 text-emerald-600/60 hover:text-emerald-800 dark:text-emerald-400/60 dark:hover:text-emerald-200"
+          >
+            <X className="h-4 w-4" />
+          </button>
+          <div className="flex items-start gap-3">
+            <div className="rounded-full bg-emerald-100 p-2 dark:bg-emerald-900/50">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-emerald-900 dark:text-emerald-100">Status akun berhasil diperbarui.</h3>
+              <p className="mt-1 text-sm text-emerald-700 dark:text-emerald-300/80">
+                Akun <strong>{recentUpdatedAccount.full_name}</strong> kini berstatus <strong>{getStatusDisplay(recentUpdatedAccount.status).label}</strong>.
+              </p>
+              
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  onClick={() => copyToClipboard(recentUpdatedAccount)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-sm transition-colors hover:bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 dark:hover:bg-emerald-800/60"
+                >
+                  {copyFeedbackId === recentUpdatedAccount.user_id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copyFeedbackId === recentUpdatedAccount.user_id ? "Tersalin!" : "Salin Pesan"}
+                </button>
+                {buildWhatsappUrl(recentUpdatedAccount) ? (
+                  <button
+                    onClick={() => window.open(buildWhatsappUrl(recentUpdatedAccount)!, "_blank", "noopener,noreferrer")}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    Buka WhatsApp
+                  </button>
+                ) : (
+                  <button disabled className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-600/50 opacity-60 dark:bg-emerald-900/30 dark:text-emerald-400/50">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    Buka WhatsApp (Nomor belum valid)
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-4">
         {filteredAccounts.map((account) => {
           const isUpdating = updatingUserId === account.user_id;
           const isCurrentAdmin = account.user_id === user?.id;
+          const waUrl = buildWhatsappUrl(account as AccountWithChildren);
 
           return (
             <article key={account.user_id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -364,6 +469,28 @@ export default function ManageAccounts() {
                     <ShieldCheck className="h-4 w-4" /> Nonaktifkan
                   </button>
                 </div>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+                <button
+                  onClick={() => copyToClipboard(account as AccountWithChildren)}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
+                >
+                  {copyFeedbackId === account.user_id ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+                  {copyFeedbackId === account.user_id ? "Tersalin!" : "Salin Pesan"}
+                </button>
+                {waUrl ? (
+                  <button
+                    onClick={() => window.open(waUrl, "_blank", "noopener,noreferrer")}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-100 text-emerald-800 px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:hover:bg-emerald-900/60"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    Buka WhatsApp
+                  </button>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground/70 italic px-2">
+                    *Nomor WhatsApp belum valid
+                  </span>
+                )}
               </div>
             </article>
           );
