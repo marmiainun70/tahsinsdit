@@ -552,14 +552,29 @@ export default function Monitoring() {
       
       const conditions = past6MonthsKeys.map(k => `and(month.eq.${k.month},year.eq.${k.year})`).join(',');
       
-      const { data, error } = await supabase
-        .from('monthly_reports')
-        .select('month, year, student_id, program_type')
-        .in('student_id', historicalStudentIds)
-        .or(conditions);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const allData: any[] = [];
+      let from = 0;
+      const PAGE_SIZE = 1000;
+      
+      while (true) {
+        const { data, error } = await supabase
+          .from('monthly_reports')
+          .select('month, year, student_id, program_type')
+          .in('student_id', historicalStudentIds)
+          .or(conditions)
+          .range(from, from + PAGE_SIZE - 1);
+          
+        if (error) throw error;
         
-      if (error) throw error;
-      return data || [];
+        const batch = data || [];
+        allData.push(...batch);
+        
+        if (batch.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+      
+      return allData;
     },
     enabled: hasAccess && historicalStudentIds.length > 0
   });
