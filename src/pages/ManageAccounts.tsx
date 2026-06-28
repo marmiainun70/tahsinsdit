@@ -33,6 +33,7 @@ export default function ManageAccounts() {
   const queryClient = useQueryClient();
   const isAdmin = profile?.role === "admin";
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const [actionError, setActionError] = useState("");
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -147,6 +148,30 @@ export default function ManageAccounts() {
     setRoleFilter("all");
   };
 
+  const pendingAccounts = filteredAccounts.filter(acc => acc.status === "pending" && acc.user_id !== user?.id);
+
+  const handleBulkApprove = async () => {
+    if (pendingAccounts.length === 0) return;
+    
+    if (!window.confirm("Yakin ingin menyetujui semua akun menunggu yang sedang tampil?")) {
+      return;
+    }
+
+    setActionError("");
+    setIsBulkUpdating(true);
+
+    for (const acc of pendingAccounts) {
+      const { error } = await supabase.from("profiles").update({ status: "approved" }).eq("user_id", acc.user_id);
+      if (error) {
+        setActionError(`Error pada akun ${acc.full_name}: ${error.message}`);
+        break;
+      }
+    }
+
+    await queryClient.invalidateQueries({ queryKey: ["managed-accounts"] });
+    setIsBulkUpdating(false);
+  };
+
   const getStatusDisplay = (status: AccountRow["status"]) => {
     switch (status) {
       case "pending":
@@ -170,9 +195,28 @@ export default function ManageAccounts() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Persetujuan Akun</h1>
-        <p className="text-sm text-muted-foreground">Kelola akun guru dan orang tua yang mendaftar melalui halaman publik.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Persetujuan Akun</h1>
+          <p className="text-sm text-muted-foreground">Kelola akun guru dan orang tua yang mendaftar melalui halaman publik.</p>
+        </div>
+        <button
+          onClick={handleBulkApprove}
+          disabled={pendingAccounts.length === 0 || isBulkUpdating || isLoading}
+          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isBulkUpdating ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Memproses...
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="h-4 w-4" />
+              Setujui Semua Menunggu
+            </>
+          )}
+        </button>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 mb-2">
@@ -298,7 +342,7 @@ export default function ManageAccounts() {
 
                 <div className="flex flex-wrap gap-2">
                   <button
-                    disabled={isUpdating || isCurrentAdmin}
+                    disabled={isUpdating || isBulkUpdating || isCurrentAdmin}
                     onClick={() => updateStatus(account.user_id, "approved")}
                     className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
@@ -306,16 +350,16 @@ export default function ManageAccounts() {
                     Setujui
                   </button>
                   <button
-                    disabled={isUpdating || isCurrentAdmin}
+                    disabled={isUpdating || isBulkUpdating || isCurrentAdmin}
                     onClick={() => updateStatus(account.user_id, "rejected")}
                     className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <UserX className="h-4 w-4" /> Tolak
                   </button>
                   <button
-                    disabled={isUpdating || isCurrentAdmin}
+                    disabled={isUpdating || isBulkUpdating || isCurrentAdmin}
                     onClick={() => updateStatus(account.user_id, "inactive")}
-                    className="inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <ShieldCheck className="h-4 w-4" /> Nonaktifkan
                   </button>
