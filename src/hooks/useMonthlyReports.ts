@@ -272,6 +272,7 @@ export const useMonthlyReports = (studentId?: string) => {
       let from = 0;
 
       while (true) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let query = (supabase as any)
           .from("monthly_reports")
           .select("*")
@@ -322,6 +323,7 @@ export const useAllMonthlyReports = () => {
       let from = 0;
 
       while (true) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let query = (supabase as any)
           .from("monthly_reports")
           .select("*, students(nama, kelas, rombel, level)")
@@ -329,6 +331,76 @@ export const useAllMonthlyReports = () => {
           .order("month", { ascending: false })
           .range(from, from + MONTHLY_REPORTS_PAGE_SIZE - 1);
 
+        if (managedStudentIds) {
+          query = query.in("student_id", managedStudentIds);
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        const batch = (data ?? []) as unknown as (MonthlyReport & {
+          students: {
+            nama: string;
+            kelas: number;
+            rombel: string;
+            level: string;
+          };
+        })[];
+        allReports.push(...batch);
+
+        if (batch.length < MONTHLY_REPORTS_PAGE_SIZE) break;
+        from += MONTHLY_REPORTS_PAGE_SIZE;
+      }
+
+      return allReports;
+    },
+  });
+};
+
+export const useMonthlyReportsForPeriod = ({
+  month,
+  year,
+  enabled = true,
+}: {
+  month?: number;
+  year?: number;
+  enabled?: boolean;
+}) => {
+  const { user, profile } = useAuth();
+
+  return useQuery({
+    queryKey: ["monthly_reports", "period", { month, year, userId: user?.id ?? "anon", role: profile?.role ?? "none" }],
+    enabled: enabled && !!month && !!year,
+    queryFn: async () => {
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && managedStudentIds.length === 0) return [];
+
+      const allReports: (MonthlyReport & {
+        students: {
+          nama: string;
+          kelas: number;
+          rombel: string;
+          level: string;
+        };
+      })[] = [];
+      let from = 0;
+
+      while (true) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let query = (supabase as any)
+          .from("monthly_reports")
+          .select("*, students(nama, kelas, rombel, level)")
+          .order("year", { ascending: false })
+          .order("month", { ascending: false })
+          .range(from, from + MONTHLY_REPORTS_PAGE_SIZE - 1);
+
+        if (month) {
+          query = query.eq("month", month);
+        }
+        if (year) {
+          query = query.eq("year", year);
+        }
         if (managedStudentIds) {
           query = query.in("student_id", managedStudentIds);
         }
@@ -374,6 +446,7 @@ export const useAddMonthlyReport = () => {
         "id" | "created_at" | "created_by" | "teacher_id" | "teacher_name"
       >,
     ) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from("monthly_reports")
         .insert({
@@ -409,6 +482,7 @@ export const useUpdateMonthlyReport = () => {
       id,
       ...updates
     }: Partial<MonthlyReport> & { id: string }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from("monthly_reports")
         .update({
@@ -432,6 +506,7 @@ export const useDeleteMonthlyReport = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any).from("monthly_reports").delete().eq("id", id);
       if (error) throw error;
     },
