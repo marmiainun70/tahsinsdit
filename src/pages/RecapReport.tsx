@@ -243,6 +243,7 @@ const RecapReport = () => {
   const [multiMonthDialogOpen, setMultiMonthDialogOpen] = useState(false);
   const [dialogYear, setDialogYear] = useState<string>(String(now.getFullYear()));
   const [dialogMonths, setDialogMonths] = useState<number[]>([Number(now.getMonth() + 1)]);
+  const [showAllGroups, setShowAllGroups] = useState(false);
   const recapLayout = useSpreadsheetLayout<RecapReportColumnKey>({
     userId: user?.id,
     role: profile?.role,
@@ -404,6 +405,7 @@ const RecapReport = () => {
     setFilterKelas("all");
     setFilterRombel("all");
     setSearch("");
+    setShowAllGroups(false);
   };
 
   useEffect(() => {
@@ -1684,7 +1686,7 @@ const RecapReport = () => {
               }}
             >
               <div ref={tableContentRef} className="space-y-6" style={{ minWidth: recapLayout.tableMinWidth }}>
-                {displayGroups.map(grp => (
+                {(showAllGroups ? displayGroups : displayGroups.slice(0, 4)).map(grp => (
                   <Card key={`${grp.kelas}-${grp.rombel}`} className="overflow-hidden border-emerald-100 shadow-sm dark:border-emerald-900/60">
               <CardHeader className="border-b border-emerald-100 bg-emerald-50/70 py-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
                 <CardTitle className="text-sm text-emerald-900 dark:text-emerald-300">
@@ -1938,6 +1940,15 @@ const RecapReport = () => {
               </CardContent>
                   </Card>
                 ))}
+
+                {!showAllGroups && displayGroups.length > 4 && (
+                  <div className="flex justify-center mt-2 mb-6">
+                    <Button variant="outline" onClick={() => setShowAllGroups(true)} className="gap-2 bg-background shadow-sm hover:bg-muted">
+                      <ListChecks className="w-4 h-4" />
+                      Tampilkan Semua Rombel ({displayGroups.length} Rombel)
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}
