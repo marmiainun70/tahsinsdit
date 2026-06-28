@@ -595,6 +595,45 @@ export default function Monitoring() {
     );
   }, [gradeSummaries, teachersForClassRombel]);
 
+  const jenjangKelasRows = useMemo(() => {
+    return groups.map((g) => {
+      const map = new Map<
+        string,
+        { total: number; td: number; tl: number; tfz: number }
+      >();
+      g.rows.forEach((r) => {
+        const teacher = r.guru && r.guru !== "-" ? r.guru : "Tidak Diketahui";
+        if (!map.has(teacher)) {
+          map.set(teacher, { total: 0, td: 0, tl: 0, tfz: 0 });
+        }
+        const counts = map.get(teacher)!;
+        counts.total++;
+        if (
+          r.program === "Tahsin Dasar" ||
+          r.program === "Tahsin Dasar (Iqra)"
+        ) {
+          counts.td++;
+        } else if (r.program === "Tahsin Lanjutan") {
+          counts.tl++;
+        } else if (r.program === "Tahfizh") {
+          counts.tfz++;
+        }
+      });
+
+      const sortedTeachers = Array.from(map.entries()).sort(
+        (a, b) => b[1].total - a[1].total,
+      );
+
+      return {
+        kelas: g.kelas,
+        rombel: g.rombel,
+        originalRows: g.rows,
+        teacher1: sortedTeachers[0] || null,
+        teacher2: sortedTeachers[1] || null,
+      };
+    }).sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
+  }, [groups]);
+
   const rombelSummaries = useMemo(() => {
     return groups.map((g) => {
       let tahsinDasar = 0;
@@ -1699,125 +1738,73 @@ export default function Monitoring() {
         </CardHeader>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-muted/50 text-muted-foreground border-b border-border">
-              <tr className="[&>th]:font-bold [&>th]:px-3 [&>th]:py-3 text-center">
+            <thead className="bg-slate-50 text-slate-600 border-b border-slate-100 text-center">
+              <tr className="[&>th]:font-semibold [&>th]:px-4 [&>th]:py-3">
                 <th className="text-left whitespace-nowrap">Kelas</th>
                 <th className="text-left whitespace-nowrap">Rombel</th>
-                <th className="text-left whitespace-nowrap">Guru Pengampu</th>
-                <th className="whitespace-nowrap">Total Siswa</th>
-                <th className="whitespace-nowrap bg-amber-50/30 text-amber-900 dark:text-amber-300">
-                  Tahsin Dasar (Jml)
-                </th>
-                <th className="whitespace-nowrap bg-amber-50/30 text-amber-900 dark:text-amber-300">
-                  Tahsin Dasar (%)
-                </th>
-                <th className="whitespace-nowrap bg-emerald-50/30 text-emerald-900 dark:text-emerald-300">
-                  Tahsin Lanjutan (Jml)
-                </th>
-                <th className="whitespace-nowrap bg-emerald-50/30 text-emerald-900 dark:text-emerald-300">
-                  Tahsin Lanjutan (%)
-                </th>
-                <th className="whitespace-nowrap bg-purple-50/30 text-purple-900 dark:text-purple-300">
-                  Tahfizh (Jml)
-                </th>
-                <th className="whitespace-nowrap bg-purple-50/30 text-purple-900 dark:text-purple-300">
-                  Tahfizh (%)
-                </th>
-                <th className="whitespace-nowrap bg-indigo-50/30 text-indigo-900 dark:text-indigo-300">
-                  Ada Laporan (Jml)
-                </th>
-                <th className="whitespace-nowrap bg-indigo-50/30 text-indigo-900 dark:text-indigo-300">
-                  Ada Laporan (%)
-                </th>
-                <th className="whitespace-nowrap bg-orange-50/30 text-orange-900 dark:text-orange-300">
-                  Belum Diisi (Jml)
-                </th>
-                <th className="whitespace-nowrap bg-orange-50/30 text-orange-900 dark:text-orange-300">
-                  Belum Diisi (%)
-                </th>
-                <th className="whitespace-nowrap bg-rose-50/30 text-rose-900 dark:text-rose-300">
-                  Perlu Perhatian (Jml)
-                </th>
-                <th className="whitespace-nowrap bg-rose-50/30 text-rose-900 dark:text-rose-300">
-                  Perlu Perhatian (%)
-                </th>
+                <th className="text-left whitespace-nowrap">Pengampu 1</th>
+                <th className="text-left whitespace-nowrap">Total Siswa Binaan 1</th>
+                <th className="text-left whitespace-nowrap border-l border-slate-200">Pengampu 2</th>
+                <th className="text-left whitespace-nowrap">Total Siswa Binaan 2</th>
                 <th className="whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
-              {rombelRows.length === 0 ? (
+            <tbody className="divide-y divide-slate-100">
+              {jenjangKelasRows.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={17}
-                    className="px-4 py-8 text-center text-muted-foreground bg-background"
-                  >
+                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
                     Tidak ada data ringkasan rombel ditemukan.
                   </td>
                 </tr>
               ) : (
-                rombelRows.map((row) => {
+                jenjangKelasRows.map((row) => {
                   const rombelKey = `${row.kelas}-${row.rombel}`;
                   const isExpanded = !!expandedRombels[rombelKey];
+                  
+                  const t1 = row.teacher1;
+                  const t2 = row.teacher2;
+
                   return (
-                    <Fragment key={`rombel-group-${rombelKey}`}>
-                      <tr className="hover:bg-muted/30 transition-colors font-medium text-foreground bg-background text-center [&>td]:px-3 [&>td]:py-2.5 [&>td]:whitespace-nowrap">
-                        <td className="text-left font-bold">
+                    <Fragment key={`jenjang-group-${rombelKey}`}>
+                      <tr className="hover:bg-slate-50/50 transition-colors text-sm [&>td]:px-4 [&>td]:py-3 [&>td]:whitespace-nowrap">
+                        <td className="text-left font-bold text-slate-800">
                           Kelas {row.kelas}
                         </td>
-                        <td className="text-left font-bold">{row.rombel}</td>
-                        <td
-                          className="text-left font-semibold max-w-[150px] truncate"
-                          title={row.guruPengampu}
-                        >
-                          {row.guruPengampu}
+                        <td className="text-left font-bold text-slate-800">{row.rombel}</td>
+                        
+                        <td className="text-left font-bold text-emerald-800 max-w-[150px] truncate" title={t1?.[0]}>
+                          {t1 ? t1[0] : "-"}
                         </td>
-                        <td className="font-semibold">{row.total}</td>
-                        <td className="bg-amber-50/10 text-amber-700 dark:text-amber-400 font-bold">
-                          {row.tahsinDasar}
+                        <td className="text-left">
+                          {t1 ? (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-0">
+                                {t1[1].total} Siswa
+                              </Badge>
+                              <span className="text-[11px] text-slate-500 font-medium">
+                                (TD: {t1[1].td}, TL: {t1[1].tl}, TFZ: {t1[1].tfz})
+                              </span>
+                            </div>
+                          ) : "-"}
                         </td>
-                        <td className="bg-amber-50/10 text-amber-600 dark:text-amber-400">
-                          {row.tahsinDasarPercent}%
+
+                        <td className="text-left font-bold text-emerald-800 max-w-[150px] truncate border-l border-slate-100" title={t2?.[0]}>
+                          {t2 ? t2[0] : "-"}
                         </td>
-                        <td className="bg-emerald-50/10 text-emerald-700 dark:text-emerald-400 font-bold">
-                          {row.tahsinLanjutan}
+                        <td className="text-left">
+                          {t2 ? (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-0">
+                                {t2[1].total} Siswa
+                              </Badge>
+                              <span className="text-[11px] text-slate-500 font-medium">
+                                (TD: {t2[1].td}, TL: {t2[1].tl}, TFZ: {t2[1].tfz})
+                              </span>
+                            </div>
+                          ) : "-"}
                         </td>
-                        <td className="bg-emerald-50/10 text-emerald-600 dark:text-emerald-400">
-                          {row.tahsinLanjutanPercent}%
-                        </td>
-                        <td className="bg-purple-50/10 text-purple-700 dark:text-purple-400 font-bold">
-                          {row.tahfizh}
-                        </td>
-                        <td className="bg-purple-50/10 text-purple-600 dark:text-purple-400">
-                          {row.tahfizhPercent}%
-                        </td>
-                        <td className="bg-indigo-50/10 text-indigo-700 dark:text-indigo-400 font-bold">
-                          {row.filled}
-                        </td>
-                        <td className="bg-indigo-50/10 text-indigo-600 dark:text-indigo-400">
-                          {row.filledPercent}%
-                        </td>
-                        <td className="bg-orange-50/10 text-orange-700 dark:text-orange-400 font-bold">
-                          {row.empty}
-                        </td>
-                        <td className="bg-orange-50/10 text-orange-600 dark:text-orange-400">
-                          {row.emptyPercent}%
-                        </td>
-                        <td className="bg-rose-50/10 text-rose-700 dark:text-rose-400 font-bold">
-                          {row.attention}
-                        </td>
-                        <td className="bg-rose-50/10 text-rose-600 dark:text-rose-400">
-                          {row.attentionPercent > 0 ? (
-                            <Badge
-                              variant="destructive"
-                              className="bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-400 border-0 text-[10px] font-bold px-1.5 py-0"
-                            >
-                              {row.attentionPercent}%
-                            </Badge>
-                          ) : (
-                            "0%"
-                          )}
-                        </td>
-                        <td>
+
+                        <td className="text-center">
                           <Button
                             variant="ghost"
                             size="icon"
