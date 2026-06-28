@@ -594,7 +594,7 @@ export default function AdminTeacherAssignments() {
       )}
 
       {isLoading ? (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
           {Array.from({ length: 5 }).map((_, index) => (
             <div key={index} className="rounded-2xl border border-border bg-card p-4">
               <Skeleton className="h-4 w-24" />
@@ -603,7 +603,7 @@ export default function AdminTeacherAssignments() {
           ))}
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
           {summaryCards.map(({ key, title, value, icon: Icon, accent }, index) => {
             const isClickable = !(index === 2 && key === "all");
             const active =
@@ -619,17 +619,17 @@ export default function AdminTeacherAssignments() {
                   if (!isClickable) return;
                   setSummaryFilter(key);
                 }}
-                className={`relative overflow-hidden rounded-2xl border bg-white p-4 text-left shadow-sm transition-all hover:shadow-md ${
-                  active ? "border-emerald-500 ring-1 ring-emerald-500" : "border-slate-200 hover:border-emerald-300"
+                className={`relative overflow-hidden rounded-2xl border bg-card p-4 text-left shadow-sm transition-all hover:shadow-md ${
+                  active ? "border-emerald-500 ring-1 ring-emerald-500" : "border-border hover:border-emerald-300 dark:hover:border-emerald-700"
                 } ${!isClickable ? "cursor-default opacity-90" : ""}`}
               >
                 <div className={`absolute top-0 left-0 w-1 h-full ${active ? "bg-emerald-500" : "bg-transparent"}`} />
                 <div className="flex items-center justify-between gap-3 pl-2">
                   <div>
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
-                    <p className="mt-1 text-3xl font-bold text-slate-800">{value}</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
+                    <p className="mt-1 text-3xl font-bold text-foreground">{value}</p>
                   </div>
-                  <div className={`p-2 rounded-lg bg-slate-50 border border-slate-100 shadow-sm ${accent.replace('text-', 'text-')}`}>
+                  <div className={`p-2 rounded-lg bg-muted/30 border border-border shadow-sm`}>
                     <Icon className={`h-6 w-6 ${accent}`} />
                   </div>
                 </div>
@@ -705,7 +705,7 @@ export default function AdminTeacherAssignments() {
       )}
 
       {isLoading ? (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2">
           {Array.from({ length: 4 }).map((_, index) => (
             <TeacherCardSkeleton key={index} />
           ))}
@@ -721,7 +721,7 @@ export default function AdminTeacherAssignments() {
         </div>
       ) : (
         <>
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             {visibleTeacherCards.map((teacher) => {
               const status =
                 teacher.approvedCount > 0
