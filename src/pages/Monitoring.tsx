@@ -601,17 +601,35 @@ export default function Monitoring() {
         string,
         { total: number; td: number; tl: number; tfz: number }
       >();
+      
+      const assigned = teachersForClassRombel.get(`${g.kelas}-${g.rombel}`) || [];
+      const t1Name = assigned[0] || null;
+      const t2Name = assigned[1] || null;
+
+      if (t1Name) map.set(t1Name, { total: 0, td: 0, tl: 0, tfz: 0 });
+      if (t2Name) map.set(t2Name, { total: 0, td: 0, tl: 0, tfz: 0 });
+
       g.rows.forEach((r) => {
-        const teacher = r.guru && r.guru !== "-" ? r.guru : "Tidak Diketahui";
+        let teacher = r.guru && r.guru !== "-" ? r.guru : "Tidak Diketahui";
+        
+        // Force assignment if only 1 teacher is official
+        if (assigned.length === 1 && t1Name) {
+           teacher = t1Name;
+        } else if (assigned.length > 1) {
+           // Attempt fuzzy matching for 2-teacher classes in case of slight typo
+           if (t1Name && teacher.toLowerCase().includes(t1Name.toLowerCase().split(' ')[0])) {
+               teacher = t1Name;
+           } else if (t2Name && teacher.toLowerCase().includes(t2Name.toLowerCase().split(' ')[0])) {
+               teacher = t2Name;
+           }
+        }
+
         if (!map.has(teacher)) {
           map.set(teacher, { total: 0, td: 0, tl: 0, tfz: 0 });
         }
         const counts = map.get(teacher)!;
         counts.total++;
-        if (
-          r.program === "Tahsin Dasar" ||
-          r.program === "Tahsin Dasar (Iqra)"
-        ) {
+        if (r.program === "Tahsin Dasar" || r.program === "Tahsin Dasar (Iqra)") {
           counts.td++;
         } else if (r.program === "Tahsin Lanjutan") {
           counts.tl++;
@@ -620,19 +638,31 @@ export default function Monitoring() {
         }
       });
 
-      const sortedTeachers = Array.from(map.entries()).sort(
-        (a, b) => b[1].total - a[1].total,
-      );
+      let teacher1 = null;
+      let teacher2 = null;
+
+      if (assigned.length > 0) {
+        teacher1 = t1Name ? [t1Name, map.get(t1Name)!] : null;
+        teacher2 = t2Name ? [t2Name, map.get(t2Name)!] : null;
+      } else {
+        const sortedTeachers = Array.from(map.entries()).sort(
+          (a, b) => b[1].total - a[1].total,
+        );
+        teacher1 = sortedTeachers[0] || null;
+        teacher2 = sortedTeachers[1] || null;
+      }
 
       return {
         kelas: g.kelas,
         rombel: g.rombel,
         originalRows: g.rows,
-        teacher1: sortedTeachers[0] || null,
-        teacher2: sortedTeachers[1] || null,
+        // @ts-expect-error generic tuple
+        teacher1,
+        // @ts-expect-error generic tuple
+        teacher2,
       };
     }).sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
-  }, [groups]);
+  }, [groups, teachersForClassRombel]);
 
   const rombelSummaries = useMemo(() => {
     return groups.map((g) => {
