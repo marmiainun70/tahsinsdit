@@ -278,6 +278,7 @@ export const useMonthlyReports = (studentId?: string) => {
           .select("*")
           .order("year", { ascending: false })
           .order("month", { ascending: false })
+          .order("id", { ascending: true })
           .range(from, from + MONTHLY_REPORTS_PAGE_SIZE - 1);
 
         if (studentId) {
@@ -329,6 +330,7 @@ export const useAllMonthlyReports = () => {
           .select("*, students(nama, kelas, rombel, level)")
           .order("year", { ascending: false })
           .order("month", { ascending: false })
+          .order("id", { ascending: true })
           .range(from, from + MONTHLY_REPORTS_PAGE_SIZE - 1);
 
         if (managedStudentIds) {
@@ -393,6 +395,7 @@ export const useMonthlyReportsForPeriod = ({
           .select("*, students(nama, kelas, rombel, level)")
           .order("year", { ascending: false })
           .order("month", { ascending: false })
+          .order("id", { ascending: true })
           .range(from, from + MONTHLY_REPORTS_PAGE_SIZE - 1);
 
         if (month) {

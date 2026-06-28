@@ -53,6 +53,7 @@ export const useAllMonthlyReports = () => {
         const { data, error } = await supabase
           .from('monthly_reports')
           .select('*')
+          .order('id', { ascending: true })
           .range(from, from + MONTHLY_REPORTS_PAGE_SIZE - 1);
 
         if (error) throw error;
@@ -89,6 +90,7 @@ export const useMultiMonthReports = (
           .in('student_id', studentIds)
           .in('month', months)
           .eq('year', year)
+          .order('id', { ascending: true })
           .range(from, from + MONTHLY_REPORTS_PAGE_SIZE - 1);
 
         if (error) throw error;

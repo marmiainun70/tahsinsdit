@@ -75,6 +75,7 @@ const fetchAttendanceRows = async ({
       .select("*")
       .order("year", { ascending: false })
       .order("month", { ascending: false })
+      .order("id", { ascending: true })
       .range(from, from + ATTENDANCE_PAGE_SIZE - 1);
 
     if (managedStudentIds) query = query.in("student_id", managedStudentIds);

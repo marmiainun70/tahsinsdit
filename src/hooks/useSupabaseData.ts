@@ -167,6 +167,7 @@ export const usePaginatedStudents = ({
       query = query
         .order("kelas", { ascending: true })
         .order("nama", { ascending: true })
+        .order("id", { ascending: true })
         .range(from, to);
 
       const { data, error, count } = await query;

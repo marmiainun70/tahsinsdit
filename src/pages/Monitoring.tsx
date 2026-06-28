@@ -571,6 +571,9 @@ export default function Monitoring() {
           .select('month, year, student_id, program_type')
           .in('student_id', historicalStudentIds)
           .or(conditions)
+          .order('year', { ascending: false })
+          .order('month', { ascending: false })
+          .order('id', { ascending: true })
           .range(from, from + PAGE_SIZE - 1);
           
         if (error) throw error;
