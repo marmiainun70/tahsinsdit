@@ -545,31 +545,44 @@ export default function AdminTeacherAssignments() {
   ];
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Penugasan Guru</h1>
-          <p className="text-sm text-muted-foreground">Atur guru pembimbing dan murid binaannya.</p>
+    <div className="space-y-6" style={{ zoom: 0.8 }}>
+      {/* Header Section */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-900 p-6 md:p-8 text-white shadow-md">
+        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+          <UserCog className="h-40 w-40" />
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            disabled={pendingAssignments.length === 0 || approveAllPending.isPending}
-            onClick={() => approveAllPending.mutate()}
-          >
-            {approveAllPending.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
-            Setujui Semua
-          </Button>
-          <Button
-            onClick={() => {
-              setSelectedTeacherId("");
-              setAddDialogOpen(true);
-            }}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Buat Penugasan
-          </Button>
+        <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl flex items-center gap-2">
+              Penugasan Guru
+            </h1>
+            <p className="mt-2 text-sm text-emerald-100 max-w-xl leading-relaxed">
+              Atur guru pembimbing dan murid binaannya. Pantau statistik dan kelola permohonan akses dengan mudah.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              className="bg-white/10 text-white hover:bg-white/20 hover:text-white border-white/20"
+              disabled={pendingAssignments.length === 0 || approveAllPending.isPending}
+              onClick={() => approveAllPending.mutate()}
+            >
+              {approveAllPending.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+              Setujui Semua
+            </Button>
+            <Button
+              className="bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-sm"
+              onClick={() => {
+                setSelectedTeacherId("");
+                setAddDialogOpen(true);
+              }}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Buat Penugasan
+            </Button>
+          </div>
         </div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-yellow-500" />
       </div>
 
       {unassignedStudentsCount > 0 && (
@@ -606,16 +619,19 @@ export default function AdminTeacherAssignments() {
                   if (!isClickable) return;
                   setSummaryFilter(key);
                 }}
-                className={`rounded-2xl border bg-card p-4 text-left shadow-sm transition-colors ${
-                  active ? "border-primary/40 bg-primary/5" : "border-border hover:border-primary/30"
-                } ${!isClickable ? "cursor-default" : ""}`}
+                className={`relative overflow-hidden rounded-2xl border bg-white p-4 text-left shadow-sm transition-all hover:shadow-md ${
+                  active ? "border-emerald-500 ring-1 ring-emerald-500" : "border-slate-200 hover:border-emerald-300"
+                } ${!isClickable ? "cursor-default opacity-90" : ""}`}
               >
-                <div className="flex items-center justify-between gap-3">
+                <div className={`absolute top-0 left-0 w-1 h-full ${active ? "bg-emerald-500" : "bg-transparent"}`} />
+                <div className="flex items-center justify-between gap-3 pl-2">
                   <div>
-                    <p className="text-sm text-muted-foreground">{title}</p>
-                    <p className="mt-2 text-2xl font-bold text-foreground">{value}</p>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{title}</p>
+                    <p className="mt-1 text-3xl font-bold text-slate-800">{value}</p>
                   </div>
-                  <Icon className={`h-5 w-5 ${accent}`} />
+                  <div className={`p-2 rounded-lg bg-slate-50 border border-slate-100 shadow-sm ${accent.replace('text-', 'text-')}`}>
+                    <Icon className={`h-6 w-6 ${accent}`} />
+                  </div>
                 </div>
               </button>
             );
