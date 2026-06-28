@@ -182,8 +182,9 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((kelas, i) => {
             const stats = getClassStats(kelas);
-            const tahsinTotal = stats.tahsinDasar + stats.tahsinLanjutan + stats.tahfizh;
-            const pct = stats.total > 0 ? Math.round(tahsinTotal / stats.total * 100) : 0;
+            const pctDasar = stats.total > 0 ? (stats.tahsinDasar / stats.total) * 100 : 0;
+            const pctLanjut = stats.total > 0 ? (stats.tahsinLanjutan / stats.total) * 100 : 0;
+            const pctTahfizh = stats.total > 0 ? (stats.tahfizh / stats.total) * 100 : 0;
             return (
               <motion.div
                 key={kelas}
@@ -210,12 +211,15 @@ const Dashboard = () => {
                         </div>
                       </div>
                        <div className="mb-3">
-                         <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                           <span>Tahsin Dasar (Iqro)</span>
-                           <span>0%</span>
+                         <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
+                           <div className="flex gap-2">
+                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Iqra 0%</span>
+                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Tahsin 0%</span>
+                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>Tahfizh 0%</span>
+                           </div>
                          </div>
-                         <div className="h-2 bg-muted rounded-full overflow-hidden">
-                           <div className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-700" style={{ width: '0%' }} />
+                         <div className="h-2 bg-muted rounded-full overflow-hidden flex">
+                           <div className="h-full bg-emerald-500 transition-all duration-700" style={{ width: '0%' }} />
                          </div>
                        </div>
                        <div className="grid grid-cols-4 gap-1.5 mb-3">
@@ -260,12 +264,17 @@ const Dashboard = () => {
                         </div>
                       </div>
                        <div className="mb-3">
-                         <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                           <span>Tahsin Dasar (Iqro)</span>
-                           <span>{pct}%</span>
+                         <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
+                           <div className="flex gap-2">
+                             {stats.tahsinDasar > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Iqra {Math.round(pctDasar)}%</span>}
+                             {stats.tahsinLanjutan > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Tahsin {Math.round(pctLanjut)}%</span>}
+                             {stats.tahfizh > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>Tahfizh {Math.round(pctTahfizh)}%</span>}
+                           </div>
                          </div>
-                         <div className="h-2 bg-muted rounded-full overflow-hidden">
-                           <div className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                         <div className="h-2 bg-muted rounded-full overflow-hidden flex">
+                           {pctDasar > 0 && <div className="h-full bg-emerald-500 transition-all duration-700" style={{ width: `${pctDasar}%` }} />}
+                           {pctLanjut > 0 && <div className="h-full bg-amber-500 transition-all duration-700 border-l border-white/20" style={{ width: `${pctLanjut}%` }} />}
+                           {pctTahfizh > 0 && <div className="h-full bg-violet-500 transition-all duration-700 border-l border-white/20" style={{ width: `${pctTahfizh}%` }} />}
                          </div>
                        </div>
                        {/* Rombel breakdown */}
