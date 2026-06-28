@@ -1267,181 +1267,180 @@ export default function Monitoring() {
         </Card>
       </div>
 
-      {/* Middle Dashboard Row */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        {/* Tombol Cepat Kelas & Perlu Tindakan Koordinator */}
-        <div className="xl:col-span-4 flex flex-col gap-6">
-          {/* Tombol Cepat Kelas */}
-          <Card className="border-border bg-card shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                Tombol Cepat Kelas
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-2">
-                {[1, 2, 3, 4, 5, 6].map((gradeNum) => (
-                  <Button
-                    key={gradeNum}
-                    variant={filterKelas === String(gradeNum) ? "default" : "outline"}
-                    onClick={() => {
-                      setFilterKelas(String(gradeNum));
-                      setFilterRombel("all");
-                    }}
-                    className={`h-12 flex flex-col items-center justify-center p-1 border transition-colors ${
-                      filterKelas === String(gradeNum)
-                        ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600"
-                        : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200"
-                    }`}
-                  >
-                    <Users className={`h-3.5 w-3.5 mb-0.5 ${filterKelas === String(gradeNum) ? "text-emerald-100" : "text-emerald-600/70"}`} />
-                    <span className="text-xs font-bold">Kelas {gradeNum}</span>
-                  </Button>
-                ))}
-                <Button
-                  variant={filterKelas === "all" ? "default" : "outline"}
-                  onClick={() => {
-                    setFilterKelas("all");
-                    setFilterRombel("all");
-                  }}
-                  className={`col-span-3 h-10 mt-1 font-bold flex items-center justify-center gap-2 border transition-colors ${
-                    filterKelas === "all"
-                      ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600"
-                      : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200"
-                  }`}
-                >
-                  <Users className="h-4 w-4" />
-                  Semua Kelas
+      {/* Middle Dashboard Row - 2 Columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Perlu Tindakan Koordinator (Kiri) */}
+        <Card className="border border-slate-200 bg-white shadow-sm flex flex-col rounded-2xl overflow-hidden h-full">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between bg-slate-50 border-b border-slate-100">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-800">
+              <ShieldCheck className="h-4 w-4 text-emerald-600" />
+              Perlu Tindakan Koordinator
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-4 flex-1">
+            <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-100 rounded-xl">
+              <div className="flex gap-3 items-start">
+                <div className="bg-amber-100 text-amber-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                  <ClipboardList className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-amber-900">
+                    Siswa Belum Diisi
+                  </div>
+                  <div className="text-[10px] text-amber-700 mt-0.5">
+                    Laporan bulanan masih kosong
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-2xl font-black text-amber-900">
+                  {actionStats.empty}
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setFilterStatus("empty")} className="text-[10px] h-7 px-2 border-amber-200 text-amber-700 hover:bg-amber-100 hidden sm:flex">
+                  Lihat
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Perlu Tindakan Koordinator */}
-          <Card className="border border-slate-200 bg-white shadow-sm flex-1 rounded-2xl overflow-hidden">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between bg-slate-50 border-b border-slate-100">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-800">
-                <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                Perlu Tindakan Koordinator
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 pt-4">
-              <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-100 rounded-xl">
-                <div className="flex gap-3 items-start">
-                  <div className="bg-amber-100 text-amber-700 p-1.5 rounded-full mt-0.5 shadow-sm">
-                    <ClipboardList className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-amber-900">
-                      Siswa Belum Diisi
-                    </div>
-                    <div className="text-[10px] text-amber-700 mt-0.5">
-                      Laporan bulanan masih kosong
-                    </div>
-                  </div>
+            <div className="flex items-center justify-between p-3 bg-rose-50 border border-rose-100 rounded-xl">
+              <div className="flex gap-3 items-start">
+                <div className="bg-rose-100 text-rose-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                  <AlertTriangle className="h-4 w-4" />
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-2xl font-black text-amber-900">
-                    {actionStats.empty}
+                <div>
+                  <div className="text-xs font-bold text-rose-900">
+                    Perlu Perhatian Khusus
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setFilterStatus("empty")} className="text-[10px] h-7 px-2 border-amber-200 text-amber-700 hover:bg-amber-100 hidden sm:flex">
-                    Lihat
-                  </Button>
+                  <div className="text-[10px] text-rose-700 mt-0.5">
+                    Berdasarkan parameter capaian
+                  </div>
                 </div>
               </div>
-
-              <div className="flex items-center justify-between p-3 bg-rose-50 border border-rose-100 rounded-xl">
-                <div className="flex gap-3 items-start">
-                  <div className="bg-rose-100 text-rose-700 p-1.5 rounded-full mt-0.5 shadow-sm">
-                    <AlertTriangle className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-rose-900">
-                      Perlu Perhatian Khusus
-                    </div>
-                    <div className="text-[10px] text-rose-700 mt-0.5">
-                      Berdasarkan parameter capaian
-                    </div>
-                  </div>
+              <div className="flex items-center gap-3">
+                <div className="text-2xl font-black text-rose-900">
+                  {actionStats.attention}
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-2xl font-black text-rose-900">
-                    {actionStats.attention}
+                <Button variant="outline" size="sm" onClick={() => setFilterStatus("attention")} className="text-[10px] h-7 px-2 border-rose-200 text-rose-700 hover:bg-rose-100 hidden sm:flex">
+                  Lihat
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl">
+              <div className="flex gap-3 items-start">
+                <div className="bg-blue-100 text-blue-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                  <BookOpen className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-blue-900">
+                    Nilai di Bawah 70
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setFilterStatus("attention")} className="text-[10px] h-7 px-2 border-rose-200 text-rose-700 hover:bg-rose-100 hidden sm:flex">
-                    Lihat
-                  </Button>
+                  <div className="text-[10px] text-blue-700 mt-0.5">
+                    Nilai akhir progresif &lt; 70
+                  </div>
                 </div>
               </div>
-
-              <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl">
-                <div className="flex gap-3 items-start">
-                  <div className="bg-blue-100 text-blue-700 p-1.5 rounded-full mt-0.5 shadow-sm">
-                    <BookOpen className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-blue-900">
-                      Nilai di Bawah 70
-                    </div>
-                    <div className="text-[10px] text-blue-700 mt-0.5">
-                      Nilai akhir progresif &lt; 70
-                    </div>
-                  </div>
+              <div className="flex items-center gap-3">
+                <div className="text-2xl font-black text-blue-900">
+                  {actionStats.below70}
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-2xl font-black text-blue-900">
-                    {actionStats.below70}
+                <Button variant="outline" size="sm" onClick={() => setFilterStatus("attention")} className="text-[10px] h-7 px-2 border-blue-200 text-blue-700 hover:bg-blue-100 hidden sm:flex">
+                  Lihat
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
+              <div className="flex gap-3 items-start">
+                <div className="bg-indigo-100 text-indigo-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                  <RotateCcw className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-indigo-900">
+                    Tidak Konsisten / Stagnan
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => setFilterStatus("attention")} className="text-[10px] h-7 px-2 border-blue-200 text-blue-700 hover:bg-blue-100 hidden sm:flex">
-                    Lihat
-                  </Button>
+                  <div className="text-[10px] text-indigo-700 mt-0.5">
+                    Progres bulanan terhambat
+                  </div>
                 </div>
               </div>
+              <div className="text-2xl font-black text-indigo-900">
+                {actionStats.stagnant}
+              </div>
+            </div>
 
-              <div className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
-                <div className="flex gap-3 items-start">
-                  <div className="bg-indigo-100 text-indigo-700 p-1.5 rounded-full mt-0.5 shadow-sm">
-                    <RotateCcw className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-indigo-900">
-                      Tidak Konsisten / Stagnan
-                    </div>
-                    <div className="text-[10px] text-indigo-700 mt-0.5">
-                      Progres bulanan terhambat
-                    </div>
-                  </div>
+            <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <div className="flex gap-3 items-start">
+                <div className="bg-slate-200 text-slate-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                  <Users className="h-4 w-4" />
                 </div>
-                <div className="text-2xl font-black text-indigo-900">
-                  {actionStats.stagnant}
+                <div>
+                  <div className="text-xs font-bold text-slate-900">
+                    Rombel Belum Tuntas
+                  </div>
+                  <div className="text-[10px] text-slate-600 mt-0.5">
+                    Rombel masih ada status kosong
+                  </div>
                 </div>
               </div>
-
-              <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                <div className="flex gap-3 items-start">
-                  <div className="bg-slate-200 text-slate-700 p-1.5 rounded-full mt-0.5 shadow-sm">
-                    <Users className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-slate-900">
-                      Rombel Belum Tuntas
-                    </div>
-                    <div className="text-[10px] text-slate-600 mt-0.5">
-                      Rombel masih ada status kosong
-                    </div>
-                  </div>
-                </div>
-                <div className="text-2xl font-black text-slate-900">
-                  {actionStats.emptyRombelsCount}
-                </div>
+              <div className="text-2xl font-black text-slate-900">
+                {actionStats.emptyRombelsCount}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Tren Perkembangan (6 Bulan Terakhir) */}
-        <Card className="xl:col-span-8 border-border bg-card shadow-sm">
+        {/* Tombol Cepat Kelas (Kanan) */}
+        <Card className="border-border bg-card shadow-sm flex flex-col h-full rounded-2xl overflow-hidden">
+          <CardHeader className="pb-3 bg-slate-50 border-b border-slate-100">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
+              <Users className="h-4 w-4 text-emerald-600" />
+              Tombol Cepat Kelas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 flex-1">
+            <div className="grid grid-cols-3 gap-3 h-full">
+              {[1, 2, 3, 4, 5, 6].map((gradeNum) => (
+                <Button
+                  key={gradeNum}
+                  variant={filterKelas === String(gradeNum) ? "default" : "outline"}
+                  onClick={() => {
+                    setFilterKelas(String(gradeNum));
+                    setFilterRombel("all");
+                  }}
+                  className={`h-full min-h-[80px] flex flex-col items-center justify-center p-2 border transition-colors rounded-xl ${
+                    filterKelas === String(gradeNum)
+                      ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 shadow-md"
+                      : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200 shadow-sm"
+                  }`}
+                >
+                  <Users className={`h-5 w-5 mb-1.5 ${filterKelas === String(gradeNum) ? "text-emerald-100" : "text-emerald-600/70"}`} />
+                  <span className="text-sm font-bold">Kelas {gradeNum}</span>
+                </Button>
+              ))}
+              <Button
+                variant={filterKelas === "all" ? "default" : "outline"}
+                onClick={() => {
+                  setFilterKelas("all");
+                  setFilterRombel("all");
+                }}
+                className={`col-span-3 min-h-[60px] font-bold flex items-center justify-center gap-2 border transition-colors rounded-xl mt-1 ${
+                  filterKelas === "all"
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 shadow-md"
+                    : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200 shadow-sm"
+                }`}
+              >
+                <Users className="h-5 w-5" />
+                Tampilkan Semua Kelas
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tren Perkembangan (6 Bulan Terakhir) - Full Width */}
+      <div className="w-full">
+        <Card className="border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-foreground">
               Tren Perkembangan (6 Bulan Terakhir)
