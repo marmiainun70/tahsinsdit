@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Loader2, ShieldCheck, UserX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,6 +86,36 @@ export default function ManageAccounts() {
     setUpdatingUserId(null);
   };
 
+  const stats = useMemo(() => {
+    return accounts.reduce(
+      (acc, curr) => {
+        if (curr.status === "pending") acc.pending++;
+        else if (curr.status === "approved") acc.approved++;
+        else if (curr.status === "rejected") acc.rejected++;
+        else if (curr.status === "inactive") acc.inactive++;
+
+        if (curr.role === "teacher") acc.teacher++;
+        else if (curr.role === "parent") acc.parent++;
+
+        return acc;
+      },
+      { pending: 0, approved: 0, rejected: 0, inactive: 0, teacher: 0, parent: 0 }
+    );
+  }, [accounts]);
+
+  const getStatusDisplay = (status: AccountRow["status"]) => {
+    switch (status) {
+      case "pending":
+        return { label: "Menunggu", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 border-amber-200 dark:border-amber-800/50" };
+      case "approved":
+        return { label: "Disetujui", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/50" };
+      case "rejected":
+        return { label: "Ditolak", color: "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300 border-rose-200 dark:border-rose-800/50" };
+      case "inactive":
+        return { label: "Nonaktif", color: "bg-slate-100 text-slate-800 dark:bg-slate-800/60 dark:text-slate-300 border-slate-200 dark:border-slate-700/60" };
+    }
+  };
+
   if (!isAdmin) {
     return <div className="rounded-2xl border border-border bg-card p-6">Halaman ini hanya dapat diakses admin.</div>;
   }
@@ -98,7 +128,34 @@ export default function ManageAccounts() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Persetujuan Akun</h1>
-        <p className="text-sm text-muted-foreground">Tinjau akun guru dan orang tua yang mendaftar dari halaman publik.</p>
+        <p className="text-sm text-muted-foreground">Kelola akun guru dan orang tua yang mendaftar melalui halaman publik.</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 mb-2">
+        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+          <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Menunggu</p>
+          <p className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.pending}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+          <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Disetujui</p>
+          <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.approved}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+          <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ditolak</p>
+          <p className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-400">{stats.rejected}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+          <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nonaktif</p>
+          <p className="mt-1 text-2xl font-bold text-slate-600 dark:text-slate-400">{stats.inactive}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+          <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Guru</p>
+          <p className="mt-1 text-2xl font-bold text-foreground">{stats.teacher}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+          <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Orang Tua</p>
+          <p className="mt-1 text-2xl font-bold text-foreground">{stats.parent}</p>
+        </div>
       </div>
 
       {actionError && (
@@ -116,26 +173,25 @@ export default function ManageAccounts() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="font-bold text-foreground">{account.full_name}</h2>
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                      account.status === "approved"
-                        ? "bg-emerald-100 text-emerald-800"
-                        : account.status === "pending"
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-rose-100 text-rose-800"
-                    }`}>
-                      {account.status}
+                    <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold tracking-wide ${getStatusDisplay(account.status).color}`}>
+                      {getStatusDisplay(account.status).label}
+                    </span>
+                    <span className="rounded-full bg-secondary/80 border border-border px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-foreground">
+                      {getRoleLabel(account.role)}
                     </span>
                     {isCurrentAdmin && (
-                      <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-semibold text-muted-foreground">
+                      <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-muted-foreground border border-border">
                         Akun Anda
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    @{account.username || "-"} · {account.whatsapp || "WhatsApp belum diisi"} · {getRoleLabel(account.role)}
+                  <p className="mt-1.5 text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-foreground">@{account.username || "-"}</span>
+                    <span className="text-muted-foreground/50">•</span>
+                    <span>{account.whatsapp || "WhatsApp belum diisi"}</span>
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Mendaftar {new Date(account.registered_at).toLocaleString("id-ID")}
+                    Terdaftar: {new Date(account.registered_at).toLocaleString("id-ID")}
                   </p>
                   {account.role === "parent" && (
                     <div className="mt-3 rounded-xl bg-secondary/60 p-3">
