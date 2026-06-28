@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect, Fragment } from "react";
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { isTeacherRole } from "@/lib/roleLabels";
 import { useStudents } from "@/hooks/useSupabaseData";
@@ -525,16 +527,8 @@ export default function Monitoring() {
     return data;
   }, [rowsByGrade]);
 
-  const donutData = useMemo(() => {
-    return [
-      { name: "Tahsin Dasar", value: stats.tahsinDasar, color: "#10b981" },
-      { name: "Tahsin Lanjutan", value: stats.tahsinLanjutan, color: "#f59e0b" },
-      { name: "Tahfizh", value: stats.tahfizh, color: "#8b5cf6" },
-    ].filter((d) => d.value > 0);
-  }, [stats]);
-
-  const lineChartData = useMemo(() => {
-    const data = [];
+  const past6MonthsKeys = useMemo(() => {
+    const list = [];
     const monthOffset = 5;
     for (let i = monthOffset; i >= 0; i--) {
       let m = selectedMonth - i;
@@ -543,17 +537,52 @@ export default function Monitoring() {
         m += 12;
         y -= 1;
       }
-      const monthName = MONTH_NAMES[m - 1].substring(0, 3);
-      const factor = 1 - i * 0.03;
-      data.push({
-        name: `${monthName} ${String(y).substring(2)}`,
-        "Tahsin Dasar": Math.round(stats.tahsinDasar * factor),
-        "Tahsin Lanjutan": Math.round(stats.tahsinLanjutan * factor),
-        "Tahfizh": Math.round(stats.tahfizh * factor),
-      });
+      list.push({ month: m, year: y });
     }
-    return data;
-  }, [selectedMonth, selectedYear, stats]);
+    return list;
+  }, [selectedMonth, selectedYear]);
+
+  const historicalStudentIds = useMemo(() => filteredStudents.map(s => s.id), [filteredStudents]);
+
+  const { data: historicalReports = [] } = useQuery({
+    queryKey: ['historical-reports', historicalStudentIds, past6MonthsKeys],
+    queryFn: async () => {
+      if (historicalStudentIds.length === 0) return [];
+      
+      const conditions = past6MonthsKeys.map(k => `and(month.eq.${k.month},year.eq.${k.year})`).join(',');
+      
+      const { data, error } = await supabase
+        .from('monthly_reports')
+        .select('month, year, student_id')
+        .in('student_id', historicalStudentIds)
+        .or(conditions);
+        
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: hasAccess && historicalStudentIds.length > 0
+  });
+
+  const lineChartData = useMemo(() => {
+    return past6MonthsKeys.map((k) => {
+      const monthName = MONTH_NAMES[k.month - 1].substring(0, 3);
+      const label = `${monthName} ${String(k.year).substring(2)}`;
+      
+      if (historicalStudentIds.length === 0) {
+        return { name: label, "Kelengkapan Data (%)": 0, "Siswa Dilaporkan": 0 };
+      }
+      
+      const reportsForMonth = historicalReports.filter(r => r.month === k.month && r.year === k.year);
+      const uniqueStudentReports = new Set(reportsForMonth.map(r => r.student_id)).size;
+      const percent = Math.round((uniqueStudentReports / historicalStudentIds.length) * 100);
+      
+      return {
+        name: label,
+        "Kelengkapan Data (%)": percent,
+        "Siswa Dilaporkan": uniqueStudentReports
+      };
+    });
+  }, [past6MonthsKeys, historicalReports, historicalStudentIds]);
 
   const rombelRows = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1381,80 +1410,18 @@ export default function Monitoring() {
           </CardContent>
         </Card>
 
-        {/* Distribusi Tahsin & Tahfizh */}
-        <Card className="xl:col-span-2 border-border bg-card shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-foreground">
-              Distribusi Tahsin & Tahfizh
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="h-[250px] p-2 flex flex-col justify-between">
-            <div className="h-[180px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={donutData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={45}
-                    outerRadius={65}
-                    paddingAngle={3}
-                    dataKey="value"
-                  >
-                    {donutData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--popover))",
-                      borderColor: "hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex flex-col gap-1 text-[9px] px-2 mt-auto">
-              {donutData.map((d) => {
-                const pct =
-                  stats.total > 0
-                    ? Math.round((d.value / stats.total) * 100)
-                    : 0;
-                return (
-                  <div
-                    key={d.name}
-                    className="flex items-center justify-between font-bold"
-                  >
-                    <span className="flex items-center gap-1 text-muted-foreground">
-                      <span
-                        className="w-2 h-2 rounded-full inline-block"
-                        style={{ backgroundColor: d.color }}
-                      />
-                      {d.name}
-                    </span>
-                    <span className="text-foreground">
-                      {d.value} ({pct}%)
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Tren Perkembangan (6 Bulan Terakhir) */}
-        <Card className="xl:col-span-3 border-border bg-card shadow-sm">
+        <Card className="xl:col-span-5 border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-foreground">
-              Tren Perkembangan (6 Bulan Terakhir)
+              Tren Kelengkapan Laporan (6 Bulan Terakhir)
             </CardTitle>
           </CardHeader>
           <CardContent className="h-[250px] p-2">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={lineChartData}
-                margin={{ top: 10, right: 10, left: -25, bottom: 5 }}
+                margin={{ top: 10, right: 20, left: -25, bottom: 5 }}
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -1471,6 +1438,7 @@ export default function Monitoring() {
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={10}
                   tickLine={false}
+                  domain={[0, 100]}
                 />
                 <Tooltip
                   contentStyle={{
@@ -1478,30 +1446,18 @@ export default function Monitoring() {
                     borderColor: "hsl(var(--border))",
                     borderRadius: "8px",
                   }}
+                  formatter={(value, name) => {
+                    if (name === "Kelengkapan Data (%)") return [`${value}%`, "Kelengkapan"];
+                    return [value, name];
+                  }}
                 />
                 <Line
                   type="monotone"
-                  dataKey="Tahsin Dasar"
+                  dataKey="Kelengkapan Data (%)"
                   stroke="#10b981"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                  activeDot={{ r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="Tahsin Lanjutan"
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                  activeDot={{ r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="Tahfizh"
-                  stroke="#8b5cf6"
-                  strokeWidth={2}
-                  dot={{ r: 2 }}
-                  activeDot={{ r: 4 }}
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
                 />
               </LineChart>
             </ResponsiveContainer>
