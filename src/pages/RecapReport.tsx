@@ -43,11 +43,8 @@ import {
   type RecapJoinedGroup,
   type RecapJoinedRow,
 } from "@/utils/recapMonthlyReportRows";
-import {
-  Search, Loader2, Eye, Download,
-  Users, ListChecks, AlertCircle, FileWarning, Calendar,
-  ClipboardList, Star, Filter, RotateCcw, FileText, ShieldCheck
-} from "lucide-react";
+import { Eye, FileText, Download, Calendar, Users, ListChecks, FileWarning, Filter, RotateCcw, Search, ShieldCheck, AlertCircle, Star, ClipboardList, Loader2 } from "lucide-react";
+import { StickyScrollbar } from "../components/StickyScrollbar";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -1264,7 +1261,7 @@ const RecapReport = () => {
   }
 
   return (
-    <div className="container max-w-none py-6 space-y-4 spreadsheet-report-page" style={{ zoom: "75%" }}>
+    <div className="container max-w-none py-6 space-y-4 spreadsheet-report-page" style={{ zoom: "65%" }}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
