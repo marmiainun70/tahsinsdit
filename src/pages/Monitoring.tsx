@@ -595,6 +595,66 @@ export default function Monitoring() {
     );
   }, [gradeSummaries, teachersForClassRombel]);
 
+  const rombelSummaries = useMemo(() => {
+    return groups.map((g) => {
+      let tahsinDasar = 0;
+      let tahsinLanjutan = 0;
+      let tahfizh = 0;
+      let filled = 0;
+      let empty = 0;
+      let attention = 0;
+      let totalNilai = 0;
+      let countNilai = 0;
+
+      g.rows.forEach((r) => {
+        if (r.program === "Tahsin Dasar" || r.program === "Tahsin Dasar (Iqra)") {
+          tahsinDasar++;
+        } else if (r.program === "Tahsin Lanjutan") {
+          tahsinLanjutan++;
+        } else if (r.program === "Tahfizh") {
+          tahfizh++;
+        }
+
+        if (r.reportStatus === "filled") {
+          filled++;
+          if (r.nilaiAkhirProgresif !== null) {
+            totalNilai += r.nilaiAkhirProgresif;
+            countNilai++;
+            if (r.nilaiAkhirProgresif < 70) attention++;
+          }
+          if (
+            r.kategoriProgres === "Stagnan" ||
+            r.kategoriProgres === "Tidak Konsisten" ||
+            r.kategoriProgres === "Kurang Konsisten"
+          ) {
+            if (!(r.nilaiAkhirProgresif !== null && r.nilaiAkhirProgresif < 70)) {
+              attention++;
+            }
+          }
+        } else {
+          empty++;
+        }
+      });
+
+      const avgScore = countNilai > 0 ? Math.round(totalNilai / countNilai) : null;
+      const filledPercent = g.rows.length > 0 ? Math.round((filled / g.rows.length) * 100) : 0;
+
+      return {
+        kelas: g.kelas,
+        rombel: g.rombel,
+        total: g.rows.length,
+        tahsinDasar,
+        tahsinLanjutan,
+        tahfizh,
+        filled,
+        empty,
+        attention,
+        avgScore,
+        filledPercent,
+      };
+    });
+  }, [groups]);
+
   const getStatusColor = (kategori: string | null, nilai: number | null) => {
     if (nilai !== null && nilai < 70)
       return "bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/40";
@@ -1351,11 +1411,101 @@ export default function Monitoring() {
         </Card>
       </div>
 
+      {/* NEW Ringkasan Rombel */}
+      <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden mb-6 rounded-2xl">
+        <CardHeader className="bg-emerald-50/50 border-b border-emerald-100 px-6 py-4 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-bold text-emerald-900 flex items-center gap-2">
+            <Users className="h-4 w-4 text-emerald-600" />
+            Ringkasan Rombel
+          </CardTitle>
+        </CardHeader>
+        
+        {(filterKelas !== "all" || filterRombel !== "all") && (
+           <div className="bg-emerald-600 text-white px-4 py-2 flex flex-wrap gap-4 text-[10px] sm:text-xs font-medium items-center justify-center">
+              <span>Total Siswa: {stats.total}</span>
+              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
+              <span>Tahsin Dasar: {stats.tahsinDasar}</span>
+              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
+              <span>Tahsin Lanjutan: {stats.tahsinLanjutan}</span>
+              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
+              <span>Tahfizh: {stats.tahfizh}</span>
+              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
+              <span>Ada Laporan: {stats.latestProgress}</span>
+              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
+              <span>Belum Diisi: {stats.emptyProgress}</span>
+              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
+              <span>Perlu Perhatian: {stats.needsAttention}</span>
+           </div>
+        )}
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+              <tr className="[&>th]:font-bold [&>th]:px-4 [&>th]:py-3 text-center">
+                <th className="text-left whitespace-nowrap">Kelas</th>
+                <th className="text-left whitespace-nowrap">Rombel</th>
+                <th className="whitespace-nowrap">Total Siswa</th>
+                <th className="whitespace-nowrap">Tahsin Dasar</th>
+                <th className="whitespace-nowrap">Tahsin Lanjutan</th>
+                <th className="whitespace-nowrap">Tahfizh</th>
+                <th className="whitespace-nowrap text-emerald-700">Ada Laporan</th>
+                <th className="whitespace-nowrap text-amber-700">Belum Diisi</th>
+                <th className="whitespace-nowrap text-rose-700">Perlu Perhatian</th>
+                <th className="whitespace-nowrap">Rata-rata Nilai</th>
+                <th className="whitespace-nowrap">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {rombelSummaries.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="px-4 py-8 text-center text-slate-500">
+                    Tidak ada data rombel ditemukan.
+                  </td>
+                </tr>
+              ) : (
+                rombelSummaries.map((rs) => (
+                  <tr key={`${rs.kelas}-${rs.rombel}`} className="hover:bg-slate-50/50 transition-colors text-center [&>td]:px-4 [&>td]:py-3 [&>td]:whitespace-nowrap">
+                    <td className="text-left font-bold text-slate-700">Kelas {rs.kelas}</td>
+                    <td className="text-left font-bold text-slate-700">{rs.rombel}</td>
+                    <td className="font-semibold text-slate-700">{rs.total}</td>
+                    <td className="text-slate-600">{rs.tahsinDasar}</td>
+                    <td className="text-slate-600">{rs.tahsinLanjutan}</td>
+                    <td className="text-slate-600">{rs.tahfizh}</td>
+                    <td>
+                      <div className="flex flex-col items-center">
+                        <span className="font-bold text-emerald-600">{rs.filled}</span>
+                        <span className="text-[9px] text-emerald-500/80">{rs.filledPercent}%</span>
+                      </div>
+                    </td>
+                    <td className="font-bold text-amber-600">{rs.empty}</td>
+                    <td className="font-bold text-rose-600">{rs.attention}</td>
+                    <td className="font-bold text-slate-700">{rs.avgScore ?? "-"}</td>
+                    <td>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-[10px] text-emerald-700 border-emerald-200 hover:bg-emerald-50"
+                        onClick={() => {
+                          setFilterKelas(String(rs.kelas));
+                          setFilterRombel(rs.rombel);
+                        }}
+                      >
+                        Lihat Detail
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
       {/* Rombel Recap Table Section */}
       <Card className="border-border bg-card shadow-sm overflow-hidden">
         <CardHeader className="border-b border-border bg-muted/40 px-6 py-4">
           <CardTitle className="text-base font-bold text-foreground">
-            Ringkasan Rombel
+            Ringkasan Jenjang Kelas
           </CardTitle>
         </CardHeader>
         <div className="overflow-x-auto">
