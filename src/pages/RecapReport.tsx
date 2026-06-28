@@ -1264,7 +1264,7 @@ const RecapReport = () => {
   }
 
   return (
-    <div className="space-y-4 spreadsheet-report-page">
+    <div className="container max-w-none py-6 space-y-4 spreadsheet-report-page">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
