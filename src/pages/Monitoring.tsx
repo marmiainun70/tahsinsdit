@@ -1269,7 +1269,54 @@ export default function Monitoring() {
 
       {/* Middle Dashboard Row - 2 Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Perlu Tindakan Koordinator (Kiri) */}
+        {/* Tombol Cepat Kelas (Kiri) */}
+        <Card className="border-border bg-card shadow-sm flex flex-col h-full rounded-2xl overflow-hidden">
+          <CardHeader className="pb-3 bg-slate-50 border-b border-slate-100">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
+              <Users className="h-4 w-4 text-emerald-600" />
+              Tombol Cepat Kelas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-4 flex-1">
+            <div className="grid grid-cols-3 gap-3 h-full">
+              {[1, 2, 3, 4, 5, 6].map((gradeNum) => (
+                <Button
+                  key={gradeNum}
+                  variant={filterKelas === String(gradeNum) ? "default" : "outline"}
+                  onClick={() => {
+                    setFilterKelas(String(gradeNum));
+                    setFilterRombel("all");
+                  }}
+                  className={`h-full min-h-[80px] flex flex-col items-center justify-center p-2 border transition-colors rounded-xl ${
+                    filterKelas === String(gradeNum)
+                      ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 shadow-md"
+                      : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200 shadow-sm"
+                  }`}
+                >
+                  <Users className={`h-5 w-5 mb-1.5 ${filterKelas === String(gradeNum) ? "text-emerald-100" : "text-emerald-600/70"}`} />
+                  <span className="text-sm font-bold">Kelas {gradeNum}</span>
+                </Button>
+              ))}
+              <Button
+                variant={filterKelas === "all" ? "default" : "outline"}
+                onClick={() => {
+                  setFilterKelas("all");
+                  setFilterRombel("all");
+                }}
+                className={`col-span-3 min-h-[60px] font-bold flex items-center justify-center gap-2 border transition-colors rounded-xl mt-1 ${
+                  filterKelas === "all"
+                    ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 shadow-md"
+                    : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200 shadow-sm"
+                }`}
+              >
+                <Users className="h-5 w-5" />
+                Tampilkan Semua Kelas
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Perlu Tindakan Koordinator (Kanan) */}
         <Card className="border border-slate-200 bg-white shadow-sm flex flex-col rounded-2xl overflow-hidden h-full">
           <CardHeader className="pb-3 flex flex-row items-center justify-between bg-slate-50 border-b border-slate-100">
             <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-800">
@@ -1386,53 +1433,6 @@ export default function Monitoring() {
               <div className="text-2xl font-black text-slate-900">
                 {actionStats.emptyRombelsCount}
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tombol Cepat Kelas (Kanan) */}
-        <Card className="border-border bg-card shadow-sm flex flex-col h-full rounded-2xl overflow-hidden">
-          <CardHeader className="pb-3 bg-slate-50 border-b border-slate-100">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
-              <Users className="h-4 w-4 text-emerald-600" />
-              Tombol Cepat Kelas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4 flex-1">
-            <div className="grid grid-cols-3 gap-3 h-full">
-              {[1, 2, 3, 4, 5, 6].map((gradeNum) => (
-                <Button
-                  key={gradeNum}
-                  variant={filterKelas === String(gradeNum) ? "default" : "outline"}
-                  onClick={() => {
-                    setFilterKelas(String(gradeNum));
-                    setFilterRombel("all");
-                  }}
-                  className={`h-full min-h-[80px] flex flex-col items-center justify-center p-2 border transition-colors rounded-xl ${
-                    filterKelas === String(gradeNum)
-                      ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 shadow-md"
-                      : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200 shadow-sm"
-                  }`}
-                >
-                  <Users className={`h-5 w-5 mb-1.5 ${filterKelas === String(gradeNum) ? "text-emerald-100" : "text-emerald-600/70"}`} />
-                  <span className="text-sm font-bold">Kelas {gradeNum}</span>
-                </Button>
-              ))}
-              <Button
-                variant={filterKelas === "all" ? "default" : "outline"}
-                onClick={() => {
-                  setFilterKelas("all");
-                  setFilterRombel("all");
-                }}
-                className={`col-span-3 min-h-[60px] font-bold flex items-center justify-center gap-2 border transition-colors rounded-xl mt-1 ${
-                  filterKelas === "all"
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 shadow-md"
-                    : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200 shadow-sm"
-                }`}
-              >
-                <Users className="h-5 w-5" />
-                Tampilkan Semua Kelas
-              </Button>
             </div>
           </CardContent>
         </Card>
