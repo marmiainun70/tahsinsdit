@@ -58,6 +58,8 @@ import {
   Line,
   LabelList,
 } from "recharts";
+import { FixedHorizontalScrollbar } from "@/components/reports/FixedHorizontalScrollbar";
+import { useRef } from "react";
 
 const now = new Date();
 const currentMonthIdx = now.getMonth();
@@ -67,6 +69,9 @@ const YEARS = [2024, 2025, 2026, 2027, 2028];
 export default function Monitoring() {
   const { user, profile } = useAuth();
   const isTeacher = isTeacherRole(profile?.role);
+
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const tableContentRef = useRef<HTMLTableElement>(null);
 
   const { data: students = [], isLoading: ls } = useStudents();
 
@@ -1515,8 +1520,11 @@ export default function Monitoring() {
             Ringkasan Jenjang Kelas
           </CardTitle>
         </CardHeader>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div 
+          className="spreadsheet-table-scroll overflow-x-hidden relative"
+          ref={tableScrollRef}
+        >
+          <table className="w-full text-left text-xs" ref={tableContentRef} style={{ minWidth: "1200px" }}>
             <thead className="bg-slate-50 text-slate-600 border-b border-slate-100 text-center">
               <tr className="[&>th]:font-semibold [&>th]:px-4 [&>th]:py-3">
                 <th className="text-left whitespace-nowrap">Kelas</th>
@@ -1787,6 +1795,12 @@ export default function Monitoring() {
             </tbody>
           </table>
         </div>
+        
+        <FixedHorizontalScrollbar
+          scrollContainerRef={tableScrollRef}
+          contentRef={tableContentRef}
+          refreshKey={`${jenjangKelasRows.length}-${Object.keys(expandedRombels).length}`}
+        />
       </Card>
     </motion.div>
   );
