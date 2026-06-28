@@ -241,7 +241,7 @@ const RecapReport = () => {
   const [dialogYear, setDialogYear] = useState<string>(String(now.getFullYear()));
   const [dialogMonths, setDialogMonths] = useState<number[]>([Number(now.getMonth() + 1)]);
   const [showAllGroups, setShowAllGroups] = useState(false);
-  const [zoom, setZoom] = useState<number>(75);
+  const [zoom, setZoom] = useState<number>(100);
   const recapLayout = useSpreadsheetLayout<RecapReportColumnKey>({
     userId: user?.id,
     role: profile?.role,
@@ -1583,58 +1583,62 @@ const RecapReport = () => {
           )}
 
           <Card className="overflow-hidden border-emerald-100 shadow-sm dark:border-emerald-900/60">
-            <CardHeader className="flex flex-row items-center justify-between gap-2 border-b border-emerald-100 bg-white/80 py-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
-              <CardTitle className="flex items-center gap-2 text-sm whitespace-nowrap">
-                <ClipboardList className="h-4 w-4 text-emerald-700" />
-                Data Rekap Laporan Bulanan
-              </CardTitle>
-              <div className="flex flex-nowrap items-center gap-1.5">
-                <Button
-                  variant="outline"
-                  className="gap-2 text-xs sm:text-sm"
-                  disabled={!!pdfLoading || activePdfGroups.length === 0}
-                  onClick={() => previewPDF("a4")}
-                >
-                  {pdfLoading === "preview-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-                  Preview PDF (A4)
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2 text-xs sm:text-sm"
-                  disabled={!!pdfLoading || activePdfGroups.length === 0}
-                  onClick={() => exportPDF("a4")}
-                >
-                  {pdfLoading === "download-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                  Download PDF (A4)
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2 border-emerald-200 bg-emerald-50/70 text-xs text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 sm:text-sm"
-                  disabled={!!pdfLoading || activePdfGroups.length === 0}
-                  onClick={() => previewPDF("f4")}
-                >
-                  {pdfLoading === "preview-f4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
-                  Preview PDF (F4)
-                </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2 border-emerald-200 bg-emerald-50/70 text-xs text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 sm:text-sm"
-                  disabled={!!pdfLoading || activePdfGroups.length === 0}
-                  onClick={() => exportPDF("f4")}
-                >
-                  {pdfLoading === "download-f4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-                  Download/Cetak PDF (F4)
-                </Button>
-                <Button
-                  className="gap-2 bg-emerald-700 text-xs hover:bg-emerald-800 sm:text-sm"
-                  disabled={!!pdfLoading || activePdfGroups.length === 0}
-                  onClick={() => setMultiMonthDialogOpen(true)}
-                >
-                  <Download className="w-4 h-4" />
-                  Download Per Rombel (Multi Bulan)
-                </Button>
+            <CardHeader className="flex flex-col gap-3 border-b border-emerald-100 bg-white/80 py-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+              <div className="flex flex-row items-center justify-between gap-2">
+                <CardTitle className="flex items-center gap-2 text-sm whitespace-nowrap">
+                  <ClipboardList className="h-4 w-4 text-emerald-700" />
+                  Data Rekap Laporan Bulanan
+                </CardTitle>
+                <div className="flex flex-nowrap items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    className="gap-2 text-xs sm:text-sm"
+                    disabled={!!pdfLoading || activePdfGroups.length === 0}
+                    onClick={() => previewPDF("a4")}
+                  >
+                    {pdfLoading === "preview-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                    Preview PDF (A4)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2 text-xs sm:text-sm"
+                    disabled={!!pdfLoading || activePdfGroups.length === 0}
+                    onClick={() => exportPDF("a4")}
+                  >
+                    {pdfLoading === "download-a4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                    Download PDF (A4)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2 border-emerald-200 bg-emerald-50/70 text-xs text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 sm:text-sm"
+                    disabled={!!pdfLoading || activePdfGroups.length === 0}
+                    onClick={() => previewPDF("f4")}
+                  >
+                    {pdfLoading === "preview-f4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                    Preview PDF (F4)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="gap-2 border-emerald-200 bg-emerald-50/70 text-xs text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 sm:text-sm"
+                    disabled={!!pdfLoading || activePdfGroups.length === 0}
+                    onClick={() => exportPDF("f4")}
+                  >
+                    {pdfLoading === "download-f4" ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                    Download/Cetak PDF (F4)
+                  </Button>
+                  <Button
+                    className="gap-2 bg-emerald-700 text-xs hover:bg-emerald-800 sm:text-sm"
+                    disabled={!!pdfLoading || activePdfGroups.length === 0}
+                    onClick={() => setMultiMonthDialogOpen(true)}
+                  >
+                    <Download className="w-4 h-4" />
+                    Download Per Rombel (Multi Bulan)
+                  </Button>
+                </div>
+              </div>
+              <div className="flex items-center justify-end">
                 <div className="flex items-center gap-1.5 bg-muted/60 p-0.5 rounded-md border border-border hidden md:flex">
-                  <span className="text-[10px] text-muted-foreground px-1.5 font-medium">Zoom:</span>
+                  <span className="text-[10px] text-muted-foreground px-1.5 font-medium">Zoom Tabel:</span>
                   {([50, 75, 100] as const).map(z => (
                     <Button
                       key={z}
