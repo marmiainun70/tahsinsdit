@@ -30,6 +30,22 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Users,
   BookOpen,
@@ -51,6 +67,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
   PieChart,
   Pie,
   Cell,
@@ -65,6 +82,105 @@ const now = new Date();
 const currentMonthIdx = now.getMonth();
 const initialSemester = currentMonthIdx >= 6 ? "ganjil" : "genap";
 const YEARS = [2024, 2025, 2026, 2027, 2028];
+const TEACHER_LOAD_COLORS = {
+  TD: "#e34948",
+  TL: "#2a78d6",
+  TFZ: "#1baf7a",
+};
+
+type TeacherLoadReportRow = {
+  student_id: string;
+  teacher_id: string | null;
+  teacher_name: string | null;
+  program_type: string | null;
+  month: number;
+  year: number;
+};
+
+type TeacherLoadSummary = {
+  teacherId: string;
+  teacherName: string;
+  TD: number;
+  TL: number;
+  TFZ: number;
+  total: number;
+  tdPercent: number;
+};
+
+const formatPercent = (value: number) => `${value.toFixed(1)}%`;
+
+const getMonthLabel = (month: number, year: number) =>
+  `${MONTH_NAMES[month - 1]} ${year}`;
+
+const getPreviousPeriod = (month: number, year: number) => {
+  if (month === 1) return { month: 12, year: year - 1 };
+  return { month: month - 1, year };
+};
+
+const getProgramBucket = (programType: string | null): "TD" | "TL" | "TFZ" => {
+  const normalized = (programType ?? "").toLowerCase();
+  if (normalized.includes("tahfizh")) return "TFZ";
+  if (normalized.includes("lanjutan") || normalized === "tahsin") return "TL";
+  return "TD";
+};
+
+const getTeacherLoadStatus = (tdPercent: number) => {
+  if (tdPercent >= 80) {
+    return {
+      label: "Dominan TD",
+      className: "bg-rose-100 text-rose-700 border-rose-200",
+    };
+  }
+  if (tdPercent >= 60) {
+    return {
+      label: "Campuran",
+      className: "bg-amber-100 text-amber-700 border-amber-200",
+    };
+  }
+  return {
+    label: "Seimbang",
+    className: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  };
+};
+
+const buildTeacherLoadSummaries = (
+  rows: TeacherLoadReportRow[],
+): TeacherLoadSummary[] => {
+  const map = new Map<string, TeacherLoadSummary>();
+  const seenStudentPerTeacher = new Set<string>();
+
+  rows.forEach((row) => {
+    const teacherId = row.teacher_id || row.teacher_name || "unknown";
+    const teacherName = row.teacher_name?.trim() || "Tidak Diketahui";
+    const uniqueKey = `${teacherId}-${row.student_id}`;
+    if (seenStudentPerTeacher.has(uniqueKey)) return;
+    seenStudentPerTeacher.add(uniqueKey);
+
+    if (!map.has(teacherId)) {
+      map.set(teacherId, {
+        teacherId,
+        teacherName,
+        TD: 0,
+        TL: 0,
+        TFZ: 0,
+        total: 0,
+        tdPercent: 0,
+      });
+    }
+
+    const summary = map.get(teacherId)!;
+    const bucket = getProgramBucket(row.program_type);
+    summary[bucket] += 1;
+    summary.total += 1;
+  });
+
+  return Array.from(map.values())
+    .map((summary) => ({
+      ...summary,
+      tdPercent: summary.total > 0 ? (summary.TD / summary.total) * 100 : 0,
+    }))
+    .sort((a, b) => b.total - a.total || a.teacherName.localeCompare(b.teacherName));
+};
 
 export default function Monitoring() {
   const { user, profile } = useAuth();
@@ -91,6 +207,12 @@ export default function Monitoring() {
 
   const selectedMonth = Number(filterMonth);
   const selectedYear = Number(filterYear);
+  const currentLoadMonth = now.getMonth() + 1;
+  const currentLoadYear = now.getFullYear();
+  const previousLoadPeriod = useMemo(
+    () => getPreviousPeriod(currentLoadMonth, currentLoadYear),
+    [currentLoadMonth, currentLoadYear],
+  );
 
   // Sync Month with Semester when Semester changes
   useEffect(() => {
@@ -114,6 +236,48 @@ export default function Monitoring() {
   const { data: reports = [], isLoading: lr } = useMonthlyReportsForPeriod({
     month: selectedMonth,
     year: selectedYear,
+    enabled: hasAccess,
+  });
+
+  const { data: teacherLoadReports = [], isLoading: teacherLoadLoading } = useQuery({
+    queryKey: [
+      "teacher-load-reports",
+      currentLoadMonth,
+      currentLoadYear,
+      previousLoadPeriod.month,
+      previousLoadPeriod.year,
+    ],
+    queryFn: async () => {
+      const periods = [
+        { month: currentLoadMonth, year: currentLoadYear },
+        previousLoadPeriod,
+      ];
+      const conditions = periods
+        .map((period) => `and(month.eq.${period.month},year.eq.${period.year})`)
+        .join(",");
+      const allData: TeacherLoadReportRow[] = [];
+      let from = 0;
+      const PAGE_SIZE = 1000;
+
+      while (true) {
+        const { data, error } = await supabase
+          .from("monthly_reports")
+          .select("student_id, teacher_id, teacher_name, program_type, month, year")
+          .or(conditions)
+          .not("teacher_id", "is", null)
+          .range(from, from + PAGE_SIZE - 1);
+
+        if (error) throw error;
+
+        const batch = (data ?? []) as TeacherLoadReportRow[];
+        allData.push(...batch);
+
+        if (batch.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+
+      return allData;
+    },
     enabled: hasAccess,
   });
 
@@ -232,6 +396,104 @@ export default function Monitoring() {
     attendanceSettingsQuery.data,
     profileMap,
   ]);
+
+  const currentTeacherLoadRows = useMemo(
+    () =>
+      teacherLoadReports.filter(
+        (row) => row.month === currentLoadMonth && row.year === currentLoadYear,
+      ),
+    [teacherLoadReports, currentLoadMonth, currentLoadYear],
+  );
+
+  const previousTeacherLoadRows = useMemo(
+    () =>
+      teacherLoadReports.filter(
+        (row) =>
+          row.month === previousLoadPeriod.month &&
+          row.year === previousLoadPeriod.year,
+      ),
+    [teacherLoadReports, previousLoadPeriod.month, previousLoadPeriod.year],
+  );
+
+  const currentTeacherLoads = useMemo(
+    () => buildTeacherLoadSummaries(currentTeacherLoadRows),
+    [currentTeacherLoadRows],
+  );
+
+  const previousTeacherLoads = useMemo(
+    () => buildTeacherLoadSummaries(previousTeacherLoadRows),
+    [previousTeacherLoadRows],
+  );
+
+  const teacherLoadTotals = useMemo(() => {
+    const total = currentTeacherLoads.reduce(
+      (acc, item) => ({
+        total: acc.total + item.total,
+        TD: acc.TD + item.TD,
+        TL: acc.TL + item.TL,
+        TFZ: acc.TFZ + item.TFZ,
+      }),
+      { total: 0, TD: 0, TL: 0, TFZ: 0 },
+    );
+    return {
+      ...total,
+      tdPercent: total.total > 0 ? (total.TD / total.total) * 100 : 0,
+      tlPercent: total.total > 0 ? (total.TL / total.total) * 100 : 0,
+      tfzPercent: total.total > 0 ? (total.TFZ / total.total) * 100 : 0,
+    };
+  }, [currentTeacherLoads]);
+
+  const teacherLoadChartData = useMemo(
+    () => currentTeacherLoads.slice(0, 8),
+    [currentTeacherLoads],
+  );
+
+  const dominantTdTeachers = useMemo(
+    () => currentTeacherLoads.filter((item) => item.tdPercent >= 80),
+    [currentTeacherLoads],
+  );
+
+  const teacherLoadComparisonRows = useMemo(() => {
+    const previousMap = new Map(previousTeacherLoads.map((item) => [item.teacherId, item]));
+    const currentMap = new Map(currentTeacherLoads.map((item) => [item.teacherId, item]));
+    const ids = Array.from(new Set([...previousMap.keys(), ...currentMap.keys()]));
+
+    return ids
+      .map((id) => {
+        const current = currentMap.get(id);
+        const previous = previousMap.get(id);
+        const tdDelta = (current?.TD ?? 0) - (previous?.TD ?? 0);
+        const tlDelta = (current?.TL ?? 0) - (previous?.TL ?? 0);
+        let status = "Tetap";
+        let statusClassName = "bg-slate-100 text-slate-700 border-slate-200";
+
+        if (tdDelta > 2) {
+          status = "TD Naik";
+          statusClassName = "bg-rose-100 text-rose-700 border-rose-200";
+        } else if (tlDelta > 2) {
+          status = "TL Naik";
+          statusClassName = "bg-emerald-100 text-emerald-700 border-emerald-200";
+        }
+
+        return {
+          teacherId: id,
+          teacherName: current?.teacherName ?? previous?.teacherName ?? "Tidak Diketahui",
+          previousTD: previous?.TD ?? 0,
+          currentTD: current?.TD ?? 0,
+          tdDelta,
+          previousTL: previous?.TL ?? 0,
+          currentTL: current?.TL ?? 0,
+          tlDelta,
+          status,
+          statusClassName,
+        };
+      })
+      .sort(
+        (a, b) =>
+          b.currentTD + b.currentTL - (a.currentTD + a.currentTL) ||
+          a.teacherName.localeCompare(b.teacherName),
+      );
+  }, [currentTeacherLoads, previousTeacherLoads]);
 
   const allRows = useMemo(() => {
     let rows = groups.flatMap((g) => g.rows);
@@ -1800,6 +2062,245 @@ export default function Monitoring() {
           contentRef={tableContentRef}
           refreshKey={`${jenjangKelasRows.length}-${Object.keys(expandedRombels).length}`}
         />
+      </Card>
+
+      <Card className="border-border bg-card shadow-sm overflow-hidden">
+        <CardHeader className="border-b border-border bg-muted/40 px-6 py-4">
+          <div>
+            <CardTitle className="text-base font-bold text-foreground">
+              Beban Guru per Bulan
+            </CardTitle>
+            <CardDescription className="mt-1 text-xs">
+              Data dari laporan bulanan {getMonthLabel(currentLoadMonth, currentLoadYear)}.
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-6">
+          {teacherLoadLoading ? (
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {[1, 2, 3, 4].map((item) => (
+                  <Skeleton key={item} className="h-24 rounded-xl" />
+                ))}
+              </div>
+              <Skeleton className="h-80 rounded-xl" />
+            </div>
+          ) : currentTeacherLoads.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-10 text-center">
+              <ClipboardList className="mx-auto h-10 w-10 text-muted-foreground/60" />
+              <h3 className="mt-3 text-sm font-semibold text-foreground">
+                Data beban guru belum tersedia
+              </h3>
+              <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
+                Belum ada laporan bulanan dengan guru pengampu untuk periode{" "}
+                {getMonthLabel(currentLoadMonth, currentLoadYear)}.
+              </p>
+            </div>
+          ) : (
+            <Tabs defaultValue="current" className="space-y-4">
+              <TabsList className="grid h-auto w-full grid-cols-1 gap-1 sm:inline-grid sm:w-auto sm:grid-cols-3">
+                <TabsTrigger value="current">Beban Bulan Ini</TabsTrigger>
+                <TabsTrigger value="distribution">Distribusi Beban</TabsTrigger>
+                <TabsTrigger value="comparison">Perbandingan Bulan Lalu</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="current" className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {[
+                    {
+                      label: "Total Terdata",
+                      value: teacherLoadTotals.total,
+                      percent: "100.0%",
+                      color: "bg-slate-500",
+                    },
+                    {
+                      label: "Total TD",
+                      value: teacherLoadTotals.TD,
+                      percent: formatPercent(teacherLoadTotals.tdPercent),
+                      color: "bg-rose-500",
+                    },
+                    {
+                      label: "Total TL",
+                      value: teacherLoadTotals.TL,
+                      percent: formatPercent(teacherLoadTotals.tlPercent),
+                      color: "bg-blue-500",
+                    },
+                    {
+                      label: "Total TFZ",
+                      value: teacherLoadTotals.TFZ,
+                      percent: formatPercent(teacherLoadTotals.tfzPercent),
+                      color: "bg-emerald-500",
+                    },
+                  ].map((item) => (
+                    <Card key={item.label} className="overflow-hidden rounded-xl border-border shadow-sm">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                              {item.label}
+                            </p>
+                            <p className="mt-2 text-3xl font-bold text-foreground">
+                              {item.value}
+                            </p>
+                            <p className="mt-1 text-xs font-medium text-muted-foreground">
+                              {item.percent} dari total
+                            </p>
+                          </div>
+                          <span className={`mt-1 h-2.5 w-2.5 rounded-full ${item.color}`} />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                <div className="rounded-xl border border-border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead>Nama Guru</TableHead>
+                        <TableHead className="text-right">TD</TableHead>
+                        <TableHead className="text-right">TL</TableHead>
+                        <TableHead className="text-right">TFZ</TableHead>
+                        <TableHead className="text-right">Total</TableHead>
+                        <TableHead className="text-right">%TD</TableHead>
+                        <TableHead className="min-w-[160px]">Bar progress %TD</TableHead>
+                        <TableHead>Badge status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {currentTeacherLoads.map((teacher) => {
+                        const status = getTeacherLoadStatus(teacher.tdPercent);
+                        return (
+                          <TableRow key={teacher.teacherId}>
+                            <TableCell className="font-semibold">{teacher.teacherName}</TableCell>
+                            <TableCell className="text-right">{teacher.TD}</TableCell>
+                            <TableCell className="text-right">{teacher.TL}</TableCell>
+                            <TableCell className="text-right">{teacher.TFZ}</TableCell>
+                            <TableCell className="text-right font-bold">{teacher.total}</TableCell>
+                            <TableCell className="text-right">{formatPercent(teacher.tdPercent)}</TableCell>
+                            <TableCell>
+                              <div className="h-2.5 rounded-full bg-muted">
+                                <div
+                                  className="h-2.5 rounded-full bg-rose-500"
+                                  style={{ width: `${Math.min(teacher.tdPercent, 100)}%` }}
+                                />
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={status.className}>
+                                {status.label}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {dominantTdTeachers.length > 0 && (
+                  <Alert variant="destructive" className="border-rose-200 bg-rose-50 text-rose-800">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Guru dengan beban TD dominan</AlertTitle>
+                    <AlertDescription>
+                      {dominantTdTeachers
+                        .map(
+                          (teacher) =>
+                            `${teacher.teacherName}: ${teacher.TD} siswa TD dari ${teacher.total} siswa (${formatPercent(teacher.tdPercent)})`,
+                        )
+                        .join("; ")}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </TabsContent>
+
+              <TabsContent value="distribution">
+                <div className="h-[360px] w-full rounded-xl border border-border p-3 sm:p-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={teacherLoadChartData} margin={{ top: 12, right: 12, left: 0, bottom: 40 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <XAxis
+                        dataKey="teacherName"
+                        tick={{ fontSize: 11 }}
+                        tickLine={false}
+                        angle={-25}
+                        textAnchor="end"
+                        height={72}
+                      />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11 }} tickLine={false} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--popover))",
+                          borderColor: "hsl(var(--border))",
+                          borderRadius: "8px",
+                        }}
+                      />
+                      <Legend verticalAlign="top" height={32} />
+                      <Bar dataKey="TD" stackId="load" fill={TEACHER_LOAD_COLORS.TD} />
+                      <Bar dataKey="TL" stackId="load" fill={TEACHER_LOAD_COLORS.TL} />
+                      <Bar dataKey="TFZ" stackId="load" fill={TEACHER_LOAD_COLORS.TFZ} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="comparison" className="space-y-3">
+                <h3 className="text-sm font-bold text-foreground">
+                  {getMonthLabel(previousLoadPeriod.month, previousLoadPeriod.year)} vs{" "}
+                  {getMonthLabel(currentLoadMonth, currentLoadYear)}
+                </h3>
+                <div className="rounded-xl border border-border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50">
+                        <TableHead>Nama Guru</TableHead>
+                        <TableHead className="text-right">TD bulan lalu</TableHead>
+                        <TableHead className="text-right">TD bulan ini</TableHead>
+                        <TableHead className="text-right">Delta TD</TableHead>
+                        <TableHead className="text-right">TL bulan lalu</TableHead>
+                        <TableHead className="text-right">TL bulan ini</TableHead>
+                        <TableHead className="text-right">Delta TL</TableHead>
+                        <TableHead>Status perubahan</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {teacherLoadComparisonRows.map((row) => {
+                        const deltaClass = (value: number) => {
+                          if (value > 0) return "text-emerald-600";
+                          if (value < 0) return "text-rose-600";
+                          return "text-muted-foreground";
+                        };
+                        const deltaLabel = (value: number) =>
+                          value > 0 ? `+${value}` : String(value);
+
+                        return (
+                          <TableRow key={row.teacherId}>
+                            <TableCell className="font-semibold">{row.teacherName}</TableCell>
+                            <TableCell className="text-right">{row.previousTD}</TableCell>
+                            <TableCell className="text-right">{row.currentTD}</TableCell>
+                            <TableCell className={`text-right font-bold ${deltaClass(row.tdDelta)}`}>
+                              {deltaLabel(row.tdDelta)}
+                            </TableCell>
+                            <TableCell className="text-right">{row.previousTL}</TableCell>
+                            <TableCell className="text-right">{row.currentTL}</TableCell>
+                            <TableCell className={`text-right font-bold ${deltaClass(row.tlDelta)}`}>
+                              {deltaLabel(row.tlDelta)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={row.statusClassName}>
+                                {row.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
+        </CardContent>
       </Card>
     </motion.div>
   );
