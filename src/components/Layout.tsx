@@ -32,7 +32,7 @@ const navItems = [
   { to: "/pengumuman", icon: Megaphone, label: "Pengumuman" },
   { to: "/pengaturan-notifikasi", icon: Bell, label: "Pengaturan Notifikasi" },
   { to: "/pengaturan-lembaga", icon: Settings, label: "Pengaturan Lembaga" },
-  { to: "/kelola-akun", icon: UserCog, label: "Persetujuan Akun", adminOnly: true },
+  { to: "/kelola-akun", icon: UserCog, label: "Manajemen Akun All User", adminOnly: true },
 ];
 
 interface SidebarContentProps {
@@ -180,7 +180,7 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
   if (pathname === "/rekap-laporan") return <h2 className="font-semibold text-foreground text-base">Rekap Laporan Bulanan</h2>;
   if (pathname === "/input-cepat") return <h2 className="font-semibold text-foreground text-base">Input Laporan Bulanan</h2>;
   if (pathname === "/pengaturan-lembaga") return <h2 className="font-semibold text-foreground text-base">Pengaturan Lembaga</h2>;
-  if (pathname === "/kelola-akun") return <h2 className="font-semibold text-foreground text-base">Persetujuan Akun</h2>;
+  if (pathname === "/kelola-akun") return <h2 className="font-semibold text-foreground text-base">Manajemen Akun All User</h2>;
   if (pathname.startsWith("/class/")) {
     const k = pathname.split("/")[2];
     return <h2 className="font-semibold text-foreground text-base">Data Siswa — Kelas {k}</h2>;

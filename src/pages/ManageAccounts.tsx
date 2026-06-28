@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Loader2, ShieldCheck, UserX, Search, Filter, X, SearchX, MessageSquare, Copy, Check } from "lucide-react";
+import { CheckCircle2, Loader2, ShieldCheck, UserX, Search, Filter, X, SearchX, MessageSquare, Copy, Check, Edit2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRoleLabel } from "@/lib/roleLabels";
@@ -39,6 +39,10 @@ export default function ManageAccounts() {
   const [actionError, setActionError] = useState("");
   const [recentUpdatedAccount, setRecentUpdatedAccount] = useState<AccountWithChildren | null>(null);
   const [copyFeedbackId, setCopyFeedbackId] = useState<string | null>(null);
+  
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ full_name: "", username: "" });
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -107,6 +111,23 @@ export default function ManageAccounts() {
 
     await queryClient.invalidateQueries({ queryKey: ["managed-accounts"] });
     setUpdatingUserId(null);
+  };
+
+  const handleEditSave = async (userId: string) => {
+    setActionError("");
+    setIsSavingEdit(true);
+    const { error } = await supabase.from("profiles").update({ 
+      full_name: editForm.full_name, 
+      username: editForm.username || null 
+    }).eq("user_id", userId);
+
+    if (error) {
+      setActionError("Gagal memperbarui profil: " + error.message);
+    } else {
+      await queryClient.invalidateQueries({ queryKey: ["managed-accounts"] });
+      setEditingUserId(null);
+    }
+    setIsSavingEdit(false);
   };
 
   const stats = useMemo(() => {
@@ -252,10 +273,10 @@ export default function ManageAccounts() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" style={{ zoom: "75%" }}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Persetujuan Akun</h1>
+          <h1 className="text-2xl font-bold text-foreground">Manajemen Akun All User</h1>
           <p className="text-sm text-muted-foreground">Kelola akun guru dan orang tua yang mendaftar melalui halaman publik.</p>
         </div>
         <button
@@ -278,30 +299,48 @@ export default function ManageAccounts() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 mb-2">
-        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+        <button 
+          onClick={() => setStatusFilter(statusFilter === "pending" ? "all" : "pending")}
+          className={`rounded-xl border text-left p-3 shadow-sm transition-all ${statusFilter === "pending" ? "border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-950/20" : "border-border bg-card hover:border-emerald-300"}`}
+        >
           <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Menunggu</p>
           <p className="mt-1 text-2xl font-bold text-amber-600 dark:text-amber-400">{stats.pending}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+        </button>
+        <button 
+          onClick={() => setStatusFilter(statusFilter === "approved" ? "all" : "approved")}
+          className={`rounded-xl border text-left p-3 shadow-sm transition-all ${statusFilter === "approved" ? "border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-950/20" : "border-border bg-card hover:border-emerald-300"}`}
+        >
           <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Disetujui</p>
           <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{stats.approved}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+        </button>
+        <button 
+          onClick={() => setStatusFilter(statusFilter === "rejected" ? "all" : "rejected")}
+          className={`rounded-xl border text-left p-3 shadow-sm transition-all ${statusFilter === "rejected" ? "border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-950/20" : "border-border bg-card hover:border-emerald-300"}`}
+        >
           <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ditolak</p>
           <p className="mt-1 text-2xl font-bold text-rose-600 dark:text-rose-400">{stats.rejected}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+        </button>
+        <button 
+          onClick={() => setStatusFilter(statusFilter === "inactive" ? "all" : "inactive")}
+          className={`rounded-xl border text-left p-3 shadow-sm transition-all ${statusFilter === "inactive" ? "border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-950/20" : "border-border bg-card hover:border-emerald-300"}`}
+        >
           <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nonaktif</p>
           <p className="mt-1 text-2xl font-bold text-slate-600 dark:text-slate-400">{stats.inactive}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+        </button>
+        <button 
+          onClick={() => setRoleFilter(roleFilter === "teacher" ? "all" : "teacher")}
+          className={`rounded-xl border text-left p-3 shadow-sm transition-all ${roleFilter === "teacher" ? "border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-950/20" : "border-border bg-card hover:border-emerald-300"}`}
+        >
           <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Guru</p>
           <p className="mt-1 text-2xl font-bold text-foreground">{stats.teacher}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+        </button>
+        <button 
+          onClick={() => setRoleFilter(roleFilter === "parent" ? "all" : "parent")}
+          className={`rounded-xl border text-left p-3 shadow-sm transition-all ${roleFilter === "parent" ? "border-emerald-500 ring-1 ring-emerald-500 bg-emerald-50 dark:bg-emerald-950/20" : "border-border bg-card hover:border-emerald-300"}`}
+        >
           <p className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">Orang Tua</p>
           <p className="mt-1 text-2xl font-bold text-foreground">{stats.parent}</p>
-        </div>
+        </button>
       </div>
 
       {actionError && (
@@ -408,30 +447,76 @@ export default function ManageAccounts() {
           const isUpdating = updatingUserId === account.user_id;
           const isCurrentAdmin = account.user_id === user?.id;
           const waUrl = buildWhatsappUrl(account as AccountWithChildren);
+          const isEditing = editingUserId === account.user_id;
 
           return (
             <article key={account.user_id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
                 <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="font-bold text-foreground">{account.full_name}</h2>
-                    <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold tracking-wide ${getStatusDisplay(account.status).color}`}>
-                      {getStatusDisplay(account.status).label}
-                    </span>
-                    <span className="rounded-full bg-secondary/80 border border-border px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-foreground">
-                      {getRoleLabel(account.role)}
-                    </span>
-                    {isCurrentAdmin && (
-                      <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-muted-foreground border border-border">
-                        Akun Anda
+                  
+                  {isEditing ? (
+                    <div className="flex flex-col gap-2 mb-2 p-3 bg-secondary/30 rounded-xl border border-border">
+                      <div className="grid gap-1">
+                        <label className="text-xs font-semibold text-muted-foreground">Nama Lengkap</label>
+                        <input
+                          type="text"
+                          value={editForm.full_name}
+                          onChange={(e) => setEditForm({...editForm, full_name: e.target.value})}
+                          className="h-8 rounded-lg border border-border bg-background px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                        />
+                      </div>
+                      <div className="grid gap-1">
+                        <label className="text-xs font-semibold text-muted-foreground">Username</label>
+                        <input
+                          type="text"
+                          value={editForm.username}
+                          onChange={(e) => setEditForm({...editForm, username: e.target.value})}
+                          className="h-8 rounded-lg border border-border bg-background px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                        />
+                      </div>
+                      <div className="flex gap-2 mt-1">
+                        <button
+                          onClick={() => handleEditSave(account.user_id)}
+                          disabled={isSavingEdit}
+                          className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                          {isSavingEdit ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                          Simpan
+                        </button>
+                        <button
+                          onClick={() => setEditingUserId(null)}
+                          disabled={isSavingEdit}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary disabled:opacity-50"
+                        >
+                          Batal
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="font-bold text-foreground">{account.full_name}</h2>
+                      <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-bold tracking-wide ${getStatusDisplay(account.status).color}`}>
+                        {getStatusDisplay(account.status).label}
                       </span>
-                    )}
-                  </div>
-                  <p className="mt-1.5 text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-foreground">@{account.username || "-"}</span>
-                    <span className="text-muted-foreground/50">•</span>
-                    <span>{account.whatsapp || "WhatsApp belum diisi"}</span>
-                  </p>
+                      <span className="rounded-full bg-secondary/80 border border-border px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-foreground">
+                        {getRoleLabel(account.role)}
+                      </span>
+                      {isCurrentAdmin && (
+                        <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-muted-foreground border border-border">
+                          Akun Anda
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {!isEditing && (
+                    <p className="mt-1.5 text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-foreground">@{account.username || "-"}</span>
+                      <span className="text-muted-foreground/50">•</span>
+                      <span>{account.whatsapp || "WhatsApp belum diisi"}</span>
+                    </p>
+                  )}
+                  
                   <p className="mt-1 text-xs text-muted-foreground">
                     Terdaftar: {new Date(account.registered_at).toLocaleString("id-ID")}
                   </p>
@@ -471,6 +556,18 @@ export default function ManageAccounts() {
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
+                <button
+                  onClick={() => {
+                    setEditingUserId(account.user_id);
+                    setEditForm({ full_name: account.full_name, username: account.username || "" });
+                  }}
+                  disabled={isSavingEdit}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-secondary disabled:opacity-50"
+                >
+                  <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  Edit Akun
+                </button>
+                <div className="w-px h-4 bg-border mx-1"></div>
                 <button
                   onClick={() => copyToClipboard(account as AccountWithChildren)}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
