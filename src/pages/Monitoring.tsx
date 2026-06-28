@@ -849,6 +849,7 @@ export default function Monitoring() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="container mx-auto space-y-6 pb-20 pt-6 sm:pb-8"
+      style={{ zoom: 0.8 }}
     >
       {/* Header Section */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-900 p-6 md:p-8 text-white shadow-md">
