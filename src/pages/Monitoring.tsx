@@ -23,8 +23,6 @@ import {
   AlertTriangle,
   ClipboardList,
   Search,
-  ChevronLeft,
-  ChevronRight,
   ShieldCheck,
   RotateCcw
 } from "lucide-react";
@@ -48,8 +46,6 @@ export default function Monitoring() {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const itemsPerPage = 20;
 
   const selectedMonth = Number(filterMonth);
   const selectedYear = Number(filterYear);
@@ -246,7 +242,6 @@ export default function Monitoring() {
     setFilterCategory("all");
     setFilterStatus("all");
     setSearch("");
-    setPage(1);
   };
 
   const isFilterActive = useMemo(() => {
@@ -262,11 +257,17 @@ export default function Monitoring() {
     );
   }, [filterSemester, filterMonth, filterYear, filterKelas, filterRombel, filterCategory, filterStatus, search]);
 
-  const paginatedRows = useMemo(() => {
-    const startIndex = (page - 1) * itemsPerPage;
-    return allRows.slice(startIndex, startIndex + itemsPerPage);
-  }, [allRows, page]);
-  const totalPages = Math.ceil(allRows.length / itemsPerPage);
+  const rowsByGrade = useMemo(() => {
+    const map: Record<number, typeof allRows> = {
+      1: [], 2: [], 3: [], 4: [], 5: [], 6: []
+    };
+    for (const r of allRows) {
+      if (map[r.kelas]) {
+        map[r.kelas].push(r);
+      }
+    }
+    return map;
+  }, [allRows]);
 
   const getStatusColor = (kategori: string | null, nilai: number | null) => {
     if (nilai !== null && nilai < 70) return "bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/40";
@@ -322,7 +323,7 @@ export default function Monitoring() {
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Semester
               </label>
-              <Select value={filterSemester} onValueChange={(val) => { setFilterSemester(val); setPage(1); }}>
+              <Select value={filterSemester} onValueChange={(val) => setFilterSemester(val)}>
                 <SelectTrigger className="h-10 bg-background text-sm">
                   <SelectValue placeholder="Pilih Semester" />
                 </SelectTrigger>
@@ -338,7 +339,7 @@ export default function Monitoring() {
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Tahun
               </label>
-              <Select value={filterYear} onValueChange={(val) => { setFilterYear(val); setPage(1); }}>
+              <Select value={filterYear} onValueChange={(val) => setFilterYear(val)}>
                 <SelectTrigger className="h-10 bg-background text-sm">
                   <SelectValue />
                 </SelectTrigger>
@@ -356,7 +357,7 @@ export default function Monitoring() {
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Bulan
               </label>
-              <Select value={filterMonth} onValueChange={(val) => { setFilterMonth(val); setPage(1); }}>
+              <Select value={filterMonth} onValueChange={(val) => setFilterMonth(val)}>
                 <SelectTrigger className="h-10 bg-background text-sm">
                   <SelectValue />
                 </SelectTrigger>
@@ -374,7 +375,7 @@ export default function Monitoring() {
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Kelas
               </label>
-              <Select value={filterKelas} onValueChange={(val) => { setFilterKelas(val); setFilterRombel("all"); setPage(1); }}>
+              <Select value={filterKelas} onValueChange={(val) => { setFilterKelas(val); setFilterRombel("all"); }}>
                 <SelectTrigger className="h-10 bg-background text-sm">
                   <SelectValue placeholder="Semua Kelas" />
                 </SelectTrigger>
@@ -393,7 +394,7 @@ export default function Monitoring() {
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Rombel
               </label>
-              <Select value={filterRombel} onValueChange={(val) => { setFilterRombel(val); setPage(1); }}>
+              <Select value={filterRombel} onValueChange={(val) => setFilterRombel(val)}>
                 <SelectTrigger className="h-10 bg-background text-sm">
                   <SelectValue placeholder="Semua Rombel" />
                 </SelectTrigger>
@@ -412,7 +413,7 @@ export default function Monitoring() {
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Kategori
               </label>
-              <Select value={filterCategory} onValueChange={(val) => { setFilterCategory(val); setPage(1); }}>
+              <Select value={filterCategory} onValueChange={(val) => setFilterCategory(val)}>
                 <SelectTrigger className="h-10 bg-background text-sm">
                   <SelectValue placeholder="Semua Kategori" />
                 </SelectTrigger>
@@ -429,7 +430,7 @@ export default function Monitoring() {
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Status Laporan
               </label>
-              <Select value={filterStatus} onValueChange={(val) => { setFilterStatus(val); setPage(1); }}>
+              <Select value={filterStatus} onValueChange={(val) => setFilterStatus(val)}>
                 <SelectTrigger className="h-10 bg-background text-sm">
                   <SelectValue placeholder="Semua Status" />
                 </SelectTrigger>
@@ -449,7 +450,7 @@ export default function Monitoring() {
               <Input
                 placeholder="Cari nama siswa..."
                 value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 h-10 w-full md:max-w-md"
               />
             </div>
@@ -545,120 +546,103 @@ export default function Monitoring() {
         </Card>
       </div>
 
-      <Card className="border-border bg-card shadow-sm overflow-hidden">
-        <CardHeader className="border-b border-border bg-muted/40 px-6 py-4 flex flex-row items-center justify-between">
-          <CardTitle className="text-lg font-bold text-foreground">Data Progres Siswa</CardTitle>
-          <div className="text-sm text-muted-foreground">
-            Menampilkan {allRows.length === 0 ? 0 : (page - 1) * itemsPerPage + 1} - {Math.min(page * itemsPerPage, allRows.length)} dari {allRows.length}
-          </div>
-        </CardHeader>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-muted/50 text-muted-foreground border-b border-border">
-              <tr>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">No</th>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Nama Siswa</th>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Kelas</th>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Kategori / Level</th>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Status Laporan</th>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Kategori Progres</th>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Nilai</th>
-                <th className="px-4 py-3 font-semibold whitespace-nowrap">Guru</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {paginatedRows.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground bg-background">
-                    {stats.total === 0 ? "Tidak ada data siswa ditemukan." : "Tidak ada data pada halaman ini."}
-                  </td>
-                </tr>
-              ) : (
-                paginatedRows.map((row, i) => {
-                  const needsAttention = row.reportStatus === "filled" && (
-                    (row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70) ||
-                    row.kategoriProgres === "Kurang Konsisten" ||
-                    row.kategoriProgres === "Tidak Konsisten"
-                  );
-                  return (
-                    <tr key={row.studentId} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 whitespace-nowrap text-muted-foreground bg-background">{(page - 1) * itemsPerPage + i + 1}</td>
-                      <td className="px-4 py-3 font-medium bg-background">
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-2 font-semibold text-foreground">
-                            {row.nama}
-                            {needsAttention && (
-                              <Badge variant="destructive" className="text-[10px] px-1.5 py-0 bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-900/40 animate-pulse">
-                                Perhatian
-                              </Badge>
-                            )}
-                          </div>
-                          {row.catatan && (
-                            <span className="text-xs text-muted-foreground font-normal max-w-md truncate block mt-0.5" title={row.catatan}>
-                              {row.catatan}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-foreground bg-background">{row.kelas}{row.rombel}</td>
-                      <td className="px-4 py-3 whitespace-nowrap bg-background">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-xs text-muted-foreground">{row.program}</span>
-                          <span className="font-medium text-foreground">{row.level}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap bg-background">
-                        <Badge variant="outline" className={row.reportStatus === "filled" ? "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/40" : "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40"}>
-                          {row.reportStatus === "filled" ? "Sudah Diisi" : "Belum Diisi"}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap bg-background">
-                        {row.reportStatus === "filled" ? (
-                          <Badge variant="outline" className={getStatusColor(row.kategoriProgres, row.nilaiAkhirProgresif)}>
-                            {row.kategoriProgres || "-"}
-                          </Badge>
-                        ) : "-"}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap bg-background">
-                        {row.reportStatus === "filled" ? (
-                          <span className={`font-bold ${row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70 ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}>
-                            {row.nilaiAkhirProgresif ?? "-"}
-                          </span>
-                        ) : "-"}
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap bg-background">{row.guru}</td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+      <div className="space-y-6">
+        {[1, 2, 3, 4, 5, 6].map((gradeNum) => {
+          const gradeRows = rowsByGrade[gradeNum] || [];
+          if (gradeRows.length === 0) return null;
 
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-border bg-muted/20 px-6 py-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-            >
-              <ChevronLeft className="mr-1 h-4 w-4" /> Sebelumnya
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Halaman {page} dari {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-            >
-              Selanjutnya <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
-          </div>
+          return (
+            <Card key={gradeNum} className="border-border bg-card shadow-sm overflow-hidden">
+              <CardHeader className="border-b border-border bg-muted/40 px-6 py-4 flex flex-row items-center justify-between">
+                <CardTitle className="text-lg font-bold text-foreground">Jenjang Kelas {gradeNum}</CardTitle>
+                <div className="text-sm text-muted-foreground">
+                  {gradeRows.length} siswa
+                </div>
+              </CardHeader>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-muted/50 text-muted-foreground border-b border-border">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold whitespace-nowrap">No</th>
+                      <th className="px-4 py-3 font-semibold whitespace-nowrap">Nama Siswa</th>
+                      <th className="px-4 py-3 font-semibold whitespace-nowrap">Kelas</th>
+                      <th className="px-4 py-3 font-semibold whitespace-nowrap">Kategori / Level</th>
+                      <th className="px-4 py-3 font-semibold whitespace-nowrap">Status Laporan</th>
+                      <th className="px-4 py-3 font-semibold whitespace-nowrap">Kategori Progres</th>
+                      <th className="px-4 py-3 font-semibold whitespace-nowrap">Nilai</th>
+                      <th className="px-4 py-3 font-semibold whitespace-nowrap">Guru</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {gradeRows.map((row, i) => {
+                      const needsAttention = row.reportStatus === "filled" && (
+                        (row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70) ||
+                        row.kategoriProgres === "Kurang Konsisten" ||
+                        row.kategoriProgres === "Tidak Konsisten"
+                      );
+                      return (
+                        <tr key={row.studentId} className="hover:bg-muted/30 transition-colors">
+                          <td className="px-4 py-3 whitespace-nowrap text-muted-foreground bg-background">{i + 1}</td>
+                          <td className="px-4 py-3 font-medium bg-background">
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-2 font-semibold text-foreground">
+                                {row.nama}
+                                {needsAttention && (
+                                  <Badge variant="destructive" className="text-[10px] px-1.5 py-0 bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-900/40 animate-pulse">
+                                    Perhatian
+                                  </Badge>
+                                )}
+                              </div>
+                              {row.catatan && (
+                                <span className="text-xs text-muted-foreground font-normal max-w-md truncate block mt-0.5" title={row.catatan}>
+                                  {row.catatan}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-foreground bg-background">{row.kelas}{row.rombel}</td>
+                          <td className="px-4 py-3 whitespace-nowrap bg-background">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-xs text-muted-foreground">{row.program}</span>
+                              <span className="font-medium text-foreground">{row.level}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap bg-background">
+                            <Badge variant="outline" className={row.reportStatus === "filled" ? "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/40" : "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/40"}>
+                              {row.reportStatus === "filled" ? "Sudah Diisi" : "Belum Diisi"}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap bg-background">
+                            {row.reportStatus === "filled" ? (
+                              <Badge variant="outline" className={getStatusColor(row.kategoriProgres, row.nilaiAkhirProgresif)}>
+                                {row.kategoriProgres || "-"}
+                              </Badge>
+                            ) : "-"}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap bg-background">
+                            {row.reportStatus === "filled" ? (
+                              <span className={`font-bold ${row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70 ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}>
+                                {row.nilaiAkhirProgresif ?? "-"}
+                              </span>
+                            ) : "-"}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap bg-background">{row.guru}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          );
+        })}
+
+        {allRows.length === 0 && (
+          <Card className="border-border bg-card shadow-sm p-12 text-center text-muted-foreground">
+            Tidak ada data siswa ditemukan.
+          </Card>
         )}
-      </Card>
+      </div>
     </motion.div>
   );
 }
