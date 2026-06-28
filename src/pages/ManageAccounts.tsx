@@ -76,6 +76,15 @@ export default function ManageAccounts() {
       return;
     }
 
+    let confirmMsg = "";
+    if (status === "approved") confirmMsg = "Setujui akun ini?";
+    else if (status === "rejected") confirmMsg = "Yakin ingin menolak akun ini?";
+    else if (status === "inactive") confirmMsg = "Yakin ingin menonaktifkan akun ini?";
+
+    if (confirmMsg && !window.confirm(confirmMsg)) {
+      return;
+    }
+
     setActionError("");
     setUpdatingUserId(userId);
     const { error } = await supabase.from("profiles").update({ status }).eq("user_id", userId);
