@@ -1281,23 +1281,23 @@ const RecapReport = () => {
       {/* Single Month Mode */}
           {/* Filters */}
           <Card className="border-emerald-100 bg-white/90 shadow-sm dark:border-emerald-900/60 dark:bg-emerald-950/20">
-            <CardContent className="grid grid-cols-2 gap-2 p-3 md:grid-cols-4 xl:grid-cols-12">
-              <div className="col-span-2">
+            <CardContent className="flex w-full items-end gap-2 p-3 overflow-x-auto hide-scrollbar">
+              <div className="flex-[1.5] min-w-[150px]">
                 <Label className="text-xs">Cari Siswa</Label>
                 <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    className="h-9 pl-7"
+                    className="h-9 pl-7 text-xs"
                     placeholder="Nama siswa..."
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                   />
                 </div>
               </div>
-              <div>
+              <div className="flex-1 min-w-[90px]">
                 <Label className="text-xs">Kelas</Label>
                 <Select value={filterKelas} onValueChange={setFilterKelas}>
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1310,10 +1310,10 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="flex-1 min-w-[90px]">
                 <Label className="text-xs">Tahun</Label>
                 <Select value={filterYear} onValueChange={setFilterYear}>
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1325,10 +1325,10 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="flex-1 min-w-[90px]">
                 <Label className="text-xs">Rombel</Label>
                 <Select value={filterRombel} onValueChange={setFilterRombel}>
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1341,10 +1341,10 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="flex-1 min-w-[100px]">
                 <Label className="text-xs">Bulan</Label>
                 <Select value={filterMonth} onValueChange={setFilterMonth}>
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1356,13 +1356,13 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="flex-[1.2] min-w-[120px]">
                 <Label className="text-xs">Status laporan</Label>
                 <Select
                   value={filterReportStatus}
                   onValueChange={(v) => setFilterReportStatus(v as FilterReportStatusType)}
                 >
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1372,13 +1372,13 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="flex-[1.2] min-w-[130px]">
                 <Label className="text-xs">Status absensi</Label>
                 <Select
                   value={filterAttendanceStatus}
                   onValueChange={(v) => setFilterAttendanceStatus(v as FilterAttendanceStatusType)}
                 >
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1386,17 +1386,17 @@ const RecapReport = () => {
                     <SelectItem value="Lengkap">Lengkap</SelectItem>
                     <SelectItem value="Belum Lengkap">Belum Lengkap</SelectItem>
                     <SelectItem value="Belum Diisi">Belum Diisi</SelectItem>
-                    <SelectItem value="Melebihi Hari Efektif">Melebihi Hari Efektif</SelectItem>
+                    <SelectItem value="Melebihi Hari Efektif">Melebihi Hari</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="flex-[1.2] min-w-[130px]">
                 <Label className="text-xs">Kategori progres</Label>
                 <Select
                   value={filterCategory}
                   onValueChange={(v) => setFilterCategory(v as FilterCategoryType)}
                 >
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1409,13 +1409,13 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="flex-[1.2] min-w-[120px]">
                 <Label className="text-xs">Nilai</Label>
                 <Select
                   value={filterScore}
                   onValueChange={(v) => setFilterScore(v as FilterScoreType)}
                 >
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1427,7 +1427,7 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-2 flex items-end gap-2">
+              <div className="flex-none flex items-end gap-1.5 min-w-[180px]">
                 <Button
                   className="h-9 flex-1 gap-2 bg-emerald-700 text-xs hover:bg-emerald-800"
                   onClick={() => toast({ title: "Filter rekap sudah diterapkan." })}
@@ -1448,7 +1448,7 @@ const RecapReport = () => {
           </Card>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-6 gap-3">
             <StatCard
               icon={<Users className="w-4 h-4" />}
               label="Total Siswa"
@@ -1586,12 +1586,12 @@ const RecapReport = () => {
           )}
 
           <Card className="overflow-hidden border-emerald-100 shadow-sm dark:border-emerald-900/60">
-            <CardHeader className="flex flex-col gap-3 border-b border-emerald-100 bg-white/80 py-3 dark:border-emerald-900/60 dark:bg-emerald-950/20 lg:flex-row lg:items-center lg:justify-between">
-              <CardTitle className="flex items-center gap-2 text-sm">
+            <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-emerald-100 bg-white/80 py-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+              <CardTitle className="flex items-center gap-2 text-sm whitespace-nowrap">
                 <ClipboardList className="h-4 w-4 text-emerald-700" />
                 Data Rekap Laporan Bulanan
               </CardTitle>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-nowrap items-center gap-2 overflow-x-auto hide-scrollbar">
                 <Button
                   variant="outline"
                   className="gap-2 text-xs sm:text-sm"
