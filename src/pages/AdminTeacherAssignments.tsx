@@ -512,35 +512,40 @@ export default function AdminTeacherAssignments() {
       title: "Total Guru",
       value: totalTeachers,
       icon: UserCog,
-      accent: "text-primary",
+      accent: "text-slate-600 dark:text-slate-300",
+      bgClass: "bg-slate-50 border-slate-200 dark:bg-slate-900/40 dark:border-slate-800/60",
     },
     {
       key: "assigned" as SummaryFilter,
       title: "Guru Sudah Memiliki Murid",
       value: teachersWithStudents,
       icon: UserCheck,
-      accent: "text-emerald-600",
+      accent: "text-emerald-600 dark:text-emerald-400",
+      bgClass: "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900/30",
     },
     {
       key: "all" as SummaryFilter,
       title: "Siswa Sudah Ditugaskan",
       value: assignedStudentsCount,
       icon: Users,
-      accent: "text-sky-600",
+      accent: "text-sky-600 dark:text-sky-400",
+      bgClass: "bg-sky-50 border-sky-200 dark:bg-sky-950/20 dark:border-sky-900/30",
     },
     {
       key: "unassigned" as SummaryFilter,
       title: "Siswa Belum Memiliki Guru",
       value: unassignedStudentsCount,
       icon: UserX,
-      accent: "text-slate-600",
+      accent: "text-rose-600 dark:text-rose-400",
+      bgClass: "bg-rose-50 border-rose-200 dark:bg-rose-950/20 dark:border-rose-900/30",
     },
     {
       key: "pending" as SummaryFilter,
       title: "Permintaan Menunggu Persetujuan",
       value: pendingAssignments.length,
       icon: Clock3,
-      accent: "text-amber-600",
+      accent: "text-amber-600 dark:text-amber-400",
+      bgClass: "bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900/30",
     },
   ];
 
@@ -604,7 +609,7 @@ export default function AdminTeacherAssignments() {
         </div>
       ) : (
         <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
-          {summaryCards.map(({ key, title, value, icon: Icon, accent }, index) => {
+          {summaryCards.map(({ key, title, value, icon: Icon, accent, bgClass }, index) => {
             const isClickable = !(index === 2 && key === "all");
             const active =
               (index === 2 && summaryFilter === "all" && teacherFilter === ALL && kelasFilter === ALL) ||
@@ -619,18 +624,18 @@ export default function AdminTeacherAssignments() {
                   if (!isClickable) return;
                   setSummaryFilter(key);
                 }}
-                className={`relative overflow-hidden rounded-2xl border bg-card p-4 text-left shadow-sm transition-all hover:shadow-md ${
-                  active ? "border-emerald-500 ring-1 ring-emerald-500" : "border-border hover:border-emerald-300 dark:hover:border-emerald-700"
+                className={`relative overflow-hidden rounded-2xl border p-4 text-left shadow-sm transition-all hover:shadow-md ${bgClass} ${
+                  active ? "ring-2 ring-emerald-500" : "hover:border-emerald-300 dark:hover:border-emerald-700"
                 } ${!isClickable ? "cursor-default opacity-90" : ""}`}
               >
                 <div className={`absolute top-0 left-0 w-1 h-full ${active ? "bg-emerald-500" : "bg-transparent"}`} />
                 <div className="flex items-center justify-between gap-3 pl-2">
                   <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
-                    <p className="mt-1 text-3xl font-bold text-foreground">{value}</p>
+                    <p className={`text-[10px] sm:text-xs font-semibold uppercase tracking-wider ${accent}`}>{title}</p>
+                    <p className="mt-1 text-2xl sm:text-3xl font-bold text-foreground">{value}</p>
                   </div>
-                  <div className={`p-2 rounded-lg bg-muted/30 border border-border shadow-sm`}>
-                    <Icon className={`h-6 w-6 ${accent}`} />
+                  <div className={`p-2 rounded-lg bg-white/60 dark:bg-black/20 border border-black/5 dark:border-white/5 shadow-sm`}>
+                    <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${accent}`} />
                   </div>
                 </div>
               </button>
@@ -786,17 +791,17 @@ export default function AdminTeacherAssignments() {
                   </div>
 
                   <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-xl border border-border bg-muted/30 p-3">
-                      <p className="text-xs text-muted-foreground">Murid binaan aktif</p>
-                      <p className="mt-1 text-xl font-bold text-foreground">{teacher.approvedCount}</p>
+                    <div className="rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50 dark:bg-emerald-950/20 p-3">
+                      <p className="text-xs font-medium text-emerald-700 dark:text-emerald-400">Murid binaan aktif</p>
+                      <p className="mt-1 text-xl font-bold text-emerald-950 dark:text-emerald-100">{teacher.approvedCount}</p>
                     </div>
-                    <div className="rounded-xl border border-border bg-muted/30 p-3">
-                      <p className="text-xs text-muted-foreground">Pending</p>
-                      <p className="mt-1 text-xl font-bold text-foreground">{teacher.pendingCount}</p>
+                    <div className="rounded-xl border border-amber-100 dark:border-amber-900/30 bg-amber-50 dark:bg-amber-950/20 p-3">
+                      <p className="text-xs font-medium text-amber-700 dark:text-amber-400">Pending</p>
+                      <p className="mt-1 text-xl font-bold text-amber-950 dark:text-amber-100">{teacher.pendingCount}</p>
                     </div>
-                    <div className="rounded-xl border border-border bg-muted/30 p-3">
-                      <p className="text-xs text-muted-foreground">Kelas terlibat</p>
-                      <p className="mt-1 text-xl font-bold text-foreground">{teacher.classLabels.length}</p>
+                    <div className="rounded-xl border border-violet-100 dark:border-violet-900/30 bg-violet-50 dark:bg-violet-950/20 p-3">
+                      <p className="text-xs font-medium text-violet-700 dark:text-violet-400">Kelas terlibat</p>
+                      <p className="mt-1 text-xl font-bold text-violet-950 dark:text-violet-100">{teacher.classLabels.length}</p>
                     </div>
                   </div>
                 </article>
