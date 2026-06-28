@@ -724,10 +724,12 @@ export default function Monitoring() {
 
 
   const selectedRombelRows = useMemo(() => {
-    if (filterKelas === "all" || filterRombel === "all") return [];
-    return allRows.filter(
-      (r) => String(r.kelas) === filterKelas && r.rombel === filterRombel,
-    );
+    if (filterKelas === "all") return [];
+    return allRows.filter((r) => {
+      const matchKelas = String(r.kelas) === filterKelas;
+      const matchRombel = filterRombel === "all" || r.rombel === filterRombel;
+      return matchKelas && matchRombel;
+    });
   }, [allRows, filterKelas, filterRombel]);
 
   const teacherSummaries = useMemo(() => {
@@ -1514,12 +1516,12 @@ export default function Monitoring() {
 
 
       {/* Pengampu Summary Section / Ringkasan Jenjang Kelas */}
-      {filterKelas !== "all" && filterRombel !== "all" ? (
+      {filterKelas !== "all" ? (
         <Card className="border border-emerald-200 bg-white shadow-sm overflow-hidden mb-6 rounded-2xl">
           <CardHeader className="bg-emerald-50/50 border-b border-emerald-100 px-6 py-4">
             <CardTitle className="text-base font-bold text-emerald-900 flex items-center gap-2">
               <Users className="h-5 w-5 text-emerald-600" />
-              Ringkasan Pengampu - Kelas {filterKelas} {filterRombel}
+              Ringkasan Pengampu - Kelas {filterKelas} {filterRombel !== "all" ? filterRombel : ""}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
@@ -1542,22 +1544,13 @@ export default function Monitoring() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {[0, 1].map((idx) => {
-                const ts = teacherSummaries[idx];
-                if (!ts) {
-                  return (
-                    <div key={`empty-${idx}`} className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 p-6 text-center">
-                      <Users className="h-6 w-6 text-slate-300 mb-2" />
-                      <span className="text-slate-400 text-sm font-medium">Pengampu {idx === 0 ? "pertama" : "kedua"} belum terdeteksi</span>
-                    </div>
-                  );
-                }
-                return (
+              {teacherSummaries.length > 0 ? (
+                teacherSummaries.map((ts, idx) => (
                   <div key={ts.guru} className="border border-emerald-200 rounded-xl overflow-hidden shadow-sm bg-white">
                     <div className="bg-emerald-50/50 px-4 py-3 flex justify-between items-center border-b border-emerald-100">
                       <div className="font-bold text-emerald-900 flex items-center gap-2">
                         <Users className="w-4 h-4 text-emerald-600" />
-                        Pengampu {idx + 1}
+                        {ts.guru !== "Tidak Diketahui" ? ts.guru : `Pengampu ${idx + 1}`}
                       </div>
                       <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0">
                         {ts.total} Siswa Binaan
@@ -1602,17 +1595,15 @@ export default function Monitoring() {
                       </table>
                     </div>
                   </div>
-                );
-              })}
+                ))
+              ) : (
+                <div className="col-span-full flex flex-col items-center justify-center h-40 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 p-6 text-center">
+                  <Users className="h-6 w-6 text-slate-300 mb-2" />
+                  <span className="text-slate-400 text-sm font-medium">Belum ada pengampu terdeteksi untuk kelas ini</span>
+                </div>
+              )}
             </div>
           </CardContent>
-        </Card>
-      ) : filterKelas !== "all" ? (
-        <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden mb-6 rounded-2xl flex items-center justify-center p-8">
-          <div className="flex flex-col items-center gap-2 text-slate-400">
-            <Users className="h-8 w-8 text-slate-300" />
-            <p className="text-sm font-medium">Pilih salah satu rombel spesifik untuk melihat ringkasan pengampu.</p>
-          </div>
         </Card>
       ) : (
       <Card className="border-border bg-card shadow-sm overflow-hidden">
