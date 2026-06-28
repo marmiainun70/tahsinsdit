@@ -18,7 +18,7 @@ import {
   buildRecapJoinedGroups,
   type RecapJoinedRow,
 } from "@/utils/recapMonthlyReportRows";
-import { useTeacherClasses } from "@/hooks/useTeacherStudents";
+import { useTeacherClasses, useTeacherStudents } from "@/hooks/useTeacherStudents";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -99,7 +99,7 @@ export default function Monitoring() {
   }, [filterSemester]);
 
   const { data: assignments = [], isLoading: la } = useTeacherClasses(user?.id);
-  const { data: allAssignments = [] } = useTeacherClasses();
+  const { data: allTeacherStudents = [] } = useTeacherStudents("all", "approved");
 
   const hasAccess = useMemo(() => {
     if (!isTeacher) return true;
@@ -473,20 +473,28 @@ export default function Monitoring() {
   };
 
   const teachersForClassRombel = useMemo(() => {
-    const map = new Map<string, string[]>();
-    allAssignments.forEach((tc) => {
-      const key = `${tc.kelas}-${tc.rombel}`;
-      const name = profileMap.get(tc.teacher_id);
-      if (name) {
-        if (!map.has(key)) map.set(key, []);
-        const list = map.get(key)!;
-        if (!list.includes(name)) {
-          list.push(name);
+    const map = new Map<string, Set<string>>();
+    const studentMap = new Map();
+    students.forEach((s) => studentMap.set(s.id, s));
+
+    allTeacherStudents.forEach((ts) => {
+      const student = studentMap.get(ts.student_id);
+      if (student) {
+        const key = `${student.kelas}-${student.rombel}`;
+        const name = profileMap.get(ts.teacher_id);
+        if (name) {
+          if (!map.has(key)) map.set(key, new Set());
+          map.get(key)!.add(name);
         }
       }
     });
-    return map;
-  }, [allAssignments, profileMap]);
+
+    const resultMap = new Map<string, string[]>();
+    map.forEach((set, key) => {
+      resultMap.set(key, Array.from(set));
+    });
+    return resultMap;
+  }, [allTeacherStudents, students, profileMap]);
 
   const actionStats = useMemo(() => {
     let below70 = 0;
