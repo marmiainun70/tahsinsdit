@@ -485,27 +485,36 @@ export default function Monitoring() {
     return map;
   }, [allAssignments, profileMap]);
 
-  const inactiveTwoMonthsCount = useMemo(() => {
-    return Math.max(0, Math.floor(stats.emptyProgress * 0.4)) || 0;
-  }, [stats.emptyProgress]);
+  const actionStats = useMemo(() => {
+    let below70 = 0;
+    let stagnant = 0;
+    const emptyRombels = new Set<string>();
 
-  const belowTargetCount = useMemo(() => {
-    return stats.needsAttention;
-  }, [stats.needsAttention]);
-
-  const stagnantOneMonthCount = useMemo(() => {
-    let count = 0;
     allRows.forEach((r) => {
-      if (
-        r.reportStatus === "filled" &&
-        (r.kategoriProgres === "Stagnan" ||
-          r.kategoriProgres === "Tidak Konsisten")
-      ) {
-        count++;
+      if (r.reportStatus === "filled") {
+        if (r.nilaiAkhirProgresif !== null && r.nilaiAkhirProgresif < 70) {
+          below70++;
+        }
+        if (
+          r.kategoriProgres === "Stagnan" ||
+          r.kategoriProgres === "Tidak Konsisten" ||
+          r.kategoriProgres === "Kurang Konsisten"
+        ) {
+          stagnant++;
+        }
+      } else {
+        emptyRombels.add(`${r.kelas}-${r.rombel}`);
       }
     });
-    return count;
-  }, [allRows]);
+
+    return {
+      empty: stats.emptyProgress,
+      attention: stats.needsAttention,
+      below70,
+      stagnant,
+      emptyRombelsCount: emptyRombels.size,
+    };
+  }, [allRows, stats]);
 
   const barChartData = useMemo(() => {
     const data = [];
@@ -1010,16 +1019,18 @@ export default function Monitoring() {
                 {[1, 2, 3, 4, 5, 6].map((gradeNum) => (
                   <Button
                     key={gradeNum}
-                    variant={
-                      filterKelas === String(gradeNum) ? "default" : "outline"
-                    }
+                    variant={filterKelas === String(gradeNum) ? "default" : "outline"}
                     onClick={() => {
                       setFilterKelas(String(gradeNum));
                       setFilterRombel("all");
                     }}
-                    className="h-12 flex flex-col items-center justify-center p-1 border-border bg-card text-foreground hover:bg-muted/50"
+                    className={`h-12 flex flex-col items-center justify-center p-1 border transition-colors ${
+                      filterKelas === String(gradeNum)
+                        ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600"
+                        : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200"
+                    }`}
                   >
-                    <Users className="h-3.5 w-3.5 mb-0.5 text-muted-foreground" />
+                    <Users className={`h-3.5 w-3.5 mb-0.5 ${filterKelas === String(gradeNum) ? "text-emerald-100" : "text-emerald-600/70"}`} />
                     <span className="text-xs font-bold">Kelas {gradeNum}</span>
                   </Button>
                 ))}
@@ -1029,7 +1040,11 @@ export default function Monitoring() {
                     setFilterKelas("all");
                     setFilterRombel("all");
                   }}
-                  className="col-span-3 h-10 mt-1 bg-emerald-800 hover:bg-emerald-950 text-white hover:text-white font-bold flex items-center justify-center gap-2 border-0"
+                  className={`col-span-3 h-10 mt-1 font-bold flex items-center justify-center gap-2 border transition-colors ${
+                    filterKelas === "all"
+                      ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600"
+                      : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200"
+                  }`}
                 >
                   <Users className="h-4 w-4" />
                   Semua Kelas
@@ -1039,77 +1054,123 @@ export default function Monitoring() {
           </Card>
 
           {/* Perlu Tindakan Koordinator */}
-          <Card className="border-border bg-card shadow-sm flex-1">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
-                <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+          <Card className="border border-slate-200 bg-white shadow-sm flex-1 rounded-2xl overflow-hidden">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between bg-slate-50 border-b border-slate-100">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-800">
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
                 Perlu Tindakan Koordinator
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-lg">
+            <CardContent className="space-y-3 pt-4">
+              <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-100 rounded-xl">
                 <div className="flex gap-3 items-start">
-                  <div className="bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 p-1.5 rounded-full mt-0.5">
-                    <AlertTriangle className="h-4 w-4" />
+                  <div className="bg-amber-100 text-amber-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                    <ClipboardList className="h-4 w-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-red-900 dark:text-red-300">
-                      Siswa tanpa laporan &gt; 2 bulan
+                    <div className="text-xs font-bold text-amber-900">
+                      Siswa Belum Diisi
                     </div>
-                    <div className="text-[10px] text-red-700/80 dark:text-red-400/80 mt-0.5">
-                      Perlu diingatkan ke wali kelas / guru
+                    <div className="text-[10px] text-amber-700 mt-0.5">
+                      Laporan bulanan masih kosong
                     </div>
                   </div>
                 </div>
-                <div className="text-2xl font-black text-red-900 dark:text-red-300">
-                  {inactiveTwoMonthsCount}
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl font-black text-amber-900">
+                    {actionStats.empty}
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setFilterStatus("empty")} className="text-[10px] h-7 px-2 border-amber-200 text-amber-700 hover:bg-amber-100 hidden sm:flex">
+                    Lihat
+                  </Button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-rose-50 border border-rose-100 rounded-xl">
                 <div className="flex gap-3 items-start">
-                  <div className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 p-1.5 rounded-full mt-0.5">
+                  <div className="bg-rose-100 text-rose-700 p-1.5 rounded-full mt-0.5 shadow-sm">
                     <AlertTriangle className="h-4 w-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-amber-900 dark:text-amber-300">
-                      Capaian di bawah target
+                    <div className="text-xs font-bold text-rose-900">
+                      Perlu Perhatian Khusus
                     </div>
-                    <div className="text-[10px] text-amber-700/80 dark:text-amber-400/80 mt-0.5">
-                      Perlu bimbingan khusus
+                    <div className="text-[10px] text-rose-700 mt-0.5">
+                      Berdasarkan parameter capaian
                     </div>
                   </div>
                 </div>
-                <div className="text-2xl font-black text-amber-900 dark:text-amber-300">
-                  {belowTargetCount}
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl font-black text-rose-900">
+                    {actionStats.attention}
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setFilterStatus("attention")} className="text-[10px] h-7 px-2 border-rose-200 text-rose-700 hover:bg-rose-100 hidden sm:flex">
+                    Lihat
+                  </Button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl">
                 <div className="flex gap-3 items-start">
-                  <div className="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 p-1.5 rounded-full mt-0.5">
-                    <AlertTriangle className="h-4 w-4" />
+                  <div className="bg-blue-100 text-blue-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                    <BookOpen className="h-4 w-4" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-blue-900 dark:text-blue-300">
-                      Hafalan stagnan &gt; 1 bulan
+                    <div className="text-xs font-bold text-blue-900">
+                      Nilai di Bawah 70
                     </div>
-                    <div className="text-[10px] text-blue-700/80 dark:text-blue-400/80 mt-0.5">
-                      Perlu evaluasi dan pendampingan
+                    <div className="text-[10px] text-blue-700 mt-0.5">
+                      Nilai akhir progresif &lt; 70
                     </div>
                   </div>
                 </div>
-                <div className="text-2xl font-black text-blue-900 dark:text-blue-300">
-                  {stagnantOneMonthCount}
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl font-black text-blue-900">
+                    {actionStats.below70}
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => setFilterStatus("attention")} className="text-[10px] h-7 px-2 border-blue-200 text-blue-700 hover:bg-blue-100 hidden sm:flex">
+                    Lihat
+                  </Button>
                 </div>
               </div>
 
-              <button
-                onClick={() => setFilterStatus("attention")}
-                className="w-full text-center text-xs font-bold text-emerald-700 dark:text-emerald-400 hover:underline pt-2 block bg-transparent border-0 cursor-pointer"
-              >
-                Lihat Daftar Lengkap &gt;
-              </button>
+              <div className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
+                <div className="flex gap-3 items-start">
+                  <div className="bg-indigo-100 text-indigo-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                    <RotateCcw className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-indigo-900">
+                      Tidak Konsisten / Stagnan
+                    </div>
+                    <div className="text-[10px] text-indigo-700 mt-0.5">
+                      Progres bulanan terhambat
+                    </div>
+                  </div>
+                </div>
+                <div className="text-2xl font-black text-indigo-900">
+                  {actionStats.stagnant}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                <div className="flex gap-3 items-start">
+                  <div className="bg-slate-200 text-slate-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                    <Users className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-slate-900">
+                      Rombel Belum Tuntas
+                    </div>
+                    <div className="text-[10px] text-slate-600 mt-0.5">
+                      Rombel masih ada status kosong
+                    </div>
+                  </div>
+                </div>
+                <div className="text-2xl font-black text-slate-900">
+                  {actionStats.emptyRombelsCount}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
