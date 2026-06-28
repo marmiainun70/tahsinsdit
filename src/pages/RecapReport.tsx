@@ -1496,7 +1496,7 @@ const RecapReport = () => {
             />
             <StatCard
               icon={<AlertCircle className="w-4 h-4" />}
-              label="Absensi Belum Lengkap/Belum Diisi"
+              label="Absensi Belum Lengkap"
               value={stats.attendanceIncomplete}
               color="bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
               onClick={() => setFilterAttendanceStatus("Belum Lengkap")}
