@@ -1103,19 +1103,19 @@ export default function Monitoring() {
         </Card>
 
         <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
-          <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
+          <div className="absolute top-0 left-0 w-1 h-full bg-amber-500" />
           <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Lanjutan</span>
-              <div className="p-1.5 bg-emerald-50 rounded-md">
-                <Award className="h-4 w-4 text-emerald-600" />
+              <div className="p-1.5 bg-amber-50 rounded-md">
+                <Award className="h-4 w-4 text-amber-600" />
               </div>
             </div>
             <div>
               <div className="text-3xl font-bold text-slate-800">
                 {stats.tahsinLanjutan}
               </div>
-              <div className="text-[10px] font-medium text-emerald-600 mt-1 bg-emerald-50 inline-block px-1.5 py-0.5 rounded">
+              <div className="text-[10px] font-medium text-amber-600 mt-1 bg-amber-50 inline-block px-1.5 py-0.5 rounded">
                 {stats.total > 0
                   ? ((stats.tahsinLanjutan / stats.total) * 100).toFixed(1)
                   : 0}
@@ -1126,19 +1126,19 @@ export default function Monitoring() {
         </Card>
 
         <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
-          <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
+          <div className="absolute top-0 left-0 w-1 h-full bg-violet-500" />
           <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tahfizh</span>
-              <div className="p-1.5 bg-emerald-50 rounded-md">
-                <Award className="h-4 w-4 text-emerald-600" />
+              <div className="p-1.5 bg-violet-50 rounded-md">
+                <Award className="h-4 w-4 text-violet-600" />
               </div>
             </div>
             <div>
               <div className="text-3xl font-bold text-slate-800">
                 {stats.tahfizh}
               </div>
-              <div className="text-[10px] font-medium text-emerald-600 mt-1 bg-emerald-50 inline-block px-1.5 py-0.5 rounded">
+              <div className="text-[10px] font-medium text-violet-600 mt-1 bg-violet-50 inline-block px-1.5 py-0.5 rounded">
                 {stats.total > 0
                   ? ((stats.tahfizh / stats.total) * 100).toFixed(1)
                   : 0}
