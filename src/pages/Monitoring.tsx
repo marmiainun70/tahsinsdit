@@ -1515,97 +1515,7 @@ export default function Monitoring() {
       </div>
 
 
-      {/* Pengampu Summary Section / Ringkasan Jenjang Kelas */}
-      {filterKelas !== "all" ? (
-        <Card className="border border-emerald-200 bg-white shadow-sm overflow-hidden mb-6 rounded-2xl">
-          <CardHeader className="bg-emerald-50/50 border-b border-emerald-100 px-6 py-4">
-            <CardTitle className="text-base font-bold text-emerald-900 flex items-center gap-2">
-              <Users className="h-5 w-5 text-emerald-600" />
-              Ringkasan Pengampu - Kelas {filterKelas} {filterRombel !== "all" ? filterRombel : ""}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            
-            {/* Summary Strip (Jika Filter Aktif) */}
-            <div className="bg-emerald-600 text-white px-4 py-2 mb-6 flex flex-wrap gap-4 text-[10px] sm:text-xs font-medium items-center justify-center rounded-lg shadow-sm">
-              <span>Total Siswa: {stats.total}</span>
-              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
-              <span>Tahsin Dasar: {stats.tahsinDasar}</span>
-              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
-              <span>Tahsin Lanjutan: {stats.tahsinLanjutan}</span>
-              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
-              <span>Tahfizh: {stats.tahfizh}</span>
-              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
-              <span>Ada Laporan: {stats.latestProgress}</span>
-              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
-              <span>Belum Diisi: {stats.emptyProgress}</span>
-              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
-              <span>Perlu Perhatian: {stats.needsAttention}</span>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {teacherSummaries.length > 0 ? (
-                teacherSummaries.map((ts, idx) => (
-                  <div key={ts.guru} className="border border-emerald-200 rounded-xl overflow-hidden shadow-sm bg-white">
-                    <div className="bg-emerald-50/50 px-4 py-3 flex justify-between items-center border-b border-emerald-100">
-                      <div className="font-bold text-emerald-900 flex items-center gap-2">
-                        <Users className="w-4 h-4 text-emerald-600" />
-                        {ts.guru !== "Tidak Diketahui" ? ts.guru : `Pengampu ${idx + 1}`}
-                      </div>
-                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0">
-                        {ts.total} Siswa Binaan
-                      </Badge>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs whitespace-nowrap">
-                        <thead className="bg-slate-50 text-slate-600 border-b border-slate-100 text-center">
-                          <tr className="[&>th]:font-semibold [&>th]:px-2 [&>th]:py-2.5">
-                            <th className="text-left px-4">Nama Pengampu</th>
-                            <th>TD</th>
-                            <th>TL</th>
-                            <th>TFZ</th>
-                            <th className="text-emerald-700">Laporan</th>
-                            <th className="text-amber-700">Belum</th>
-                            <th className="text-rose-700">Perhatian</th>
-                            <th>Nilai</th>
-                            <th>Hadir</th>
-                            <th>Aksi</th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-center">
-                          <tr className="hover:bg-slate-50/50 [&>td]:px-2 [&>td]:py-3">
-                            <td className="text-left font-bold text-slate-800 px-4 max-w-[150px] truncate" title={ts.guru}>{ts.guru}</td>
-                            <td className="text-slate-600">{ts.tahsinDasar}</td>
-                            <td className="text-slate-600">{ts.tahsinLanjutan}</td>
-                            <td className="text-slate-600">{ts.tahfizh}</td>
-                            <td>
-                              <span className="font-bold text-emerald-600">{ts.filled}</span>
-                            </td>
-                            <td className="font-bold text-amber-600">{ts.empty}</td>
-                            <td className="font-bold text-rose-600">{ts.attention}</td>
-                            <td className="font-bold text-slate-700">{ts.avgScore ?? "-"}</td>
-                            <td className="font-bold text-slate-700">{ts.avgHadir !== null ? `${ts.avgHadir}%` : "-"}</td>
-                            <td>
-                              <Button variant="outline" size="sm" className="h-6 text-[10px] text-emerald-700 border-emerald-200 hover:bg-emerald-50 px-2" onClick={() => {}}>
-                                Lihat Detail
-                              </Button>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-full flex flex-col items-center justify-center h-40 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 p-6 text-center">
-                  <Users className="h-6 w-6 text-slate-300 mb-2" />
-                  <span className="text-slate-400 text-sm font-medium">Belum ada pengampu terdeteksi untuk kelas ini</span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
+      {/* Ringkasan Jenjang Kelas */}
       <Card className="border-border bg-card shadow-sm overflow-hidden">
         <CardHeader className="border-b border-border bg-muted/40 px-6 py-4">
           <CardTitle className="text-base font-bold text-foreground">
@@ -1853,7 +1763,6 @@ export default function Monitoring() {
           </table>
         </div>
       </Card>
-      )}
     </motion.div>
   );
 }
