@@ -213,9 +213,9 @@ const Dashboard = () => {
                        <div className="mb-3">
                          <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
                            <div className="flex gap-2">
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Iqra 0%</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Tahsin 0%</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>Tahfizh 0%</span>
+                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Iqra 0</span>
+                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Tahsin 0</span>
+                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>Tahfizh 0</span>
                            </div>
                          </div>
                          <div className="h-2 bg-muted rounded-full overflow-hidden flex">
@@ -266,9 +266,9 @@ const Dashboard = () => {
                        <div className="mb-3">
                          <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
                            <div className="flex gap-2">
-                             {stats.tahsinDasar > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Iqra {Math.round(pctDasar)}%</span>}
-                             {stats.tahsinLanjutan > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Tahsin {Math.round(pctLanjut)}%</span>}
-                             {stats.tahfizh > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>Tahfizh {Math.round(pctTahfizh)}%</span>}
+                             {stats.tahsinDasar > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Iqra {stats.tahsinDasar}</span>}
+                             {stats.tahsinLanjutan > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Tahsin {stats.tahsinLanjutan}</span>}
+                             {stats.tahfizh > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>Tahfizh {stats.tahfizh}</span>}
                            </div>
                          </div>
                          <div className="h-2 bg-muted rounded-full overflow-hidden flex">
