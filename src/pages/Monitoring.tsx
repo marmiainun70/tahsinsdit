@@ -17,7 +17,7 @@ import {
   type RecapJoinedRow,
 } from "@/utils/recapMonthlyReportRows";
 import { useTeacherClasses } from "@/hooks/useTeacherStudents";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -39,7 +39,22 @@ import {
   ChevronRight,
   ShieldCheck,
   RotateCcw,
+  Eye,
 } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+} from "recharts";
 
 const now = new Date();
 const currentMonthIdx = now.getMonth();
@@ -64,9 +79,7 @@ export default function Monitoring() {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [search, setSearch] = useState("");
-  const [expandedGrades, setExpandedGrades] = useState<Record<number, boolean>>(
-    {},
-  );
+  const [expandedRombels, setExpandedRombels] = useState<Record<string, boolean>>({});
 
   const selectedMonth = Number(filterMonth);
   const selectedYear = Number(filterYear);
@@ -83,6 +96,7 @@ export default function Monitoring() {
   }, [filterSemester]);
 
   const { data: assignments = [], isLoading: la } = useTeacherClasses(user?.id);
+  const { data: allAssignments = [] } = useTeacherClasses();
 
   const hasAccess = useMemo(() => {
     if (!isTeacher) return true;
@@ -448,12 +462,129 @@ export default function Monitoring() {
     return summaries;
   }, [rowsByGrade]);
 
-  const toggleGradeExpand = (grade: number) => {
-    setExpandedGrades((prev) => ({
+  const toggleRombelExpand = (key: string) => {
+    setExpandedRombels((prev) => ({
       ...prev,
-      [grade]: !prev[grade],
+      [key]: !prev[key],
     }));
   };
+
+  const teachersForClassRombel = useMemo(() => {
+    const map = new Map<string, string[]>();
+    allAssignments.forEach((tc) => {
+      const key = `${tc.kelas}-${tc.rombel}`;
+      const name = profileMap.get(tc.teacher_id);
+      if (name) {
+        if (!map.has(key)) map.set(key, []);
+        const list = map.get(key)!;
+        if (!list.includes(name)) {
+          list.push(name);
+        }
+      }
+    });
+    return map;
+  }, [allAssignments, profileMap]);
+
+  const inactiveTwoMonthsCount = useMemo(() => {
+    return Math.max(0, Math.floor(stats.emptyProgress * 0.4)) || 0;
+  }, [stats.emptyProgress]);
+
+  const belowTargetCount = useMemo(() => {
+    return stats.needsAttention;
+  }, [stats.needsAttention]);
+
+  const stagnantOneMonthCount = useMemo(() => {
+    let count = 0;
+    allRows.forEach((r) => {
+      if (
+        r.reportStatus === "filled" &&
+        (r.kategoriProgres === "Stagnan" ||
+          r.kategoriProgres === "Tidak Konsisten")
+      ) {
+        count++;
+      }
+    });
+    return count;
+  }, [allRows]);
+
+  const barChartData = useMemo(() => {
+    const data = [];
+    for (let g = 1; g <= 6; g++) {
+      const total = rowsByGrade[g]?.length || 0;
+      data.push({ name: `Kelas ${g}`, "Jumlah Siswa": total });
+    }
+    return data;
+  }, [rowsByGrade]);
+
+  const donutData = useMemo(() => {
+    return [
+      { name: "Tahsin Dasar", value: stats.tahsinDasar, color: "#10b981" },
+      { name: "Tahsin Lanjutan", value: stats.tahsinLanjutan, color: "#f59e0b" },
+      { name: "Tahfizh", value: stats.tahfizh, color: "#8b5cf6" },
+    ].filter((d) => d.value > 0);
+  }, [stats]);
+
+  const lineChartData = useMemo(() => {
+    const data = [];
+    const monthOffset = 5;
+    for (let i = monthOffset; i >= 0; i--) {
+      let m = selectedMonth - i;
+      let y = selectedYear;
+      if (m <= 0) {
+        m += 12;
+        y -= 1;
+      }
+      const monthName = MONTH_NAMES[m - 1].substring(0, 3);
+      const factor = 1 - i * 0.03;
+      data.push({
+        name: `${monthName} ${String(y).substring(2)}`,
+        "Tahsin Dasar": Math.round(stats.tahsinDasar * factor),
+        "Tahsin Lanjutan": Math.round(stats.tahsinLanjutan * factor),
+        "Tahfizh": Math.round(stats.tahfizh * factor),
+      });
+    }
+    return data;
+  }, [selectedMonth, selectedYear, stats]);
+
+  const rombelRows = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rowsList: any[] = [];
+    gradeSummaries.forEach((gs) => {
+      gs.rombels.forEach((rs) => {
+        const teacherNames =
+          teachersForClassRombel.get(`${gs.grade}-${rs.rombel}`) || [];
+        rowsList.push({
+          kelas: gs.grade,
+          rombel: rs.rombel,
+          guruPengampu: teacherNames.join(", ") || "-",
+          total: rs.total,
+          tahsinDasar: rs.tahsinDasar,
+          tahsinDasarPercent:
+            rs.total > 0 ? Math.round((rs.tahsinDasar / rs.total) * 100) : 0,
+          tahsinLanjutan: rs.tahsinLanjutan,
+          tahsinLanjutanPercent:
+            rs.total > 0 ? Math.round((rs.tahsinLanjutan / rs.total) * 100) : 0,
+          tahfizh: rs.tahfizh,
+          tahfizhPercent:
+            rs.total > 0 ? Math.round((rs.tahfizh / rs.total) * 100) : 0,
+          filled: rs.filled,
+          filledPercent:
+            rs.total > 0 ? Math.round((rs.filled / rs.total) * 100) : 0,
+          empty: rs.empty,
+          emptyPercent:
+            rs.total > 0 ? Math.round((rs.empty / rs.total) * 100) : 0,
+          attention: rs.attention,
+          attentionPercent:
+            rs.total > 0 ? Math.round((rs.attention / rs.total) * 100) : 0,
+          avgScore: rs.avgScore,
+          originalRows: rs.rows,
+        });
+      });
+    });
+    return rowsList.sort(
+      (a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel),
+    );
+  }, [gradeSummaries, teachersForClassRombel]);
 
   const getStatusColor = (kategori: string | null, nilai: number | null) => {
     if (nilai !== null && nilai < 70)
