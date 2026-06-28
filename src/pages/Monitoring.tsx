@@ -655,6 +655,94 @@ export default function Monitoring() {
     });
   }, [groups]);
 
+  const selectedRombelRows = useMemo(() => {
+    if (filterKelas === "all" || filterRombel === "all") return [];
+    return allRows.filter(
+      (r) => String(r.kelas) === filterKelas && r.rombel === filterRombel,
+    );
+  }, [allRows, filterKelas, filterRombel]);
+
+  const teacherSummaries = useMemo(() => {
+    if (selectedRombelRows.length === 0) return [];
+
+    const map = new Map<string, typeof selectedRombelRows>();
+    selectedRombelRows.forEach((r) => {
+      const teacher = r.guru && r.guru !== "-" ? r.guru : "Tidak Diketahui";
+      if (!map.has(teacher)) map.set(teacher, []);
+      map.get(teacher)!.push(r);
+    });
+
+    return Array.from(map.entries()).map(([teacher, rows]) => {
+      let tahsinDasar = 0;
+      let tahsinLanjutan = 0;
+      let tahfizh = 0;
+      let filled = 0;
+      let empty = 0;
+      let attention = 0;
+      let totalNilai = 0;
+      let countNilai = 0;
+      let totalPersentaseHadir = 0;
+      let countHadir = 0;
+
+      rows.forEach((r) => {
+        if (
+          r.program === "Tahsin Dasar" ||
+          r.program === "Tahsin Dasar (Iqra)"
+        ) {
+          tahsinDasar++;
+        } else if (r.program === "Tahsin Lanjutan") {
+          tahsinLanjutan++;
+        } else if (r.program === "Tahfizh") {
+          tahfizh++;
+        }
+
+        if (r.reportStatus === "filled") {
+          filled++;
+          if (r.nilaiAkhirProgresif !== null) {
+            totalNilai += r.nilaiAkhirProgresif;
+            countNilai++;
+          }
+          if (
+            (r.nilaiAkhirProgresif !== null && r.nilaiAkhirProgresif < 70) ||
+            r.kategoriProgres === "Kurang Konsisten" ||
+            r.kategoriProgres === "Tidak Konsisten" ||
+            r.kategoriProgres === "Stagnan"
+          ) {
+            attention++;
+          }
+        } else {
+          empty++;
+        }
+
+        if (r.persentaseHadir !== null) {
+          totalPersentaseHadir += r.persentaseHadir;
+          countHadir++;
+        }
+      });
+
+      const avgScore =
+        countNilai > 0 ? Math.round(totalNilai / countNilai) : null;
+      const avgHadir =
+        countHadir > 0 ? Math.round(totalPersentaseHadir / countHadir) : null;
+      const filledPercent =
+        rows.length > 0 ? Math.round((filled / rows.length) * 100) : 0;
+
+      return {
+        guru: teacher,
+        total: rows.length,
+        tahsinDasar,
+        tahsinLanjutan,
+        tahfizh,
+        filled,
+        filledPercent,
+        empty,
+        attention,
+        avgScore,
+        avgHadir,
+      };
+    });
+  }, [selectedRombelRows]);
+
   const getStatusColor = (kategori: string | null, nilai: number | null) => {
     if (nilai !== null && nilai < 70)
       return "bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/40";
@@ -1501,7 +1589,108 @@ export default function Monitoring() {
         </div>
       </Card>
 
-      {/* Rombel Recap Table Section */}
+      {/* Pengampu Summary Section / Ringkasan Jenjang Kelas */}
+      {filterKelas !== "all" && filterRombel !== "all" ? (
+        <Card className="border border-emerald-200 bg-white shadow-sm overflow-hidden mb-6 rounded-2xl">
+          <CardHeader className="bg-emerald-50/50 border-b border-emerald-100 px-6 py-4">
+            <CardTitle className="text-base font-bold text-emerald-900 flex items-center gap-2">
+              <Users className="h-5 w-5 text-emerald-600" />
+              Ringkasan Pengampu - Kelas {filterKelas} {filterRombel}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            
+            {/* Summary Strip (Jika Filter Aktif) */}
+            <div className="bg-emerald-600 text-white px-4 py-2 mb-6 flex flex-wrap gap-4 text-[10px] sm:text-xs font-medium items-center justify-center rounded-lg shadow-sm">
+              <span>Total Siswa: {stats.total}</span>
+              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
+              <span>Tahsin Dasar: {stats.tahsinDasar}</span>
+              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
+              <span>Tahsin Lanjutan: {stats.tahsinLanjutan}</span>
+              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
+              <span>Tahfizh: {stats.tahfizh}</span>
+              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
+              <span>Ada Laporan: {stats.latestProgress}</span>
+              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
+              <span>Belum Diisi: {stats.emptyProgress}</span>
+              <span className="w-1 h-1 rounded-full bg-emerald-300"></span>
+              <span>Perlu Perhatian: {stats.needsAttention}</span>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {[0, 1].map((idx) => {
+                const ts = teacherSummaries[idx];
+                if (!ts) {
+                  return (
+                    <div key={`empty-${idx}`} className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50 p-6 text-center">
+                      <Users className="h-6 w-6 text-slate-300 mb-2" />
+                      <span className="text-slate-400 text-sm font-medium">Pengampu {idx === 0 ? "pertama" : "kedua"} belum terdeteksi</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={ts.guru} className="border border-emerald-200 rounded-xl overflow-hidden shadow-sm bg-white">
+                    <div className="bg-emerald-50/50 px-4 py-3 flex justify-between items-center border-b border-emerald-100">
+                      <div className="font-bold text-emerald-900 flex items-center gap-2">
+                        <Users className="w-4 h-4 text-emerald-600" />
+                        Pengampu {idx + 1}
+                      </div>
+                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-0">
+                        {ts.total} Siswa Binaan
+                      </Badge>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs whitespace-nowrap">
+                        <thead className="bg-slate-50 text-slate-600 border-b border-slate-100 text-center">
+                          <tr className="[&>th]:font-semibold [&>th]:px-2 [&>th]:py-2.5">
+                            <th className="text-left px-4">Nama Pengampu</th>
+                            <th>TD</th>
+                            <th>TL</th>
+                            <th>TFZ</th>
+                            <th className="text-emerald-700">Laporan</th>
+                            <th className="text-amber-700">Belum</th>
+                            <th className="text-rose-700">Perhatian</th>
+                            <th>Nilai</th>
+                            <th>Hadir</th>
+                            <th>Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-center">
+                          <tr className="hover:bg-slate-50/50 [&>td]:px-2 [&>td]:py-3">
+                            <td className="text-left font-bold text-slate-800 px-4 max-w-[150px] truncate" title={ts.guru}>{ts.guru}</td>
+                            <td className="text-slate-600">{ts.tahsinDasar}</td>
+                            <td className="text-slate-600">{ts.tahsinLanjutan}</td>
+                            <td className="text-slate-600">{ts.tahfizh}</td>
+                            <td>
+                              <span className="font-bold text-emerald-600">{ts.filled}</span>
+                            </td>
+                            <td className="font-bold text-amber-600">{ts.empty}</td>
+                            <td className="font-bold text-rose-600">{ts.attention}</td>
+                            <td className="font-bold text-slate-700">{ts.avgScore ?? "-"}</td>
+                            <td className="font-bold text-slate-700">{ts.avgHadir !== null ? `${ts.avgHadir}%` : "-"}</td>
+                            <td>
+                              <Button variant="outline" size="sm" className="h-6 text-[10px] text-emerald-700 border-emerald-200 hover:bg-emerald-50 px-2" onClick={() => {}}>
+                                Lihat Detail
+                              </Button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      ) : filterKelas !== "all" ? (
+        <Card className="border border-slate-200 bg-white shadow-sm overflow-hidden mb-6 rounded-2xl flex items-center justify-center p-8">
+          <div className="flex flex-col items-center gap-2 text-slate-400">
+            <Users className="h-8 w-8 text-slate-300" />
+            <p className="text-sm font-medium">Pilih salah satu rombel spesifik untuk melihat ringkasan pengampu.</p>
+          </div>
+        </Card>
+      ) : (
       <Card className="border-border bg-card shadow-sm overflow-hidden">
         <CardHeader className="border-b border-border bg-muted/40 px-6 py-4">
           <CardTitle className="text-base font-bold text-foreground">
@@ -1801,6 +1990,7 @@ export default function Monitoring() {
           </table>
         </div>
       </Card>
+      )}
     </motion.div>
   );
 }
