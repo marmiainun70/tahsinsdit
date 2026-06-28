@@ -626,30 +626,36 @@ export default function Monitoring() {
       className="container mx-auto space-y-6 pb-20 pt-6 sm:pb-8"
     >
       {/* Header Section */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border pb-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl flex items-center gap-2">
-            <ClipboardList className="h-8 w-8 text-primary" />
-            Monitoring Tahsin & Tahfizh
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pantau capaian Tahsin & Tahfizh siswa secara menyeluruh dan ambil
-            tindakan yang tepat.
-          </p>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-900 p-6 md:p-8 text-white shadow-md">
+        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+          <ClipboardList className="h-40 w-40" />
         </div>
-        <div className="text-right hidden md:block">
-          <div className="text-sm font-bold text-foreground">
-            SDIT Luqmanul Hakim
+        <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Badge variant="outline" className="bg-emerald-500/20 text-emerald-100 border-emerald-400/30 hover:bg-emerald-500/30">Dashboard</Badge>
+              <Badge variant="outline" className="bg-amber-500/20 text-amber-100 border-amber-400/30 hover:bg-amber-500/30">SDIT Luqmanul Hakim</Badge>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl flex items-center gap-2">
+              Monitoring Tahsin & Tahfizh
+            </h1>
+            <p className="mt-2 text-sm text-emerald-100 max-w-xl leading-relaxed">
+              Pantau capaian Tahsin & Tahfizh siswa secara menyeluruh dan ambil
+              tindakan yang tepat.
+            </p>
           </div>
-          <div className="text-xs text-muted-foreground">
-            Tahun Ajaran {filterYear}/{Number(filterYear) + 1}
+          <div className="text-right hidden md:block">
+            <div className="text-sm font-bold text-white bg-white/10 px-4 py-2 rounded-lg backdrop-blur-sm border border-white/20 shadow-sm">
+              Tahun Ajaran {filterYear}/{Number(filterYear) + 1}
+            </div>
           </div>
         </div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-yellow-500" />
       </div>
 
       {/* Filter Section */}
-      <Card className="border-border bg-card shadow-sm">
-        <CardContent className="p-4 sm:p-6">
+      <Card className="border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl">
+        <CardContent className="p-5 sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
             <div className="space-y-1.5">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -828,34 +834,40 @@ export default function Monitoring() {
 
       {/* KPI Cards Row */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
-        <Card className="bg-blue-50/50 border-blue-200/60 shadow-sm dark:bg-blue-950/10 dark:border-blue-900/30">
-          <CardContent className="p-4 flex flex-col justify-between h-full">
-            <div className="flex items-center gap-2 text-blue-700 dark:text-blue-400 mb-2">
-              <Users className="h-4 w-4" />
-              <span className="text-xs font-semibold">Total Siswa</span>
+        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+          <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
+          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Siswa</span>
+              <div className="p-1.5 bg-emerald-50 rounded-md">
+                <Users className="h-4 w-4 text-emerald-600" />
+              </div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+              <div className="text-3xl font-bold text-slate-800">
                 {stats.total}
               </div>
-              <div className="text-[10px] font-medium text-blue-700/80 dark:text-blue-400/80 mt-1">
-                100%
+              <div className="text-[10px] font-medium text-slate-400 mt-1">
+                Keseluruhan Populasi
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-amber-50/50 border-amber-200/60 shadow-sm dark:bg-amber-950/10 dark:border-amber-900/30">
-          <CardContent className="p-4 flex flex-col justify-between h-full">
-            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 mb-2">
-              <BookOpen className="h-4 w-4" />
-              <span className="text-xs font-semibold">Tahsin Dasar</span>
+        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+          <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
+          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tahsin Dasar</span>
+              <div className="p-1.5 bg-emerald-50 rounded-md">
+                <BookOpen className="h-4 w-4 text-emerald-600" />
+              </div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-amber-900 dark:text-amber-100">
+              <div className="text-3xl font-bold text-slate-800">
                 {stats.tahsinDasar}
               </div>
-              <div className="text-[10px] font-medium text-amber-700/80 dark:text-amber-400/80 mt-1">
+              <div className="text-[10px] font-medium text-emerald-600 mt-1 bg-emerald-50 inline-block px-1.5 py-0.5 rounded">
                 {stats.total > 0
                   ? ((stats.tahsinDasar / stats.total) * 100).toFixed(1)
                   : 0}
@@ -865,17 +877,20 @@ export default function Monitoring() {
           </CardContent>
         </Card>
 
-        <Card className="bg-emerald-50/50 border-emerald-200/60 shadow-sm dark:bg-emerald-950/10 dark:border-emerald-900/30">
-          <CardContent className="p-4 flex flex-col justify-between h-full">
-            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 mb-2">
-              <Award className="h-4 w-4" />
-              <span className="text-xs font-semibold">Lanjutan</span>
+        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+          <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
+          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Lanjutan</span>
+              <div className="p-1.5 bg-emerald-50 rounded-md">
+                <Award className="h-4 w-4 text-emerald-600" />
+              </div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+              <div className="text-3xl font-bold text-slate-800">
                 {stats.tahsinLanjutan}
               </div>
-              <div className="text-[10px] font-medium text-emerald-700/80 dark:text-emerald-400/80 mt-1">
+              <div className="text-[10px] font-medium text-emerald-600 mt-1 bg-emerald-50 inline-block px-1.5 py-0.5 rounded">
                 {stats.total > 0
                   ? ((stats.tahsinLanjutan / stats.total) * 100).toFixed(1)
                   : 0}
@@ -885,17 +900,20 @@ export default function Monitoring() {
           </CardContent>
         </Card>
 
-        <Card className="bg-purple-50/50 border-purple-200/60 shadow-sm dark:bg-purple-950/10 dark:border-purple-900/30">
-          <CardContent className="p-4 flex flex-col justify-between h-full">
-            <div className="flex items-center gap-2 text-purple-700 dark:text-purple-400 mb-2">
-              <Award className="h-4 w-4" />
-              <span className="text-xs font-semibold">Tahfizh</span>
+        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+          <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
+          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tahfizh</span>
+              <div className="p-1.5 bg-emerald-50 rounded-md">
+                <Award className="h-4 w-4 text-emerald-600" />
+              </div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+              <div className="text-3xl font-bold text-slate-800">
                 {stats.tahfizh}
               </div>
-              <div className="text-[10px] font-medium text-purple-700/80 dark:text-purple-400/80 mt-1">
+              <div className="text-[10px] font-medium text-emerald-600 mt-1 bg-emerald-50 inline-block px-1.5 py-0.5 rounded">
                 {stats.total > 0
                   ? ((stats.tahfizh / stats.total) * 100).toFixed(1)
                   : 0}
@@ -905,17 +923,20 @@ export default function Monitoring() {
           </CardContent>
         </Card>
 
-        <Card className="bg-indigo-50/50 border-indigo-200/60 shadow-sm dark:bg-indigo-950/10 dark:border-indigo-900/30">
-          <CardContent className="p-4 flex flex-col justify-between h-full">
-            <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-400 mb-2">
-              <ClipboardList className="h-4 w-4" />
-              <span className="text-xs font-semibold">Ada Laporan</span>
+        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+          <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
+          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ada Laporan</span>
+              <div className="p-1.5 bg-emerald-50 rounded-md">
+                <ClipboardList className="h-4 w-4 text-emerald-600" />
+              </div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-indigo-900 dark:text-indigo-100">
+              <div className="text-3xl font-bold text-slate-800">
                 {stats.latestProgress}
               </div>
-              <div className="text-[10px] font-medium text-indigo-700/80 dark:text-indigo-400/80 mt-1">
+              <div className="text-[10px] font-medium text-emerald-600 mt-1 bg-emerald-50 inline-block px-1.5 py-0.5 rounded">
                 {stats.total > 0
                   ? ((stats.latestProgress / stats.total) * 100).toFixed(1)
                   : 0}
@@ -925,17 +946,20 @@ export default function Monitoring() {
           </CardContent>
         </Card>
 
-        <Card className="bg-orange-50/50 border-orange-200/60 shadow-sm dark:bg-orange-950/10 dark:border-orange-900/30">
-          <CardContent className="p-4 flex flex-col justify-between h-full">
-            <div className="flex items-center gap-2 text-orange-700 dark:text-orange-400 mb-2">
-              <ClipboardList className="h-4 w-4" />
-              <span className="text-xs font-semibold">Belum Diisi</span>
+        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+          <div className="absolute top-0 left-0 w-1 h-full bg-amber-500" />
+          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Belum Diisi</span>
+              <div className="p-1.5 bg-amber-50 rounded-md">
+                <ClipboardList className="h-4 w-4 text-amber-600" />
+              </div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-orange-900 dark:text-orange-100">
+              <div className="text-3xl font-bold text-slate-800">
                 {stats.emptyProgress}
               </div>
-              <div className="text-[10px] font-medium text-orange-700/80 dark:text-orange-400/80 mt-1">
+              <div className="text-[10px] font-medium text-amber-600 mt-1 bg-amber-50 inline-block px-1.5 py-0.5 rounded">
                 {stats.total > 0
                   ? ((stats.emptyProgress / stats.total) * 100).toFixed(1)
                   : 0}
@@ -945,17 +969,20 @@ export default function Monitoring() {
           </CardContent>
         </Card>
 
-        <Card className="bg-rose-50/50 border-rose-200/60 shadow-sm dark:bg-rose-950/10 dark:border-rose-900/30">
-          <CardContent className="p-4 flex flex-col justify-between h-full">
-            <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 mb-2">
-              <AlertTriangle className="h-4 w-4" />
-              <span className="text-xs font-semibold">Perhatian</span>
+        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+          <div className="absolute top-0 left-0 w-1 h-full bg-rose-500" />
+          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Perhatian</span>
+              <div className="p-1.5 bg-rose-50 rounded-md">
+                <AlertTriangle className="h-4 w-4 text-rose-600" />
+              </div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-rose-900 dark:text-rose-100">
+              <div className="text-3xl font-bold text-slate-800">
                 {stats.needsAttention}
               </div>
-              <div className="text-[10px] font-medium text-rose-700/80 dark:text-rose-400/80 mt-1">
+              <div className="text-[10px] font-medium text-rose-600 mt-1 bg-rose-50 inline-block px-1.5 py-0.5 rounded">
                 {stats.total > 0
                   ? ((stats.needsAttention / stats.total) * 100).toFixed(1)
                   : 0}
