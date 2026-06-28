@@ -288,26 +288,71 @@ export default function Monitoring() {
       let totalScore = 0;
       let scoredCount = 0;
 
+      const rombelMap: Record<string, typeof gradeRows> = {};
       gradeRows.forEach(r => {
-        if (r.level.startsWith("Iqro") || r.level === "Tahsin Dasar") tahsinDasar++;
-        else if (r.level === "Tahsin Lanjutan") tahsinLanjutan++;
-        else if (r.level === "Tahfizh") tahfizh++;
+        const rb = r.rombel || "-";
+        if (!rombelMap[rb]) rombelMap[rb] = [];
+        rombelMap[rb].push(r);
+      });
 
-        if (r.reportStatus === "filled") {
-          filled++;
-          if (r.nilaiAkhirProgresif !== null) {
-            totalScore += r.nilaiAkhirProgresif;
-            scoredCount++;
+      const rombelSummaries = Object.keys(rombelMap).sort().map(rb => {
+        const rRows = rombelMap[rb];
+        let rTahsinDasar = 0;
+        let rTahsinLanjutan = 0;
+        let rTahfizh = 0;
+        let rFilled = 0;
+        let rEmpty = 0;
+        let rAttention = 0;
+        let rTotalScore = 0;
+        let rScoredCount = 0;
+
+        rRows.forEach(r => {
+          if (r.level.startsWith("Iqro") || r.level === "Tahsin Dasar") {
+            tahsinDasar++;
+            rTahsinDasar++;
           }
-          const needsAttention = (r.nilaiAkhirProgresif !== null && r.nilaiAkhirProgresif < 70) ||
-            r.kategoriProgres === "Kurang Konsisten" ||
-            r.kategoriProgres === "Tidak Konsisten";
-          if (needsAttention) {
-            attention++;
+          else if (r.level === "Tahsin Lanjutan") {
+            tahsinLanjutan++;
+            rTahsinLanjutan++;
           }
-        } else {
-          empty++;
-        }
+          else if (r.level === "Tahfizh") {
+            tahfizh++;
+            rTahfizh++;
+          }
+
+          if (r.reportStatus === "filled") {
+            filled++;
+            rFilled++;
+            if (r.nilaiAkhirProgresif !== null) {
+              totalScore += r.nilaiAkhirProgresif;
+              scoredCount++;
+              rTotalScore += r.nilaiAkhirProgresif;
+              rScoredCount++;
+            }
+            const needsAttention = (r.nilaiAkhirProgresif !== null && r.nilaiAkhirProgresif < 70) ||
+              r.kategoriProgres === "Kurang Konsisten" ||
+              r.kategoriProgres === "Tidak Konsisten";
+            if (needsAttention) {
+              attention++;
+              rAttention++;
+            }
+          } else {
+            empty++;
+            rEmpty++;
+          }
+        });
+
+        return {
+          rombel: rb,
+          total: rRows.length,
+          tahsinDasar: rTahsinDasar,
+          tahsinLanjutan: rTahsinLanjutan,
+          tahfizh: rTahfizh,
+          filled: rFilled,
+          empty: rEmpty,
+          attention: rAttention,
+          avgScore: rScoredCount > 0 ? Math.round(rTotalScore / rScoredCount) : null,
+        };
       });
 
       const avgScore = scoredCount > 0 ? Math.round(totalScore / scoredCount) : null;
@@ -322,7 +367,7 @@ export default function Monitoring() {
         empty,
         attention,
         avgScore,
-        rows: gradeRows
+        rombels: rombelSummaries
       });
     }
     return summaries;
@@ -684,76 +729,52 @@ export default function Monitoring() {
                         <tr>
                           <td colSpan={9} className="p-0 bg-muted/20">
                             <div className="overflow-x-auto p-4 border-t border-b border-border bg-muted/10">
-                              <table className="w-full text-left text-xs bg-background border border-border rounded-lg overflow-hidden">
+                              <table className="w-full text-left text-xs bg-background border border-border rounded-lg overflow-hidden shadow-sm">
                                 <thead className="bg-muted/80 text-muted-foreground border-b border-border">
                                   <tr>
-                                    <th className="px-3 py-2 font-semibold">No</th>
-                                    <th className="px-3 py-2 font-semibold">Nama Siswa</th>
-                                    <th className="px-3 py-2 font-semibold">Rombel</th>
-                                    <th className="px-3 py-2 font-semibold">Kategori / Level</th>
-                                    <th className="px-3 py-2 font-semibold">Status Laporan</th>
-                                    <th className="px-3 py-2 font-semibold">Kategori Progres</th>
-                                    <th className="px-3 py-2 font-semibold">Nilai</th>
-                                    <th className="px-3 py-2 font-semibold">Guru</th>
+                                    <th className="px-4 py-2 font-semibold">Rombel</th>
+                                    <th className="px-4 py-2 font-semibold text-center">Total Siswa</th>
+                                    <th className="px-4 py-2 font-semibold text-center">Tahsin Dasar</th>
+                                    <th className="px-4 py-2 font-semibold text-center">Lanjutan</th>
+                                    <th className="px-4 py-2 font-semibold text-center">Tahfizh</th>
+                                    <th className="px-4 py-2 font-semibold text-center">Terisi</th>
+                                    <th className="px-4 py-2 font-semibold text-center">Belum Diisi</th>
+                                    <th className="px-4 py-2 font-semibold text-center">Perlu Perhatian</th>
+                                    <th className="px-4 py-2 font-semibold text-center">Rata-rata Nilai</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
-                                  {summary.rows.map((row, i) => {
-                                    const needsAttention = row.reportStatus === "filled" && (
-                                      (row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70) ||
-                                      row.kategoriProgres === "Kurang Konsisten" ||
-                                      row.kategoriProgres === "Tidak Konsisten"
-                                    );
-                                    return (
-                                      <tr key={row.studentId} className="hover:bg-muted/40 transition-colors">
-                                        <td className="px-3 py-2 text-muted-foreground bg-background">{i + 1}</td>
-                                        <td className="px-3 py-2 font-semibold bg-background animate-none">
-                                          <div className="flex flex-col">
-                                            <div className="flex items-center gap-1.5 text-foreground font-semibold">
-                                              {row.nama}
-                                              {needsAttention && (
-                                                <Badge variant="destructive" className="text-[9px] px-1 py-0 bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200">
-                                                  Perhatian
-                                                </Badge>
-                                              )}
-                                            </div>
-                                            {row.catatan && (
-                                              <span className="text-[10px] text-muted-foreground font-normal max-w-sm truncate block mt-0.5" title={row.catatan}>
-                                                {row.catatan}
-                                              </span>
-                                            )}
-                                          </div>
-                                        </td>
-                                        <td className="px-3 py-2 text-foreground font-semibold bg-background">{row.rombel}</td>
-                                        <td className="px-3 py-2 bg-background">
-                                          <div className="flex flex-col">
-                                            <span className="text-[10px] text-muted-foreground">{row.program}</span>
-                                            <span className="font-semibold text-foreground">{row.level}</span>
-                                          </div>
-                                        </td>
-                                        <td className="px-3 py-2 bg-background">
-                                          <Badge variant="outline" className={row.reportStatus === "filled" ? "bg-emerald-50 text-emerald-700 border-emerald-100 text-[10px] px-1" : "bg-amber-50 text-amber-700 border-amber-100 text-[10px] px-1"}>
-                                            {row.reportStatus === "filled" ? "Sudah Diisi" : "Belum Diisi"}
+                                  {summary.rombels.map((rombelSummary, i) => (
+                                    <tr key={`rombel-${summary.grade}-${rombelSummary.rombel}`} className="hover:bg-muted/40 transition-colors bg-background">
+                                      <td className="px-4 py-2.5 font-bold text-foreground bg-background">
+                                        Kelas {summary.grade}{rombelSummary.rombel}
+                                      </td>
+                                      <td className="px-4 py-2.5 text-center bg-background">{rombelSummary.total}</td>
+                                      <td className="px-4 py-2.5 text-center text-amber-700 dark:text-amber-400 font-semibold bg-background">{rombelSummary.tahsinDasar}</td>
+                                      <td className="px-4 py-2.5 text-center text-emerald-700 dark:text-emerald-400 font-semibold bg-background">{rombelSummary.tahsinLanjutan}</td>
+                                      <td className="px-4 py-2.5 text-center text-purple-700 dark:text-purple-400 font-semibold bg-background">{rombelSummary.tahfizh}</td>
+                                      <td className="px-4 py-2.5 text-center text-emerald-600 font-semibold bg-background">{rombelSummary.filled}</td>
+                                      <td className="px-4 py-2.5 text-center text-orange-600 font-semibold bg-background">{rombelSummary.empty}</td>
+                                      <td className="px-4 py-2.5 text-center bg-background">
+                                        {rombelSummary.attention > 0 ? (
+                                          <Badge variant="destructive" className="bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-900/40 text-[10px] px-1.5 py-0">
+                                            {rombelSummary.attention} siswa
                                           </Badge>
-                                        </td>
-                                        <td className="px-3 py-2 bg-background">
-                                          {row.reportStatus === "filled" ? (
-                                            <Badge variant="outline" className={`${getStatusColor(row.kategoriProgres, row.nilaiAkhirProgresif)} text-[10px] px-1`}>
-                                              {row.kategoriProgres || "-"}
-                                            </Badge>
-                                          ) : "-"}
-                                        </td>
-                                        <td className="px-3 py-2 font-bold bg-background">
-                                          {row.reportStatus === "filled" ? (
-                                            <span className={row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70 ? 'text-rose-600 dark:text-rose-400 font-bold' : 'text-foreground font-bold'}>
-                                              {row.nilaiAkhirProgresif ?? "-"}
-                                            </span>
-                                          ) : "-"}
-                                        </td>
-                                        <td className="px-3 py-2 text-muted-foreground bg-background">{row.guru}</td>
-                                      </tr>
-                                    );
-                                  })}
+                                        ) : (
+                                          <span className="text-muted-foreground">-</span>
+                                        )}
+                                      </td>
+                                      <td className="px-4 py-2.5 text-center font-bold bg-background">
+                                        {rombelSummary.avgScore !== null ? (
+                                          <span className={rombelSummary.avgScore < 70 ? "text-rose-600 dark:text-rose-400" : "text-foreground"}>
+                                            {rombelSummary.avgScore}
+                                          </span>
+                                        ) : (
+                                          <span className="text-muted-foreground">-</span>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  ))}
                                 </tbody>
                               </table>
                             </div>
