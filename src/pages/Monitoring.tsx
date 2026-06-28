@@ -715,25 +715,37 @@ export default function Monitoring() {
         }
       });
 
-      let teacher1 = null;
-      let teacher2 = null;
-      let teacher3 = null;
-      let teacher4 = null;
+      const finalTeachers: Array<[string, { total: number; td: number; tl: number; tfz: number }]> = [];
+      const assignedSet = new Set(assigned);
 
-      if (assigned.length > 0) {
-        teacher1 = t1Name ? [t1Name, map.get(t1Name)!] : null;
-        teacher2 = t2Name ? [t2Name, map.get(t2Name)!] : null;
-        teacher3 = t3Name ? [t3Name, map.get(t3Name)!] : null;
-        teacher4 = t4Name ? [t4Name, map.get(t4Name)!] : null;
-      } else {
-        const sortedTeachers = Array.from(map.entries()).sort(
-          (a, b) => b[1].total - a[1].total,
-        );
-        teacher1 = sortedTeachers[0] || null;
-        teacher2 = sortedTeachers[1] || null;
-        teacher3 = sortedTeachers[2] || null;
-        teacher4 = sortedTeachers[3] || null;
+      // 1. Prioritaskan Guru Pengampu resmi di kolom pertama sesuai urutan penugasan
+      for (const tName of assigned) {
+         finalTeachers.push([tName, map.get(tName) || { total: 0, td: 0, tl: 0, tfz: 0 }]);
       }
+
+      // 2. Masukkan guru tamu / nama tidak dikenal / nyasar yang memiliki siswa
+      const otherTeachers = Array.from(map.entries())
+         .filter(([name, counts]) => !assignedSet.has(name) && counts.total > 0)
+         .sort((a, b) => b[1].total - a[1].total);
+         
+      finalTeachers.push(...otherTeachers);
+
+      // 3. Jika guru lebih dari 4, gabungkan sisanya ke kolom ke-4 ("Guru Lainnya") agar total murid tidak menguap
+      if (finalTeachers.length > 4) {
+         let restTotal = 0, restTd = 0, restTl = 0, restTfz = 0;
+         for (let i = 3; i < finalTeachers.length; i++) {
+            restTotal += finalTeachers[i][1].total;
+            restTd += finalTeachers[i][1].td;
+            restTl += finalTeachers[i][1].tl;
+            restTfz += finalTeachers[i][1].tfz;
+         }
+         finalTeachers[3] = ["Guru Lainnya", { total: restTotal, td: restTd, tl: restTl, tfz: restTfz }];
+      }
+
+      const teacher1 = finalTeachers[0] || null;
+      const teacher2 = finalTeachers[1] || null;
+      const teacher3 = finalTeachers[2] || null;
+      const teacher4 = finalTeachers[3] || null;
 
       return {
         kelas: g.kelas,
