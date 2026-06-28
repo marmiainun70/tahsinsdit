@@ -56,6 +56,7 @@ import {
   Cell,
   LineChart,
   Line,
+  LabelList,
 } from "recharts";
 
 const now = new Date();
@@ -553,7 +554,7 @@ export default function Monitoring() {
       
       const { data, error } = await supabase
         .from('monthly_reports')
-        .select('month, year, student_id')
+        .select('month, year, student_id, program_type')
         .in('student_id', historicalStudentIds)
         .or(conditions);
         
@@ -569,17 +570,30 @@ export default function Monitoring() {
       const label = `${monthName} ${String(k.year).substring(2)}`;
       
       if (historicalStudentIds.length === 0) {
-        return { name: label, "Kelengkapan Data (%)": 0, "Siswa Dilaporkan": 0 };
+        return { name: label, "Tahsin Dasar": 0, "Tahsin Lanjutan": 0, "Tahfizh": 0 };
       }
       
       const reportsForMonth = historicalReports.filter(r => r.month === k.month && r.year === k.year);
-      const uniqueStudentReports = new Set(reportsForMonth.map(r => r.student_id)).size;
-      const percent = Math.round((uniqueStudentReports / historicalStudentIds.length) * 100);
+      const seenStudents = new Set<string>();
+      let td = 0;
+      let tl = 0;
+      let tf = 0;
+      
+      for (const r of reportsForMonth) {
+        if (!seenStudents.has(r.student_id)) {
+           seenStudents.add(r.student_id);
+           const pType = r.program_type ? r.program_type.toLowerCase() : "";
+           if (pType === "iqra" || pType === "tahsin dasar (iqra)") td++;
+           else if (pType === "tahsin" || pType === "tahsin lanjutan") tl++;
+           else if (pType === "tahfizh") tf++;
+        }
+      }
       
       return {
         name: label,
-        "Kelengkapan Data (%)": percent,
-        "Siswa Dilaporkan": uniqueStudentReports
+        "Tahsin Dasar": td,
+        "Tahsin Lanjutan": tl,
+        "Tahfizh": tf
       };
     });
   }, [past6MonthsKeys, historicalReports, historicalStudentIds]);
@@ -1414,14 +1428,14 @@ export default function Monitoring() {
         <Card className="xl:col-span-5 border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-foreground">
-              Tren Kelengkapan Laporan (6 Bulan Terakhir)
+              Tren Perkembangan (6 Bulan Terakhir)
             </CardTitle>
           </CardHeader>
           <CardContent className="h-[250px] p-2">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={lineChartData}
-                margin={{ top: 10, right: 20, left: -25, bottom: 5 }}
+                margin={{ top: 20, right: 20, left: -25, bottom: 5 }}
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -1438,7 +1452,6 @@ export default function Monitoring() {
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={10}
                   tickLine={false}
-                  domain={[0, 100]}
                 />
                 <Tooltip
                   contentStyle={{
@@ -1446,19 +1459,37 @@ export default function Monitoring() {
                     borderColor: "hsl(var(--border))",
                     borderRadius: "8px",
                   }}
-                  formatter={(value, name) => {
-                    if (name === "Kelengkapan Data (%)") return [`${value}%`, "Kelengkapan"];
-                    return [value, name];
-                  }}
                 />
                 <Line
                   type="monotone"
-                  dataKey="Kelengkapan Data (%)"
+                  dataKey="Tahsin Dasar"
                   stroke="#10b981"
-                  strokeWidth={3}
+                  strokeWidth={2}
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}
-                />
+                >
+                  <LabelList dataKey="Tahsin Dasar" position="top" offset={10} fontSize={10} fontWeight="bold" fill="#10b981" />
+                </Line>
+                <Line
+                  type="monotone"
+                  dataKey="Tahsin Lanjutan"
+                  stroke="#f59e0b"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                >
+                  <LabelList dataKey="Tahsin Lanjutan" position="top" offset={10} fontSize={10} fontWeight="bold" fill="#f59e0b" />
+                </Line>
+                <Line
+                  type="monotone"
+                  dataKey="Tahfizh"
+                  stroke="#8b5cf6"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                >
+                  <LabelList dataKey="Tahfizh" position="top" offset={10} fontSize={10} fontWeight="bold" fill="#8b5cf6" />
+                </Line>
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
