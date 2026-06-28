@@ -244,6 +244,7 @@ const RecapReport = () => {
   const [dialogYear, setDialogYear] = useState<string>(String(now.getFullYear()));
   const [dialogMonths, setDialogMonths] = useState<number[]>([Number(now.getMonth() + 1)]);
   const [showAllGroups, setShowAllGroups] = useState(false);
+  const [zoom, setZoom] = useState<number>(75);
   const recapLayout = useSpreadsheetLayout<RecapReportColumnKey>({
     userId: user?.id,
     role: profile?.role,
@@ -1635,6 +1636,20 @@ const RecapReport = () => {
                   <Download className="w-4 h-4" />
                   Download Per Rombel (Multi Bulan)
                 </Button>
+                <div className="flex items-center gap-1.5 bg-muted/60 p-0.5 rounded-md border border-border hidden md:flex">
+                  <span className="text-[10px] text-muted-foreground px-1.5 font-medium">Zoom:</span>
+                  {([50, 75, 100] as const).map(z => (
+                    <Button
+                      key={z}
+                      size="sm"
+                      variant={zoom === z ? "default" : "ghost"}
+                      className="h-6 px-1.5 text-[10px]"
+                      onClick={() => setZoom(z)}
+                    >
+                      {z}%
+                    </Button>
+                  ))}
+                </div>
               </div>
             </CardHeader>
             <CardContent className="hidden p-3 md:block">
@@ -1710,6 +1725,7 @@ const RecapReport = () => {
                       minWidth: recapLayout.tableMinWidth,
                       fontFamily: `"${recapLayout.layout.tableFont}", system-ui, sans-serif`,
                       fontSize: `${recapLayout.layout.tableFontSize}px`,
+                      zoom: zoom / 100,
                     }}
                     onClick={(event) => {
                       if (!recapLayout.isEditing || event.target !== event.currentTarget) return;
