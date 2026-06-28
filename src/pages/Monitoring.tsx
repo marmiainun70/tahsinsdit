@@ -1394,56 +1394,8 @@ export default function Monitoring() {
           </Card>
         </div>
 
-        {/* Perbandingan Total Siswa per Kelas */}
-        <Card className="xl:col-span-3 border-border bg-card shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-foreground">
-              Perbandingan Total Siswa per Kelas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="h-[250px] p-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={barChartData}
-                margin={{ top: 10, right: 5, left: -25, bottom: 5 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="hsl(var(--border))"
-                />
-                <XAxis
-                  dataKey="name"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={10}
-                  tickLine={false}
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={10}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    borderColor: "hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                  itemStyle={{ color: "hsl(var(--popover-foreground))" }}
-                />
-                <Bar
-                  dataKey="Jumlah Siswa"
-                  fill="#0f766e"
-                  radius={[4, 4, 0, 0]}
-                  barSize={20}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
         {/* Tren Perkembangan (6 Bulan Terakhir) */}
-        <Card className="xl:col-span-5 border-border bg-card shadow-sm">
+        <Card className="xl:col-span-8 border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-foreground">
               Tren Perkembangan (6 Bulan Terakhir)
