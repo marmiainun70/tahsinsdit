@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, Loader2, ShieldCheck, UserX } from "lucide-react";
+import { CheckCircle2, Loader2, ShieldCheck, UserX, Search, Filter, X, SearchX } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRoleLabel } from "@/lib/roleLabels";
@@ -34,6 +34,10 @@ export default function ManageAccounts() {
   const isAdmin = profile?.role === "admin";
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ["managed-accounts"],
@@ -103,6 +107,37 @@ export default function ManageAccounts() {
     );
   }, [accounts]);
 
+  const filteredAccounts = useMemo(() => {
+    return accounts
+      .filter((acc) => {
+        const matchesSearch =
+          searchQuery === "" ||
+          acc.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (acc.username && acc.username.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (acc.whatsapp && acc.whatsapp.includes(searchQuery));
+        
+        const matchesStatus = statusFilter === "all" || acc.status === statusFilter;
+        const matchesRole = roleFilter === "all" || acc.role === roleFilter;
+
+        return matchesSearch && matchesStatus && matchesRole;
+      })
+      .sort((a, b) => {
+        // Sort pending first
+        if (a.status === "pending" && b.status !== "pending") return -1;
+        if (a.status !== "pending" && b.status === "pending") return 1;
+        // Then by registered_at desc
+        return new Date(b.registered_at).getTime() - new Date(a.registered_at).getTime();
+      });
+  }, [accounts, searchQuery, statusFilter, roleFilter]);
+
+  const hasActiveFilters = searchQuery !== "" || statusFilter !== "all" || roleFilter !== "all";
+
+  const resetFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setRoleFilter("all");
+  };
+
   const getStatusDisplay = (status: AccountRow["status"]) => {
     switch (status) {
       case "pending":
@@ -162,8 +197,57 @@ export default function ManageAccounts() {
         <p className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{actionError}</p>
       )}
 
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Cari nama, username, atau WhatsApp..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-9 w-full rounded-xl border border-border bg-background pl-9 pr-4 text-sm outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          />
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-9 rounded-xl border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            >
+              <option value="all">Semua Status</option>
+              <option value="pending">Menunggu</option>
+              <option value="approved">Disetujui</option>
+              <option value="rejected">Ditolak</option>
+              <option value="inactive">Nonaktif</option>
+            </select>
+          </div>
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="h-9 rounded-xl border border-border bg-background px-3 text-sm outline-none transition-colors focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          >
+            <option value="all">Semua Role</option>
+            <option value="admin">Admin</option>
+            <option value="teacher">Guru</option>
+            <option value="parent">Orang Tua</option>
+            {accounts.some((a) => a.role === "tester") && <option value="tester">Penguji</option>}
+          </select>
+          {hasActiveFilters && (
+            <button
+              onClick={resetFilters}
+              className="inline-flex h-9 items-center gap-2 rounded-xl bg-secondary px-3 text-sm font-medium text-foreground transition-colors hover:bg-secondary/80"
+            >
+              <X className="h-4 w-4" />
+              Reset
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="grid gap-4">
-        {accounts.map((account) => {
+        {filteredAccounts.map((account) => {
           const isUpdating = updatingUserId === account.user_id;
           const isCurrentAdmin = account.user_id === user?.id;
 
@@ -231,6 +315,24 @@ export default function ManageAccounts() {
             </article>
           );
         })}
+
+        {filteredAccounts.length === 0 && accounts.length > 0 && (
+          <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
+              <SearchX className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-bold text-foreground">Tidak ada hasil</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Tidak ada akun yang sesuai dengan filter pencarian Anda.
+            </p>
+            <button
+              onClick={resetFilters}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground hover:bg-secondary"
+            >
+              <X className="h-4 w-4" /> Reset Filter
+            </button>
+          </div>
+        )}
 
         {accounts.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
