@@ -1077,3 +1077,10 @@ Tahsin SDIT harus tampil:
 
 > Setiap halaman baru wajib mengikuti design system ini agar seluruh website terasa sebagai satu produk yang utuh.
 
+
+
+## Program Colors
+
+- **Tahsin Dasar (TD)**: Emerald (#10b981, g-emerald-500)
+- **Tahsin Lanjutan (TL)**: Amber (#f59e0b, g-amber-500)
+- **Tahfizh (TFZ)**: Violet (#8b5cf6, g-violet-500)
