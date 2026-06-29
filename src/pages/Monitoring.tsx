@@ -107,10 +107,17 @@ type TeacherLoadSummary = {
   tdPercent: number;
 };
 
+type TeacherLoadChartLimit = "8" | "15" | "all";
+
 const formatPercent = (value: number) => `${value.toFixed(1)}%`;
 
 const getMonthLabel = (month: number, year: number) =>
   `${MONTH_NAMES[month - 1]} ${year}`;
+
+const formatTeacherChartName = (name: string) => {
+  if (name.length <= 24) return name;
+  return `${name.slice(0, 23)}...`;
+};
 
 const getPreviousPeriod = (month: number, year: number) => {
   if (month === 1) return { month: 12, year: year - 1 };
@@ -204,6 +211,8 @@ export default function Monitoring() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [expandedRombels, setExpandedRombels] = useState<Record<string, boolean>>({});
+  const [teacherLoadChartLimit, setTeacherLoadChartLimit] =
+    useState<TeacherLoadChartLimit>("8");
   const [showAllJenjang, setShowAllJenjang] = useState(false);
 
   const selectedMonth = Number(filterMonth);
@@ -1001,9 +1010,17 @@ export default function Monitoring() {
   }, [currentTeacherLoads]);
 
   const teacherLoadChartData = useMemo(
-    () => currentTeacherLoads.slice(0, 8),
-    [currentTeacherLoads],
+    () => {
+      if (teacherLoadChartLimit === "all") return currentTeacherLoads;
+      return currentTeacherLoads.slice(0, Number(teacherLoadChartLimit));
+    },
+    [currentTeacherLoads, teacherLoadChartLimit],
   );
+
+  const teacherLoadChartLimitLabel =
+    teacherLoadChartLimit === "all"
+      ? "semua guru"
+      : `${teacherLoadChartData.length} guru teratas`;
 
   const dominantTdTeachers = useMemo(
     () => currentTeacherLoads.filter((item) => item.tdPercent >= 80),
@@ -2311,21 +2328,77 @@ export default function Monitoring() {
                 )}
               </TabsContent>
 
-              <TabsContent value="distribution">
-                <div className="h-[360px] w-full rounded-xl border border-border p-3 sm:p-4">
+              <TabsContent value="distribution" className="space-y-3">
+                <div className="flex flex-col gap-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-blue-900 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="text-sm font-bold">Distribusi beban ditampilkan berdasarkan total siswa terbanyak</div>
+                    <p className="mt-1 text-xs leading-relaxed text-blue-700">
+                      Default Top 8 dipakai agar chart tetap ringkas dan mudah dibaca. Ubah pilihan jika ingin melihat lebih banyak guru.
+                    </p>
+                  </div>
+                  <div className="w-full sm:w-44">
+                    <Select
+                      value={teacherLoadChartLimit}
+                      onValueChange={(value) =>
+                        setTeacherLoadChartLimit(value as TeacherLoadChartLimit)
+                      }
+                    >
+                      <SelectTrigger className="h-9 bg-white text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="8">Top 8</SelectItem>
+                        <SelectItem value="15">Top 15</SelectItem>
+                        <SelectItem value="all">Semua</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border p-3 sm:p-4">
+                  <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">
+                        Menampilkan {teacherLoadChartLimitLabel}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        Urutan dari guru dengan total siswa paling banyak.
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="w-fit bg-muted/40 text-muted-foreground">
+                      Total guru: {currentTeacherLoads.length}
+                    </Badge>
+                  </div>
+                  <div
+                    className="w-full"
+                    style={{
+                      height: `${Math.max(360, teacherLoadChartData.length * 52 + 96)}px`,
+                    }}
+                  >
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={teacherLoadChartData} margin={{ top: 12, right: 12, left: 0, bottom: 40 }}>
+                    <BarChart
+                      data={teacherLoadChartData}
+                      layout="vertical"
+                      margin={{ top: 8, right: 16, left: 24, bottom: 8 }}
+                    >
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis
-                        dataKey="teacherName"
+                        type="number"
+                        allowDecimals={false}
                         tick={{ fontSize: 11 }}
                         tickLine={false}
-                        angle={-25}
-                        textAnchor="end"
-                        height={72}
                       />
-                      <YAxis allowDecimals={false} tick={{ fontSize: 11 }} tickLine={false} />
+                      <YAxis
+                        type="category"
+                        dataKey="teacherName"
+                        width={156}
+                        tick={{ fontSize: 12, fontWeight: 600, fill: "hsl(var(--foreground))" }}
+                        tickFormatter={formatTeacherChartName}
+                        tickLine={false}
+                      />
                       <Tooltip
+                        formatter={(value, name) => [`${value} siswa`, name]}
+                        labelFormatter={(label) => `Guru: ${label}`}
                         contentStyle={{
                           backgroundColor: "hsl(var(--popover))",
                           borderColor: "hsl(var(--border))",
@@ -2338,6 +2411,7 @@ export default function Monitoring() {
                       <Bar dataKey="TFZ" stackId="load" fill={TEACHER_LOAD_COLORS.TFZ} />
                     </BarChart>
                   </ResponsiveContainer>
+                  </div>
                 </div>
               </TabsContent>
 
