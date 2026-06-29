@@ -197,6 +197,22 @@ export default function Monitoring() {
   );
   const [filterYear, setFilterYear] = useState<string>(
     String(now.getFullYear()),
+
+export default function Monitoring() {
+  const { user, profile } = useAuth();
+  const isTeacher = isTeacherRole(profile?.role);
+
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const tableContentRef = useRef<HTMLTableElement>(null);
+
+  const { data: students = [], isLoading: ls } = useStudents();
+
+  const [filterSemester, setFilterSemester] = useState<string>(initialSemester);
+  const [filterMonth, setFilterMonth] = useState<string>(
+    String(currentMonthIdx + 1),
+  );
+  const [filterYear, setFilterYear] = useState<string>(
+    String(now.getFullYear()),
   );
   const [filterKelas, setFilterKelas] = useState<string>("all");
   const [filterRombel, setFilterRombel] = useState<string>("all");
@@ -204,6 +220,7 @@ export default function Monitoring() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [expandedRombels, setExpandedRombels] = useState<Record<string, boolean>>({});
+  const [showAllJenjang, setShowAllJenjang] = useState(false);
 
   const selectedMonth = Number(filterMonth);
   const selectedYear = Number(filterYear);
@@ -1797,15 +1814,29 @@ export default function Monitoring() {
 
       {/* Ringkasan Jenjang Kelas */}
       <Card className="border-border bg-card shadow-sm overflow-hidden">
-        <CardHeader className="border-b border-border bg-muted/40 px-6 py-4">
+        <CardHeader className="border-b border-border bg-muted/40 px-6 py-4 flex flex-row items-center justify-between">
           <CardTitle className="text-base font-bold text-foreground">
             Ringkasan Jenjang Kelas
           </CardTitle>
+          {filterKelas === "all" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAllJenjang(!showAllJenjang)}
+              className="text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50 h-8"
+            >
+              <Eye className="h-3.5 w-3.5 mr-1.5" />
+              {showAllJenjang ? "Sembunyikan Arsip" : "Lihat Arsip Data"}
+            </Button>
+          )}
         </CardHeader>
-        <div 
-          className="spreadsheet-table-scroll overflow-x-hidden relative"
-          ref={tableScrollRef}
-        >
+        
+        {(filterKelas !== "all" || showAllJenjang) ? (
+          <>
+            <div 
+              className="spreadsheet-table-scroll overflow-x-hidden relative"
+              ref={tableScrollRef}
+            >
           <table className="w-full text-left text-xs" ref={tableContentRef} style={{ minWidth: "1200px" }}>
             <thead className="bg-slate-50 text-slate-600 border-b border-slate-100 text-center">
               <tr className="[&>th]:font-semibold [&>th]:px-4 [&>th]:py-3">
@@ -2083,6 +2114,25 @@ export default function Monitoring() {
           contentRef={tableContentRef}
           refreshKey={`${jenjangKelasRows.length}-${Object.keys(expandedRombels).length}`}
         />
+          </>
+        ) : (
+          <div className="p-12 flex flex-col items-center justify-center text-center bg-slate-50/50">
+            <div className="bg-emerald-100 p-3 rounded-full mb-3 shadow-sm border border-emerald-200">
+              <ClipboardList className="h-6 w-6 text-emerald-600" />
+            </div>
+            <h3 className="text-sm font-bold text-slate-700 mb-1">Data Diarsipkan (Mode Semua Kelas)</h3>
+            <p className="text-xs text-slate-500 max-w-md mb-4 leading-relaxed">
+              Tampilan ringkasan 24 rombel disembunyikan untuk memprioritaskan ruang dan kenyamanan membaca Anda. 
+            </p>
+            <Button
+              onClick={() => setShowAllJenjang(true)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Tampilkan {jenjangKelasRows.length} Rombel
+            </Button>
+          </div>
+        )}
       </Card>
 
       <Card className="border-border bg-card shadow-sm overflow-hidden">
