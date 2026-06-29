@@ -160,6 +160,32 @@ describe("recapMonthlyReportRows", () => {
     expect(row.attendanceStatus).toBe("Belum Diisi");
   });
 
+  it("uses monthly report snapshots for historical student identity and grouping", () => {
+    const groups = buildRecapJoinedGroups({
+      students: [{ id: "student-1", nama: "Ahmad Baru", kelas: 5, rombel: "B", level: "Tahfizh" }],
+      month: 6,
+      year: 2026,
+      monthName: "Juni",
+      reports: [
+        report({
+          student_name_snapshot: "Ahmad Lama",
+          kelas_snapshot: 4,
+          rombel_snapshot: "A",
+          level_snapshot: "Tahsin Lanjutan",
+          teacher_name_snapshot: "Ustadzah Snapshot",
+        }),
+      ],
+      attendance: [],
+      attendanceSettings: [setting({ kelas: 4, rombel: "A" })],
+    });
+
+    expect(groups[0].kelas).toBe(4);
+    expect(groups[0].rombel).toBe("A");
+    expect(groups[0].rows[0].nama).toBe("Ahmad Lama");
+    expect(groups[0].rows[0].level).toBe("Tahsin Lanjutan");
+    expect(groups[0].rows[0].guru).toBe("Ustadzah Snapshot");
+  });
+
   it("detects complete, incomplete, excessive, and unset effective-day attendance", () => {
     const base = {
       students: [students[0]],

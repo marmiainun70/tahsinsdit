@@ -30,6 +30,12 @@ export interface MonthlyReport {
   created_by: string | null;
   teacher_id: string | null;
   teacher_name: string | null;
+  student_name_snapshot?: string | null;
+  kelas_snapshot?: number | null;
+  rombel_snapshot?: string | null;
+  level_snapshot?: string | null;
+  teacher_id_snapshot?: string | null;
+  teacher_name_snapshot?: string | null;
   created_at: string;
 }
 
@@ -446,9 +452,23 @@ export const useAddMonthlyReport = () => {
     mutationFn: async (
       report: Omit<
         MonthlyReport,
-        "id" | "created_at" | "created_by" | "teacher_id" | "teacher_name"
+        | "id"
+        | "created_at"
+        | "created_by"
+        | "teacher_id"
+        | "teacher_name"
+        | "teacher_id_snapshot"
+        | "teacher_name_snapshot"
       >,
     ) => {
+      const { data: studentSnapshot, error: studentSnapshotError } = await supabase
+        .from("students")
+        .select("nama, kelas, rombel, level")
+        .eq("id", report.student_id)
+        .maybeSingle();
+
+      if (studentSnapshotError) throw studentSnapshotError;
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from("monthly_reports")
@@ -457,6 +477,12 @@ export const useAddMonthlyReport = () => {
           created_by: user?.id ?? null,
           teacher_id: user?.id ?? null,
           teacher_name: teacherName,
+          student_name_snapshot: report.student_name_snapshot ?? studentSnapshot?.nama ?? null,
+          kelas_snapshot: report.kelas_snapshot ?? studentSnapshot?.kelas ?? null,
+          rombel_snapshot: report.rombel_snapshot ?? studentSnapshot?.rombel ?? null,
+          level_snapshot: report.level_snapshot ?? studentSnapshot?.level ?? null,
+          teacher_id_snapshot: user?.id ?? null,
+          teacher_name_snapshot: teacherName,
         })
         .select()
         .single();
@@ -485,6 +511,32 @@ export const useUpdateMonthlyReport = () => {
       id,
       ...updates
     }: Partial<MonthlyReport> & { id: string }) => {
+      const { data: existingReport, error: existingReportError } = await supabase
+        .from("monthly_reports")
+        .select("student_id, student_name_snapshot, kelas_snapshot, rombel_snapshot, level_snapshot, teacher_id_snapshot, teacher_name_snapshot")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (existingReportError) throw existingReportError;
+
+      const studentId = updates.student_id ?? existingReport?.student_id ?? null;
+      const needsStudentSnapshot =
+        studentId &&
+        (updates.student_name_snapshot === undefined ||
+          updates.kelas_snapshot === undefined ||
+          updates.rombel_snapshot === undefined ||
+          updates.level_snapshot === undefined);
+
+      const { data: studentSnapshot, error: studentSnapshotError } = needsStudentSnapshot
+        ? await supabase
+            .from("students")
+            .select("nama, kelas, rombel, level")
+            .eq("id", studentId)
+            .maybeSingle()
+        : { data: null, error: null };
+
+      if (studentSnapshotError) throw studentSnapshotError;
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase as any)
         .from("monthly_reports")
@@ -492,6 +544,36 @@ export const useUpdateMonthlyReport = () => {
           ...updates,
           teacher_id: user?.id ?? updates.teacher_id ?? null,
           teacher_name: teacherName,
+          student_name_snapshot:
+            updates.student_name_snapshot ??
+            existingReport?.student_name_snapshot ??
+            studentSnapshot?.nama ??
+            null,
+          kelas_snapshot:
+            updates.kelas_snapshot ??
+            existingReport?.kelas_snapshot ??
+            studentSnapshot?.kelas ??
+            null,
+          rombel_snapshot:
+            updates.rombel_snapshot ??
+            existingReport?.rombel_snapshot ??
+            studentSnapshot?.rombel ??
+            null,
+          level_snapshot:
+            updates.level_snapshot ??
+            existingReport?.level_snapshot ??
+            studentSnapshot?.level ??
+            null,
+          teacher_id_snapshot:
+            updates.teacher_id_snapshot ??
+            existingReport?.teacher_id_snapshot ??
+            user?.id ??
+            updates.teacher_id ??
+            null,
+          teacher_name_snapshot:
+            updates.teacher_name_snapshot ??
+            existingReport?.teacher_name_snapshot ??
+            teacherName,
         })
         .eq("id", id)
         .select()

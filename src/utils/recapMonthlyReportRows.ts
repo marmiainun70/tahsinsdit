@@ -198,15 +198,24 @@ export const buildRecapJoinedRow = ({
   const effectiveDays = attendanceSetting?.effective_days ?? null;
   const attendanceStatus = getAttendanceStatus({ hasAttendance, totalAbsensi, effectiveDays });
   const reportProgramType = report?.program_type ?? null;
+  const studentName = report?.student_name_snapshot?.trim() || student.nama;
+  const studentClass = report?.kelas_snapshot ?? student.kelas;
+  const studentRombel = report?.rombel_snapshot?.trim() || student.rombel;
+  const studentLevel = report?.level_snapshot?.trim() || student.level;
+  const teacherSnapshot =
+    report?.teacher_name_snapshot?.trim() ||
+    report?.teacher_name?.trim() ||
+    teacherName ||
+    "-";
 
   return {
     no,
     studentId: student.id,
-    nama: student.nama,
-    kelas: student.kelas,
-    rombel: student.rombel,
-    program: getProgramLabelFromLevel(student.level),
-    level: student.level,
+    nama: studentName,
+    kelas: studentClass,
+    rombel: studentRombel,
+    program: getProgramLabelFromLevel(studentLevel),
+    level: studentLevel,
     month,
     year,
     periode: `${monthName} ${year}`,
@@ -219,12 +228,12 @@ export const buildRecapJoinedRow = ({
     poinKualitasBacaan: hasReport && report ? normalizePoint(report.poin_kualitas_bacaan) : null,
     poinPerbaikanBacaan: hasReport && report ? normalizePoint(report.poin_perbaikan_bacaan) : null,
     pencapaianTargetBulan:
-      hasReport && report && shouldShowMonthlyAchievement(student.level, reportProgramType)
+      hasReport && report && shouldShowMonthlyAchievement(studentLevel, reportProgramType)
         ? report.pencapaian_target_bulan ?? 0
         : null,
     kategoriProgres: hasReport && report ? normalizeCategory(report.kategori_progres) : null,
     nilaiAkhirProgresif: hasReport && report ? report.nilai_akhir_progresif ?? null : null,
-    guru: hasReport && report ? report.teacher_name?.trim() || teacherName || "-" : "-",
+    guru: hasReport && report ? teacherSnapshot : "-",
     catatan: hasReport && report ? report.notes || "" : "",
     hasAttendance,
     present: hasAttendance ? present : null,
@@ -263,22 +272,25 @@ export const buildRecapJoinedGroups = ({
   const groupMap = new Map<string, RecapJoinedGroup>();
 
   students.forEach((student) => {
-    const groupKey = `${student.kelas}-${student.rombel}`;
+    const periodKey = buildRecapPeriodKey(student.id, year, month);
+    const report = reportMap.get(periodKey);
+    const groupKelas = report?.kelas_snapshot ?? student.kelas;
+    const groupRombel = report?.rombel_snapshot?.trim() || student.rombel;
+    const groupKey = `${groupKelas}-${groupRombel}`;
     if (!groupMap.has(groupKey)) {
-      groupMap.set(groupKey, { kelas: student.kelas, rombel: student.rombel, rows: [] });
+      groupMap.set(groupKey, { kelas: groupKelas, rombel: groupRombel, rows: [] });
     }
 
     const group = groupMap.get(groupKey)!;
-    const periodKey = buildRecapPeriodKey(student.id, year, month);
     const row = buildRecapJoinedRow({
       student,
       month,
       year,
       monthName,
-      report: reportMap.get(periodKey),
+      report,
       attendance: attendanceMap.get(periodKey),
-      attendanceSetting: settingsMap.get(buildAttendanceSettingKey(year, month, student.kelas, student.rombel)),
-      teacherName: getTeacherName?.(reportMap.get(periodKey)?.created_by ?? null),
+      attendanceSetting: settingsMap.get(buildAttendanceSettingKey(year, month, groupKelas, groupRombel)),
+      teacherName: getTeacherName?.(report?.created_by ?? null),
       no: group.rows.length + 1,
     });
 

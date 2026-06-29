@@ -343,6 +343,8 @@ export type Database = {
           iqra_level: string | null
           attendance_percentage: number
           kategori_progres: string
+          kelas_snapshot: number | null
+          level_snapshot: string | null
           month: number
           nilai_akhir_progresif: number
           nilai_dasar: number
@@ -355,11 +357,15 @@ export type Database = {
           poin_pencapaian: number
           poin_perbaikan_bacaan: number
           program_type: string
+          rombel_snapshot: string | null
           start_page: number
           student_id: string
+          student_name_snapshot: string | null
           target_pages: number
           teacher_id: string | null
+          teacher_id_snapshot: string | null
           teacher_name: string | null
+          teacher_name_snapshot: string | null
           year: number
         }
         Insert: {
@@ -372,6 +378,8 @@ export type Database = {
           iqra_level?: string | null
           attendance_percentage?: number
           kategori_progres?: string
+          kelas_snapshot?: number | null
+          level_snapshot?: string | null
           month: number
           nilai_akhir_progresif?: number
           nilai_dasar?: number
@@ -384,11 +392,15 @@ export type Database = {
           poin_pencapaian?: number
           poin_perbaikan_bacaan?: number
           program_type?: string
+          rombel_snapshot?: string | null
           start_page?: number
           student_id: string
+          student_name_snapshot?: string | null
           target_pages?: number
           teacher_id?: string | null
+          teacher_id_snapshot?: string | null
           teacher_name?: string | null
+          teacher_name_snapshot?: string | null
           year: number
         }
         Update: {
@@ -401,6 +413,8 @@ export type Database = {
           iqra_level?: string | null
           attendance_percentage?: number
           kategori_progres?: string
+          kelas_snapshot?: number | null
+          level_snapshot?: string | null
           month?: number
           nilai_akhir_progresif?: number
           nilai_dasar?: number
@@ -413,11 +427,15 @@ export type Database = {
           poin_pencapaian?: number
           poin_perbaikan_bacaan?: number
           program_type?: string
+          rombel_snapshot?: string | null
           start_page?: number
           student_id?: string
+          student_name_snapshot?: string | null
           target_pages?: number
           teacher_id?: string | null
+          teacher_id_snapshot?: string | null
           teacher_name?: string | null
+          teacher_name_snapshot?: string | null
           year?: number
         }
         Relationships: [

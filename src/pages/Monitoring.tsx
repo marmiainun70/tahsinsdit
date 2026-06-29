@@ -92,6 +92,8 @@ type TeacherLoadReportRow = {
   student_id: string;
   teacher_id: string | null;
   teacher_name: string | null;
+  teacher_id_snapshot?: string | null;
+  teacher_name_snapshot?: string | null;
   program_type: string | null;
   month: number;
   year: number;
@@ -160,8 +162,14 @@ const buildTeacherLoadSummaries = (
   const seenStudentPerTeacher = new Set<string>();
 
   rows.forEach((row) => {
-    const teacherName = row.teacher_name?.trim() || "Tidak Diketahui";
-    const teacherId = getTeacherLoadKey(teacherName, row.teacher_id);
+    const teacherName =
+      row.teacher_name_snapshot?.trim() ||
+      row.teacher_name?.trim() ||
+      "Tidak Diketahui";
+    const teacherId = getTeacherLoadKey(
+      teacherName,
+      row.teacher_id_snapshot ?? row.teacher_id,
+    );
     const uniqueKey = `${teacherId}-${row.student_id}`;
     if (seenStudentPerTeacher.has(uniqueKey)) return;
     seenStudentPerTeacher.add(uniqueKey);
@@ -354,7 +362,7 @@ export default function Monitoring() {
       while (true) {
         const { data, error } = await supabase
           .from("monthly_reports")
-          .select("student_id, teacher_id, teacher_name, program_type, month, year")
+          .select("student_id, teacher_id, teacher_name, teacher_id_snapshot, teacher_name_snapshot, program_type, month, year")
           .eq("month", previousLoadPeriod.month)
           .eq("year", previousLoadPeriod.year)
           .order("id", { ascending: true })

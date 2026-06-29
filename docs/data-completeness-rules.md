@@ -14,3 +14,10 @@ Gunakan aturan ini setiap membuat rekap, chart, dashboard, atau perbandingan dat
 - Tab beban guru bulan ini harus mengambil data dari rekap Monitoring yang sudah lengkap, bukan dari tabel tampilan yang bisa menggabungkan kolom menjadi "Guru Lainnya".
 - Chart distribusi boleh membatasi tampilan untuk keterbacaan, tetapi sumber agregasinya tetap harus berasal dari data lengkap.
 - Jika chart memakai Top 8 atau Top 15, tampilkan catatan UI bahwa data dibatasi untuk keterbacaan dan sediakan pilihan "Semua".
+
+## Period snapshots
+
+- Jangan jadikan nama siswa, kelas, rombel, atau level aktif sebagai sumber utama untuk laporan bulan lama.
+- Saat `monthly_reports` dibuat, simpan snapshot periode: `student_name_snapshot`, `kelas_snapshot`, `rombel_snapshot`, `level_snapshot`, `teacher_id_snapshot`, dan `teacher_name_snapshot`.
+- Rekap lama harus memprioritaskan snapshot ini agar tetap akurat setelah siswa naik kelas, pindah rombel, namanya dikoreksi, atau guru pengampu berubah.
+- Backfill snapshot otomatis hanya bisa memakai kondisi data yang tersedia saat migrasi dijalankan. Jika histori lama sudah berubah sebelum snapshot dibuat, koreksi historis perlu sumber pembanding seperti Excel/arsip periode.
