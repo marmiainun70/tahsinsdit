@@ -2336,7 +2336,7 @@ export default function Monitoring() {
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
-                                <div className="truncate text-sm font-bold text-rose-950" title={teacher.teacherName}>
+                                <div className="truncate text-sm font-bold text-rose-900 dark:text-rose-400" title={teacher.teacherName}>
                                   {teacher.teacherName}
                                 </div>
                                 <div className="mt-1 text-xs text-rose-700 dark:text-rose-300">
