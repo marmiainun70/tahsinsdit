@@ -83,9 +83,9 @@ const currentMonthIdx = now.getMonth();
 const initialSemester = currentMonthIdx >= 6 ? "ganjil" : "genap";
 const YEARS = [2024, 2025, 2026, 2027, 2028];
 const TEACHER_LOAD_COLORS = {
-  TD: "#e34948",
-  TL: "#2a78d6",
-  TFZ: "#1baf7a",
+  TD: "#10b981",
+  TL: "#f59e0b",
+  TFZ: "#8b5cf6",
 };
 
 type TeacherLoadReportRow = {
@@ -2199,19 +2199,19 @@ export default function Monitoring() {
                       label: "Total TD",
                       value: teacherLoadTotals.TD,
                       percent: formatPercent(teacherLoadTotals.tdPercent),
-                      color: "bg-rose-500",
+                      color: "bg-emerald-500",
                     },
                     {
                       label: "Total TL",
                       value: teacherLoadTotals.TL,
                       percent: formatPercent(teacherLoadTotals.tlPercent),
-                      color: "bg-blue-500",
+                      color: "bg-amber-500",
                     },
                     {
                       label: "Total TFZ",
                       value: teacherLoadTotals.TFZ,
                       percent: formatPercent(teacherLoadTotals.tfzPercent),
-                      color: "bg-emerald-500",
+                      color: "bg-violet-500",
                     },
                   ].map((item) => (
                     <Card key={item.label} className="overflow-hidden rounded-xl border-border shadow-sm">
@@ -2263,7 +2263,7 @@ export default function Monitoring() {
                             <TableCell>
                               <div className="h-2.5 rounded-full bg-muted">
                                 <div
-                                  className="h-2.5 rounded-full bg-rose-500"
+                                  className="h-2.5 rounded-full bg-emerald-500"
                                   style={{ width: `${Math.min(teacher.tdPercent, 100)}%` }}
                                 />
                               </div>
