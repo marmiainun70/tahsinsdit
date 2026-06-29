@@ -140,18 +140,18 @@ const getTeacherLoadStatus = (tdPercent: number) => {
   if (tdPercent >= 80) {
     return {
       label: "Dominan TD",
-      className: "bg-rose-100 text-rose-700 border-rose-200",
+      className: "bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/40",
     };
   }
   if (tdPercent >= 60) {
     return {
       label: "Campuran",
-      className: "bg-amber-100 text-amber-700 border-amber-200",
+      className: "bg-amber-100 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900/40",
     };
   }
   return {
     label: "Seimbang",
-    className: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    className: "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40",
   };
 };
 
@@ -1083,14 +1083,14 @@ export default function Monitoring() {
         const tdDelta = (current?.TD ?? 0) - (previous?.TD ?? 0);
         const tlDelta = (current?.TL ?? 0) - (previous?.TL ?? 0);
         let status = "Tetap";
-        let statusClassName = "bg-slate-100 text-slate-700 border-slate-200";
+        let statusClassName = "bg-muted text-foreground border-border";
 
         if (tdDelta > 2) {
           status = "TD Naik";
-          statusClassName = "bg-rose-100 text-rose-700 border-rose-200";
+          statusClassName = "bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/40";
         } else if (tlDelta > 2) {
           status = "TL Naik";
-          statusClassName = "bg-emerald-100 text-emerald-700 border-emerald-200";
+          statusClassName = "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40";
         }
 
         return {
@@ -1206,12 +1206,12 @@ export default function Monitoring() {
 
   const getStatusColor = (kategori: string | null, nilai: number | null) => {
     if (nilai !== null && nilai < 70)
-      return "bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/40";
+      return "bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-400 border-rose-200 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/40";
     if (kategori === "Konsisten & Progresif" || kategori === "Ada Progres")
-      return "bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/40";
+      return "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/40";
     if (kategori === "Kurang Konsisten" || kategori === "Tidak Konsisten")
       return "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-900/40";
-    return "bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800/40";
+    return "bg-muted text-foreground border-border dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800/40";
   };
 
   if (ls || lr || (isTeacher && la)) {
@@ -1273,7 +1273,7 @@ export default function Monitoring() {
       </div>
 
       {/* Filter Section */}
-      <Card className="border border-slate-200 bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl">
+      <Card className="border border-border bg-card shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl">
         <CardContent className="p-5 sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
             <div className="space-y-1.5">
@@ -1453,40 +1453,40 @@ export default function Monitoring() {
 
       {/* KPI Cards Row */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
-        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
           <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
           <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Siswa</span>
-              <div className="p-1.5 bg-emerald-50 rounded-md">
-                <Users className="h-4 w-4 text-emerald-600" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Siswa</span>
+              <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-md">
+                <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-slate-800">
+              <div className="text-3xl font-bold text-foreground">
                 {stats.total}
               </div>
-              <div className="text-[10px] font-medium text-slate-400 mt-1">
+              <div className="text-[10px] font-medium text-muted-foreground/70 mt-1">
                 Keseluruhan Populasi
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
           <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
           <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tahsin Dasar</span>
-              <div className="p-1.5 bg-emerald-50 rounded-md">
-                <BookOpen className="h-4 w-4 text-emerald-600" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tahsin Dasar</span>
+              <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-md">
+                <BookOpen className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-slate-800">
+              <div className="text-3xl font-bold text-foreground">
                 {stats.tahsinDasar}
               </div>
-              <div className="text-[10px] font-medium text-emerald-600 mt-1 bg-emerald-50 inline-block px-1.5 py-0.5 rounded">
+              <div className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 mt-1 bg-emerald-50 dark:bg-emerald-950/40 inline-block px-1.5 py-0.5 rounded">
                 {stats.total > 0
                   ? ((stats.tahsinDasar / stats.total) * 100).toFixed(1)
                   : 0}
@@ -1496,20 +1496,20 @@ export default function Monitoring() {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
           <div className="absolute top-0 left-0 w-1 h-full bg-amber-500" />
           <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Lanjutan</span>
-              <div className="p-1.5 bg-amber-50 rounded-md">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Lanjutan</span>
+              <div className="p-1.5 bg-amber-50 dark:bg-amber-950/40 rounded-md">
                 <Award className="h-4 w-4 text-amber-600" />
               </div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-slate-800">
+              <div className="text-3xl font-bold text-foreground">
                 {stats.tahsinLanjutan}
               </div>
-              <div className="text-[10px] font-medium text-amber-600 mt-1 bg-amber-50 inline-block px-1.5 py-0.5 rounded">
+              <div className="text-[10px] font-medium text-amber-600 mt-1 bg-amber-50 dark:bg-amber-950/40 inline-block px-1.5 py-0.5 rounded">
                 {stats.total > 0
                   ? ((stats.tahsinLanjutan / stats.total) * 100).toFixed(1)
                   : 0}
@@ -1519,17 +1519,17 @@ export default function Monitoring() {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
           <div className="absolute top-0 left-0 w-1 h-full bg-violet-500" />
           <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Tahfizh</span>
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tahfizh</span>
               <div className="p-1.5 bg-violet-50 rounded-md">
                 <Award className="h-4 w-4 text-violet-600" />
               </div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-slate-800">
+              <div className="text-3xl font-bold text-foreground">
                 {stats.tahfizh}
               </div>
               <div className="text-[10px] font-medium text-violet-600 mt-1 bg-violet-50 inline-block px-1.5 py-0.5 rounded">
@@ -1542,20 +1542,20 @@ export default function Monitoring() {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
           <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
           <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ada Laporan</span>
-              <div className="p-1.5 bg-emerald-50 rounded-md">
-                <ClipboardList className="h-4 w-4 text-emerald-600" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ada Laporan</span>
+              <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-md">
+                <ClipboardList className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-slate-800">
+              <div className="text-3xl font-bold text-foreground">
                 {stats.latestProgress}
               </div>
-              <div className="text-[10px] font-medium text-emerald-600 mt-1 bg-emerald-50 inline-block px-1.5 py-0.5 rounded">
+              <div className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 mt-1 bg-emerald-50 dark:bg-emerald-950/40 inline-block px-1.5 py-0.5 rounded">
                 {stats.total > 0
                   ? ((stats.latestProgress / stats.total) * 100).toFixed(1)
                   : 0}
@@ -1565,20 +1565,20 @@ export default function Monitoring() {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
           <div className="absolute top-0 left-0 w-1 h-full bg-amber-500" />
           <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Belum Diisi</span>
-              <div className="p-1.5 bg-amber-50 rounded-md">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Belum Diisi</span>
+              <div className="p-1.5 bg-amber-50 dark:bg-amber-950/40 rounded-md">
                 <ClipboardList className="h-4 w-4 text-amber-600" />
               </div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-slate-800">
+              <div className="text-3xl font-bold text-foreground">
                 {stats.emptyProgress}
               </div>
-              <div className="text-[10px] font-medium text-amber-600 mt-1 bg-amber-50 inline-block px-1.5 py-0.5 rounded">
+              <div className="text-[10px] font-medium text-amber-600 mt-1 bg-amber-50 dark:bg-amber-950/40 inline-block px-1.5 py-0.5 rounded">
                 {stats.total > 0
                   ? ((stats.emptyProgress / stats.total) * 100).toFixed(1)
                   : 0}
@@ -1588,20 +1588,20 @@ export default function Monitoring() {
           </CardContent>
         </Card>
 
-        <Card className="relative overflow-hidden bg-white border border-slate-200 shadow-sm rounded-xl hover:shadow-md transition-shadow">
+        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
           <div className="absolute top-0 left-0 w-1 h-full bg-rose-500" />
           <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Perhatian</span>
-              <div className="p-1.5 bg-rose-50 rounded-md">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Perhatian</span>
+              <div className="p-1.5 bg-rose-50 dark:bg-rose-950/40 rounded-md">
                 <AlertTriangle className="h-4 w-4 text-rose-600" />
               </div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-slate-800">
+              <div className="text-3xl font-bold text-foreground">
                 {stats.needsAttention}
               </div>
-              <div className="text-[10px] font-medium text-rose-600 mt-1 bg-rose-50 inline-block px-1.5 py-0.5 rounded">
+              <div className="text-[10px] font-medium text-rose-600 mt-1 bg-rose-50 dark:bg-rose-950/40 inline-block px-1.5 py-0.5 rounded">
                 {stats.total > 0
                   ? ((stats.needsAttention / stats.total) * 100).toFixed(1)
                   : 0}
@@ -1616,9 +1616,9 @@ export default function Monitoring() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Tombol Cepat Kelas (Kiri) */}
         <Card className="border-border bg-card shadow-sm flex flex-col h-full rounded-2xl overflow-hidden">
-          <CardHeader className="pb-3 bg-slate-50 border-b border-slate-100">
+          <CardHeader className="pb-3 bg-muted/40 border-b border-border">
             <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
-              <Users className="h-4 w-4 text-emerald-600" />
+              <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               Tombol Cepat Kelas
             </CardTitle>
           </CardHeader>
@@ -1635,7 +1635,7 @@ export default function Monitoring() {
                   className={`h-full min-h-[80px] flex flex-col items-center justify-center p-2 border transition-colors rounded-xl ${
                     filterKelas === String(gradeNum)
                       ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 shadow-md"
-                      : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200 shadow-sm"
+                      : "bg-card text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 border-emerald-200 dark:border-emerald-900/40 shadow-sm"
                   }`}
                 >
                   <Users className={`h-5 w-5 mb-1.5 ${filterKelas === String(gradeNum) ? "text-emerald-100" : "text-emerald-600/70"}`} />
@@ -1651,7 +1651,7 @@ export default function Monitoring() {
                 className={`col-span-3 min-h-[60px] font-bold flex items-center justify-center gap-2 border transition-colors rounded-xl mt-1 ${
                   filterKelas === "all"
                     ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 shadow-md"
-                    : "bg-white text-emerald-600 hover:bg-emerald-50 border-emerald-200 shadow-sm"
+                    : "bg-card text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 border-emerald-200 dark:border-emerald-900/40 shadow-sm"
                 }`}
               >
                 <Users className="h-5 w-5" />
@@ -1662,120 +1662,120 @@ export default function Monitoring() {
         </Card>
 
         {/* Perlu Tindakan Koordinator (Kanan) */}
-        <Card className="border border-slate-200 bg-white shadow-sm flex flex-col rounded-2xl overflow-hidden h-full">
-          <CardHeader className="pb-3 flex flex-row items-center justify-between bg-slate-50 border-b border-slate-100">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-800">
-              <ShieldCheck className="h-4 w-4 text-emerald-600" />
+        <Card className="border border-border bg-card shadow-sm flex flex-col rounded-2xl overflow-hidden h-full">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between bg-muted/40 border-b border-border">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
+              <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               Perlu Tindakan Koordinator
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 pt-4 flex-1">
-            <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-100 rounded-xl">
+            <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/40 rounded-xl">
               <div className="flex gap-3 items-start">
-                <div className="bg-amber-100 text-amber-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                <div className="bg-amber-100 text-amber-700 dark:text-amber-300 p-1.5 rounded-full mt-0.5 shadow-sm">
                   <ClipboardList className="h-4 w-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-amber-900">
+                  <div className="text-xs font-bold text-amber-900 dark:text-amber-400">
                     Siswa Belum Diisi
                   </div>
-                  <div className="text-[10px] text-amber-700 mt-0.5">
+                  <div className="text-[10px] text-amber-700 dark:text-amber-300 mt-0.5">
                     Laporan bulanan masih kosong
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="text-2xl font-black text-amber-900">
+                <div className="text-2xl font-black text-amber-900 dark:text-amber-400">
                   {actionStats.empty}
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setFilterStatus("empty")} className="text-[10px] h-7 px-2 border-amber-200 text-amber-700 hover:bg-amber-100 hidden sm:flex">
+                <Button variant="outline" size="sm" onClick={() => setFilterStatus("empty")} className="text-[10px] h-7 px-2 border-amber-200 dark:border-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 hidden sm:flex">
                   Lihat
                 </Button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-rose-50 border border-rose-100 rounded-xl">
+            <div className="flex items-center justify-between p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 rounded-xl">
               <div className="flex gap-3 items-start">
-                <div className="bg-rose-100 text-rose-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                <div className="bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 p-1.5 rounded-full mt-0.5 shadow-sm">
                   <AlertTriangle className="h-4 w-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-rose-900">
+                  <div className="text-xs font-bold text-rose-900 dark:text-rose-400">
                     Perlu Perhatian Khusus
                   </div>
-                  <div className="text-[10px] text-rose-700 mt-0.5">
+                  <div className="text-[10px] text-rose-700 dark:text-rose-300 mt-0.5">
                     Berdasarkan parameter capaian
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="text-2xl font-black text-rose-900">
+                <div className="text-2xl font-black text-rose-900 dark:text-rose-400">
                   {actionStats.attention}
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setFilterStatus("attention")} className="text-[10px] h-7 px-2 border-rose-200 text-rose-700 hover:bg-rose-100 hidden sm:flex">
+                <Button variant="outline" size="sm" onClick={() => setFilterStatus("attention")} className="text-[10px] h-7 px-2 border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 hidden sm:flex">
                   Lihat
                 </Button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl">
+            <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 rounded-xl">
               <div className="flex gap-3 items-start">
-                <div className="bg-blue-100 text-blue-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                <div className="bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 p-1.5 rounded-full mt-0.5 shadow-sm">
                   <BookOpen className="h-4 w-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-blue-900">
+                  <div className="text-xs font-bold text-blue-900 dark:text-blue-400">
                     Nilai di Bawah 70
                   </div>
-                  <div className="text-[10px] text-blue-700 mt-0.5">
+                  <div className="text-[10px] text-blue-700 dark:text-blue-300 mt-0.5">
                     Nilai akhir progresif &lt; 70
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="text-2xl font-black text-blue-900">
+                <div className="text-2xl font-black text-blue-900 dark:text-blue-400">
                   {actionStats.below70}
                 </div>
-                <Button variant="outline" size="sm" onClick={() => setFilterStatus("attention")} className="text-[10px] h-7 px-2 border-blue-200 text-blue-700 hover:bg-blue-100 hidden sm:flex">
+                <Button variant="outline" size="sm" onClick={() => setFilterStatus("attention")} className="text-[10px] h-7 px-2 border-blue-200 dark:border-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 hidden sm:flex">
                   Lihat
                 </Button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
+            <div className="flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 rounded-xl">
               <div className="flex gap-3 items-start">
-                <div className="bg-indigo-100 text-indigo-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                <div className="bg-indigo-100 text-indigo-700 dark:text-indigo-300 p-1.5 rounded-full mt-0.5 shadow-sm">
                   <RotateCcw className="h-4 w-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-indigo-900">
+                  <div className="text-xs font-bold text-indigo-900 dark:text-indigo-400">
                     Tidak Konsisten / Stagnan
                   </div>
-                  <div className="text-[10px] text-indigo-700 mt-0.5">
+                  <div className="text-[10px] text-indigo-700 dark:text-indigo-300 mt-0.5">
                     Progres bulanan terhambat
                   </div>
                 </div>
               </div>
-              <div className="text-2xl font-black text-indigo-900">
+              <div className="text-2xl font-black text-indigo-900 dark:text-indigo-400">
                 {actionStats.stagnant}
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+            <div className="flex items-center justify-between p-3 bg-muted/40 border border-border rounded-xl">
               <div className="flex gap-3 items-start">
-                <div className="bg-slate-200 text-slate-700 p-1.5 rounded-full mt-0.5 shadow-sm">
+                <div className="bg-muted-foreground/20 text-foreground p-1.5 rounded-full mt-0.5 shadow-sm">
                   <Users className="h-4 w-4" />
                 </div>
                 <div>
-                  <div className="text-xs font-bold text-slate-900">
+                  <div className="text-xs font-bold text-foreground">
                     Rombel Belum Tuntas
                   </div>
-                  <div className="text-[10px] text-slate-600 mt-0.5">
+                  <div className="text-[10px] text-muted-foreground mt-0.5">
                     Rombel masih ada status kosong
                   </div>
                 </div>
               </div>
-              <div className="text-2xl font-black text-slate-900">
+              <div className="text-2xl font-black text-foreground">
                 {actionStats.emptyRombelsCount}
               </div>
             </div>
@@ -1868,7 +1868,7 @@ export default function Monitoring() {
               variant="outline"
               size="sm"
               onClick={() => setShowAllJenjang(!showAllJenjang)}
-              className="text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50 h-8"
+              className="text-xs border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 h-8"
             >
               <Eye className="h-3.5 w-3.5 mr-1.5" />
               {showAllJenjang ? "Sembunyikan Arsip" : "Lihat Arsip Data"}
@@ -1883,25 +1883,25 @@ export default function Monitoring() {
               ref={tableScrollRef}
             >
           <table className="w-full text-left text-xs" ref={tableContentRef} style={{ minWidth: "1200px" }}>
-            <thead className="bg-slate-50 text-slate-600 border-b border-slate-100 text-center">
+            <thead className="bg-muted/40 text-muted-foreground border-b border-border text-center">
               <tr className="[&>th]:font-semibold [&>th]:px-4 [&>th]:py-3">
                 <th className="text-left whitespace-nowrap">Kelas</th>
                 <th className="text-left whitespace-nowrap">Rombel</th>
                 <th className="text-left whitespace-nowrap">Pengampu 1</th>
                 <th className="text-left whitespace-nowrap">Total Siswa Binaan 1</th>
-                <th className="text-left whitespace-nowrap border-l border-slate-200">Pengampu 2</th>
+                <th className="text-left whitespace-nowrap border-l border-border">Pengampu 2</th>
                 <th className="text-left whitespace-nowrap">Total Siswa Binaan 2</th>
-                <th className="text-left whitespace-nowrap border-l border-slate-200">Pengampu 3</th>
+                <th className="text-left whitespace-nowrap border-l border-border">Pengampu 3</th>
                 <th className="text-left whitespace-nowrap">Total Siswa Binaan 3</th>
-                <th className="text-left whitespace-nowrap border-l border-slate-200">Pengampu 4</th>
+                <th className="text-left whitespace-nowrap border-l border-border">Pengampu 4</th>
                 <th className="text-left whitespace-nowrap">Total Siswa Binaan 4</th>
                 <th className="whitespace-nowrap">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border">
               {jenjangKelasRows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
                     Tidak ada data ringkasan rombel ditemukan.
                   </td>
                 </tr>
@@ -1918,63 +1918,63 @@ export default function Monitoring() {
                   return (
                     <Fragment key={`jenjang-group-${rombelKey}`}>
                       <tr className="hover:bg-slate-50/50 transition-colors text-sm [&>td]:px-4 [&>td]:py-3 [&>td]:whitespace-nowrap">
-                        <td className="text-left font-bold text-slate-800">
+                        <td className="text-left font-bold text-foreground">
                           Kelas {row.kelas}
                         </td>
-                        <td className="text-left font-bold text-slate-800">{row.rombel}</td>
+                        <td className="text-left font-bold text-foreground">{row.rombel}</td>
                         
-                        <td className="text-left font-bold text-emerald-800 max-w-[150px] truncate" title={t1?.[0]}>
+                        <td className="text-left font-bold text-emerald-800 dark:text-emerald-400 max-w-[150px] truncate" title={t1?.[0]}>
                           {t1 ? t1[0] : "-"}
                         </td>
                         <td className="text-left">
                           {t1 ? (
                             <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-0">
+                              <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 border-0">
                                 {t1[1].total} Siswa
                               </Badge>
-                              <span className="text-[11px] text-slate-500 font-medium">
+                              <span className="text-[11px] text-muted-foreground font-medium">
                                 (TD: {t1[1].td}, TL: {t1[1].tl}, TFZ: {t1[1].tfz})
                               </span>
                             </div>
                           ) : "-"}
                         </td>
 
-                        <td className="text-left font-bold text-emerald-800 max-w-[150px] truncate border-l border-slate-100" title={t2?.[0]}>
+                        <td className="text-left font-bold text-emerald-800 dark:text-emerald-400 max-w-[150px] truncate border-l border-border" title={t2?.[0]}>
                           {t2 ? t2[0] : "-"}
                         </td>
                         <td className="text-left">
                           {t2 ? (
                             <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-0">
+                              <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 border-0">
                                 {t2[1].total} Siswa
                               </Badge>
-                              <span className="text-[11px] text-slate-500 font-medium">
+                              <span className="text-[11px] text-muted-foreground font-medium">
                                 (TD: {t2[1].td}, TL: {t2[1].tl}, TFZ: {t2[1].tfz})
                               </span>
                             </div>
                           ) : "-"}
                         </td>
 
-                        <td className="text-left font-bold text-emerald-800 max-w-[150px] truncate border-l border-slate-100" title={t3?.[0]}>
+                        <td className="text-left font-bold text-emerald-800 dark:text-emerald-400 max-w-[150px] truncate border-l border-border" title={t3?.[0]}>
                           {t3 ? t3[0] : "-"}
                         </td>
                         <td className="text-left">
                           {t3 ? (
                             <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-0">
+                              <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 border-0">
                                 {t3[1].total} Siswa
                               </Badge>
                             </div>
                           ) : "-"}
                         </td>
 
-                        <td className="text-left font-bold text-emerald-800 max-w-[150px] truncate border-l border-slate-100" title={t4?.[0]}>
+                        <td className="text-left font-bold text-emerald-800 dark:text-emerald-400 max-w-[150px] truncate border-l border-border" title={t4?.[0]}>
                           {t4 ? t4[0] : "-"}
                         </td>
                         <td className="text-left">
                           {t4 ? (
                             <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border-0">
+                              <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 border-0">
                                 {t4[1].total} Siswa
                               </Badge>
                             </div>
@@ -2060,7 +2060,7 @@ export default function Monitoring() {
                                               {needsAttention && (
                                                 <Badge
                                                   variant="destructive"
-                                                  className="text-[9px] px-1 py-0 bg-rose-100 text-rose-700 border-rose-200"
+                                                  className="text-[9px] px-1 py-0 bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/40"
                                                 >
                                                   Perhatian
                                                 </Badge>
@@ -2083,8 +2083,8 @@ export default function Monitoring() {
                                               className={
                                                 studentRow.reportStatus ===
                                                 "filled"
-                                                  ? "bg-emerald-50 text-emerald-700 border-emerald-100 text-[10px] px-1"
-                                                  : "bg-amber-50 text-amber-700 border-amber-100 text-[10px] px-1"
+                                                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/40 text-[10px] px-1"
+                                                  : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-100 dark:border-amber-900/40 text-[10px] px-1"
                                               }
                                             >
                                               {studentRow.reportStatus ===
@@ -2161,12 +2161,12 @@ export default function Monitoring() {
         />
           </>
         ) : (
-          <div className="p-12 flex flex-col items-center justify-center text-center bg-slate-50/50">
-            <div className="bg-emerald-100 p-3 rounded-full mb-3 shadow-sm border border-emerald-200">
-              <ClipboardList className="h-6 w-6 text-emerald-600" />
+          <div className="p-12 flex flex-col items-center justify-center text-center bg-muted/40">
+            <div className="bg-emerald-100 dark:bg-emerald-950/40 p-3 rounded-full mb-3 shadow-sm border border-emerald-200 dark:border-emerald-900/40">
+              <ClipboardList className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h3 className="text-sm font-bold text-slate-700 mb-1">Data Diarsipkan (Mode Semua Kelas)</h3>
-            <p className="text-xs text-slate-500 max-w-md mb-4 leading-relaxed">
+            <h3 className="text-sm font-bold text-foreground mb-1">Data Diarsipkan (Mode Semua Kelas)</h3>
+            <p className="text-xs text-muted-foreground max-w-md mb-4 leading-relaxed">
               Tampilan ringkasan 24 rombel disembunyikan untuk memprioritaskan ruang dan kenyamanan membaca Anda. 
             </p>
             <Button
@@ -2316,51 +2316,51 @@ export default function Monitoring() {
                 </div>
 
                 {dominantTdTeachers.length > 0 && (
-                  <Alert variant="destructive" className="border-rose-200 bg-rose-50 text-rose-900">
+                  <Alert variant="destructive" className="border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-400">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle className="flex flex-col gap-1 pr-2 sm:flex-row sm:items-center sm:justify-between">
                       <span>Guru dengan beban TD dominan</span>
-                      <Badge variant="outline" className="w-fit border-rose-200 bg-white text-rose-700">
+                      <Badge variant="outline" className="w-fit border-rose-200 dark:border-rose-900/40 bg-card text-rose-700 dark:text-rose-300">
                         {dominantTdTeachers.length} guru perlu ditinjau
                       </Badge>
                     </AlertTitle>
                     <AlertDescription className="mt-3 space-y-3">
-                      <p className="text-xs text-rose-700">
+                      <p className="text-xs text-rose-700 dark:text-rose-300">
                         Prioritas penyeimbangan beban: porsi Tahsin Dasar mencapai 80% atau lebih.
                       </p>
                       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
                         {dominantTdTeachers.map((teacher) => (
                           <div
                             key={teacher.teacherId}
-                            className="rounded-lg border border-rose-200 bg-white p-3 shadow-sm"
+                            className="rounded-lg border border-rose-200 dark:border-rose-900/40 bg-card p-3 shadow-sm"
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
                                 <div className="truncate text-sm font-bold text-rose-950" title={teacher.teacherName}>
                                   {teacher.teacherName}
                                 </div>
-                                <div className="mt-1 text-xs text-rose-700">
+                                <div className="mt-1 text-xs text-rose-700 dark:text-rose-300">
                                   {teacher.TD} TD dari {teacher.total} siswa
                                 </div>
                               </div>
-                              <div className="shrink-0 rounded-md bg-rose-100 px-2 py-1 text-sm font-black text-rose-700">
+                              <div className="shrink-0 rounded-md bg-rose-100 dark:bg-rose-950/40 px-2 py-1 text-sm font-black text-rose-700 dark:text-rose-300">
                                 {formatPercent(teacher.tdPercent)}
                               </div>
                             </div>
-                            <div className="mt-3 h-2 rounded-full bg-rose-100">
+                            <div className="mt-3 h-2 rounded-full bg-rose-100 dark:bg-rose-950/40">
                               <div
                                 className="h-2 rounded-full bg-rose-500"
                                 style={{ width: `${Math.min(teacher.tdPercent, 100)}%` }}
                               />
                             </div>
                             <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
-                              <span className="rounded bg-rose-50 px-2 py-0.5 font-semibold text-rose-700">
+                              <span className="rounded bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 font-semibold text-rose-700 dark:text-rose-300">
                                 TD {teacher.TD}
                               </span>
-                              <span className="rounded bg-blue-50 px-2 py-0.5 font-semibold text-blue-700">
+                              <span className="rounded bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 font-semibold text-blue-700 dark:text-blue-300">
                                 TL {teacher.TL}
                               </span>
-                              <span className="rounded bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700">
+                              <span className="rounded bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 font-semibold text-emerald-700 dark:text-emerald-300">
                                 TFZ {teacher.TFZ}
                               </span>
                             </div>
@@ -2373,10 +2373,10 @@ export default function Monitoring() {
               </TabsContent>
 
               <TabsContent value="distribution" className="space-y-3">
-                <div className="flex flex-col gap-3 rounded-xl border border-blue-100 bg-blue-50 p-3 text-blue-900 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 rounded-xl border border-blue-100 dark:border-blue-900/40 bg-blue-50 dark:bg-blue-950/40 p-3 text-blue-900 dark:text-blue-400 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="text-sm font-bold">Distribusi beban ditampilkan berdasarkan total siswa terbanyak</div>
-                    <p className="mt-1 text-xs leading-relaxed text-blue-700">
+                    <p className="mt-1 text-xs leading-relaxed text-blue-700 dark:text-blue-300">
                       Default Top 8 dipakai agar chart tetap ringkas dan mudah dibaca. Ubah pilihan jika ingin melihat lebih banyak guru.
                     </p>
                   </div>
@@ -2387,7 +2387,7 @@ export default function Monitoring() {
                         setTeacherLoadChartLimit(value as TeacherLoadChartLimit)
                       }
                     >
-                      <SelectTrigger className="h-9 bg-white text-sm">
+                      <SelectTrigger className="h-9 bg-card text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -2481,7 +2481,7 @@ export default function Monitoring() {
                     <TableBody>
                       {teacherLoadComparisonRows.map((row) => {
                         const deltaClass = (value: number) => {
-                          if (value > 0) return "text-emerald-600";
+                          if (value > 0) return "text-emerald-600 dark:text-emerald-400";
                           if (value < 0) return "text-rose-600";
                           return "text-muted-foreground";
                         };
