@@ -207,11 +207,9 @@ export default function Monitoring() {
 
   const selectedMonth = Number(filterMonth);
   const selectedYear = Number(filterYear);
-  const currentLoadMonth = now.getMonth() + 1;
-  const currentLoadYear = now.getFullYear();
   const previousLoadPeriod = useMemo(
-    () => getPreviousPeriod(currentLoadMonth, currentLoadYear),
-    [currentLoadMonth, currentLoadYear],
+    () => getPreviousPeriod(selectedMonth, selectedYear),
+    [selectedMonth, selectedYear],
   );
 
   // Sync Month with Semester when Semester changes
@@ -236,48 +234,6 @@ export default function Monitoring() {
   const { data: reports = [], isLoading: lr } = useMonthlyReportsForPeriod({
     month: selectedMonth,
     year: selectedYear,
-    enabled: hasAccess,
-  });
-
-  const { data: teacherLoadReports = [], isLoading: teacherLoadLoading } = useQuery({
-    queryKey: [
-      "teacher-load-reports",
-      currentLoadMonth,
-      currentLoadYear,
-      previousLoadPeriod.month,
-      previousLoadPeriod.year,
-    ],
-    queryFn: async () => {
-      const periods = [
-        { month: currentLoadMonth, year: currentLoadYear },
-        previousLoadPeriod,
-      ];
-      const conditions = periods
-        .map((period) => `and(month.eq.${period.month},year.eq.${period.year})`)
-        .join(",");
-      const allData: TeacherLoadReportRow[] = [];
-      let from = 0;
-      const PAGE_SIZE = 1000;
-
-      while (true) {
-        const { data, error } = await supabase
-          .from("monthly_reports")
-          .select("student_id, teacher_id, teacher_name, program_type, month, year")
-          .or(conditions)
-          .not("teacher_id", "is", null)
-          .range(from, from + PAGE_SIZE - 1);
-
-        if (error) throw error;
-
-        const batch = (data ?? []) as TeacherLoadReportRow[];
-        allData.push(...batch);
-
-        if (batch.length < PAGE_SIZE) break;
-        from += PAGE_SIZE;
-      }
-
-      return allData;
-    },
     enabled: hasAccess,
   });
 
@@ -361,6 +317,48 @@ export default function Monitoring() {
     });
   }, [filteredStudents]);
 
+  const teacherLoadStudentIds = useMemo(
+    () => filteredStudents.map((student) => student.id),
+    [filteredStudents],
+  );
+
+  const { data: previousTeacherLoadReports = [], isLoading: teacherLoadLoading } = useQuery({
+    queryKey: [
+      "teacher-load-previous-reports",
+      previousLoadPeriod.month,
+      previousLoadPeriod.year,
+      teacherLoadStudentIds,
+    ],
+    queryFn: async () => {
+      if (teacherLoadStudentIds.length === 0) return [];
+
+      const allData: TeacherLoadReportRow[] = [];
+      let from = 0;
+      const PAGE_SIZE = 1000;
+
+      while (true) {
+        const { data, error } = await supabase
+          .from("monthly_reports")
+          .select("student_id, teacher_id, teacher_name, program_type, month, year")
+          .eq("month", previousLoadPeriod.month)
+          .eq("year", previousLoadPeriod.year)
+          .in("student_id", teacherLoadStudentIds)
+          .range(from, from + PAGE_SIZE - 1);
+
+        if (error) throw error;
+
+        const batch = (data ?? []) as TeacherLoadReportRow[];
+        allData.push(...batch);
+
+        if (batch.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+
+      return allData;
+    },
+    enabled: hasAccess && teacherLoadStudentIds.length > 0,
+  });
+
   const attendanceQuery = useAttendanceForRecapPeriod({
     month: selectedMonth,
     year: selectedYear,
@@ -396,104 +394,6 @@ export default function Monitoring() {
     attendanceSettingsQuery.data,
     profileMap,
   ]);
-
-  const currentTeacherLoadRows = useMemo(
-    () =>
-      teacherLoadReports.filter(
-        (row) => row.month === currentLoadMonth && row.year === currentLoadYear,
-      ),
-    [teacherLoadReports, currentLoadMonth, currentLoadYear],
-  );
-
-  const previousTeacherLoadRows = useMemo(
-    () =>
-      teacherLoadReports.filter(
-        (row) =>
-          row.month === previousLoadPeriod.month &&
-          row.year === previousLoadPeriod.year,
-      ),
-    [teacherLoadReports, previousLoadPeriod.month, previousLoadPeriod.year],
-  );
-
-  const currentTeacherLoads = useMemo(
-    () => buildTeacherLoadSummaries(currentTeacherLoadRows),
-    [currentTeacherLoadRows],
-  );
-
-  const previousTeacherLoads = useMemo(
-    () => buildTeacherLoadSummaries(previousTeacherLoadRows),
-    [previousTeacherLoadRows],
-  );
-
-  const teacherLoadTotals = useMemo(() => {
-    const total = currentTeacherLoads.reduce(
-      (acc, item) => ({
-        total: acc.total + item.total,
-        TD: acc.TD + item.TD,
-        TL: acc.TL + item.TL,
-        TFZ: acc.TFZ + item.TFZ,
-      }),
-      { total: 0, TD: 0, TL: 0, TFZ: 0 },
-    );
-    return {
-      ...total,
-      tdPercent: total.total > 0 ? (total.TD / total.total) * 100 : 0,
-      tlPercent: total.total > 0 ? (total.TL / total.total) * 100 : 0,
-      tfzPercent: total.total > 0 ? (total.TFZ / total.total) * 100 : 0,
-    };
-  }, [currentTeacherLoads]);
-
-  const teacherLoadChartData = useMemo(
-    () => currentTeacherLoads.slice(0, 8),
-    [currentTeacherLoads],
-  );
-
-  const dominantTdTeachers = useMemo(
-    () => currentTeacherLoads.filter((item) => item.tdPercent >= 80),
-    [currentTeacherLoads],
-  );
-
-  const teacherLoadComparisonRows = useMemo(() => {
-    const previousMap = new Map(previousTeacherLoads.map((item) => [item.teacherId, item]));
-    const currentMap = new Map(currentTeacherLoads.map((item) => [item.teacherId, item]));
-    const ids = Array.from(new Set([...previousMap.keys(), ...currentMap.keys()]));
-
-    return ids
-      .map((id) => {
-        const current = currentMap.get(id);
-        const previous = previousMap.get(id);
-        const tdDelta = (current?.TD ?? 0) - (previous?.TD ?? 0);
-        const tlDelta = (current?.TL ?? 0) - (previous?.TL ?? 0);
-        let status = "Tetap";
-        let statusClassName = "bg-slate-100 text-slate-700 border-slate-200";
-
-        if (tdDelta > 2) {
-          status = "TD Naik";
-          statusClassName = "bg-rose-100 text-rose-700 border-rose-200";
-        } else if (tlDelta > 2) {
-          status = "TL Naik";
-          statusClassName = "bg-emerald-100 text-emerald-700 border-emerald-200";
-        }
-
-        return {
-          teacherId: id,
-          teacherName: current?.teacherName ?? previous?.teacherName ?? "Tidak Diketahui",
-          previousTD: previous?.TD ?? 0,
-          currentTD: current?.TD ?? 0,
-          tdDelta,
-          previousTL: previous?.TL ?? 0,
-          currentTL: current?.TL ?? 0,
-          tlDelta,
-          status,
-          statusClassName,
-        };
-      })
-      .sort(
-        (a, b) =>
-          b.currentTD + b.currentTL - (a.currentTD + a.currentTL) ||
-          a.teacherName.localeCompare(b.teacherName),
-      );
-  }, [currentTeacherLoads, previousTeacherLoads]);
 
   const allRows = useMemo(() => {
     let rows = groups.flatMap((g) => g.rows);
@@ -1029,6 +929,127 @@ export default function Monitoring() {
       };
     }).sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
   }, [groups, teachersForClassRombel]);
+
+  const currentTeacherLoads = useMemo(() => {
+    const map = new Map<string, TeacherLoadSummary>();
+
+    jenjangKelasRows.forEach((row) => {
+      const teacherEntries = [
+        row.teacher1,
+        row.teacher2,
+        row.teacher3,
+        row.teacher4,
+      ] as Array<
+        [string, { total: number; td: number; tl: number; tfz: number }] | null
+      >;
+
+      teacherEntries.forEach((entry) => {
+        if (!entry || entry[1].total <= 0) return;
+
+        const [teacherName, counts] = entry;
+        const teacherId = teacherName;
+        if (!map.has(teacherId)) {
+          map.set(teacherId, {
+            teacherId,
+            teacherName,
+            TD: 0,
+            TL: 0,
+            TFZ: 0,
+            total: 0,
+            tdPercent: 0,
+          });
+        }
+
+        const summary = map.get(teacherId)!;
+        summary.TD += counts.td;
+        summary.TL += counts.tl;
+        summary.TFZ += counts.tfz;
+        summary.total += counts.total;
+      });
+    });
+
+    return Array.from(map.values())
+      .map((summary) => ({
+        ...summary,
+        tdPercent: summary.total > 0 ? (summary.TD / summary.total) * 100 : 0,
+      }))
+      .sort((a, b) => b.total - a.total || a.teacherName.localeCompare(b.teacherName));
+  }, [jenjangKelasRows]);
+
+  const previousTeacherLoads = useMemo(
+    () => buildTeacherLoadSummaries(previousTeacherLoadReports),
+    [previousTeacherLoadReports],
+  );
+
+  const teacherLoadTotals = useMemo(() => {
+    const total = currentTeacherLoads.reduce(
+      (acc, item) => ({
+        total: acc.total + item.total,
+        TD: acc.TD + item.TD,
+        TL: acc.TL + item.TL,
+        TFZ: acc.TFZ + item.TFZ,
+      }),
+      { total: 0, TD: 0, TL: 0, TFZ: 0 },
+    );
+    return {
+      ...total,
+      tdPercent: total.total > 0 ? (total.TD / total.total) * 100 : 0,
+      tlPercent: total.total > 0 ? (total.TL / total.total) * 100 : 0,
+      tfzPercent: total.total > 0 ? (total.TFZ / total.total) * 100 : 0,
+    };
+  }, [currentTeacherLoads]);
+
+  const teacherLoadChartData = useMemo(
+    () => currentTeacherLoads.slice(0, 8),
+    [currentTeacherLoads],
+  );
+
+  const dominantTdTeachers = useMemo(
+    () => currentTeacherLoads.filter((item) => item.tdPercent >= 80),
+    [currentTeacherLoads],
+  );
+
+  const teacherLoadComparisonRows = useMemo(() => {
+    const previousMap = new Map(previousTeacherLoads.map((item) => [item.teacherId, item]));
+    const currentMap = new Map(currentTeacherLoads.map((item) => [item.teacherId, item]));
+    const ids = Array.from(new Set([...previousMap.keys(), ...currentMap.keys()]));
+
+    return ids
+      .map((id) => {
+        const current = currentMap.get(id);
+        const previous = previousMap.get(id);
+        const tdDelta = (current?.TD ?? 0) - (previous?.TD ?? 0);
+        const tlDelta = (current?.TL ?? 0) - (previous?.TL ?? 0);
+        let status = "Tetap";
+        let statusClassName = "bg-slate-100 text-slate-700 border-slate-200";
+
+        if (tdDelta > 2) {
+          status = "TD Naik";
+          statusClassName = "bg-rose-100 text-rose-700 border-rose-200";
+        } else if (tlDelta > 2) {
+          status = "TL Naik";
+          statusClassName = "bg-emerald-100 text-emerald-700 border-emerald-200";
+        }
+
+        return {
+          teacherId: id,
+          teacherName: current?.teacherName ?? previous?.teacherName ?? "Tidak Diketahui",
+          previousTD: previous?.TD ?? 0,
+          currentTD: current?.TD ?? 0,
+          tdDelta,
+          previousTL: previous?.TL ?? 0,
+          currentTL: current?.TL ?? 0,
+          tlDelta,
+          status,
+          statusClassName,
+        };
+      })
+      .sort(
+        (a, b) =>
+          b.currentTD + b.currentTL - (a.currentTD + a.currentTL) ||
+          a.teacherName.localeCompare(b.teacherName),
+      );
+  }, [currentTeacherLoads, previousTeacherLoads]);
 
 
   const selectedRombelRows = useMemo(() => {
@@ -2071,7 +2092,8 @@ export default function Monitoring() {
               Beban Guru per Bulan
             </CardTitle>
             <CardDescription className="mt-1 text-xs">
-              Data dari laporan bulanan {getMonthLabel(currentLoadMonth, currentLoadYear)}.
+              Data dari Ringkasan Jenjang Kelas dan laporan bulanan{" "}
+              {getMonthLabel(selectedMonth, selectedYear)}.
             </CardDescription>
           </div>
         </CardHeader>
@@ -2093,7 +2115,7 @@ export default function Monitoring() {
               </h3>
               <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
                 Belum ada laporan bulanan dengan guru pengampu untuk periode{" "}
-                {getMonthLabel(currentLoadMonth, currentLoadYear)}.
+                {getMonthLabel(selectedMonth, selectedYear)}.
               </p>
             </div>
           ) : (
@@ -2247,7 +2269,7 @@ export default function Monitoring() {
               <TabsContent value="comparison" className="space-y-3">
                 <h3 className="text-sm font-bold text-foreground">
                   {getMonthLabel(previousLoadPeriod.month, previousLoadPeriod.year)} vs{" "}
-                  {getMonthLabel(currentLoadMonth, currentLoadYear)}
+                  {getMonthLabel(selectedMonth, selectedYear)}
                 </h3>
                 <div className="rounded-xl border border-border">
                   <Table>
