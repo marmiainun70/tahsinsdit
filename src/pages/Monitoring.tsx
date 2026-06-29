@@ -862,6 +862,15 @@ export default function Monitoring() {
       g.rows.forEach((r) => {
         let teacher = r.guru && r.guru !== "-" ? r.guru : "Tidak Diketahui";
         
+        // Jika data laporan belum diisi, kita intip dari data penugasan beban guru (allTeacherStudents)
+        if (teacher === "Tidak Diketahui" && r.studentId) {
+          const assignment = allTeacherStudents.find(ts => ts.student_id === r.studentId);
+          if (assignment && assignment.teacher_id) {
+             const officialName = profileMap.get(assignment.teacher_id);
+             if (officialName) teacher = officialName;
+          }
+        }
+        
         // Force assignment if only 1 teacher is official
         if (assigned.length === 1 && t1Name) {
            teacher = t1Name;
