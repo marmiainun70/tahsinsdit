@@ -2221,16 +2221,57 @@ export default function Monitoring() {
                 </div>
 
                 {dominantTdTeachers.length > 0 && (
-                  <Alert variant="destructive" className="border-rose-200 bg-rose-50 text-rose-800">
+                  <Alert variant="destructive" className="border-rose-200 bg-rose-50 text-rose-900">
                     <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle>Guru dengan beban TD dominan</AlertTitle>
-                    <AlertDescription>
-                      {dominantTdTeachers
-                        .map(
-                          (teacher) =>
-                            `${teacher.teacherName}: ${teacher.TD} siswa TD dari ${teacher.total} siswa (${formatPercent(teacher.tdPercent)})`,
-                        )
-                        .join("; ")}
+                    <AlertTitle className="flex flex-col gap-1 pr-2 sm:flex-row sm:items-center sm:justify-between">
+                      <span>Guru dengan beban TD dominan</span>
+                      <Badge variant="outline" className="w-fit border-rose-200 bg-white text-rose-700">
+                        {dominantTdTeachers.length} guru perlu ditinjau
+                      </Badge>
+                    </AlertTitle>
+                    <AlertDescription className="mt-3 space-y-3">
+                      <p className="text-xs text-rose-700">
+                        Prioritas penyeimbangan beban: porsi Tahsin Dasar mencapai 80% atau lebih.
+                      </p>
+                      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                        {dominantTdTeachers.map((teacher) => (
+                          <div
+                            key={teacher.teacherId}
+                            className="rounded-lg border border-rose-200 bg-white p-3 shadow-sm"
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="truncate text-sm font-bold text-rose-950" title={teacher.teacherName}>
+                                  {teacher.teacherName}
+                                </div>
+                                <div className="mt-1 text-xs text-rose-700">
+                                  {teacher.TD} TD dari {teacher.total} siswa
+                                </div>
+                              </div>
+                              <div className="shrink-0 rounded-md bg-rose-100 px-2 py-1 text-sm font-black text-rose-700">
+                                {formatPercent(teacher.tdPercent)}
+                              </div>
+                            </div>
+                            <div className="mt-3 h-2 rounded-full bg-rose-100">
+                              <div
+                                className="h-2 rounded-full bg-rose-500"
+                                style={{ width: `${Math.min(teacher.tdPercent, 100)}%` }}
+                              />
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+                              <span className="rounded bg-rose-50 px-2 py-0.5 font-semibold text-rose-700">
+                                TD {teacher.TD}
+                              </span>
+                              <span className="rounded bg-blue-50 px-2 py-0.5 font-semibold text-blue-700">
+                                TL {teacher.TL}
+                              </span>
+                              <span className="rounded bg-emerald-50 px-2 py-0.5 font-semibold text-emerald-700">
+                                TFZ {teacher.TFZ}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </AlertDescription>
                   </Alert>
                 )}
