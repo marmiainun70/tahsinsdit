@@ -197,22 +197,6 @@ export default function Monitoring() {
   );
   const [filterYear, setFilterYear] = useState<string>(
     String(now.getFullYear()),
-
-export default function Monitoring() {
-  const { user, profile } = useAuth();
-  const isTeacher = isTeacherRole(profile?.role);
-
-  const tableScrollRef = useRef<HTMLDivElement>(null);
-  const tableContentRef = useRef<HTMLTableElement>(null);
-
-  const { data: students = [], isLoading: ls } = useStudents();
-
-  const [filterSemester, setFilterSemester] = useState<string>(initialSemester);
-  const [filterMonth, setFilterMonth] = useState<string>(
-    String(currentMonthIdx + 1),
-  );
-  const [filterYear, setFilterYear] = useState<string>(
-    String(now.getFullYear()),
   );
   const [filterKelas, setFilterKelas] = useState<string>("all");
   const [filterRombel, setFilterRombel] = useState<string>("all");
