@@ -119,6 +119,9 @@ const formatTeacherChartName = (name: string) => {
   return `${name.slice(0, 23)}...`;
 };
 
+const getTeacherLoadKey = (teacherName: string | null | undefined, teacherId?: string | null) =>
+  teacherName?.trim() || teacherId || "Tidak Diketahui";
+
 const getPreviousPeriod = (month: number, year: number) => {
   if (month === 1) return { month: 12, year: year - 1 };
   return { month: month - 1, year };
@@ -157,8 +160,8 @@ const buildTeacherLoadSummaries = (
   const seenStudentPerTeacher = new Set<string>();
 
   rows.forEach((row) => {
-    const teacherId = row.teacher_id || row.teacher_name || "unknown";
     const teacherName = row.teacher_name?.trim() || "Tidak Diketahui";
+    const teacherId = getTeacherLoadKey(teacherName, row.teacher_id);
     const uniqueKey = `${teacherId}-${row.student_id}`;
     if (seenStudentPerTeacher.has(uniqueKey)) return;
     seenStudentPerTeacher.add(uniqueKey);
@@ -332,16 +335,18 @@ export default function Monitoring() {
     [filteredStudents],
   );
 
-  const { data: previousTeacherLoadReports = [], isLoading: teacherLoadLoading } = useQuery({
+  const teacherLoadStudentIdSet = useMemo(
+    () => new Set(teacherLoadStudentIds),
+    [teacherLoadStudentIds],
+  );
+
+  const { data: previousTeacherLoadReportsForPeriod = [], isLoading: teacherLoadLoading } = useQuery({
     queryKey: [
       "teacher-load-previous-reports",
       previousLoadPeriod.month,
       previousLoadPeriod.year,
-      teacherLoadStudentIds,
     ],
     queryFn: async () => {
-      if (teacherLoadStudentIds.length === 0) return [];
-
       const allData: TeacherLoadReportRow[] = [];
       let from = 0;
       const PAGE_SIZE = 1000;
@@ -352,7 +357,7 @@ export default function Monitoring() {
           .select("student_id, teacher_id, teacher_name, program_type, month, year")
           .eq("month", previousLoadPeriod.month)
           .eq("year", previousLoadPeriod.year)
-          .in("student_id", teacherLoadStudentIds)
+          .order("id", { ascending: true })
           .range(from, from + PAGE_SIZE - 1);
 
         if (error) throw error;
@@ -366,8 +371,16 @@ export default function Monitoring() {
 
       return allData;
     },
-    enabled: hasAccess && teacherLoadStudentIds.length > 0,
+    enabled: hasAccess,
   });
+
+  const previousTeacherLoadReports = useMemo(
+    () =>
+      previousTeacherLoadReportsForPeriod.filter((report) =>
+        teacherLoadStudentIdSet.has(report.student_id),
+      ),
+    [previousTeacherLoadReportsForPeriod, teacherLoadStudentIdSet],
+  );
 
   const attendanceQuery = useAttendanceForRecapPeriod({
     month: selectedMonth,
@@ -947,26 +960,33 @@ export default function Monitoring() {
         teacher4,
       };
     }).sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
-  }, [groups, teachersForClassRombel]);
+  }, [allTeacherStudents, groups, profileMap, teachersForClassRombel]);
 
   const currentTeacherLoads = useMemo(() => {
     const map = new Map<string, TeacherLoadSummary>();
 
-    jenjangKelasRows.forEach((row) => {
-      const teacherEntries = [
-        row.teacher1,
-        row.teacher2,
-        row.teacher3,
-        row.teacher4,
-      ] as Array<
-        [string, { total: number; td: number; tl: number; tfz: number }] | null
-      >;
+    groups.forEach((group) => {
+      const assigned = teachersForClassRombel.get(`${group.kelas}-${group.rombel}`) || [];
+      const assignedByFirstName = assigned.map((name) => ({
+        name,
+        firstName: name.toLowerCase().split(" ")[0],
+      }));
 
-      teacherEntries.forEach((entry) => {
-        if (!entry || entry[1].total <= 0) return;
+      group.rows.forEach((row) => {
+        let teacherName =
+          row.guru && row.guru !== "-" ? row.guru : "Tidak Diketahui";
 
-        const [teacherName, counts] = entry;
-        const teacherId = teacherName;
+        if (assigned.length === 1) {
+          teacherName = assigned[0];
+        } else if (assigned.length > 1) {
+          const reportTeacher = teacherName.toLowerCase();
+          const matchedTeacher = assignedByFirstName.find((teacher) =>
+            reportTeacher.includes(teacher.firstName),
+          );
+          if (matchedTeacher) teacherName = matchedTeacher.name;
+        }
+
+        const teacherId = getTeacherLoadKey(teacherName);
         if (!map.has(teacherId)) {
           map.set(teacherId, {
             teacherId,
@@ -980,10 +1000,17 @@ export default function Monitoring() {
         }
 
         const summary = map.get(teacherId)!;
-        summary.TD += counts.td;
-        summary.TL += counts.tl;
-        summary.TFZ += counts.tfz;
-        summary.total += counts.total;
+        summary.total += 1;
+        if (
+          row.program === "Tahsin Dasar" ||
+          row.program === "Tahsin Dasar (Iqra)"
+        ) {
+          summary.TD += 1;
+        } else if (row.program === "Tahsin Lanjutan") {
+          summary.TL += 1;
+        } else if (row.program === "Tahfizh") {
+          summary.TFZ += 1;
+        }
       });
     });
 
@@ -993,7 +1020,7 @@ export default function Monitoring() {
         tdPercent: summary.total > 0 ? (summary.TD / summary.total) * 100 : 0,
       }))
       .sort((a, b) => b.total - a.total || a.teacherName.localeCompare(b.teacherName));
-  }, [jenjangKelasRows]);
+  }, [groups, teachersForClassRombel]);
 
   const previousTeacherLoads = useMemo(
     () => buildTeacherLoadSummaries(previousTeacherLoadReports),
