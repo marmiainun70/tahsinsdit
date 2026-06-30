@@ -6,7 +6,7 @@ import {
   MONTH_NAMES, calcIqraPagesSigned, getProgressStatus, getTarget,
   isIqraDecline, getAutoNoteByProgress, getAutoNoteOptions,
 } from "@/hooks/useMonthlyReports";
-import { useMonthlyReportPeriodSettings } from "@/hooks/useMonthlyReportPeriodSettings";
+import { useMonthlyReportPeriodSettings, useUpsertMonthlyReportPeriodSettings } from "@/hooks/useMonthlyReportPeriodSettings";
 import { JUZ_LIST, JUZ_PAGES_PER_JUZ, calcHafalanPagesSigned, isTahfizhDecline } from "@/lib/juzData";
 import { useEnsureTeacherStudent } from "@/hooks/useTeacherStudents";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,7 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
 import { NOTE_EMOTICON_WARNING, hasBlockedNoteEmoticon, removeBlockedNoteEmoticons } from "@/lib/noteValidation";
-import { Save, Plus, Minus, Loader2, FileSpreadsheet, MessageSquarePlus, CheckCircle2, Info, Search } from "lucide-react";
+import { Save, Plus, Minus, Loader2, FileSpreadsheet, MessageSquarePlus, CheckCircle2, Info, Search, Settings } from "lucide-react";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import { FixedHorizontalScrollbar } from "@/components/reports/FixedHorizontalScrollbar";
 import { SpreadsheetLayoutToolbar } from "@/components/reports/SpreadsheetLayoutToolbar";
@@ -218,6 +218,7 @@ type MonthlyReportPayload = {
 const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : String(error);
 const PERIOD_NOT_READY_MESSAGE =
   "Hari efektif bulan ini belum diatur. Silahkan hubungi Koordinator Tahfizh untuk pembaruan.";
+const normalizeNumber = (value: string) => Math.max(0, Math.floor(Number(value) || 0));
 
 const detectProgramFromLevel = (level: ReadingLevel | string | null | undefined): ReportProgram => {
   if (!level) return "iqra";
@@ -311,7 +312,14 @@ const SpreadsheetReport = () => {
   const [studentSearch, setStudentSearch] = useState("");
   const [showGuide, setShowGuide] = useState(true);
   const [savingAll, setSavingAll] = useState(false);
+  const [periodSettingsForm, setPeriodSettingsForm] = useState({
+    target_iqra: 0,
+    target_tahsin_lanjutan: 0,
+    target_tahfizh: 0,
+    effective_days: 0,
+  });
   const periodSettingsQuery = useMonthlyReportPeriodSettings({ month, year });
+  const upsertPeriodSettings = useUpsertMonthlyReportPeriodSettings();
   const spreadsheetLayout = useSpreadsheetLayout({
     userId: user?.id,
     role: profile?.role,
@@ -330,6 +338,15 @@ const SpreadsheetReport = () => {
   );
 
   const [rows, setRows] = useState<Row[]>([]);
+
+  useEffect(() => {
+    setPeriodSettingsForm({
+      target_iqra: periodSettingsQuery.data?.target_iqra ?? getTarget("iqra"),
+      target_tahsin_lanjutan: periodSettingsQuery.data?.target_tahsin_lanjutan ?? getTarget("tahsin"),
+      target_tahfizh: periodSettingsQuery.data?.target_tahfizh ?? getTarget("tahfizh"),
+      effective_days: periodSettingsQuery.data?.effective_days ?? 0,
+    });
+  }, [periodSettingsQuery.data, month, year]);
 
   useEffect(() => {
     const reportRows = reports as MonthlyReportRecord[];
@@ -717,6 +734,36 @@ const SpreadsheetReport = () => {
     });
   };
 
+  const updatePeriodSettingsForm = (
+    field: "target_iqra" | "target_tahsin_lanjutan" | "target_tahfizh" | "effective_days",
+    value: string,
+  ) => {
+    setPeriodSettingsForm((current) => ({ ...current, [field]: normalizeNumber(value) }));
+  };
+
+  const saveGlobalPeriodSettings = async () => {
+    if (!isAdmin) return;
+    try {
+      await upsertPeriodSettings.mutateAsync({
+        month,
+        year,
+        ...periodSettingsForm,
+        syncAttendanceSettings: true,
+      });
+      toast({
+        title: "Pengaturan bulanan tersimpan",
+        description: "Target laporan dan hari efektif global sudah diperbarui.",
+      });
+      await periodSettingsQuery.refetch();
+    } catch (error: unknown) {
+      toast({
+        title: "Gagal menyimpan pengaturan bulanan",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="spreadsheet-report-page p-3 md:p-6 space-y-4 max-w-[1700px] mx-auto">
       <Card className="rounded-2xl overflow-hidden border border-primary/15 shadow-lg shadow-primary/5 bg-background">
@@ -768,27 +815,6 @@ const SpreadsheetReport = () => {
               <Info className="h-4 w-4" />
               <AlertDescription>{PERIOD_NOT_READY_MESSAGE}</AlertDescription>
             </Alert>
-          )}
-
-          {isAdmin && (
-            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-              <div className="rounded-xl border border-border bg-muted/30 px-3 py-2">
-                <p className="text-[10px] text-muted-foreground">Target Iqra / Tahsin Dasar</p>
-                <p className="text-lg font-bold text-foreground">{periodSettingsQuery.data?.target_iqra ?? getTarget("iqra")}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-muted/30 px-3 py-2">
-                <p className="text-[10px] text-muted-foreground">Target Tahsin Lanjutan</p>
-                <p className="text-lg font-bold text-foreground">{periodSettingsQuery.data?.target_tahsin_lanjutan ?? getTarget("tahsin")}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-muted/30 px-3 py-2">
-                <p className="text-[10px] text-muted-foreground">Target Tahfizh</p>
-                <p className="text-lg font-bold text-foreground">{periodSettingsQuery.data?.target_tahfizh ?? getTarget("tahfizh")}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-muted/30 px-3 py-2">
-                <p className="text-[10px] text-muted-foreground">Hari Efektif</p>
-                <p className="text-lg font-bold text-foreground">{periodSettingsQuery.data?.effective_days ?? 0}</p>
-              </div>
-            </div>
           )}
 
           <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
@@ -870,6 +896,76 @@ const SpreadsheetReport = () => {
         onApplyWrap={applyWrap}
         onDefaultRowHeightChange={spreadsheetLayout.setDefaultRowHeight}
         isSaving={spreadsheetLayout.isSaving}
+        afterStatus={isAdmin ? (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                title="Pengaturan Bulanan"
+                aria-label="Pengaturan Bulanan"
+              >
+                <Settings className="h-4 w-4" />
+                Pengaturan Bulanan
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[340px] space-y-3 p-4" align="start">
+              <div>
+                <p className="text-sm font-semibold">Pengaturan Bulanan</p>
+                <p className="text-xs text-muted-foreground">{MONTH_NAMES[month - 1]} {year}</p>
+              </div>
+              <div className="grid gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium">Target Iqra / Tahsin Dasar</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={periodSettingsForm.target_iqra}
+                    onChange={(event) => updatePeriodSettingsForm("target_iqra", event.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium">Target Tahsin Lanjutan</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={periodSettingsForm.target_tahsin_lanjutan}
+                    onChange={(event) => updatePeriodSettingsForm("target_tahsin_lanjutan", event.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium">Target Tahfizh</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={periodSettingsForm.target_tahfizh}
+                    onChange={(event) => updatePeriodSettingsForm("target_tahfizh", event.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium">Hari Efektif</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={periodSettingsForm.effective_days}
+                    onChange={(event) => updatePeriodSettingsForm("effective_days", event.target.value)}
+                  />
+                </div>
+              </div>
+              <Button
+                type="button"
+                className="w-full gap-2"
+                onClick={saveGlobalPeriodSettings}
+                disabled={upsertPeriodSettings.isPending}
+              >
+                {upsertPeriodSettings.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Simpan Global
+              </Button>
+            </PopoverContent>
+          </Popover>
+        ) : null}
       />
 
       <Card className="overflow-hidden rounded-2xl border border-amber-600/20 bg-amber-50/40 shadow-sm dark:bg-amber-950/10">

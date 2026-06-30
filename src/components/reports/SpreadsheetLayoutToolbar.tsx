@@ -1,4 +1,5 @@
 import { AlignCenter, AlignLeft, AlignRight, Bold, Minus, Plus, RotateCcw, Save, Table2, Type } from "lucide-react";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,6 +33,7 @@ interface SpreadsheetLayoutToolbarProps<ColumnKey extends string = string> {
   onApplyWrap: () => void;
   onDefaultRowHeightChange: (height: number) => void;
   isSaving?: boolean;
+  afterStatus?: ReactNode;
 }
 
 const selectionLabel = <ColumnKey extends string = string>(selection: SpreadsheetLayoutSelection<ColumnKey>) => {
@@ -67,6 +69,7 @@ export const SpreadsheetLayoutToolbar = <ColumnKey extends string = string>({
   onApplyWrap,
   onDefaultRowHeightChange,
   isSaving,
+  afterStatus,
 }: SpreadsheetLayoutToolbarProps<ColumnKey>) => {
   if (!canEdit && !isEditing) return null;
 
@@ -80,6 +83,7 @@ export const SpreadsheetLayoutToolbar = <ColumnKey extends string = string>({
         <span className={`rounded-full px-3 py-1 text-xs font-medium ${dirty ? "bg-amber-100 text-amber-800" : "bg-emerald-50 text-emerald-700"}`}>
           {statusText}
         </span>
+        {afterStatus}
         {isEditing && (
           <span className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground">
             Pilihan: {selectionLabel(selection)}
