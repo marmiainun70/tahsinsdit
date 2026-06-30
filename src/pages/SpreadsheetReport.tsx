@@ -6,9 +6,11 @@ import {
   MONTH_NAMES, calcIqraPagesSigned, getProgressStatus, getTarget,
   isIqraDecline, getAutoNoteByProgress, getAutoNoteOptions,
 } from "@/hooks/useMonthlyReports";
+import { useMonthlyReportPeriodSettings } from "@/hooks/useMonthlyReportPeriodSettings";
 import { JUZ_LIST, JUZ_PAGES_PER_JUZ, calcHafalanPagesSigned, isTahfizhDecline } from "@/lib/juzData";
 import { useEnsureTeacherStudent } from "@/hooks/useTeacherStudents";
 import { useAuth } from "@/contexts/AuthContext";
+import { isTeacherRole } from "@/lib/roleLabels";
 import type { Database } from "@/integrations/supabase/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
@@ -213,6 +216,8 @@ type MonthlyReportPayload = {
 };
 
 const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : String(error);
+const PERIOD_NOT_READY_MESSAGE =
+  "Hari efektif bulan ini belum diatur. Silahkan hubungi Koordinator Tahfizh untuk pembaruan.";
 
 const detectProgramFromLevel = (level: ReadingLevel | string | null | undefined): ReportProgram => {
   if (!level) return "iqra";
@@ -288,6 +293,8 @@ interface Row {
 
 const SpreadsheetReport = () => {
   const { user, profile } = useAuth();
+  const isAdmin = profile?.role === "admin";
+  const teacherAccount = isTeacherRole(profile?.role);
   const { data: students = [] } = useStudents();
   const { data: reports = [] } = useAllMonthlyReports();
   const addReport = useAddMonthlyReport();
@@ -304,6 +311,7 @@ const SpreadsheetReport = () => {
   const [studentSearch, setStudentSearch] = useState("");
   const [showGuide, setShowGuide] = useState(true);
   const [savingAll, setSavingAll] = useState(false);
+  const periodSettingsQuery = useMonthlyReportPeriodSettings({ month, year });
   const spreadsheetLayout = useSpreadsheetLayout({
     userId: user?.id,
     role: profile?.role,
@@ -483,6 +491,14 @@ const SpreadsheetReport = () => {
     perbaikanBacaan: r.poinPerbaikanBacaan,
     pencapaianTargetBulan: r.pencapaianTargetBulan,
   }), []);
+  const targetForProgram = useCallback((program: ReportProgram) => {
+    const settings = periodSettingsQuery.data;
+    if (!settings) return getTarget(program);
+    if (program === "tahfizh") return settings.target_tahfizh;
+    if (program === "tahsin") return settings.target_tahsin_lanjutan;
+    return settings.target_iqra;
+  }, [periodSettingsQuery.data]);
+  const targetForRow = useCallback((row: Row) => targetForProgram(row.program), [targetForProgram]);
 
   const programStats = useMemo(() => rows.reduce(
     (acc, row) => {
@@ -497,7 +513,7 @@ const SpreadsheetReport = () => {
   const buildAutoNote = (r: Row): string => {
     if (!r.endLevel || r.endPage === null) return "";
     const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage);
-    return getAutoNoteByProgress(r.program, signed, getTarget(r.program));
+    return getAutoNoteByProgress(r.program, signed, targetForRow(r));
   };
 
   const buildIntegratedNote = (r: Row): string => {
@@ -516,7 +532,7 @@ const SpreadsheetReport = () => {
       endLevel: r.endLevel || r.startLevel,
       pagesRead: signedProgress,
       signedProgress,
-      targetPages: getTarget(r.program),
+      targetPages: targetForRow(r),
       kehadiranKesiapan: r.poinKehadiranKesiapan,
       kualitasBacaan: r.poinKualitasBacaan,
       perbaikanBacaan: r.poinPerbaikanBacaan,
@@ -632,7 +648,7 @@ const SpreadsheetReport = () => {
     }
     setRows(prev => prev.map((x, i) => i === idx ? { ...x, saving: true } : x));
     try {
-      const target = getTarget(r.program);
+      const target = targetForRow(r);
       const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage);
       const status = isPromotionEnd(r.program, r.endLevel) ? "achieved" : getProgressStatus(signed, target);
       const progressiveScore = scoreForRow(r);
@@ -746,6 +762,34 @@ const SpreadsheetReport = () => {
               />
             </div>
           </div>
+
+          {teacherAccount && (periodSettingsQuery.data?.effective_days ?? 0) <= 0 && (
+            <Alert className="border-yellow-300 bg-yellow-50 text-yellow-900 dark:bg-yellow-950/30 dark:text-yellow-100">
+              <Info className="h-4 w-4" />
+              <AlertDescription>{PERIOD_NOT_READY_MESSAGE}</AlertDescription>
+            </Alert>
+          )}
+
+          {isAdmin && (
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+              <div className="rounded-xl border border-border bg-muted/30 px-3 py-2">
+                <p className="text-[10px] text-muted-foreground">Target Iqra / Tahsin Dasar</p>
+                <p className="text-lg font-bold text-foreground">{periodSettingsQuery.data?.target_iqra ?? getTarget("iqra")}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-muted/30 px-3 py-2">
+                <p className="text-[10px] text-muted-foreground">Target Tahsin Lanjutan</p>
+                <p className="text-lg font-bold text-foreground">{periodSettingsQuery.data?.target_tahsin_lanjutan ?? getTarget("tahsin")}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-muted/30 px-3 py-2">
+                <p className="text-[10px] text-muted-foreground">Target Tahfizh</p>
+                <p className="text-lg font-bold text-foreground">{periodSettingsQuery.data?.target_tahfizh ?? getTarget("tahfizh")}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-muted/30 px-3 py-2">
+                <p className="text-[10px] text-muted-foreground">Hari Efektif</p>
+                <p className="text-lg font-bold text-foreground">{periodSettingsQuery.data?.effective_days ?? 0}</p>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
             <div className="rounded-xl border border-border bg-card px-3 py-2">
@@ -948,7 +992,7 @@ const SpreadsheetReport = () => {
                 <tr><td colSpan={17} className="p-6 text-center text-muted-foreground border border-border text-[10px]">Belum ada siswa pada filter ini.</td></tr>
               )}
               {currentPageRows.map(({ row: r, index: idx }, pageIndex) => {
-                const target = getTarget(r.program);
+                const target = targetForRow(r);
                 const hasEnd = Boolean(r.endLevel && r.endPage !== null);
                 const signed = hasEnd ? calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage as number) : 0;
                 const decline = hasEnd ? isDecline(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage as number) : false;

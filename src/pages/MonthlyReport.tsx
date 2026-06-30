@@ -3,6 +3,7 @@ import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { AlertCircle, CheckCircle2, Loader2, Lock, Search, Unlock, Users } from "lucide-react";
 import { AttendanceStudent, AttendanceWithStudent, useAttendanceByPeriod, useAttendancePeriodSettings, useAttendancePeriodSettingsByGroups, useBulkUpsertAttendance, useStudentsForAttendance, useUpsertAttendancePeriodSettings } from "@/hooks/useAttendance";
 import { MONTH_NAMES } from "@/hooks/useMonthlyReports";
+import { useMonthlyReportPeriodSettings, useUpsertMonthlyReportPeriodSettings } from "@/hooks/useMonthlyReportPeriodSettings";
 import { useAuth } from "@/contexts/AuthContext";
 import { isTeacherRole } from "@/lib/roleLabels";
 import { useProfileMap } from "@/hooks/useProfiles";
@@ -90,6 +91,10 @@ const statusClassMobile = (status: string, isLocked: boolean) => {
 };
 
 const normalizeNumber = (value: string) => Math.max(0, Math.floor(Number(value) || 0));
+const ATTENDANCE_PERIOD_NOT_READY_MESSAGE =
+  "Hari efektif bulan ini belum diatur. Silahkan hubungi Koordinator Tahfizh untuk pembaruan.";
+const ATTENDANCE_TOTAL_MISMATCH_MESSAGE =
+  "Total absensi tidak sesuai dengan hari efektif bulan ini. Silahkan hubungi Koordinator Tahfizh untuk pembaruan.";
 
 const buildRows = (students: AttendanceStudent[], attendance: AttendanceWithStudent[]): AttendanceInputRow[] =>
   students.map((student) => {
@@ -126,6 +131,12 @@ const MonthlyReport = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [effectiveDays, setEffectiveDays] = useState(0);
+  const [periodSettingsForm, setPeriodSettingsForm] = useState({
+    target_iqra: 0,
+    target_tahsin_lanjutan: 0,
+    target_tahfizh: 0,
+    effective_days: 0,
+  });
   const [rows, setRows] = useState<AttendanceInputRow[]>([]);
   const [activeTab, setActiveTab] = useState("input");
   const [inputPage, setInputPage] = useState(1);
@@ -163,6 +174,11 @@ const MonthlyReport = () => {
     enabled: hasClassFilter && !teacherOverview,
   });
 
+  const monthlyPeriodSettingsQuery = useMonthlyReportPeriodSettings({
+    month,
+    year,
+  });
+
   const visibleGroups = useMemo(() => {
     const map = new Map<string, { kelas: number; rombel: string }>();
     for (const row of rows) {
@@ -188,6 +204,7 @@ const MonthlyReport = () => {
 
   const bulkUpsert = useBulkUpsertAttendance();
   const upsertSettings = useUpsertAttendancePeriodSettings();
+  const upsertMonthlyPeriodSettings = useUpsertMonthlyReportPeriodSettings();
   const attendanceLayout = useSpreadsheetLayout<AttendanceColumnKey>({
     pageKey: isMobile ? `${ATTENDANCE_SPREADSHEET_PAGE_KEY}-mobile` : ATTENDANCE_SPREADSHEET_PAGE_KEY,
     columns: isMobile ? ATTENDANCE_MOBILE_COLUMNS : ATTENDANCE_COLUMNS,
@@ -200,6 +217,16 @@ const MonthlyReport = () => {
   }, [studentsQuery.data, attendanceQuery.data]);
 
   useEffect(() => {
+    if (monthlyPeriodSettingsQuery.data) {
+      setEffectiveDays(monthlyPeriodSettingsQuery.data.effective_days);
+      return;
+    }
+
+    if (teacherAccount) {
+      setEffectiveDays(0);
+      return;
+    }
+
     if (teacherOverview) {
       const settings = groupSettingsQuery.data ?? [];
       const uniqueEffectiveDays = Array.from(new Set(settings.map((setting) => setting.effective_days)));
@@ -208,7 +235,16 @@ const MonthlyReport = () => {
     }
 
     setEffectiveDays(settingsQuery.data?.effective_days ?? 0);
-  }, [teacherOverview, settingsQuery.data?.id, settingsQuery.data?.effective_days, groupSettingsQuery.data]);
+  }, [teacherAccount, teacherOverview, monthlyPeriodSettingsQuery.data, settingsQuery.data?.id, settingsQuery.data?.effective_days, groupSettingsQuery.data]);
+
+  useEffect(() => {
+    setPeriodSettingsForm({
+      target_iqra: monthlyPeriodSettingsQuery.data?.target_iqra ?? 0,
+      target_tahsin_lanjutan: monthlyPeriodSettingsQuery.data?.target_tahsin_lanjutan ?? 0,
+      target_tahfizh: monthlyPeriodSettingsQuery.data?.target_tahfizh ?? 0,
+      effective_days: monthlyPeriodSettingsQuery.data?.effective_days ?? 0,
+    });
+  }, [monthlyPeriodSettingsQuery.data, month, year]);
 
   useEffect(() => {
     setHistoryPage(1);
@@ -269,7 +305,9 @@ const MonthlyReport = () => {
   const isLocked = teacherOverview
     ? Boolean(groupSettingsQuery.data?.some((setting) => setting.is_locked))
     : Boolean(settingsQuery.data?.is_locked);
-  const saveDisabled = bulkUpsert.isPending || upsertSettings.isPending || (teacherAccount && isLocked);
+  const saveDisabled = bulkUpsert.isPending || upsertSettings.isPending || upsertMonthlyPeriodSettings.isPending;
+  const adminEffectiveDays = monthlyPeriodSettingsQuery.data?.effective_days ?? 0;
+  const showMissingEffectiveDaysAlert = teacherAccount && adminEffectiveDays <= 0;
 
   const updateRow = (studentId: string, field: "present" | "sick" | "permission" | "absent", value: string) => {
     setRows((current) =>
@@ -294,7 +332,7 @@ const MonthlyReport = () => {
 
   const validateRows = () => {
     if (!hasAttendanceScope) return "Pilih kelas dan rombel terlebih dahulu.";
-    if (effectiveDays <= 0) return "Jumlah Hari Efektif wajib lebih dari 0.";
+    if (effectiveDays <= 0) return teacherAccount ? ATTENDANCE_PERIOD_NOT_READY_MESSAGE : "Jumlah Hari Efektif wajib lebih dari 0.";
 
     for (const row of rows) {
       const values = [row.present, row.sick, row.permission, row.absent];
@@ -306,6 +344,7 @@ const MonthlyReport = () => {
       const total = getTotal(row);
       if (total !== effectiveDays) {
         scrollToRow(row.studentId);
+        if (teacherAccount) return ATTENDANCE_TOTAL_MISMATCH_MESSAGE;
         if (total < effectiveDays) return `${row.studentName}: total absensi ${total}, masih kurang dari hari efektif ${effectiveDays}.`;
         return `${row.studentName}: total absensi ${total}, melebihi hari efektif ${effectiveDays}.`;
       }
@@ -315,11 +354,12 @@ const MonthlyReport = () => {
   };
 
   const validateRow = (row: AttendanceInputRow) => {
-    if (effectiveDays <= 0) return "Jumlah Hari Efektif wajib lebih dari 0.";
+    if (effectiveDays <= 0) return teacherAccount ? ATTENDANCE_PERIOD_NOT_READY_MESSAGE : "Jumlah Hari Efektif wajib lebih dari 0.";
     const values = [row.present, row.sick, row.permission, row.absent];
     if (values.some((value) => value < 0)) return `${row.studentName}: angka absensi tidak boleh negatif.`;
     const total = getTotal(row);
     if (total !== effectiveDays) {
+      if (teacherAccount) return ATTENDANCE_TOTAL_MISMATCH_MESSAGE;
       if (total < effectiveDays) return `${row.studentName}: total absensi ${total}, masih kurang dari hari efektif ${effectiveDays}.`;
       return `${row.studentName}: total absensi ${total}, melebihi hari efektif ${effectiveDays}.`;
     }
@@ -367,7 +407,7 @@ const MonthlyReport = () => {
     }
 
     try {
-      if (teacherOverview) {
+      if (isAdmin && teacherOverview) {
         await Promise.all(visibleGroups.map((group) => {
           const existing = groupSettingsQuery.data?.find(
             (setting) => setting.kelas === group.kelas && setting.rombel === group.rombel
@@ -384,7 +424,7 @@ const MonthlyReport = () => {
             locked_at: existing?.locked_at ?? null,
           });
         }));
-      } else {
+      } else if (isAdmin && hasClassFilter) {
         await upsertSettings.mutateAsync({
           month,
           year,
@@ -417,6 +457,7 @@ const MonthlyReport = () => {
       toast({ title: "Absensi berhasil disimpan", description: `${saved.length} data absensi tersimpan.` });
       await Promise.all([
         attendanceQuery.refetch(),
+        monthlyPeriodSettingsQuery.refetch(),
         teacherOverview ? groupSettingsQuery.refetch() : settingsQuery.refetch(),
       ]);
     } catch (error: unknown) {
@@ -448,6 +489,40 @@ const MonthlyReport = () => {
       toast({
         title: "Gagal mengubah kunci periode",
         description: error instanceof Error ? error.message : "Coba lagi beberapa saat.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updatePeriodSettingsForm = (
+    field: "target_iqra" | "target_tahsin_lanjutan" | "target_tahfizh" | "effective_days",
+    value: string,
+  ) => {
+    setPeriodSettingsForm((current) => ({ ...current, [field]: normalizeNumber(value) }));
+  };
+
+  const saveGlobalPeriodSettings = async () => {
+    if (!isAdmin) return;
+    try {
+      await upsertMonthlyPeriodSettings.mutateAsync({
+        month,
+        year,
+        ...periodSettingsForm,
+        syncAttendanceSettings: true,
+      });
+      toast({
+        title: "Pengaturan bulanan tersimpan",
+        description: "Target dan hari efektif global sudah disinkronkan ke semua rombel kelas 1-6.",
+      });
+      await Promise.all([
+        monthlyPeriodSettingsQuery.refetch(),
+        settingsQuery.refetch(),
+        groupSettingsQuery.refetch(),
+      ]);
+    } catch (error: unknown) {
+      toast({
+        title: "Gagal menyimpan pengaturan bulanan",
+        description: error instanceof Error ? error.message : "Terjadi kesalahan saat menyimpan.",
         variant: "destructive",
       });
     }
@@ -583,7 +658,7 @@ const MonthlyReport = () => {
     const total = getTotal(row);
     const percentage = effectiveDays > 0 ? Math.round((row.present / effectiveDays) * 100) : 0;
     const status = getStatus(row, effectiveDays);
-    const inputDisabled = (teacherAccount && isLocked) || attendanceLayout.isEditing;
+    const inputDisabled = attendanceLayout.isEditing;
 
     if (columnKey === "number") {
       return (
@@ -806,9 +881,13 @@ const MonthlyReport = () => {
                 type="number"
                 min={0}
                 value={effectiveDays}
-                onChange={(event) => setEffectiveDays(normalizeNumber(event.target.value))}
+                onChange={(event) => {
+                  if (!isAdmin) return;
+                  setEffectiveDays(normalizeNumber(event.target.value));
+                }}
                 className="h-9 text-xs"
-                disabled={teacherAccount && isLocked}
+                readOnly={!isAdmin}
+                disabled={teacherAccount || (isAdmin && isLocked)}
               />
             </div>
             <div className="space-y-1">
@@ -839,6 +918,13 @@ const MonthlyReport = () => {
         <Alert>
           <Users className="h-4 w-4" />
           <AlertDescription>Menampilkan semua murid binaan yang sudah disetujui, dipisahkan berdasarkan kelas.</AlertDescription>
+        </Alert>
+      )}
+
+      {showMissingEffectiveDaysAlert && (
+        <Alert className="border-yellow-300 bg-yellow-50 text-yellow-900 dark:bg-yellow-950/30 dark:text-yellow-100">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{ATTENDANCE_PERIOD_NOT_READY_MESSAGE}</AlertDescription>
         </Alert>
       )}
 
@@ -915,7 +1001,7 @@ const MonthlyReport = () => {
           {teacherAccount && isLocked && (
             <Alert>
               <Lock className="h-4 w-4" />
-              <AlertDescription>Periode ini sudah dikunci. Guru tidak dapat mengubah absensi sampai admin membuka kembali periode.</AlertDescription>
+              <AlertDescription>Hari efektif periode ini sudah dikunci oleh admin. Guru tetap dapat menyimpan absensi sesuai hari efektif yang ditetapkan.</AlertDescription>
             </Alert>
           )}
 
@@ -954,6 +1040,63 @@ const MonthlyReport = () => {
                 isSaving={attendanceLayout.isSaving}
               />
 
+              {isAdmin && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Pengaturan Bulanan</CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid gap-4 md:grid-cols-5">
+                    <div className="space-y-2">
+                      <Label>Target Iqra / Tahsin Dasar</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={periodSettingsForm.target_iqra}
+                        onChange={(event) => updatePeriodSettingsForm("target_iqra", event.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Target Tahsin Lanjutan</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={periodSettingsForm.target_tahsin_lanjutan}
+                        onChange={(event) => updatePeriodSettingsForm("target_tahsin_lanjutan", event.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Target Tahfizh</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={periodSettingsForm.target_tahfizh}
+                        onChange={(event) => updatePeriodSettingsForm("target_tahfizh", event.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Hari Efektif Bulan Ini</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={periodSettingsForm.effective_days}
+                        onChange={(event) => updatePeriodSettingsForm("effective_days", event.target.value)}
+                      />
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        type="button"
+                        className="w-full"
+                        onClick={saveGlobalPeriodSettings}
+                        disabled={upsertMonthlyPeriodSettings.isPending}
+                      >
+                        {upsertMonthlyPeriodSettings.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                        Simpan Global Bulan Ini
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               <Card>
                 <CardHeader className="hidden md:flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <CardTitle className="text-lg">Input Massal</CardTitle>
@@ -965,9 +1108,13 @@ const MonthlyReport = () => {
                         type="number"
                         min={0}
                         value={effectiveDays}
-                        onChange={(event) => setEffectiveDays(normalizeNumber(event.target.value))}
+                        onChange={(event) => {
+                          if (!isAdmin) return;
+                          setEffectiveDays(normalizeNumber(event.target.value));
+                        }}
                         className="w-full sm:w-40"
-                        disabled={teacherAccount && isLocked}
+                        readOnly={!isAdmin}
+                        disabled={teacherAccount || (isAdmin && isLocked)}
                       />
                     </div>
                     <Button type="button" onClick={saveAll} disabled={saveDisabled || rows.length === 0}>
