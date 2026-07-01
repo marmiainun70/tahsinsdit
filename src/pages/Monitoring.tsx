@@ -1,92 +1,30 @@
-import { useState, useMemo, useEffect, Fragment } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
+import { Search, ClipboardList, RotateCcw, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { isTeacherRole } from "@/lib/roleLabels";
 import { useStudents } from "@/hooks/useSupabaseData";
-import {
-  useMonthlyReportsForPeriod,
-  MONTH_NAMES,
-} from "@/hooks/useMonthlyReports";
-import {
-  useAttendanceForRecapPeriod,
-  useAttendancePeriodSettingsByGroups,
-} from "@/hooks/useAttendance";
-import { useProfileMap } from "@/hooks/useProfiles";
-import {
-  buildRecapJoinedGroups,
-  type RecapJoinedRow,
-} from "@/utils/recapMonthlyReportRows";
 import { useTeacherClasses, useTeacherStudents } from "@/hooks/useTeacherStudents";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { useProfileMap } from "@/hooks/useProfiles";
+import { useAttendanceForRecapPeriod, useAttendancePeriodSettingsByGroups } from "@/hooks/useAttendance";
+import { MONTH_NAMES, useMonthlyReportsForPeriod } from "@/hooks/useMonthlyReports";
+import { buildRecapJoinedGroups, type RecapJoinedRow } from "@/utils/recapMonthlyReportRows";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Users,
-  BookOpen,
-  Award,
-  AlertTriangle,
-  ClipboardList,
-  Search,
-  ChevronDown,
-  ChevronRight,
-  ShieldCheck,
-  RotateCcw,
-  Eye,
-} from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  LabelList,
-} from "recharts";
-import { FixedHorizontalScrollbar } from "@/components/reports/FixedHorizontalScrollbar";
-import { useRef } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MonitoringSiswa } from "@/components/monitoring/MonitoringSiswa";
+import { MonitoringGuru } from "@/components/monitoring/MonitoringGuru";
 
 const now = new Date();
 const currentMonthIdx = now.getMonth();
 const initialSemester = currentMonthIdx >= 6 ? "ganjil" : "genap";
 const YEARS = [2024, 2025, 2026, 2027, 2028];
-const TEACHER_LOAD_COLORS = {
-  TD: "#10b981",
-  TL: "#f59e0b",
-  TFZ: "#8b5cf6",
-};
 
 type TeacherLoadReportRow = {
   student_id: string;
@@ -111,15 +49,21 @@ type TeacherLoadSummary = {
 
 type TeacherLoadChartLimit = "8" | "15" | "all";
 
+type TeacherOverviewRow = {
+  teacherId: string;
+  teacherName: string;
+  studentCount: number;
+  classCount: number;
+  reportFilled: number;
+  reportEmpty: number;
+  avgProgress: number | null;
+  loadStatus: string;
+  loadStatusClassName: string;
+};
+
 const formatPercent = (value: number) => `${value.toFixed(1)}%`;
 
-const getMonthLabel = (month: number, year: number) =>
-  `${MONTH_NAMES[month - 1]} ${year}`;
-
-const formatTeacherChartName = (name: string) => {
-  if (name.length <= 24) return name;
-  return `${name.slice(0, 23)}...`;
-};
+const getMonthLabel = (month: number, year: number) => `${MONTH_NAMES[month - 1]} ${year}`;
 
 const getTeacherLoadKey = (teacherName: string | null | undefined, teacherId?: string | null) =>
   teacherName?.trim() || teacherId || "Tidak Diketahui";
@@ -136,40 +80,44 @@ const getProgramBucket = (programType: string | null): "TD" | "TL" | "TFZ" => {
   return "TD";
 };
 
-const getTeacherLoadStatus = (tdPercent: number) => {
-  if (tdPercent >= 80) {
-    return {
-      label: "Dominan TD",
-      className: "bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/40",
-    };
+const normalizeTeacherNameForRow = (
+  row: RecapJoinedRow,
+  assignedTeachers: string[],
+  studentAssignedTeachers: string[],
+) => {
+  let teacherName = row.guru && row.guru !== "-" ? row.guru : "Tidak Diketahui";
+
+  if (teacherName === "Tidak Diketahui") {
+    if (studentAssignedTeachers.length === 1) {
+      teacherName = studentAssignedTeachers[0];
+    } else if (assignedTeachers.length === 1) {
+      teacherName = assignedTeachers[0];
+    } else if (studentAssignedTeachers.length > 1) {
+      teacherName = studentAssignedTeachers[0];
+    }
   }
-  if (tdPercent >= 60) {
-    return {
-      label: "Campuran",
-      className: "bg-amber-100 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900/40",
-    };
+
+  if (assignedTeachers.length === 1) return assignedTeachers[0];
+
+  if (assignedTeachers.length > 1) {
+    const loweredTeacher = teacherName.toLowerCase();
+    const matched = assignedTeachers.find((name) =>
+      loweredTeacher.includes(name.toLowerCase().split(" ")[0]),
+    );
+    if (matched) return matched;
   }
-  return {
-    label: "Seimbang",
-    className: "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40",
-  };
+
+  return teacherName;
 };
 
-const buildTeacherLoadSummaries = (
-  rows: TeacherLoadReportRow[],
-): TeacherLoadSummary[] => {
+const buildTeacherLoadSummaries = (rows: TeacherLoadReportRow[]): TeacherLoadSummary[] => {
   const map = new Map<string, TeacherLoadSummary>();
   const seenStudentPerTeacher = new Set<string>();
 
   rows.forEach((row) => {
     const teacherName =
-      row.teacher_name_snapshot?.trim() ||
-      row.teacher_name?.trim() ||
-      "Tidak Diketahui";
-    const teacherId = getTeacherLoadKey(
-      teacherName,
-      row.teacher_id_snapshot ?? row.teacher_id,
-    );
+      row.teacher_name_snapshot?.trim() || row.teacher_name?.trim() || "Tidak Diketahui";
+    const teacherId = getTeacherLoadKey(teacherName, row.teacher_id_snapshot ?? row.teacher_id);
     const uniqueKey = `${teacherId}-${row.student_id}`;
     if (seenStudentPerTeacher.has(uniqueKey)) return;
     seenStudentPerTeacher.add(uniqueKey);
@@ -208,22 +156,22 @@ export default function Monitoring() {
   const tableContentRef = useRef<HTMLTableElement>(null);
 
   const { data: students = [], isLoading: ls } = useStudents();
+  const { data: assignments = [], isLoading: la } = useTeacherClasses(user?.id);
+  const { data: allTeacherStudents = [] } = useTeacherStudents("all", "approved");
+  const profileMap = useProfileMap();
 
+  const [activeTab, setActiveTab] = useState("siswa");
   const [filterSemester, setFilterSemester] = useState<string>(initialSemester);
-  const [filterMonth, setFilterMonth] = useState<string>(
-    String(currentMonthIdx + 1),
-  );
-  const [filterYear, setFilterYear] = useState<string>(
-    String(now.getFullYear()),
-  );
+  const [filterMonth, setFilterMonth] = useState<string>(String(currentMonthIdx + 1));
+  const [filterYear, setFilterYear] = useState<string>(String(now.getFullYear()));
   const [filterKelas, setFilterKelas] = useState<string>("all");
   const [filterRombel, setFilterRombel] = useState<string>("all");
+  const [filterTeacher, setFilterTeacher] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [expandedRombels, setExpandedRombels] = useState<Record<string, boolean>>({});
-  const [teacherLoadChartLimit, setTeacherLoadChartLimit] =
-    useState<TeacherLoadChartLimit>("8");
+  const [teacherLoadChartLimit, setTeacherLoadChartLimit] = useState<TeacherLoadChartLimit>("8");
   const [showAllJenjang, setShowAllJenjang] = useState(false);
 
   const selectedMonth = Number(filterMonth);
@@ -233,7 +181,6 @@ export default function Monitoring() {
     [selectedMonth, selectedYear],
   );
 
-  // Sync Month with Semester when Semester changes
   useEffect(() => {
     const m = Number(filterMonth);
     if (filterSemester === "ganjil" && (m < 7 || m > 12)) {
@@ -241,16 +188,12 @@ export default function Monitoring() {
     } else if (filterSemester === "genap" && (m < 1 || m > 6)) {
       setFilterMonth("1");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterSemester]);
-
-  const { data: assignments = [], isLoading: la } = useTeacherClasses(user?.id);
-  const { data: allTeacherStudents = [] } = useTeacherStudents("all", "approved");
+  }, [filterMonth, filterSemester]);
 
   const hasAccess = useMemo(() => {
     if (!isTeacher) return true;
     return assignments.length > 0;
-  }, [isTeacher, assignments]);
+  }, [assignments.length, isTeacher]);
 
   const { data: reports = [], isLoading: lr } = useMonthlyReportsForPeriod({
     month: selectedMonth,
@@ -258,137 +201,93 @@ export default function Monitoring() {
     enabled: hasAccess,
   });
 
-  const profileMap = useProfileMap();
-
   const availableClasses = useMemo(() => {
     if (!isTeacher) {
-      return Array.from(new Set(students.map((s) => s.kelas))).sort(
-        (a, b) => a - b,
-      );
+      return Array.from(new Set(students.map((s) => s.kelas))).sort((a, b) => a - b);
     }
-    return Array.from(new Set(assignments.map((a) => a.kelas))).sort(
-      (a, b) => a - b,
+    return Array.from(new Set(assignments.map((a) => a.kelas))).sort((a, b) => a - b);
+  }, [assignments, isTeacher, students]);
+
+  const accessibleStudents = useMemo(() => {
+    if (!isTeacher) return students;
+    return students.filter((student) =>
+      assignments.some((assignment) => assignment.kelas === student.kelas && assignment.rombel === student.rombel),
     );
-  }, [isTeacher, students, assignments]);
+  }, [assignments, isTeacher, students]);
+
+  const studentAssignedTeachers = useMemo(() => {
+    const map = new Map<string, string[]>();
+    allTeacherStudents.forEach((assignment) => {
+      const teacherName = profileMap.get(assignment.teacher_id);
+      if (!teacherName) return;
+      const current = map.get(assignment.student_id) ?? [];
+      if (!current.includes(teacherName)) current.push(teacherName);
+      map.set(assignment.student_id, current);
+    });
+    return map;
+  }, [allTeacherStudents, profileMap]);
 
   const availableRombels = useMemo(() => {
-    let filtered = isTeacher
-      ? students.filter((s) =>
-          assignments.some((a) => a.kelas === s.kelas && a.rombel === s.rombel),
-        )
-      : students;
-
+    let filtered = accessibleStudents;
     if (filterKelas !== "all") {
-      filtered = filtered.filter((s) => s.kelas === Number(filterKelas));
+      filtered = filtered.filter((student) => student.kelas === Number(filterKelas));
     }
-
-    return Array.from(new Set(filtered.map((s) => s.rombel))).sort((a, b) =>
-      a.localeCompare(b),
-    );
-  }, [isTeacher, students, assignments, filterKelas]);
+    return Array.from(new Set(filtered.map((student) => student.rombel))).sort((a, b) => a.localeCompare(b));
+  }, [accessibleStudents, filterKelas]);
 
   const availableMonths = useMemo(() => {
     if (filterSemester === "ganjil") {
-      return MONTH_NAMES.map((name, i) => ({
-        value: String(i + 1),
-        label: name,
-      })).slice(6);
+      return MONTH_NAMES.map((name, i) => ({ value: String(i + 1), label: name })).slice(6);
     }
     if (filterSemester === "genap") {
-      return MONTH_NAMES.map((name, i) => ({
-        value: String(i + 1),
-        label: name,
-      })).slice(0, 6);
+      return MONTH_NAMES.map((name, i) => ({ value: String(i + 1), label: name })).slice(0, 6);
     }
-    return MONTH_NAMES.map((name, i) => ({
-      value: String(i + 1),
-      label: name,
-    }));
+    return MONTH_NAMES.map((name, i) => ({ value: String(i + 1), label: name }));
   }, [filterSemester]);
 
-  const filteredStudents = useMemo(() => {
-    let s = students;
-    if (isTeacher) {
-      s = s.filter((st) =>
-        assignments.some((a) => a.kelas === st.kelas && a.rombel === st.rombel),
+  const baseFilteredStudents = useMemo(() => {
+    let filtered = accessibleStudents;
+    if (filterKelas !== "all") filtered = filtered.filter((student) => student.kelas === Number(filterKelas));
+    if (filterRombel !== "all") filtered = filtered.filter((student) => student.rombel === filterRombel);
+    if (search.trim()) {
+      const query = search.toLowerCase();
+      filtered = filtered.filter(
+        (student) =>
+          student.nama.toLowerCase().includes(query) || student.rombel.toLowerCase().includes(query),
       );
     }
-    if (filterKelas !== "all")
-      s = s.filter((st) => st.kelas === Number(filterKelas));
-    if (filterRombel !== "all")
-      s = s.filter((st) => st.rombel === filterRombel);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      s = s.filter((st) => st.nama.toLowerCase().includes(q));
-    }
-    return s.sort(
+    return filtered.sort(
       (a, b) =>
-        a.kelas - b.kelas ||
-        a.rombel.localeCompare(b.rombel) ||
-        a.nama.localeCompare(b.nama),
+        a.kelas - b.kelas || a.rombel.localeCompare(b.rombel) || a.nama.localeCompare(b.nama),
     );
-  }, [students, isTeacher, assignments, filterKelas, filterRombel, search]);
+  }, [accessibleStudents, filterKelas, filterRombel, search]);
+
+  const availableTeachers = useMemo(() => {
+    const set = new Set<string>();
+    baseFilteredStudents.forEach((student) => {
+      (studentAssignedTeachers.get(student.id) ?? []).forEach((teacherName) => set.add(teacherName));
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [baseFilteredStudents, studentAssignedTeachers]);
+
+  const filteredStudents = useMemo(() => {
+    if (filterTeacher === "all") return baseFilteredStudents;
+    return baseFilteredStudents.filter((student) =>
+      (studentAssignedTeachers.get(student.id) ?? []).includes(filterTeacher),
+    );
+  }, [baseFilteredStudents, filterTeacher, studentAssignedTeachers]);
 
   const visibleGroupKeys = useMemo(() => {
     const keys = new Set<string>();
-    filteredStudents.forEach((s) => keys.add(`${s.kelas}-${s.rombel}`));
-    return Array.from(keys).map((k) => {
-      const [kelas, rombel] = k.split("-");
+    filteredStudents.forEach((student) => keys.add(`${student.kelas}-${student.rombel}`));
+    return Array.from(keys).map((key) => {
+      const [kelas, rombel] = key.split("-");
       return { kelas: Number(kelas), rombel };
     });
   }, [filteredStudents]);
 
-  const teacherLoadStudentIds = useMemo(
-    () => filteredStudents.map((student) => student.id),
-    [filteredStudents],
-  );
-
-  const teacherLoadStudentIdSet = useMemo(
-    () => new Set(teacherLoadStudentIds),
-    [teacherLoadStudentIds],
-  );
-
-  const { data: previousTeacherLoadReportsForPeriod = [], isLoading: teacherLoadLoading } = useQuery({
-    queryKey: [
-      "teacher-load-previous-reports",
-      previousLoadPeriod.month,
-      previousLoadPeriod.year,
-    ],
-    queryFn: async () => {
-      const allData: TeacherLoadReportRow[] = [];
-      let from = 0;
-      const PAGE_SIZE = 1000;
-
-      while (true) {
-        const { data, error } = await supabase
-          .from("monthly_reports")
-          .select("student_id, teacher_id, teacher_name, teacher_id_snapshot, teacher_name_snapshot, program_type, month, year")
-          .eq("month", previousLoadPeriod.month)
-          .eq("year", previousLoadPeriod.year)
-          .order("id", { ascending: true })
-          .range(from, from + PAGE_SIZE - 1);
-
-        if (error) throw error;
-
-        const batch = (data ?? []) as TeacherLoadReportRow[];
-        allData.push(...batch);
-
-        if (batch.length < PAGE_SIZE) break;
-        from += PAGE_SIZE;
-      }
-
-      return allData;
-    },
-    enabled: hasAccess,
-  });
-
-  const previousTeacherLoadReports = useMemo(
-    () =>
-      previousTeacherLoadReportsForPeriod.filter((report) =>
-        teacherLoadStudentIdSet.has(report.student_id),
-      ),
-    [previousTeacherLoadReportsForPeriod, teacherLoadStudentIdSet],
-  );
+  const teacherLoadStudentIds = useMemo(() => filteredStudents.map((student) => student.id), [filteredStudents]);
+  const teacherLoadStudentIdSet = useMemo(() => new Set(teacherLoadStudentIds), [teacherLoadStudentIds]);
 
   const attendanceQuery = useAttendanceForRecapPeriod({
     month: selectedMonth,
@@ -416,59 +315,66 @@ export default function Monitoring() {
       getTeacherName: (userId) => (userId ? profileMap.get(userId) : undefined),
     });
   }, [
-    hasAccess,
-    filteredStudents,
-    selectedMonth,
-    selectedYear,
-    reports,
     attendanceQuery.data,
     attendanceSettingsQuery.data,
+    filteredStudents,
+    hasAccess,
     profileMap,
+    reports,
+    selectedMonth,
+    selectedYear,
   ]);
 
+  const teachersForClassRombel = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    const studentMap = new Map(students.map((student) => [student.id, student]));
+
+    allTeacherStudents.forEach((assignment) => {
+      const student = studentMap.get(assignment.student_id);
+      const teacherName = profileMap.get(assignment.teacher_id);
+      if (!student || !teacherName) return;
+      const key = `${student.kelas}-${student.rombel}`;
+      if (!map.has(key)) map.set(key, new Set());
+      map.get(key)!.add(teacherName);
+    });
+
+    const result = new Map<string, string[]>();
+    map.forEach((names, key) => result.set(key, Array.from(names)));
+    return result;
+  }, [allTeacherStudents, profileMap, students]);
+
   const allRows = useMemo(() => {
-    let rows = groups.flatMap((g) => g.rows);
+    let rows = groups.flatMap((group) => group.rows);
     if (filterCategory !== "all") {
-      rows = rows.filter((r) => {
-        if (filterCategory === "Tahsin Dasar")
-          return r.level.startsWith("Iqro") || r.level === "Tahsin Dasar";
-        if (filterCategory === "Tahsin Lanjutan")
-          return r.level === "Tahsin Lanjutan";
-        if (filterCategory === "Tahfizh") return r.level === "Tahfizh";
+      rows = rows.filter((row) => {
+        if (filterCategory === "Tahsin Dasar") {
+          return row.level.startsWith("Iqro") || row.level === "Tahsin Dasar";
+        }
+        if (filterCategory === "Tahsin Lanjutan") return row.level === "Tahsin Lanjutan";
+        if (filterCategory === "Tahfizh") return row.level === "Tahfizh";
         return true;
       });
     }
     if (filterStatus !== "all") {
-      rows = rows.filter((r) => {
-        if (filterStatus === "filled") return r.reportStatus === "filled";
-        if (filterStatus === "empty") return r.reportStatus === "empty";
+      rows = rows.filter((row) => {
+        if (filterStatus === "filled") return row.reportStatus === "filled";
+        if (filterStatus === "empty") return row.reportStatus === "empty";
         if (filterStatus === "attention") {
           return (
-            r.reportStatus === "filled" &&
-            ((r.nilaiAkhirProgresif !== null && r.nilaiAkhirProgresif < 70) ||
-              r.kategoriProgres === "Kurang Konsisten" ||
-              r.kategoriProgres === "Tidak Konsisten")
+            row.reportStatus === "filled" &&
+            ((row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70) ||
+              row.kategoriProgres === "Kurang Konsisten" ||
+              row.kategoriProgres === "Tidak Konsisten")
           );
         }
         return true;
       });
     }
     return rows;
-  }, [groups, filterCategory, filterStatus]);
+  }, [filterCategory, filterStatus, groups]);
 
   const stats = useMemo(() => {
-    let baseRows = groups.flatMap((g) => g.rows);
-    if (filterCategory !== "all") {
-      baseRows = baseRows.filter((r) => {
-        if (filterCategory === "Tahsin Dasar")
-          return r.level.startsWith("Iqro") || r.level === "Tahsin Dasar";
-        if (filterCategory === "Tahsin Lanjutan")
-          return r.level === "Tahsin Lanjutan";
-        if (filterCategory === "Tahfizh") return r.level === "Tahfizh";
-        return true;
-      });
-    }
-
+    const baseRows = allRows;
     const total = baseRows.length;
     let tahsinDasar = 0;
     let tahsinLanjutan = 0;
@@ -477,23 +383,21 @@ export default function Monitoring() {
     let emptyProgress = 0;
     let needsAttention = 0;
 
-    baseRows.forEach((r) => {
-      if (r.level === "Tahfizh") tahfizh++;
-      else if (r.level === "Tahsin Lanjutan") tahsinLanjutan++;
-      else if (r.level.startsWith("Iqro") || r.level === "Tahsin Dasar")
-        tahsinDasar++;
+    baseRows.forEach((row) => {
+      if (row.level === "Tahfizh") tahfizh++;
+      else if (row.level === "Tahsin Lanjutan") tahsinLanjutan++;
+      else if (row.level.startsWith("Iqro") || row.level === "Tahsin Dasar") tahsinDasar++;
 
-      if (r.reportStatus === "filled") latestProgress++;
+      if (row.reportStatus === "filled") latestProgress++;
       else emptyProgress++;
 
-      if (r.reportStatus === "filled") {
-        if (
-          (r.nilaiAkhirProgresif !== null && r.nilaiAkhirProgresif < 70) ||
-          r.kategoriProgres === "Kurang Konsisten" ||
-          r.kategoriProgres === "Tidak Konsisten"
-        ) {
-          needsAttention++;
-        }
+      if (
+        row.reportStatus === "filled" &&
+        ((row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70) ||
+          row.kategoriProgres === "Kurang Konsisten" ||
+          row.kategoriProgres === "Tidak Konsisten")
+      ) {
+        needsAttention++;
       }
     });
 
@@ -506,213 +410,25 @@ export default function Monitoring() {
       emptyProgress,
       needsAttention,
     };
-  }, [groups, filterCategory]);
-
-  const handleResetFilters = () => {
-    setFilterSemester(initialSemester);
-    setFilterMonth(String(currentMonthIdx + 1));
-    setFilterYear(String(now.getFullYear()));
-    setFilterKelas("all");
-    setFilterRombel("all");
-    setFilterCategory("all");
-    setFilterStatus("all");
-    setSearch("");
-  };
-
-  const isFilterActive = useMemo(() => {
-    return (
-      filterSemester !== initialSemester ||
-      filterMonth !== String(currentMonthIdx + 1) ||
-      filterYear !== String(now.getFullYear()) ||
-      filterKelas !== "all" ||
-      filterRombel !== "all" ||
-      filterCategory !== "all" ||
-      filterStatus !== "all" ||
-      search.trim() !== ""
-    );
-  }, [
-    filterSemester,
-    filterMonth,
-    filterYear,
-    filterKelas,
-    filterRombel,
-    filterCategory,
-    filterStatus,
-    search,
-  ]);
-
-  const rowsByGrade = useMemo(() => {
-    const map: Record<number, typeof allRows> = {
-      1: [],
-      2: [],
-      3: [],
-      4: [],
-      5: [],
-      6: [],
-    };
-    for (const r of allRows) {
-      if (map[r.kelas]) {
-        map[r.kelas].push(r);
-      }
-    }
-    return map;
   }, [allRows]);
-
-  const gradeSummaries = useMemo(() => {
-    const summaries = [];
-    for (const g of [1, 2, 3, 4, 5, 6]) {
-      const gradeRows = rowsByGrade[g] || [];
-      if (gradeRows.length === 0) continue;
-
-      const total = gradeRows.length;
-      let tahsinDasar = 0;
-      let tahsinLanjutan = 0;
-      let tahfizh = 0;
-      let filled = 0;
-      let empty = 0;
-      let attention = 0;
-      let totalScore = 0;
-      let scoredCount = 0;
-
-      const rombelMap: Record<string, typeof gradeRows> = {};
-      gradeRows.forEach((r) => {
-        const rb = r.rombel || "-";
-        if (!rombelMap[rb]) rombelMap[rb] = [];
-        rombelMap[rb].push(r);
-      });
-
-      const rombelSummaries = Object.keys(rombelMap)
-        .sort()
-        .map((rb) => {
-          const rRows = rombelMap[rb];
-          let rTahsinDasar = 0;
-          let rTahsinLanjutan = 0;
-          let rTahfizh = 0;
-          let rFilled = 0;
-          let rEmpty = 0;
-          let rAttention = 0;
-          let rTotalScore = 0;
-          let rScoredCount = 0;
-
-          rRows.forEach((r) => {
-            if (r.level.startsWith("Iqro") || r.level === "Tahsin Dasar") {
-              tahsinDasar++;
-              rTahsinDasar++;
-            } else if (r.level === "Tahsin Lanjutan") {
-              tahsinLanjutan++;
-              rTahsinLanjutan++;
-            } else if (r.level === "Tahfizh") {
-              tahfizh++;
-              rTahfizh++;
-            }
-
-            if (r.reportStatus === "filled") {
-              filled++;
-              rFilled++;
-              if (r.nilaiAkhirProgresif !== null) {
-                totalScore += r.nilaiAkhirProgresif;
-                scoredCount++;
-                rTotalScore += r.nilaiAkhirProgresif;
-                rScoredCount++;
-              }
-              const needsAttention =
-                (r.nilaiAkhirProgresif !== null &&
-                  r.nilaiAkhirProgresif < 70) ||
-                r.kategoriProgres === "Kurang Konsisten" ||
-                r.kategoriProgres === "Tidak Konsisten";
-              if (needsAttention) {
-                attention++;
-                rAttention++;
-              }
-            } else {
-              empty++;
-              rEmpty++;
-            }
-          });
-
-          return {
-            rombel: rb,
-            total: rRows.length,
-            tahsinDasar: rTahsinDasar,
-            tahsinLanjutan: rTahsinLanjutan,
-            tahfizh: rTahfizh,
-            filled: rFilled,
-            empty: rEmpty,
-            attention: rAttention,
-            avgScore:
-              rScoredCount > 0 ? Math.round(rTotalScore / rScoredCount) : null,
-          };
-        });
-
-      const avgScore =
-        scoredCount > 0 ? Math.round(totalScore / scoredCount) : null;
-
-      summaries.push({
-        grade: g,
-        total,
-        tahsinDasar,
-        tahsinLanjutan,
-        tahfizh,
-        filled,
-        empty,
-        attention,
-        avgScore,
-        rombels: rombelSummaries,
-      });
-    }
-    return summaries;
-  }, [rowsByGrade]);
-
-  const toggleRombelExpand = (key: string) => {
-    setExpandedRombels((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
-
-  const teachersForClassRombel = useMemo(() => {
-    const map = new Map<string, Set<string>>();
-    const studentMap = new Map();
-    students.forEach((s) => studentMap.set(s.id, s));
-
-    allTeacherStudents.forEach((ts) => {
-      const student = studentMap.get(ts.student_id);
-      if (student) {
-        const key = `${student.kelas}-${student.rombel}`;
-        const name = profileMap.get(ts.teacher_id);
-        if (name) {
-          if (!map.has(key)) map.set(key, new Set());
-          map.get(key)!.add(name);
-        }
-      }
-    });
-
-    const resultMap = new Map<string, string[]>();
-    map.forEach((set, key) => {
-      resultMap.set(key, Array.from(set));
-    });
-    return resultMap;
-  }, [allTeacherStudents, students, profileMap]);
 
   const actionStats = useMemo(() => {
     let below70 = 0;
     let stagnant = 0;
     const emptyRombels = new Set<string>();
 
-    allRows.forEach((r) => {
-      if (r.reportStatus === "filled") {
-        if (r.nilaiAkhirProgresif !== null && r.nilaiAkhirProgresif < 70) {
-          below70++;
-        }
+    allRows.forEach((row) => {
+      if (row.reportStatus === "filled") {
+        if (row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70) below70++;
         if (
-          r.kategoriProgres === "Stagnan" ||
-          r.kategoriProgres === "Tidak Konsisten" ||
-          r.kategoriProgres === "Kurang Konsisten"
+          row.kategoriProgres === "Stagnan" ||
+          row.kategoriProgres === "Tidak Konsisten" ||
+          row.kategoriProgres === "Kurang Konsisten"
         ) {
           stagnant++;
         }
       } else {
-        emptyRombels.add(`${r.kelas}-${r.rombel}`);
+        emptyRombels.add(`${row.kelas}-${row.rombel}`);
       }
     });
 
@@ -723,277 +439,242 @@ export default function Monitoring() {
       stagnant,
       emptyRombelsCount: emptyRombels.size,
     };
-  }, [allRows, stats]);
+  }, [allRows, stats.emptyProgress, stats.needsAttention]);
 
-  const barChartData = useMemo(() => {
-    const data = [];
-    for (let g = 1; g <= 6; g++) {
-      const total = rowsByGrade[g]?.length || 0;
-      data.push({ name: `Kelas ${g}`, "Jumlah Siswa": total });
-    }
-    return data;
+  const rowsByGrade = useMemo(() => {
+    const map: Record<number, RecapJoinedRow[]> = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+    allRows.forEach((row) => {
+      if (map[row.kelas]) map[row.kelas].push(row);
+    });
+    return map;
+  }, [allRows]);
+
+  const gradeSummaries = useMemo(() => {
+    return [1, 2, 3, 4, 5, 6]
+      .map((grade) => {
+        const gradeRows = rowsByGrade[grade] ?? [];
+        if (gradeRows.length === 0) return null;
+
+        const rombelMap = new Map<string, RecapJoinedRow[]>();
+        gradeRows.forEach((row) => {
+          const current = rombelMap.get(row.rombel) ?? [];
+          current.push(row);
+          rombelMap.set(row.rombel, current);
+        });
+
+        return {
+          grade,
+          rombels: Array.from(rombelMap.entries())
+            .map(([rombel, rows]) => {
+              let tahsinDasar = 0;
+              let tahsinLanjutan = 0;
+              let tahfizh = 0;
+              let filled = 0;
+              let empty = 0;
+              let attention = 0;
+              let totalScore = 0;
+              let scoreCount = 0;
+
+              rows.forEach((row) => {
+                if (row.level.startsWith("Iqro") || row.level === "Tahsin Dasar") tahsinDasar++;
+                else if (row.level === "Tahsin Lanjutan") tahsinLanjutan++;
+                else if (row.level === "Tahfizh") tahfizh++;
+
+                if (row.reportStatus === "filled") {
+                  filled++;
+                  if (row.nilaiAkhirProgresif !== null) {
+                    totalScore += row.nilaiAkhirProgresif;
+                    scoreCount++;
+                  }
+                  if (
+                    (row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70) ||
+                    row.kategoriProgres === "Kurang Konsisten" ||
+                    row.kategoriProgres === "Tidak Konsisten"
+                  ) {
+                    attention++;
+                  }
+                } else {
+                  empty++;
+                }
+              });
+
+              return {
+                rombel,
+                total: rows.length,
+                tahsinDasar,
+                tahsinLanjutan,
+                tahfizh,
+                filled,
+                empty,
+                attention,
+                avgScore: scoreCount > 0 ? Math.round(totalScore / scoreCount) : null,
+              };
+            })
+            .sort((a, b) => a.rombel.localeCompare(b.rombel)),
+        };
+      })
+      .filter((value): value is NonNullable<typeof value> => Boolean(value));
   }, [rowsByGrade]);
 
+  const toggleRombelExpand = (key: string) => {
+    setExpandedRombels((current) => ({ ...current, [key]: !current[key] }));
+  };
+
   const past6MonthsKeys = useMemo(() => {
-    const list = [];
-    const monthOffset = 5;
-    for (let i = monthOffset; i >= 0; i--) {
-      let m = selectedMonth - i;
-      let y = selectedYear;
-      if (m <= 0) {
-        m += 12;
-        y -= 1;
+    const keys = [];
+    for (let i = 5; i >= 0; i -= 1) {
+      let month = selectedMonth - i;
+      let year = selectedYear;
+      if (month <= 0) {
+        month += 12;
+        year -= 1;
       }
-      list.push({ month: m, year: y });
+      keys.push({ month, year });
     }
-    return list;
+    return keys;
   }, [selectedMonth, selectedYear]);
 
-  const historicalStudentIds = useMemo(() => filteredStudents.map(s => s.id), [filteredStudents]);
+  const historicalStudentIds = useMemo(() => filteredStudents.map((student) => student.id), [filteredStudents]);
 
   const { data: historicalReports = [] } = useQuery({
-    queryKey: ['historical-reports', historicalStudentIds, past6MonthsKeys],
+    queryKey: ["historical-reports", historicalStudentIds, past6MonthsKeys],
     queryFn: async () => {
       if (historicalStudentIds.length === 0) return [];
-      
-      const conditions = past6MonthsKeys.map(k => `and(month.eq.${k.month},year.eq.${k.year})`).join(',');
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const allData: any[] = [];
+      const conditions = past6MonthsKeys.map((key) => `and(month.eq.${key.month},year.eq.${key.year})`).join(",");
+      const allData: Array<{ month: number; year: number; student_id: string; program_type: string | null }> = [];
       let from = 0;
       const PAGE_SIZE = 1000;
-      
+
       while (true) {
         const { data, error } = await supabase
-          .from('monthly_reports')
-          .select('month, year, student_id, program_type')
-          .in('student_id', historicalStudentIds)
+          .from("monthly_reports")
+          .select("month, year, student_id, program_type")
+          .in("student_id", historicalStudentIds)
           .or(conditions)
-          .order('year', { ascending: false })
-          .order('month', { ascending: false })
-          .order('id', { ascending: true })
+          .order("year", { ascending: false })
+          .order("month", { ascending: false })
+          .order("id", { ascending: true })
           .range(from, from + PAGE_SIZE - 1);
-          
+
         if (error) throw error;
-        
-        const batch = data || [];
+        const batch = data ?? [];
         allData.push(...batch);
-        
         if (batch.length < PAGE_SIZE) break;
         from += PAGE_SIZE;
       }
-      
+
       return allData;
     },
-    enabled: hasAccess && historicalStudentIds.length > 0
+    enabled: hasAccess && historicalStudentIds.length > 0,
   });
 
   const lineChartData = useMemo(() => {
-    return past6MonthsKeys.map((k) => {
-      const monthName = MONTH_NAMES[k.month - 1].substring(0, 3);
-      const label = `${monthName} ${String(k.year).substring(2)}`;
-      
-      if (historicalStudentIds.length === 0) {
-        return { name: label, "Tahsin Dasar": 0, "Tahsin Lanjutan": 0, "Tahfizh": 0 };
-      }
-      
-      const reportsForMonth = historicalReports.filter(r => r.month === k.month && r.year === k.year);
+    return past6MonthsKeys.map((key) => {
+      const label = `${MONTH_NAMES[key.month - 1].substring(0, 3)} ${String(key.year).slice(2)}`;
+      const reportsForMonth = historicalReports.filter(
+        (report) => report.month === key.month && report.year === key.year,
+      );
+
       const seenStudents = new Set<string>();
-      let td = 0;
-      let tl = 0;
-      let tf = 0;
-      
-      for (const r of reportsForMonth) {
-        if (!seenStudents.has(r.student_id)) {
-           seenStudents.add(r.student_id);
-           const pType = r.program_type ? r.program_type.toLowerCase() : "";
-           if (pType === "iqra" || pType === "tahsin dasar (iqra)") td++;
-           else if (pType === "tahsin" || pType === "tahsin lanjutan") tl++;
-           else if (pType === "tahfizh") tf++;
-        }
-      }
-      
+      let tahsinDasar = 0;
+      let tahsinLanjutan = 0;
+      let tahfizh = 0;
+
+      reportsForMonth.forEach((report) => {
+        if (seenStudents.has(report.student_id)) return;
+        seenStudents.add(report.student_id);
+        const programType = report.program_type?.toLowerCase() ?? "";
+        if (programType === "iqra" || programType === "tahsin dasar (iqra)") tahsinDasar++;
+        else if (programType === "tahsin" || programType === "tahsin lanjutan") tahsinLanjutan++;
+        else if (programType === "tahfizh") tahfizh++;
+      });
+
       return {
         name: label,
-        "Tahsin Dasar": td,
-        "Tahsin Lanjutan": tl,
-        "Tahfizh": tf
+        "Tahsin Dasar": tahsinDasar,
+        "Tahsin Lanjutan": tahsinLanjutan,
+        Tahfizh: tahfizh,
       };
     });
-  }, [past6MonthsKeys, historicalReports, historicalStudentIds]);
-
-  const rombelRows = useMemo(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rowsList: any[] = [];
-    gradeSummaries.forEach((gs) => {
-      gs.rombels.forEach((rs) => {
-        const teacherNames =
-          teachersForClassRombel.get(`${gs.grade}-${rs.rombel}`) || [];
-        rowsList.push({
-          kelas: gs.grade,
-          rombel: rs.rombel,
-          guruPengampu: teacherNames.join(", ") || "-",
-          total: rs.total,
-          tahsinDasar: rs.tahsinDasar,
-          tahsinDasarPercent:
-            rs.total > 0 ? Math.round((rs.tahsinDasar / rs.total) * 100) : 0,
-          tahsinLanjutan: rs.tahsinLanjutan,
-          tahsinLanjutanPercent:
-            rs.total > 0 ? Math.round((rs.tahsinLanjutan / rs.total) * 100) : 0,
-          tahfizh: rs.tahfizh,
-          tahfizhPercent:
-            rs.total > 0 ? Math.round((rs.tahfizh / rs.total) * 100) : 0,
-          filled: rs.filled,
-          filledPercent:
-            rs.total > 0 ? Math.round((rs.filled / rs.total) * 100) : 0,
-          empty: rs.empty,
-          emptyPercent:
-            rs.total > 0 ? Math.round((rs.empty / rs.total) * 100) : 0,
-          attention: rs.attention,
-          attentionPercent:
-            rs.total > 0 ? Math.round((rs.attention / rs.total) * 100) : 0,
-          avgScore: rs.avgScore,
-          originalRows: rs.rows,
-        });
-      });
-    });
-    return rowsList.sort(
-      (a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel),
-    );
-  }, [gradeSummaries, teachersForClassRombel]);
+  }, [historicalReports, past6MonthsKeys]);
 
   const jenjangKelasRows = useMemo(() => {
-    return groups.map((g) => {
-      const map = new Map<
-        string,
-        { total: number; td: number; tl: number; tfz: number }
-      >();
-      
-      const assigned = teachersForClassRombel.get(`${g.kelas}-${g.rombel}`) || [];
-      const t1Name = assigned[0] || null;
-      const t2Name = assigned[1] || null;
-      const t3Name = assigned[2] || null;
-      const t4Name = assigned[3] || null;
+    return groups
+      .map((group) => {
+        const key = `${group.kelas}-${group.rombel}`;
+        const assignedTeachers = teachersForClassRombel.get(key) ?? [];
+        const teacherMap = new Map<string, { total: number; td: number; tl: number; tfz: number }>();
 
-      if (t1Name) map.set(t1Name, { total: 0, td: 0, tl: 0, tfz: 0 });
-      if (t2Name) map.set(t2Name, { total: 0, td: 0, tl: 0, tfz: 0 });
-      if (t3Name) map.set(t3Name, { total: 0, td: 0, tl: 0, tfz: 0 });
-      if (t4Name) map.set(t4Name, { total: 0, td: 0, tl: 0, tfz: 0 });
+        assignedTeachers.forEach((teacherName) => {
+          teacherMap.set(teacherName, { total: 0, td: 0, tl: 0, tfz: 0 });
+        });
 
-      g.rows.forEach((r) => {
-        let teacher = r.guru && r.guru !== "-" ? r.guru : "Tidak Diketahui";
-        
-        // Jika data laporan belum diisi, kita intip dari data penugasan beban guru (allTeacherStudents)
-        if (teacher === "Tidak Diketahui" && r.studentId) {
-          const assignment = allTeacherStudents.find(ts => ts.student_id === r.studentId);
-          if (assignment && assignment.teacher_id) {
-             const officialName = profileMap.get(assignment.teacher_id);
-             if (officialName) teacher = officialName;
+        group.rows.forEach((row) => {
+          const teacherName = normalizeTeacherNameForRow(
+            row,
+            assignedTeachers,
+            studentAssignedTeachers.get(row.studentId) ?? [],
+          );
+
+          if (!teacherMap.has(teacherName)) {
+            teacherMap.set(teacherName, { total: 0, td: 0, tl: 0, tfz: 0 });
           }
+
+          const counts = teacherMap.get(teacherName)!;
+          counts.total += 1;
+          if (row.program === "Tahsin Dasar" || row.program === "Tahsin Dasar (Iqra)") counts.td += 1;
+          else if (row.program === "Tahsin Lanjutan") counts.tl += 1;
+          else if (row.program === "Tahfizh") counts.tfz += 1;
+        });
+
+        const prioritizedTeachers = [
+          ...assignedTeachers.map((teacherName) => [teacherName, teacherMap.get(teacherName) ?? { total: 0, td: 0, tl: 0, tfz: 0 }] as const),
+          ...Array.from(teacherMap.entries())
+            .filter(([teacherName, counts]) => !assignedTeachers.includes(teacherName) && counts.total > 0)
+            .sort((a, b) => b[1].total - a[1].total),
+        ];
+
+        if (prioritizedTeachers.length > 4) {
+          let total = 0;
+          let td = 0;
+          let tl = 0;
+          let tfz = 0;
+          prioritizedTeachers.slice(3).forEach(([, counts]) => {
+            total += counts.total;
+            td += counts.td;
+            tl += counts.tl;
+            tfz += counts.tfz;
+          });
+          prioritizedTeachers.splice(3, prioritizedTeachers.length - 3, [
+            "Guru Lainnya",
+            { total, td, tl, tfz },
+          ]);
         }
-        
-        // Force assignment if only 1 teacher is official
-        if (assigned.length === 1 && t1Name) {
-           teacher = t1Name;
-        } else if (assigned.length > 1) {
-           // Attempt fuzzy matching for 2-teacher classes in case of slight typo
-           if (t1Name && teacher.toLowerCase().includes(t1Name.toLowerCase().split(' ')[0])) {
-               teacher = t1Name;
-           } else if (t2Name && teacher.toLowerCase().includes(t2Name.toLowerCase().split(' ')[0])) {
-               teacher = t2Name;
-           } else if (t3Name && teacher.toLowerCase().includes(t3Name.toLowerCase().split(' ')[0])) {
-               teacher = t3Name;
-           } else if (t4Name && teacher.toLowerCase().includes(t4Name.toLowerCase().split(' ')[0])) {
-               teacher = t4Name;
-           }
-        }
 
-        if (!map.has(teacher)) {
-          map.set(teacher, { total: 0, td: 0, tl: 0, tfz: 0 });
-        }
-        const counts = map.get(teacher)!;
-        counts.total++;
-        if (r.program === "Tahsin Dasar" || r.program === "Tahsin Dasar (Iqra)") {
-          counts.td++;
-        } else if (r.program === "Tahsin Lanjutan") {
-          counts.tl++;
-        } else if (r.program === "Tahfizh") {
-          counts.tfz++;
-        }
-      });
+        return {
+          kelas: group.kelas,
+          rombel: group.rombel,
+          originalRows: group.rows,
+          teacher1: prioritizedTeachers[0] ?? null,
+          teacher2: prioritizedTeachers[1] ?? null,
+          teacher3: prioritizedTeachers[2] ?? null,
+          teacher4: prioritizedTeachers[3] ?? null,
+        };
+      })
+      .sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
+  }, [groups, studentAssignedTeachers, teachersForClassRombel]);
 
-      const finalTeachers: Array<[string, { total: number; td: number; tl: number; tfz: number }]> = [];
-      const assignedSet = new Set(assigned);
-
-      // 1. Prioritaskan Guru Pengampu resmi di kolom pertama sesuai urutan penugasan
-      for (const tName of assigned) {
-         finalTeachers.push([tName, map.get(tName) || { total: 0, td: 0, tl: 0, tfz: 0 }]);
-      }
-
-      // 2. Masukkan guru tamu / nama tidak dikenal / nyasar yang memiliki siswa
-      const otherTeachers = Array.from(map.entries())
-         .filter(([name, counts]) => !assignedSet.has(name) && counts.total > 0)
-         .sort((a, b) => b[1].total - a[1].total);
-         
-      finalTeachers.push(...otherTeachers);
-
-      // 3. Jika guru lebih dari 4, gabungkan sisanya ke kolom ke-4 ("Guru Lainnya") agar total murid tidak menguap
-      if (finalTeachers.length > 4) {
-         let restTotal = 0, restTd = 0, restTl = 0, restTfz = 0;
-         for (let i = 3; i < finalTeachers.length; i++) {
-            restTotal += finalTeachers[i][1].total;
-            restTd += finalTeachers[i][1].td;
-            restTl += finalTeachers[i][1].tl;
-            restTfz += finalTeachers[i][1].tfz;
-         }
-         finalTeachers[3] = ["Guru Lainnya", { total: restTotal, td: restTd, tl: restTl, tfz: restTfz }];
-      }
-
-      const teacher1 = finalTeachers[0] || null;
-      const teacher2 = finalTeachers[1] || null;
-      const teacher3 = finalTeachers[2] || null;
-      const teacher4 = finalTeachers[3] || null;
-
-      return {
-        kelas: g.kelas,
-        rombel: g.rombel,
-        originalRows: g.rows,
-        // @ts-expect-error generic tuple
-        teacher1,
-        // @ts-expect-error generic tuple
-        teacher2,
-        // @ts-expect-error generic tuple
-        teacher3,
-        // @ts-expect-error generic tuple
-        teacher4,
-      };
-    }).sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
-  }, [allTeacherStudents, groups, profileMap, teachersForClassRombel]);
-
-  const currentTeacherLoads = useMemo(() => {
+  const teacherLoadRows = useMemo(() => {
     const map = new Map<string, TeacherLoadSummary>();
 
     groups.forEach((group) => {
-      const assigned = teachersForClassRombel.get(`${group.kelas}-${group.rombel}`) || [];
-      const assignedByFirstName = assigned.map((name) => ({
-        name,
-        firstName: name.toLowerCase().split(" ")[0],
-      }));
-
+      const assignedTeachers = teachersForClassRombel.get(`${group.kelas}-${group.rombel}`) ?? [];
       group.rows.forEach((row) => {
-        let teacherName =
-          row.guru && row.guru !== "-" ? row.guru : "Tidak Diketahui";
-
-        if (assigned.length === 1) {
-          teacherName = assigned[0];
-        } else if (assigned.length > 1) {
-          const reportTeacher = teacherName.toLowerCase();
-          const matchedTeacher = assignedByFirstName.find((teacher) =>
-            reportTeacher.includes(teacher.firstName),
-          );
-          if (matchedTeacher) teacherName = matchedTeacher.name;
-        }
-
+        const teacherName = normalizeTeacherNameForRow(
+          row,
+          assignedTeachers,
+          studentAssignedTeachers.get(row.studentId) ?? [],
+        );
         const teacherId = getTeacherLoadKey(teacherName);
         if (!map.has(teacherId)) {
           map.set(teacherId, {
@@ -1006,19 +687,11 @@ export default function Monitoring() {
             tdPercent: 0,
           });
         }
-
         const summary = map.get(teacherId)!;
         summary.total += 1;
-        if (
-          row.program === "Tahsin Dasar" ||
-          row.program === "Tahsin Dasar (Iqra)"
-        ) {
-          summary.TD += 1;
-        } else if (row.program === "Tahsin Lanjutan") {
-          summary.TL += 1;
-        } else if (row.program === "Tahfizh") {
-          summary.TFZ += 1;
-        }
+        if (row.program === "Tahsin Dasar" || row.program === "Tahsin Dasar (Iqra)") summary.TD += 1;
+        else if (row.program === "Tahsin Lanjutan") summary.TL += 1;
+        else if (row.program === "Tahfizh") summary.TFZ += 1;
       });
     });
 
@@ -1028,12 +701,52 @@ export default function Monitoring() {
         tdPercent: summary.total > 0 ? (summary.TD / summary.total) * 100 : 0,
       }))
       .sort((a, b) => b.total - a.total || a.teacherName.localeCompare(b.teacherName));
-  }, [groups, teachersForClassRombel]);
+  }, [groups, studentAssignedTeachers, teachersForClassRombel]);
 
-  const previousTeacherLoads = useMemo(
-    () => buildTeacherLoadSummaries(previousTeacherLoadReports),
-    [previousTeacherLoadReports],
+  const currentTeacherLoads = useMemo(() => {
+    if (filterTeacher === "all") return teacherLoadRows;
+    return teacherLoadRows.filter((row) => row.teacherName === filterTeacher);
+  }, [filterTeacher, teacherLoadRows]);
+
+  const { data: previousTeacherLoadReportsForPeriod = [], isLoading: teacherLoadLoading } = useQuery({
+    queryKey: ["teacher-load-previous-reports", previousLoadPeriod.month, previousLoadPeriod.year],
+    queryFn: async () => {
+      const allData: TeacherLoadReportRow[] = [];
+      let from = 0;
+      const PAGE_SIZE = 1000;
+
+      while (true) {
+        const { data, error } = await supabase
+          .from("monthly_reports")
+          .select("student_id, teacher_id, teacher_name, teacher_id_snapshot, teacher_name_snapshot, program_type, month, year")
+          .eq("month", previousLoadPeriod.month)
+          .eq("year", previousLoadPeriod.year)
+          .order("id", { ascending: true })
+          .range(from, from + PAGE_SIZE - 1);
+
+        if (error) throw error;
+        const batch = (data ?? []) as TeacherLoadReportRow[];
+        allData.push(...batch);
+        if (batch.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
+
+      return allData;
+    },
+    enabled: hasAccess,
+  });
+
+  const previousTeacherLoadReports = useMemo(
+    () =>
+      previousTeacherLoadReportsForPeriod.filter((report) => teacherLoadStudentIdSet.has(report.student_id)),
+    [previousTeacherLoadReportsForPeriod, teacherLoadStudentIdSet],
   );
+
+  const previousTeacherLoads = useMemo(() => {
+    const rows = buildTeacherLoadSummaries(previousTeacherLoadReports);
+    if (filterTeacher === "all") return rows;
+    return rows.filter((row) => row.teacherName === filterTeacher);
+  }, [filterTeacher, previousTeacherLoadReports]);
 
   const teacherLoadTotals = useMemo(() => {
     const total = currentTeacherLoads.reduce(
@@ -1053,23 +766,20 @@ export default function Monitoring() {
     };
   }, [currentTeacherLoads]);
 
-  const teacherLoadChartData = useMemo(
-    () => {
-      if (teacherLoadChartLimit === "all") return currentTeacherLoads;
-      return currentTeacherLoads.slice(0, Number(teacherLoadChartLimit));
-    },
-    [currentTeacherLoads, teacherLoadChartLimit],
-  );
-
-  const teacherLoadChartLimitLabel =
-    teacherLoadChartLimit === "all"
-      ? "semua guru"
-      : `${teacherLoadChartData.length} guru teratas`;
+  const teacherLoadChartData = useMemo(() => {
+    if (teacherLoadChartLimit === "all") return currentTeacherLoads;
+    return currentTeacherLoads.slice(0, Number(teacherLoadChartLimit));
+  }, [currentTeacherLoads, teacherLoadChartLimit]);
 
   const dominantTdTeachers = useMemo(
-    () => currentTeacherLoads.filter((item) => item.tdPercent >= 80),
+    () => currentTeacherLoads.filter((teacher) => teacher.tdPercent >= 80),
     [currentTeacherLoads],
   );
+
+  const teacherLoadChartLimitLabel = useMemo(() => {
+    if (teacherLoadChartLimit === "all") return "semua guru";
+    return `${teacherLoadChartData.length} guru teratas`;
+  }, [teacherLoadChartData.length, teacherLoadChartLimit]);
 
   const teacherLoadComparisonRows = useMemo(() => {
     const previousMap = new Map(previousTeacherLoads.map((item) => [item.teacherId, item]));
@@ -1082,9 +792,9 @@ export default function Monitoring() {
         const previous = previousMap.get(id);
         const tdDelta = (current?.TD ?? 0) - (previous?.TD ?? 0);
         const tlDelta = (current?.TL ?? 0) - (previous?.TL ?? 0);
+
         let status = "Tetap";
         let statusClassName = "bg-muted text-foreground border-border";
-
         if (tdDelta > 2) {
           status = "TD Naik";
           statusClassName = "bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/40";
@@ -1113,106 +823,160 @@ export default function Monitoring() {
       );
   }, [currentTeacherLoads, previousTeacherLoads]);
 
+  const teacherOverviewRows = useMemo(() => {
+    const summaryMap = new Map<
+      string,
+      {
+        teacherId: string;
+        teacherName: string;
+        studentCount: number;
+        reportFilled: number;
+        reportEmpty: number;
+        totalProgress: number;
+        progressCount: number;
+        classKeys: Set<string>;
+      }
+    >();
 
-  const selectedRombelRows = useMemo(() => {
-    if (filterKelas === "all") return [];
-    return allRows.filter((r) => {
-      const matchKelas = String(r.kelas) === filterKelas;
-      const matchRombel = filterRombel === "all" || r.rombel === filterRombel;
-      return matchKelas && matchRombel;
-    });
-  }, [allRows, filterKelas, filterRombel]);
+    groups.forEach((group) => {
+      const assignedTeachers = teachersForClassRombel.get(`${group.kelas}-${group.rombel}`) ?? [];
+      group.rows.forEach((row) => {
+        const teacherName = normalizeTeacherNameForRow(
+          row,
+          assignedTeachers,
+          studentAssignedTeachers.get(row.studentId) ?? [],
+        );
+        const teacherId = getTeacherLoadKey(teacherName);
 
-  const teacherSummaries = useMemo(() => {
-    if (selectedRombelRows.length === 0) return [];
-
-    const map = new Map<string, typeof selectedRombelRows>();
-    selectedRombelRows.forEach((r) => {
-      const teacher = r.guru && r.guru !== "-" ? r.guru : "Tidak Diketahui";
-      if (!map.has(teacher)) map.set(teacher, []);
-      map.get(teacher)!.push(r);
-    });
-
-    return Array.from(map.entries()).map(([teacher, rows]) => {
-      let tahsinDasar = 0;
-      let tahsinLanjutan = 0;
-      let tahfizh = 0;
-      let filled = 0;
-      let empty = 0;
-      let attention = 0;
-      let totalNilai = 0;
-      let countNilai = 0;
-      let totalPersentaseHadir = 0;
-      let countHadir = 0;
-
-      rows.forEach((r) => {
-        if (
-          r.program === "Tahsin Dasar" ||
-          r.program === "Tahsin Dasar (Iqra)"
-        ) {
-          tahsinDasar++;
-        } else if (r.program === "Tahsin Lanjutan") {
-          tahsinLanjutan++;
-        } else if (r.program === "Tahfizh") {
-          tahfizh++;
+        if (!summaryMap.has(teacherId)) {
+          summaryMap.set(teacherId, {
+            teacherId,
+            teacherName,
+            studentCount: 0,
+            reportFilled: 0,
+            reportEmpty: 0,
+            totalProgress: 0,
+            progressCount: 0,
+            classKeys: new Set<string>(),
+          });
         }
 
-        if (r.reportStatus === "filled") {
-          filled++;
-          if (r.nilaiAkhirProgresif !== null) {
-            totalNilai += r.nilaiAkhirProgresif;
-            countNilai++;
-          }
-          if (
-            (r.nilaiAkhirProgresif !== null && r.nilaiAkhirProgresif < 70) ||
-            r.kategoriProgres === "Kurang Konsisten" ||
-            r.kategoriProgres === "Tidak Konsisten" ||
-            r.kategoriProgres === "Stagnan"
-          ) {
-            attention++;
+        const summary = summaryMap.get(teacherId)!;
+        summary.studentCount += 1;
+        summary.classKeys.add(`${group.kelas}-${group.rombel}`);
+        if (row.reportStatus === "filled") {
+          summary.reportFilled += 1;
+          if (row.nilaiAkhirProgresif !== null) {
+            summary.totalProgress += row.nilaiAkhirProgresif;
+            summary.progressCount += 1;
           }
         } else {
-          empty++;
-        }
-
-        if (r.persentaseHadir !== null) {
-          totalPersentaseHadir += r.persentaseHadir;
-          countHadir++;
+          summary.reportEmpty += 1;
         }
       });
-
-      const avgScore =
-        countNilai > 0 ? Math.round(totalNilai / countNilai) : null;
-      const avgHadir =
-        countHadir > 0 ? Math.round(totalPersentaseHadir / countHadir) : null;
-      const filledPercent =
-        rows.length > 0 ? Math.round((filled / rows.length) * 100) : 0;
-
-      return {
-        guru: teacher,
-        total: rows.length,
-        tahsinDasar,
-        tahsinLanjutan,
-        tahfizh,
-        filled,
-        filledPercent,
-        empty,
-        attention,
-        avgScore,
-        avgHadir,
-      };
     });
-  }, [selectedRombelRows]);
+
+    const rows = Array.from(summaryMap.values()).map((summary) => ({
+      teacherId: summary.teacherId,
+      teacherName: summary.teacherName,
+      studentCount: summary.studentCount,
+      classCount: summary.classKeys.size,
+      reportFilled: summary.reportFilled,
+      reportEmpty: summary.reportEmpty,
+      avgProgress: summary.progressCount > 0 ? Math.round(summary.totalProgress / summary.progressCount) : null,
+      loadStatus: "Seimbang",
+      loadStatusClassName: "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/40",
+    }));
+
+    const averageLoad = rows.length > 0 ? rows.reduce((sum, row) => sum + row.studentCount, 0) / rows.length : 0;
+    const highThreshold = Math.max(1, averageLoad * 1.25);
+    const lowThreshold = Math.max(1, averageLoad * 0.75);
+
+    return rows
+      .map((row) => {
+        if (row.studentCount > highThreshold) {
+          return {
+            ...row,
+            loadStatus: "Terlalu Tinggi",
+            loadStatusClassName: "bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/40",
+          };
+        }
+        if (row.studentCount < lowThreshold) {
+          return {
+            ...row,
+            loadStatus: "Terlalu Rendah",
+            loadStatusClassName: "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900/40",
+          };
+        }
+        return row;
+      })
+      .sort((a, b) => b.studentCount - a.studentCount || a.teacherName.localeCompare(b.teacherName));
+  }, [groups, studentAssignedTeachers, teachersForClassRombel]);
+
+  const orphanStudents = useMemo(() => {
+    return baseFilteredStudents
+      .filter((student) => (studentAssignedTeachers.get(student.id) ?? []).length === 0)
+      .map((student) => ({
+        id: student.id,
+        nama: student.nama,
+        kelas: student.kelas,
+        rombel: student.rombel,
+        level: student.level,
+      }))
+      .sort(
+        (a, b) =>
+          a.kelas - b.kelas || a.rombel.localeCompare(b.rombel) || a.nama.localeCompare(b.nama),
+      );
+  }, [baseFilteredStudents, studentAssignedTeachers]);
 
   const getStatusColor = (kategori: string | null, nilai: number | null) => {
-    if (nilai !== null && nilai < 70)
-      return "bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-400 border-rose-200 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/40";
-    if (kategori === "Konsisten & Progresif" || kategori === "Ada Progres")
-      return "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/40";
-    if (kategori === "Kurang Konsisten" || kategori === "Tidak Konsisten")
+    if (nilai !== null && nilai < 70) {
+      return "bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-400 border-rose-200 dark:border-rose-900/40";
+    }
+    if (kategori === "Konsisten & Progresif" || kategori === "Ada Progres") {
+      return "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/40";
+    }
+    if (kategori === "Kurang Konsisten" || kategori === "Tidak Konsisten") {
       return "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-900/40";
+    }
     return "bg-muted text-foreground border-border dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800/40";
   };
+
+  const handleResetFilters = () => {
+    setFilterSemester(initialSemester);
+    setFilterMonth(String(currentMonthIdx + 1));
+    setFilterYear(String(now.getFullYear()));
+    setFilterKelas("all");
+    setFilterRombel("all");
+    setFilterTeacher("all");
+    setFilterCategory("all");
+    setFilterStatus("all");
+    setSearch("");
+  };
+
+  const isFilterActive = useMemo(
+    () =>
+      filterSemester !== initialSemester ||
+      filterMonth !== String(currentMonthIdx + 1) ||
+      filterYear !== String(now.getFullYear()) ||
+      filterKelas !== "all" ||
+      filterRombel !== "all" ||
+      filterTeacher !== "all" ||
+      filterCategory !== "all" ||
+      filterStatus !== "all" ||
+      search.trim() !== "",
+    [
+      filterCategory,
+      filterKelas,
+      filterMonth,
+      filterRombel,
+      filterSemester,
+      filterStatus,
+      filterTeacher,
+      filterYear,
+      search,
+    ],
+  );
 
   if (ls || lr || (isTeacher && la)) {
     return (
@@ -1244,7 +1008,6 @@ export default function Monitoring() {
       className="container mx-auto space-y-6 pb-20 pt-6 sm:pb-8"
       style={{ zoom: 0.8 }}
     >
-      {/* Header Section */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-900 p-6 md:p-8 text-white shadow-md">
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
           <ClipboardList className="h-40 w-40" />
@@ -1252,15 +1015,16 @@ export default function Monitoring() {
         <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Badge variant="outline" className="bg-emerald-500/20 text-emerald-100 border-emerald-400/30 hover:bg-emerald-500/30">Dashboard</Badge>
-              <Badge variant="outline" className="bg-amber-500/20 text-amber-100 border-amber-400/30 hover:bg-amber-500/30">SDIT Luqmanul Hakim</Badge>
+              <Badge variant="outline" className="bg-emerald-500/20 text-emerald-100 border-emerald-400/30 hover:bg-emerald-500/30">
+                Dashboard
+              </Badge>
+              <Badge variant="outline" className="bg-amber-500/20 text-amber-100 border-amber-400/30 hover:bg-amber-500/30">
+                SDIT Luqmanul Hakim
+              </Badge>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl flex items-center gap-2">
-              Monitoring Tahsin & Tahfizh
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Monitoring Tahsin & Tahfizh</h1>
             <p className="mt-2 text-sm text-emerald-100 max-w-xl leading-relaxed">
-              Pantau capaian Tahsin & Tahfizh siswa secara menyeluruh dan ambil
-              tindakan yang tepat.
+              Pantau capaian siswa dan beban guru dari sumber data yang sama dengan rekap laporan bulanan.
             </p>
           </div>
           <div className="text-right hidden md:block">
@@ -1272,18 +1036,12 @@ export default function Monitoring() {
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-yellow-500" />
       </div>
 
-      {/* Filter Section */}
       <Card className="border border-border bg-card shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-2xl">
         <CardContent className="p-5 sm:p-6">
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Semester
-              </label>
-              <Select
-                value={filterSemester}
-                onValueChange={(val) => setFilterSemester(val)}
-              >
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Semester</label>
+              <Select value={filterSemester} onValueChange={setFilterSemester}>
                 <SelectTrigger className="h-10 bg-background text-sm">
                   <SelectValue placeholder="Pilih Semester" />
                 </SelectTrigger>
@@ -1296,20 +1054,15 @@ export default function Monitoring() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Tahun
-              </label>
-              <Select
-                value={filterYear}
-                onValueChange={(val) => setFilterYear(val)}
-              >
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tahun</label>
+              <Select value={filterYear} onValueChange={setFilterYear}>
                 <SelectTrigger className="h-10 bg-background text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {YEARS.map((y) => (
-                    <SelectItem key={y} value={String(y)}>
-                      {y}/{y + 1}
+                  {YEARS.map((year) => (
+                    <SelectItem key={year} value={String(year)}>
+                      {year}/{year + 1}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1317,20 +1070,15 @@ export default function Monitoring() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Bulan
-              </label>
-              <Select
-                value={filterMonth}
-                onValueChange={(val) => setFilterMonth(val)}
-              >
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Bulan</label>
+              <Select value={filterMonth} onValueChange={setFilterMonth}>
                 <SelectTrigger className="h-10 bg-background text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableMonths.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>
-                      {m.label}
+                  {availableMonths.map((month) => (
+                    <SelectItem key={month.value} value={month.value}>
+                      {month.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1338,14 +1086,13 @@ export default function Monitoring() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Kelas
-              </label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kelas</label>
               <Select
                 value={filterKelas}
-                onValueChange={(val) => {
-                  setFilterKelas(val);
+                onValueChange={(value) => {
+                  setFilterKelas(value);
                   setFilterRombel("all");
+                  setFilterTeacher("all");
                 }}
               >
                 <SelectTrigger className="h-10 bg-background text-sm">
@@ -1353,9 +1100,9 @@ export default function Monitoring() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua Kelas</SelectItem>
-                  {availableClasses.map((k) => (
-                    <SelectItem key={k} value={String(k)}>
-                      Kelas {k}
+                  {availableClasses.map((kelas) => (
+                    <SelectItem key={kelas} value={String(kelas)}>
+                      Kelas {kelas}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1363,21 +1110,22 @@ export default function Monitoring() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Rombel
-              </label>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Rombel</label>
               <Select
                 value={filterRombel}
-                onValueChange={(val) => setFilterRombel(val)}
+                onValueChange={(value) => {
+                  setFilterRombel(value);
+                  setFilterTeacher("all");
+                }}
               >
                 <SelectTrigger className="h-10 bg-background text-sm">
                   <SelectValue placeholder="Semua Rombel" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua Rombel</SelectItem>
-                  {availableRombels.map((r) => (
-                    <SelectItem key={r} value={r}>
-                      {r}
+                  {availableRombels.map((rombel) => (
+                    <SelectItem key={rombel} value={rombel}>
+                      {rombel}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1385,35 +1133,40 @@ export default function Monitoring() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Kategori
-              </label>
-              <Select
-                value={filterCategory}
-                onValueChange={(val) => setFilterCategory(val)}
-              >
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Guru</label>
+              <Select value={filterTeacher} onValueChange={setFilterTeacher}>
+                <SelectTrigger className="h-10 bg-background text-sm">
+                  <SelectValue placeholder="Semua Guru" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Guru</SelectItem>
+                  {availableTeachers.map((teacher) => (
+                    <SelectItem key={teacher} value={teacher}>
+                      {teacher}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kategori</label>
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
                 <SelectTrigger className="h-10 bg-background text-sm">
                   <SelectValue placeholder="Semua Kategori" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Semua Kategori</SelectItem>
                   <SelectItem value="Tahsin Dasar">Tahsin Dasar</SelectItem>
-                  <SelectItem value="Tahsin Lanjutan">
-                    Tahsin Lanjutan
-                  </SelectItem>
+                  <SelectItem value="Tahsin Lanjutan">Tahsin Lanjutan</SelectItem>
                   <SelectItem value="Tahfizh">Tahfizh</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Status Laporan
-              </label>
-              <Select
-                value={filterStatus}
-                onValueChange={(val) => setFilterStatus(val)}
-              >
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status Laporan</label>
+              <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger className="h-10 bg-background text-sm">
                   <SelectValue placeholder="Semua Status" />
                 </SelectTrigger>
@@ -1433,7 +1186,7 @@ export default function Monitoring() {
               <Input
                 placeholder="Cari siswa / rombel..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(event) => setSearch(event.target.value)}
                 className="pl-9 h-10 w-full md:max-w-md"
               />
             </div>
@@ -1451,1072 +1204,62 @@ export default function Monitoring() {
         </CardContent>
       </Card>
 
-      {/* KPI Cards Row */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
-        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
-          <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
-          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Siswa</span>
-              <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-md">
-                <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-foreground">
-                {stats.total}
-              </div>
-              <div className="text-[10px] font-medium text-muted-foreground/70 mt-1">
-                Keseluruhan Populasi
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid h-auto w-full grid-cols-1 gap-1 rounded-2xl bg-muted/50 p-1 sm:grid-cols-2">
+          <TabsTrigger value="siswa" className="h-11 rounded-xl text-sm font-semibold">
+            Monitoring Siswa
+          </TabsTrigger>
+          <TabsTrigger value="guru" className="h-11 rounded-xl text-sm font-semibold">
+            Beban & Perkembangan Guru
+          </TabsTrigger>
+        </TabsList>
 
-        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
-          <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
-          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tahsin Dasar</span>
-              <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-md">
-                <BookOpen className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-foreground">
-                {stats.tahsinDasar}
-              </div>
-              <div className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 mt-1 bg-emerald-50 dark:bg-emerald-950/40 inline-block px-1.5 py-0.5 rounded">
-                {stats.total > 0
-                  ? ((stats.tahsinDasar / stats.total) * 100).toFixed(1)
-                  : 0}
-                %
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
-          <div className="absolute top-0 left-0 w-1 h-full bg-amber-500" />
-          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Lanjutan</span>
-              <div className="p-1.5 bg-amber-50 dark:bg-amber-950/40 rounded-md">
-                <Award className="h-4 w-4 text-amber-600" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-foreground">
-                {stats.tahsinLanjutan}
-              </div>
-              <div className="text-[10px] font-medium text-amber-600 mt-1 bg-amber-50 dark:bg-amber-950/40 inline-block px-1.5 py-0.5 rounded">
-                {stats.total > 0
-                  ? ((stats.tahsinLanjutan / stats.total) * 100).toFixed(1)
-                  : 0}
-                %
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
-          <div className="absolute top-0 left-0 w-1 h-full bg-violet-500" />
-          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tahfizh</span>
-              <div className="p-1.5 bg-violet-50 rounded-md">
-                <Award className="h-4 w-4 text-violet-600" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-foreground">
-                {stats.tahfizh}
-              </div>
-              <div className="text-[10px] font-medium text-violet-600 mt-1 bg-violet-50 inline-block px-1.5 py-0.5 rounded">
-                {stats.total > 0
-                  ? ((stats.tahfizh / stats.total) * 100).toFixed(1)
-                  : 0}
-                %
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
-          <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500" />
-          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ada Laporan</span>
-              <div className="p-1.5 bg-emerald-50 dark:bg-emerald-950/40 rounded-md">
-                <ClipboardList className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-foreground">
-                {stats.latestProgress}
-              </div>
-              <div className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 mt-1 bg-emerald-50 dark:bg-emerald-950/40 inline-block px-1.5 py-0.5 rounded">
-                {stats.total > 0
-                  ? ((stats.latestProgress / stats.total) * 100).toFixed(1)
-                  : 0}
-                %
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
-          <div className="absolute top-0 left-0 w-1 h-full bg-amber-500" />
-          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Belum Diisi</span>
-              <div className="p-1.5 bg-amber-50 dark:bg-amber-950/40 rounded-md">
-                <ClipboardList className="h-4 w-4 text-amber-600" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-foreground">
-                {stats.emptyProgress}
-              </div>
-              <div className="text-[10px] font-medium text-amber-600 mt-1 bg-amber-50 dark:bg-amber-950/40 inline-block px-1.5 py-0.5 rounded">
-                {stats.total > 0
-                  ? ((stats.emptyProgress / stats.total) * 100).toFixed(1)
-                  : 0}
-                %
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="relative overflow-hidden bg-card border border-border shadow-sm rounded-xl hover:shadow-md transition-shadow">
-          <div className="absolute top-0 left-0 w-1 h-full bg-rose-500" />
-          <CardContent className="p-4 flex flex-col justify-between h-full pl-5">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Perhatian</span>
-              <div className="p-1.5 bg-rose-50 dark:bg-rose-950/40 rounded-md">
-                <AlertTriangle className="h-4 w-4 text-rose-600" />
-              </div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-foreground">
-                {stats.needsAttention}
-              </div>
-              <div className="text-[10px] font-medium text-rose-600 mt-1 bg-rose-50 dark:bg-rose-950/40 inline-block px-1.5 py-0.5 rounded">
-                {stats.total > 0
-                  ? ((stats.needsAttention / stats.total) * 100).toFixed(1)
-                  : 0}
-                %
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Middle Dashboard Row - 2 Columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Tombol Cepat Kelas (Kiri) */}
-        <Card className="border-border bg-card shadow-sm flex flex-col h-full rounded-2xl overflow-hidden">
-          <CardHeader className="pb-3 bg-muted/40 border-b border-border">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
-              <Users className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              Tombol Cepat Kelas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4 flex-1">
-            <div className="grid grid-cols-3 gap-3 h-full">
-              {[1, 2, 3, 4, 5, 6].map((gradeNum) => (
-                <Button
-                  key={gradeNum}
-                  variant={filterKelas === String(gradeNum) ? "default" : "outline"}
-                  onClick={() => {
-                    setFilterKelas(String(gradeNum));
-                    setFilterRombel("all");
-                  }}
-                  className={`h-full min-h-[80px] flex flex-col items-center justify-center p-2 border transition-colors rounded-xl ${
-                    filterKelas === String(gradeNum)
-                      ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 shadow-md"
-                      : "bg-card text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 border-emerald-200 dark:border-emerald-900/40 shadow-sm"
-                  }`}
-                >
-                  <Users className={`h-5 w-5 mb-1.5 ${filterKelas === String(gradeNum) ? "text-emerald-100" : "text-emerald-600/70"}`} />
-                  <span className="text-sm font-bold">Kelas {gradeNum}</span>
-                </Button>
-              ))}
-              <Button
-                variant={filterKelas === "all" ? "default" : "outline"}
-                onClick={() => {
-                  setFilterKelas("all");
-                  setFilterRombel("all");
-                }}
-                className={`col-span-3 min-h-[60px] font-bold flex items-center justify-center gap-2 border transition-colors rounded-xl mt-1 ${
-                  filterKelas === "all"
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 shadow-md"
-                    : "bg-card text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 border-emerald-200 dark:border-emerald-900/40 shadow-sm"
-                }`}
-              >
-                <Users className="h-5 w-5" />
-                Tampilkan Semua Kelas
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Perlu Tindakan Koordinator (Kanan) */}
-        <Card className="border border-border bg-card shadow-sm flex flex-col rounded-2xl overflow-hidden h-full">
-          <CardHeader className="pb-3 flex flex-row items-center justify-between bg-muted/40 border-b border-border">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
-              <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              Perlu Tindakan Koordinator
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-4 flex-1">
-            <div className="flex items-center justify-between p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/40 rounded-xl">
-              <div className="flex gap-3 items-start">
-                <div className="bg-amber-100 text-amber-700 dark:text-amber-300 p-1.5 rounded-full mt-0.5 shadow-sm">
-                  <ClipboardList className="h-4 w-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-amber-900 dark:text-amber-400">
-                    Siswa Belum Diisi
-                  </div>
-                  <div className="text-[10px] text-amber-700 dark:text-amber-300 mt-0.5">
-                    Laporan bulanan masih kosong
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-2xl font-black text-amber-900 dark:text-amber-400">
-                  {actionStats.empty}
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setFilterStatus("empty")} className="text-[10px] h-7 px-2 border-amber-200 dark:border-amber-900/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 hidden sm:flex">
-                  Lihat
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-900/40 rounded-xl">
-              <div className="flex gap-3 items-start">
-                <div className="bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 p-1.5 rounded-full mt-0.5 shadow-sm">
-                  <AlertTriangle className="h-4 w-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-rose-900 dark:text-rose-400">
-                    Perlu Perhatian Khusus
-                  </div>
-                  <div className="text-[10px] text-rose-700 dark:text-rose-300 mt-0.5">
-                    Berdasarkan parameter capaian
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-2xl font-black text-rose-900 dark:text-rose-400">
-                  {actionStats.attention}
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setFilterStatus("attention")} className="text-[10px] h-7 px-2 border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 hover:bg-rose-100 hidden sm:flex">
-                  Lihat
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/40 rounded-xl">
-              <div className="flex gap-3 items-start">
-                <div className="bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 p-1.5 rounded-full mt-0.5 shadow-sm">
-                  <BookOpen className="h-4 w-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-blue-900 dark:text-blue-400">
-                    Nilai di Bawah 70
-                  </div>
-                  <div className="text-[10px] text-blue-700 dark:text-blue-300 mt-0.5">
-                    Nilai akhir progresif &lt; 70
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="text-2xl font-black text-blue-900 dark:text-blue-400">
-                  {actionStats.below70}
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setFilterStatus("attention")} className="text-[10px] h-7 px-2 border-blue-200 dark:border-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-100 hidden sm:flex">
-                  Lihat
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/40 rounded-xl">
-              <div className="flex gap-3 items-start">
-                <div className="bg-indigo-100 text-indigo-700 dark:text-indigo-300 p-1.5 rounded-full mt-0.5 shadow-sm">
-                  <RotateCcw className="h-4 w-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-indigo-900 dark:text-indigo-400">
-                    Tidak Konsisten / Stagnan
-                  </div>
-                  <div className="text-[10px] text-indigo-700 dark:text-indigo-300 mt-0.5">
-                    Progres bulanan terhambat
-                  </div>
-                </div>
-              </div>
-              <div className="text-2xl font-black text-indigo-900 dark:text-indigo-400">
-                {actionStats.stagnant}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between p-3 bg-muted/40 border border-border rounded-xl">
-              <div className="flex gap-3 items-start">
-                <div className="bg-muted-foreground/20 text-foreground p-1.5 rounded-full mt-0.5 shadow-sm">
-                  <Users className="h-4 w-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-foreground">
-                    Rombel Belum Tuntas
-                  </div>
-                  <div className="text-[10px] text-muted-foreground mt-0.5">
-                    Rombel masih ada status kosong
-                  </div>
-                </div>
-              </div>
-              <div className="text-2xl font-black text-foreground">
-                {actionStats.emptyRombelsCount}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tren Perkembangan (6 Bulan Terakhir) - Full Width */}
-      <div className="w-full">
-        <Card className="border-border bg-card shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-foreground">
-              Tren Perkembangan (6 Bulan Terakhir)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="h-[250px] p-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={lineChartData}
-                margin={{ top: 20, right: 20, left: -25, bottom: 5 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="hsl(var(--border))"
-                />
-                <XAxis
-                  dataKey="name"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={10}
-                  tickLine={false}
-                />
-                <YAxis
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={10}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--popover))",
-                    borderColor: "hsl(var(--border))",
-                    borderRadius: "8px",
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="Tahsin Dasar"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                >
-                  <LabelList dataKey="Tahsin Dasar" position="top" offset={10} fontSize={10} fontWeight="bold" fill="#10b981" />
-                </Line>
-                <Line
-                  type="monotone"
-                  dataKey="Tahsin Lanjutan"
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                >
-                  <LabelList dataKey="Tahsin Lanjutan" position="top" offset={10} fontSize={10} fontWeight="bold" fill="#f59e0b" />
-                </Line>
-                <Line
-                  type="monotone"
-                  dataKey="Tahfizh"
-                  stroke="#8b5cf6"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                >
-                  <LabelList dataKey="Tahfizh" position="top" offset={10} fontSize={10} fontWeight="bold" fill="#8b5cf6" />
-                </Line>
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-
-      {/* Ringkasan Jenjang Kelas */}
-      <Card className="border-border bg-card shadow-sm overflow-hidden">
-        <CardHeader className="border-b border-border bg-muted/40 px-6 py-4 flex flex-row items-center justify-between">
-          <CardTitle className="text-base font-bold text-foreground">
-            Ringkasan Jenjang Kelas
-          </CardTitle>
-          {filterKelas === "all" && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAllJenjang(!showAllJenjang)}
-              className="text-xs border-emerald-200 dark:border-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 h-8"
-            >
-              <Eye className="h-3.5 w-3.5 mr-1.5" />
-              {showAllJenjang ? "Sembunyikan Arsip" : "Lihat Arsip Data"}
-            </Button>
-          )}
-        </CardHeader>
-        
-        {(filterKelas !== "all" || showAllJenjang) ? (
-          <>
-            <div 
-              className="spreadsheet-table-scroll overflow-x-hidden relative"
-              ref={tableScrollRef}
-            >
-          <table className="w-full text-left text-xs" ref={tableContentRef} style={{ minWidth: "1200px" }}>
-            <thead className="bg-muted/40 text-muted-foreground border-b border-border text-center">
-              <tr className="[&>th]:font-semibold [&>th]:px-4 [&>th]:py-3">
-                <th className="text-left whitespace-nowrap">Kelas</th>
-                <th className="text-left whitespace-nowrap">Rombel</th>
-                <th className="text-left whitespace-nowrap">Pengampu 1</th>
-                <th className="text-left whitespace-nowrap">Total Siswa Binaan 1</th>
-                <th className="text-left whitespace-nowrap border-l border-border">Pengampu 2</th>
-                <th className="text-left whitespace-nowrap">Total Siswa Binaan 2</th>
-                <th className="text-left whitespace-nowrap border-l border-border">Pengampu 3</th>
-                <th className="text-left whitespace-nowrap">Total Siswa Binaan 3</th>
-                <th className="text-left whitespace-nowrap border-l border-border">Pengampu 4</th>
-                <th className="text-left whitespace-nowrap">Total Siswa Binaan 4</th>
-                <th className="whitespace-nowrap">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {jenjangKelasRows.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                    Tidak ada data ringkasan rombel ditemukan.
-                  </td>
-                </tr>
-              ) : (
-                jenjangKelasRows.map((row) => {
-                  const rombelKey = `${row.kelas}-${row.rombel}`;
-                  const isExpanded = !!expandedRombels[rombelKey];
-                  
-                  const t1 = row.teacher1;
-                  const t2 = row.teacher2;
-                  const t3 = row.teacher3;
-                  const t4 = row.teacher4;
-
-                  return (
-                    <Fragment key={`jenjang-group-${rombelKey}`}>
-                      <tr className="hover:bg-slate-50/50 transition-colors text-sm [&>td]:px-4 [&>td]:py-3 [&>td]:whitespace-nowrap">
-                        <td className="text-left font-bold text-foreground">
-                          Kelas {row.kelas}
-                        </td>
-                        <td className="text-left font-bold text-foreground">{row.rombel}</td>
-                        
-                        <td className="text-left font-bold text-emerald-800 dark:text-emerald-400 max-w-[150px] truncate" title={t1?.[0]}>
-                          {t1 ? t1[0] : "-"}
-                        </td>
-                        <td className="text-left">
-                          {t1 ? (
-                            <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 border-0">
-                                {t1[1].total} Siswa
-                              </Badge>
-                              <span className="text-[11px] text-muted-foreground font-medium">
-                                (TD: {t1[1].td}, TL: {t1[1].tl}, TFZ: {t1[1].tfz})
-                              </span>
-                            </div>
-                          ) : "-"}
-                        </td>
-
-                        <td className="text-left font-bold text-emerald-800 dark:text-emerald-400 max-w-[150px] truncate border-l border-border" title={t2?.[0]}>
-                          {t2 ? t2[0] : "-"}
-                        </td>
-                        <td className="text-left">
-                          {t2 ? (
-                            <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 border-0">
-                                {t2[1].total} Siswa
-                              </Badge>
-                              <span className="text-[11px] text-muted-foreground font-medium">
-                                (TD: {t2[1].td}, TL: {t2[1].tl}, TFZ: {t2[1].tfz})
-                              </span>
-                            </div>
-                          ) : "-"}
-                        </td>
-
-                        <td className="text-left font-bold text-emerald-800 dark:text-emerald-400 max-w-[150px] truncate border-l border-border" title={t3?.[0]}>
-                          {t3 ? t3[0] : "-"}
-                        </td>
-                        <td className="text-left">
-                          {t3 ? (
-                            <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 border-0">
-                                {t3[1].total} Siswa
-                              </Badge>
-                            </div>
-                          ) : "-"}
-                        </td>
-
-                        <td className="text-left font-bold text-emerald-800 dark:text-emerald-400 max-w-[150px] truncate border-l border-border" title={t4?.[0]}>
-                          {t4 ? t4[0] : "-"}
-                        </td>
-                        <td className="text-left">
-                          {t4 ? (
-                            <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 border-0">
-                                {t4[1].total} Siswa
-                              </Badge>
-                            </div>
-                          ) : "-"}
-                        </td>
-
-                        <td className="text-center">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 border border-border"
-                            onClick={() => toggleRombelExpand(rombelKey)}
-                          >
-                            <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                          </Button>
-                        </td>
-                      </tr>
-
-                      {isExpanded && (
-                        <tr>
-                          <td colSpan={17} className="p-0 bg-muted/20">
-                            <div className="p-4 border-t border-b border-border bg-muted/10">
-                              <h4 className="text-xs font-bold text-foreground mb-2 text-left">
-                                Daftar Siswa Rombel {row.kelas}
-                                {row.rombel} ({row.originalRows.length} siswa)
-                              </h4>
-                              <table className="w-full text-left text-xs bg-background border border-border rounded-lg overflow-hidden shadow-sm">
-                                <thead className="bg-muted/80 text-muted-foreground border-b border-border">
-                                  <tr>
-                                    <th className="px-3 py-2 font-semibold">
-                                      No
-                                    </th>
-                                    <th className="px-3 py-2 font-semibold">
-                                      Nama Siswa
-                                    </th>
-                                    <th className="px-3 py-2 font-semibold">
-                                      Kategori / Level
-                                    </th>
-                                    <th className="px-3 py-2 font-semibold">
-                                      Status Laporan
-                                    </th>
-                                    <th className="px-3 py-2 font-semibold">
-                                      Kategori Progres
-                                    </th>
-                                    <th className="px-3 py-2 font-semibold">
-                                      Nilai
-                                    </th>
-                                    <th className="px-3 py-2 font-semibold">
-                                      Catatan
-                                    </th>
-                                    <th className="px-3 py-2 font-semibold">
-                                      Guru Pembuat
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border">
-                                  {row.originalRows.map(
-                                    (
-                                      studentRow: RecapJoinedRow,
-                                      idx: number,
-                                    ) => {
-                                      const needsAttention =
-                                        studentRow.reportStatus === "filled" &&
-                                        ((studentRow.nilaiAkhirProgresif !==
-                                          null &&
-                                          studentRow.nilaiAkhirProgresif <
-                                            70) ||
-                                          studentRow.kategoriProgres ===
-                                            "Kurang Konsisten" ||
-                                          studentRow.kategoriProgres ===
-                                            "Tidak Konsisten");
-                                      return (
-                                        <tr
-                                          key={studentRow.studentId}
-                                          className="hover:bg-muted/40 transition-colors bg-background"
-                                        >
-                                          <td className="px-3 py-2 text-muted-foreground">
-                                            {idx + 1}
-                                          </td>
-                                          <td className="px-3 py-2 font-semibold text-foreground">
-                                            <div className="flex items-center gap-1.5">
-                                              {studentRow.nama}
-                                              {needsAttention && (
-                                                <Badge
-                                                  variant="destructive"
-                                                  className="text-[9px] px-1 py-0 bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/40"
-                                                >
-                                                  Perhatian
-                                                </Badge>
-                                              )}
-                                            </div>
-                                          </td>
-                                          <td className="px-3 py-2">
-                                            <div className="flex flex-col">
-                                              <span className="text-[10px] text-muted-foreground">
-                                                {studentRow.program}
-                                              </span>
-                                              <span className="font-semibold text-foreground">
-                                                {studentRow.level}
-                                              </span>
-                                            </div>
-                                          </td>
-                                          <td className="px-3 py-2">
-                                            <Badge
-                                              variant="outline"
-                                              className={
-                                                studentRow.reportStatus ===
-                                                "filled"
-                                                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/40 text-[10px] px-1"
-                                                  : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-100 dark:border-amber-900/40 text-[10px] px-1"
-                                              }
-                                            >
-                                              {studentRow.reportStatus ===
-                                              "filled"
-                                                ? "Sudah Diisi"
-                                                : "Belum Diisi"}
-                                            </Badge>
-                                          </td>
-                                          <td className="px-3 py-2">
-                                            {studentRow.reportStatus ===
-                                            "filled" ? (
-                                              <Badge
-                                                variant="outline"
-                                                className={`${getStatusColor(studentRow.kategoriProgres, studentRow.nilaiAkhirProgresif)} text-[10px] px-1`}
-                                              >
-                                                {studentRow.kategoriProgres ||
-                                                  "-"}
-                                              </Badge>
-                                            ) : (
-                                              "-"
-                                            )}
-                                          </td>
-                                          <td className="px-3 py-2 font-bold">
-                                            {studentRow.reportStatus ===
-                                            "filled" ? (
-                                              <span
-                                                className={
-                                                  studentRow.nilaiAkhirProgresif !==
-                                                    null &&
-                                                  studentRow.nilaiAkhirProgresif <
-                                                    70
-                                                    ? "text-rose-600 dark:text-rose-400 font-bold"
-                                                    : "text-foreground font-bold"
-                                                }
-                                              >
-                                                {studentRow.nilaiAkhirProgresif ??
-                                                  "-"}
-                                              </span>
-                                            ) : (
-                                              "-"
-                                            )}
-                                          </td>
-                                          <td
-                                            className="px-3 py-2 text-muted-foreground max-w-[200px] truncate"
-                                            title={studentRow.catatan}
-                                          >
-                                            {studentRow.catatan || "-"}
-                                          </td>
-                                          <td className="px-3 py-2 text-muted-foreground">
-                                            {studentRow.guru || "-"}
-                                          </td>
-                                        </tr>
-                                      );
-                                    },
-                                  )}
-                                </tbody>
-                              </table>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-        
-        <FixedHorizontalScrollbar
-          scrollContainerRef={tableScrollRef}
-          contentRef={tableContentRef}
-          refreshKey={`${jenjangKelasRows.length}-${Object.keys(expandedRombels).length}`}
-        />
-          </>
-        ) : (
-          <div className="p-12 flex flex-col items-center justify-center text-center bg-muted/40">
-            <div className="bg-emerald-100 dark:bg-emerald-950/40 p-3 rounded-full mb-3 shadow-sm border border-emerald-200 dark:border-emerald-900/40">
-              <ClipboardList className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <h3 className="text-sm font-bold text-foreground mb-1">Data Diarsipkan (Mode Semua Kelas)</h3>
-            <p className="text-xs text-muted-foreground max-w-md mb-4 leading-relaxed">
-              Tampilan ringkasan 24 rombel disembunyikan untuk memprioritaskan ruang dan kenyamanan membaca Anda. 
-            </p>
-            <Button
-              onClick={() => setShowAllJenjang(true)}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Tampilkan {jenjangKelasRows.length} Rombel
-            </Button>
-          </div>
-        )}
-      </Card>
-
-      <Card className="border-border bg-card shadow-sm overflow-hidden">
-        <CardHeader className="border-b border-border bg-muted/40 px-6 py-4">
-          <div>
-            <CardTitle className="text-base font-bold text-foreground">
-              Beban Guru per Bulan
-            </CardTitle>
-            <CardDescription className="mt-1 text-xs">
-              Data dari Ringkasan Jenjang Kelas dan laporan bulanan{" "}
-              {getMonthLabel(selectedMonth, selectedYear)}.
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="p-4 sm:p-6">
-          {teacherLoadLoading ? (
-            <div className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                {[1, 2, 3, 4].map((item) => (
-                  <Skeleton key={item} className="h-24 rounded-xl" />
-                ))}
-              </div>
-              <Skeleton className="h-80 rounded-xl" />
-            </div>
-          ) : currentTeacherLoads.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-10 text-center">
-              <ClipboardList className="mx-auto h-10 w-10 text-muted-foreground/60" />
-              <h3 className="mt-3 text-sm font-semibold text-foreground">
-                Data beban guru belum tersedia
-              </h3>
-              <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
-                Belum ada laporan bulanan dengan guru pengampu untuk periode{" "}
-                {getMonthLabel(selectedMonth, selectedYear)}.
-              </p>
+        <TabsContent value="siswa" className="space-y-6">
+          {attendanceQuery.isLoading || attendanceSettingsQuery.isLoading ? (
+            <div className="grid gap-4">
+              <Skeleton className="h-28 rounded-2xl" />
+              <Skeleton className="h-96 rounded-2xl" />
             </div>
           ) : (
-            <Tabs defaultValue="current" className="space-y-4">
-              <TabsList className="grid h-auto w-full grid-cols-1 gap-1 sm:inline-grid sm:w-auto sm:grid-cols-3">
-                <TabsTrigger value="current">Beban Bulan Ini</TabsTrigger>
-                <TabsTrigger value="distribution">Distribusi Beban</TabsTrigger>
-                <TabsTrigger value="comparison">Perbandingan Bulan Lalu</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="current" className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {[
-                    {
-                      label: "Total Terdata",
-                      value: teacherLoadTotals.total,
-                      percent: "100.0%",
-                      color: "bg-slate-500",
-                    },
-                    {
-                      label: "Total TD",
-                      value: teacherLoadTotals.TD,
-                      percent: formatPercent(teacherLoadTotals.tdPercent),
-                      color: "bg-emerald-500",
-                    },
-                    {
-                      label: "Total TL",
-                      value: teacherLoadTotals.TL,
-                      percent: formatPercent(teacherLoadTotals.tlPercent),
-                      color: "bg-amber-500",
-                    },
-                    {
-                      label: "Total TFZ",
-                      value: teacherLoadTotals.TFZ,
-                      percent: formatPercent(teacherLoadTotals.tfzPercent),
-                      color: "bg-violet-500",
-                    },
-                  ].map((item) => (
-                    <Card key={item.label} className="overflow-hidden rounded-xl border-border shadow-sm">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                              {item.label}
-                            </p>
-                            <p className="mt-2 text-3xl font-bold text-foreground">
-                              {item.value}
-                            </p>
-                            <p className="mt-1 text-xs font-medium text-muted-foreground">
-                              {item.percent} dari total
-                            </p>
-                          </div>
-                          <span className={`mt-1 h-2.5 w-2.5 rounded-full ${item.color}`} />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-
-                <div className="rounded-xl border border-border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead>Nama Guru</TableHead>
-                        <TableHead className="text-right">TD</TableHead>
-                        <TableHead className="text-right">TL</TableHead>
-                        <TableHead className="text-right">TFZ</TableHead>
-                        <TableHead className="text-right">Total</TableHead>
-                        <TableHead className="text-right">%TD</TableHead>
-                        <TableHead className="min-w-[160px]">Bar progress %TD</TableHead>
-                        <TableHead>Badge status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {currentTeacherLoads.map((teacher) => {
-                        const status = getTeacherLoadStatus(teacher.tdPercent);
-                        return (
-                          <TableRow key={teacher.teacherId}>
-                            <TableCell className="font-semibold">{teacher.teacherName}</TableCell>
-                            <TableCell className="text-right">{teacher.TD}</TableCell>
-                            <TableCell className="text-right">{teacher.TL}</TableCell>
-                            <TableCell className="text-right">{teacher.TFZ}</TableCell>
-                            <TableCell className="text-right font-bold">{teacher.total}</TableCell>
-                            <TableCell className="text-right">{formatPercent(teacher.tdPercent)}</TableCell>
-                            <TableCell>
-                              <div className="h-2.5 rounded-full bg-muted">
-                                <div
-                                  className="h-2.5 rounded-full bg-emerald-500"
-                                  style={{ width: `${Math.min(teacher.tdPercent, 100)}%` }}
-                                />
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className={status.className}>
-                                {status.label}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {dominantTdTeachers.length > 0 && (
-                  <Alert variant="destructive" className="border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-400">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertTitle className="flex flex-col gap-1 pr-2 sm:flex-row sm:items-center sm:justify-between">
-                      <span>Guru dengan beban TD dominan</span>
-                      <Badge variant="outline" className="w-fit border-rose-200 dark:border-rose-900/40 bg-card text-rose-700 dark:text-rose-300">
-                        {dominantTdTeachers.length} guru perlu ditinjau
-                      </Badge>
-                    </AlertTitle>
-                    <AlertDescription className="mt-3 space-y-3">
-                      <p className="text-xs text-rose-700 dark:text-rose-300">
-                        Prioritas penyeimbangan beban: porsi Tahsin Dasar mencapai 80% atau lebih.
-                      </p>
-                      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                        {dominantTdTeachers.map((teacher) => (
-                          <div
-                            key={teacher.teacherId}
-                            className="rounded-lg border border-rose-200 dark:border-rose-900/40 bg-card p-3 shadow-sm"
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <div className="truncate text-sm font-bold text-rose-900 dark:text-rose-400" title={teacher.teacherName}>
-                                  {teacher.teacherName}
-                                </div>
-                                <div className="mt-1 text-xs text-rose-700 dark:text-rose-300">
-                                  {teacher.TD} TD dari {teacher.total} siswa
-                                </div>
-                              </div>
-                              <div className="shrink-0 rounded-md bg-rose-100 dark:bg-rose-950/40 px-2 py-1 text-sm font-black text-rose-700 dark:text-rose-300">
-                                {formatPercent(teacher.tdPercent)}
-                              </div>
-                            </div>
-                            <div className="mt-3 h-2 rounded-full bg-rose-100 dark:bg-rose-950/40">
-                              <div
-                                className="h-2 rounded-full bg-rose-500"
-                                style={{ width: `${Math.min(teacher.tdPercent, 100)}%` }}
-                              />
-                            </div>
-                            <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
-                              <span className="rounded bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 font-semibold text-rose-700 dark:text-rose-300">
-                                TD {teacher.TD}
-                              </span>
-                              <span className="rounded bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 font-semibold text-blue-700 dark:text-blue-300">
-                                TL {teacher.TL}
-                              </span>
-                              <span className="rounded bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 font-semibold text-emerald-700 dark:text-emerald-300">
-                                TFZ {teacher.TFZ}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </TabsContent>
-
-              <TabsContent value="distribution" className="space-y-3">
-                <div className="flex flex-col gap-3 rounded-xl border border-blue-100 dark:border-blue-900/40 bg-blue-50 dark:bg-blue-950/40 p-3 text-blue-900 dark:text-blue-400 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <div className="text-sm font-bold">Distribusi beban ditampilkan berdasarkan total siswa terbanyak</div>
-                    <p className="mt-1 text-xs leading-relaxed text-blue-700 dark:text-blue-300">
-                      Default Top 8 dipakai agar chart tetap ringkas dan mudah dibaca. Ubah pilihan jika ingin melihat lebih banyak guru.
-                    </p>
-                  </div>
-                  <div className="w-full sm:w-44">
-                    <Select
-                      value={teacherLoadChartLimit}
-                      onValueChange={(value) =>
-                        setTeacherLoadChartLimit(value as TeacherLoadChartLimit)
-                      }
-                    >
-                      <SelectTrigger className="h-9 bg-card text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="8">Top 8</SelectItem>
-                        <SelectItem value="15">Top 15</SelectItem>
-                        <SelectItem value="all">Semua</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-border p-3 sm:p-4">
-                  <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-foreground">
-                        Menampilkan {teacherLoadChartLimitLabel}
-                      </h3>
-                      <p className="text-xs text-muted-foreground">
-                        Urutan dari guru dengan total siswa paling banyak.
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="w-fit bg-muted/40 text-muted-foreground">
-                      Total guru: {currentTeacherLoads.length}
-                    </Badge>
-                  </div>
-                  <div
-                    className="w-full"
-                    style={{
-                      height: `${Math.max(360, teacherLoadChartData.length * 52 + 96)}px`,
-                    }}
-                  >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={teacherLoadChartData}
-                      layout="vertical"
-                      margin={{ top: 8, right: 16, left: 24, bottom: 8 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                      <XAxis
-                        type="number"
-                        allowDecimals={false}
-                        tick={{ fontSize: 11 }}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        type="category"
-                        dataKey="teacherName"
-                        width={156}
-                        tick={{ fontSize: 12, fontWeight: 600, fill: "hsl(var(--foreground))" }}
-                        tickFormatter={formatTeacherChartName}
-                        tickLine={false}
-                      />
-                      <Tooltip
-                        formatter={(value, name) => [`${value} siswa`, name]}
-                        labelFormatter={(label) => `Guru: ${label}`}
-                        contentStyle={{
-                          backgroundColor: "hsl(var(--popover))",
-                          borderColor: "hsl(var(--border))",
-                          borderRadius: "8px",
-                        }}
-                      />
-                      <Legend verticalAlign="top" height={32} />
-                      <Bar dataKey="TD" stackId="load" fill={TEACHER_LOAD_COLORS.TD} />
-                      <Bar dataKey="TL" stackId="load" fill={TEACHER_LOAD_COLORS.TL} />
-                      <Bar dataKey="TFZ" stackId="load" fill={TEACHER_LOAD_COLORS.TFZ} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="comparison" className="space-y-3">
-                <h3 className="text-sm font-bold text-foreground">
-                  {getMonthLabel(previousLoadPeriod.month, previousLoadPeriod.year)} vs{" "}
-                  {getMonthLabel(selectedMonth, selectedYear)}
-                </h3>
-                <div className="rounded-xl border border-border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-muted/50">
-                        <TableHead>Nama Guru</TableHead>
-                        <TableHead className="text-right">TD bulan lalu</TableHead>
-                        <TableHead className="text-right">TD bulan ini</TableHead>
-                        <TableHead className="text-right">Delta TD</TableHead>
-                        <TableHead className="text-right">TL bulan lalu</TableHead>
-                        <TableHead className="text-right">TL bulan ini</TableHead>
-                        <TableHead className="text-right">Delta TL</TableHead>
-                        <TableHead>Status perubahan</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {teacherLoadComparisonRows.map((row) => {
-                        const deltaClass = (value: number) => {
-                          if (value > 0) return "text-emerald-600 dark:text-emerald-400";
-                          if (value < 0) return "text-rose-600";
-                          return "text-muted-foreground";
-                        };
-                        const deltaLabel = (value: number) =>
-                          value > 0 ? `+${value}` : String(value);
-
-                        return (
-                          <TableRow key={row.teacherId}>
-                            <TableCell className="font-semibold">{row.teacherName}</TableCell>
-                            <TableCell className="text-right">{row.previousTD}</TableCell>
-                            <TableCell className="text-right">{row.currentTD}</TableCell>
-                            <TableCell className={`text-right font-bold ${deltaClass(row.tdDelta)}`}>
-                              {deltaLabel(row.tdDelta)}
-                            </TableCell>
-                            <TableCell className="text-right">{row.previousTL}</TableCell>
-                            <TableCell className="text-right">{row.currentTL}</TableCell>
-                            <TableCell className={`text-right font-bold ${deltaClass(row.tlDelta)}`}>
-                              {deltaLabel(row.tlDelta)}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className={row.statusClassName}>
-                                {row.status}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-            </Tabs>
+            <MonitoringSiswa
+              stats={stats}
+              actionStats={actionStats}
+              filterKelas={filterKelas}
+              setFilterKelas={setFilterKelas}
+              setFilterRombel={setFilterRombel}
+              lineChartData={lineChartData}
+              jenjangKelasRows={jenjangKelasRows}
+              expandedRombels={expandedRombels}
+              toggleRombelExpand={toggleRombelExpand}
+              getStatusColor={getStatusColor}
+              showAllJenjang={showAllJenjang}
+              setShowAllJenjang={setShowAllJenjang}
+              tableScrollRef={tableScrollRef}
+              tableContentRef={tableContentRef}
+            />
           )}
-        </CardContent>
-      </Card>
+        </TabsContent>
+
+        <TabsContent value="guru" className="space-y-6">
+          <MonitoringGuru
+            teacherLoadLoading={teacherLoadLoading}
+            selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
+            previousPeriodLabel={getMonthLabel(previousLoadPeriod.month, previousLoadPeriod.year)}
+            teacherLoadTotals={teacherLoadTotals}
+            currentTeacherLoads={currentTeacherLoads}
+            dominantTdTeachers={dominantTdTeachers}
+            teacherLoadChartLimit={teacherLoadChartLimit}
+            setTeacherLoadChartLimit={setTeacherLoadChartLimit}
+            teacherLoadChartLimitLabel={teacherLoadChartLimitLabel}
+            teacherLoadChartData={teacherLoadChartData}
+            teacherLoadComparisonRows={teacherLoadComparisonRows}
+            teacherOverviewRows={teacherOverviewRows}
+            orphanStudents={orphanStudents}
+            formatPercent={formatPercent}
+            teacherFilterLabel={filterTeacher === "all" ? "Semua guru aktif" : filterTeacher}
+          />
+        </TabsContent>
+      </Tabs>
     </motion.div>
   );
 }
