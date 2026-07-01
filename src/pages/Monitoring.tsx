@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { Search, ClipboardList, RotateCcw, ShieldCheck } from "lucide-react";
@@ -173,6 +173,9 @@ export default function Monitoring() {
   const [expandedRombels, setExpandedRombels] = useState<Record<string, boolean>>({});
   const [teacherLoadChartLimit, setTeacherLoadChartLimit] = useState<TeacherLoadChartLimit>("8");
   const [showAllJenjang, setShowAllJenjang] = useState(false);
+  const deferredSearch = useDeferredValue(search);
+  const isStudentTabActive = activeTab === "siswa";
+  const isTeacherTabActive = activeTab === "guru";
 
   const selectedMonth = Number(filterMonth);
   const selectedYear = Number(filterYear);
@@ -249,8 +252,8 @@ export default function Monitoring() {
     let filtered = accessibleStudents;
     if (filterKelas !== "all") filtered = filtered.filter((student) => student.kelas === Number(filterKelas));
     if (filterRombel !== "all") filtered = filtered.filter((student) => student.rombel === filterRombel);
-    if (search.trim()) {
-      const query = search.toLowerCase();
+    if (deferredSearch.trim()) {
+      const query = deferredSearch.toLowerCase();
       filtered = filtered.filter(
         (student) =>
           student.nama.toLowerCase().includes(query) || student.rombel.toLowerCase().includes(query),
@@ -260,7 +263,7 @@ export default function Monitoring() {
       (a, b) =>
         a.kelas - b.kelas || a.rombel.localeCompare(b.rombel) || a.nama.localeCompare(b.nama),
     );
-  }, [accessibleStudents, filterKelas, filterRombel, search]);
+  }, [accessibleStudents, deferredSearch, filterKelas, filterRombel]);
 
   const availableTeachers = useMemo(() => {
     const set = new Set<string>();
@@ -292,14 +295,14 @@ export default function Monitoring() {
   const attendanceQuery = useAttendanceForRecapPeriod({
     month: selectedMonth,
     year: selectedYear,
-    enabled: hasAccess,
+    enabled: hasAccess && isStudentTabActive,
   });
 
   const attendanceSettingsQuery = useAttendancePeriodSettingsByGroups({
     month: selectedMonth,
     year: selectedYear,
     groups: visibleGroupKeys,
-    enabled: visibleGroupKeys.length > 0 && hasAccess,
+    enabled: visibleGroupKeys.length > 0 && hasAccess && isStudentTabActive,
   });
 
   const groups = useMemo(() => {
@@ -310,8 +313,8 @@ export default function Monitoring() {
       year: selectedYear,
       monthName: MONTH_NAMES[selectedMonth - 1],
       reports,
-      attendance: attendanceQuery.data ?? [],
-      attendanceSettings: attendanceSettingsQuery.data ?? [],
+      attendance: isStudentTabActive ? (attendanceQuery.data ?? []) : [],
+      attendanceSettings: isStudentTabActive ? (attendanceSettingsQuery.data ?? []) : [],
       getTeacherName: (userId) => (userId ? profileMap.get(userId) : undefined),
     });
   }, [
@@ -319,6 +322,7 @@ export default function Monitoring() {
     attendanceSettingsQuery.data,
     filteredStudents,
     hasAccess,
+    isStudentTabActive,
     profileMap,
     reports,
     selectedMonth,
@@ -374,6 +378,17 @@ export default function Monitoring() {
   }, [filterCategory, filterStatus, groups]);
 
   const stats = useMemo(() => {
+    if (!isStudentTabActive) {
+      return {
+        total: 0,
+        tahsinDasar: 0,
+        tahsinLanjutan: 0,
+        tahfizh: 0,
+        latestProgress: 0,
+        emptyProgress: 0,
+        needsAttention: 0,
+      };
+    }
     const baseRows = allRows;
     const total = baseRows.length;
     let tahsinDasar = 0;
@@ -410,9 +425,18 @@ export default function Monitoring() {
       emptyProgress,
       needsAttention,
     };
-  }, [allRows]);
+  }, [allRows, isStudentTabActive]);
 
   const actionStats = useMemo(() => {
+    if (!isStudentTabActive) {
+      return {
+        empty: 0,
+        attention: 0,
+        below70: 0,
+        stagnant: 0,
+        emptyRombelsCount: 0,
+      };
+    }
     let below70 = 0;
     let stagnant = 0;
     const emptyRombels = new Set<string>();
@@ -439,17 +463,21 @@ export default function Monitoring() {
       stagnant,
       emptyRombelsCount: emptyRombels.size,
     };
-  }, [allRows, stats.emptyProgress, stats.needsAttention]);
+  }, [allRows, isStudentTabActive, stats.emptyProgress, stats.needsAttention]);
 
   const rowsByGrade = useMemo(() => {
+    if (!isStudentTabActive) {
+      return { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] } as Record<number, RecapJoinedRow[]>;
+    }
     const map: Record<number, RecapJoinedRow[]> = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
     allRows.forEach((row) => {
       if (map[row.kelas]) map[row.kelas].push(row);
     });
     return map;
-  }, [allRows]);
+  }, [allRows, isStudentTabActive]);
 
   const gradeSummaries = useMemo(() => {
+    if (!isStudentTabActive) return [];
     return [1, 2, 3, 4, 5, 6]
       .map((grade) => {
         const gradeRows = rowsByGrade[grade] ?? [];
@@ -514,7 +542,7 @@ export default function Monitoring() {
         };
       })
       .filter((value): value is NonNullable<typeof value> => Boolean(value));
-  }, [rowsByGrade]);
+  }, [isStudentTabActive, rowsByGrade]);
 
   const toggleRombelExpand = (key: string) => {
     setExpandedRombels((current) => ({ ...current, [key]: !current[key] }));
@@ -565,10 +593,12 @@ export default function Monitoring() {
 
       return allData;
     },
-    enabled: hasAccess && historicalStudentIds.length > 0,
+    enabled: isStudentTabActive && hasAccess && historicalStudentIds.length > 0,
+    placeholderData: (previousData) => previousData,
   });
 
   const lineChartData = useMemo(() => {
+    if (!isStudentTabActive) return [];
     return past6MonthsKeys.map((key) => {
       const label = `${MONTH_NAMES[key.month - 1].substring(0, 3)} ${String(key.year).slice(2)}`;
       const reportsForMonth = historicalReports.filter(
@@ -596,9 +626,10 @@ export default function Monitoring() {
         Tahfizh: tahfizh,
       };
     });
-  }, [historicalReports, past6MonthsKeys]);
+  }, [historicalReports, isStudentTabActive, past6MonthsKeys]);
 
   const jenjangKelasRows = useMemo(() => {
+    if (!isStudentTabActive) return [];
     return groups
       .map((group) => {
         const key = `${group.kelas}-${group.rombel}`;
@@ -662,9 +693,10 @@ export default function Monitoring() {
         };
       })
       .sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
-  }, [groups, studentAssignedTeachers, teachersForClassRombel]);
+  }, [groups, isStudentTabActive, studentAssignedTeachers, teachersForClassRombel]);
 
   const teacherLoadRows = useMemo(() => {
+    if (!isTeacherTabActive) return [];
     const map = new Map<string, TeacherLoadSummary>();
 
     groups.forEach((group) => {
@@ -701,7 +733,7 @@ export default function Monitoring() {
         tdPercent: summary.total > 0 ? (summary.TD / summary.total) * 100 : 0,
       }))
       .sort((a, b) => b.total - a.total || a.teacherName.localeCompare(b.teacherName));
-  }, [groups, studentAssignedTeachers, teachersForClassRombel]);
+  }, [groups, isTeacherTabActive, studentAssignedTeachers, teachersForClassRombel]);
 
   const currentTeacherLoads = useMemo(() => {
     if (filterTeacher === "all") return teacherLoadRows;
@@ -733,7 +765,8 @@ export default function Monitoring() {
 
       return allData;
     },
-    enabled: hasAccess,
+    enabled: isTeacherTabActive && hasAccess,
+    placeholderData: (previousData) => previousData,
   });
 
   const previousTeacherLoadReports = useMemo(
@@ -749,6 +782,17 @@ export default function Monitoring() {
   }, [filterTeacher, previousTeacherLoadReports]);
 
   const teacherLoadTotals = useMemo(() => {
+    if (!isTeacherTabActive) {
+      return {
+        total: 0,
+        TD: 0,
+        TL: 0,
+        TFZ: 0,
+        tdPercent: 0,
+        tlPercent: 0,
+        tfzPercent: 0,
+      };
+    }
     const total = currentTeacherLoads.reduce(
       (acc, item) => ({
         total: acc.total + item.total,
@@ -764,7 +808,7 @@ export default function Monitoring() {
       tlPercent: total.total > 0 ? (total.TL / total.total) * 100 : 0,
       tfzPercent: total.total > 0 ? (total.TFZ / total.total) * 100 : 0,
     };
-  }, [currentTeacherLoads]);
+  }, [currentTeacherLoads, isTeacherTabActive]);
 
   const teacherLoadChartData = useMemo(() => {
     if (teacherLoadChartLimit === "all") return currentTeacherLoads;
@@ -772,8 +816,8 @@ export default function Monitoring() {
   }, [currentTeacherLoads, teacherLoadChartLimit]);
 
   const dominantTdTeachers = useMemo(
-    () => currentTeacherLoads.filter((teacher) => teacher.tdPercent >= 80),
-    [currentTeacherLoads],
+    () => (isTeacherTabActive ? currentTeacherLoads.filter((teacher) => teacher.tdPercent >= 80) : []),
+    [currentTeacherLoads, isTeacherTabActive],
   );
 
   const teacherLoadChartLimitLabel = useMemo(() => {
@@ -782,6 +826,7 @@ export default function Monitoring() {
   }, [teacherLoadChartData.length, teacherLoadChartLimit]);
 
   const teacherLoadComparisonRows = useMemo(() => {
+    if (!isTeacherTabActive) return [];
     const previousMap = new Map(previousTeacherLoads.map((item) => [item.teacherId, item]));
     const currentMap = new Map(currentTeacherLoads.map((item) => [item.teacherId, item]));
     const ids = Array.from(new Set([...previousMap.keys(), ...currentMap.keys()]));
@@ -821,9 +866,10 @@ export default function Monitoring() {
           b.currentTD + b.currentTL - (a.currentTD + a.currentTL) ||
           a.teacherName.localeCompare(b.teacherName),
       );
-  }, [currentTeacherLoads, previousTeacherLoads]);
+  }, [currentTeacherLoads, isTeacherTabActive, previousTeacherLoads]);
 
   const teacherOverviewRows = useMemo(() => {
+    if (!isTeacherTabActive) return [];
     const summaryMap = new Map<
       string,
       {
@@ -911,9 +957,10 @@ export default function Monitoring() {
         return row;
       })
       .sort((a, b) => b.studentCount - a.studentCount || a.teacherName.localeCompare(b.teacherName));
-  }, [groups, studentAssignedTeachers, teachersForClassRombel]);
+  }, [groups, isTeacherTabActive, studentAssignedTeachers, teachersForClassRombel]);
 
   const orphanStudents = useMemo(() => {
+    if (!isTeacherTabActive) return [];
     return baseFilteredStudents
       .filter((student) => (studentAssignedTeachers.get(student.id) ?? []).length === 0)
       .map((student) => ({
@@ -927,7 +974,7 @@ export default function Monitoring() {
         (a, b) =>
           a.kelas - b.kelas || a.rombel.localeCompare(b.rombel) || a.nama.localeCompare(b.nama),
       );
-  }, [baseFilteredStudents, studentAssignedTeachers]);
+  }, [baseFilteredStudents, isTeacherTabActive, studentAssignedTeachers]);
 
   const getStatusColor = (kategori: string | null, nilai: number | null) => {
     if (nilai !== null && nilai < 70) {

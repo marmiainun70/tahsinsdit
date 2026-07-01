@@ -151,6 +151,7 @@ export const useAttendanceForRecapPeriod = ({
   return useQuery({
     queryKey: ["attendance", "recap-period", { month, year, userId: user?.id ?? "anon", role: profile?.role ?? "none" }],
     enabled: enabled && !!month && !!year,
+    placeholderData: (previousData) => previousData,
     queryFn: () => fetchAttendanceRows({ userId: user?.id, role: profile?.role, month, year }),
   });
 };
@@ -311,6 +312,7 @@ export const useAttendancePeriodSettingsByGroups = ({
   useQuery({
     queryKey: ["attendance-period-settings", "groups", { month, year, groups }],
     enabled: enabled && !!month && !!year && groups.length > 0,
+    placeholderData: (previousData) => previousData,
     queryFn: async () => {
       const kelasList = Array.from(new Set(groups.map((group) => group.kelas)));
       const { data, error } = await sb

@@ -380,6 +380,7 @@ export const useMonthlyReportsForPeriod = ({
   return useQuery({
     queryKey: ["monthly_reports", "period", { month, year, userId: user?.id ?? "anon", role: profile?.role ?? "none" }],
     enabled: enabled && !!month && !!year,
+    placeholderData: (previousData) => previousData,
     queryFn: async () => {
       const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
       if (managedStudentIds && managedStudentIds.length === 0) return [];
