@@ -370,7 +370,7 @@ export default function TeacherManagedStudents() {
       )}
 
       <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
-        <DialogContent className="flex max-h-[90vh] w-[min(96vw,980px)] flex-col overflow-hidden">
+        <DialogContent className="flex max-h-[95vh] w-[min(98vw,1400px)] flex-col overflow-hidden">
           <DialogHeader>
             <DialogTitle>Ajukan Murid Binaan</DialogTitle>
             <DialogDescription>Pilih siswa yang belum memiliki guru pembina untuk diajukan ke admin.</DialogDescription>
@@ -431,14 +431,15 @@ export default function TeacherManagedStudents() {
             )}
           </div>
 
-          <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+          <div className="flex-1 overflow-y-auto pr-1">
             {visibleRequestRows.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border p-8 text-center">
                 <p className="font-semibold text-foreground">Tidak ada siswa pada filter ini</p>
                 <p className="mt-2 text-sm text-muted-foreground">Coba ubah pencarian atau filter kelas.</p>
               </div>
             ) : (
-              visibleRequestRows.map(({ student, approvedAssignment, myPending, disabled }) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {visibleRequestRows.map(({ student, approvedAssignment, myPending, disabled }) => {
                 const checked = selectedStudentIds.includes(student.id);
                 return (
                   <label
@@ -483,7 +484,8 @@ export default function TeacherManagedStudents() {
                     </div>
                   </label>
                 );
-              })
+              })}
+              </div>
             )}
           </div>
 
