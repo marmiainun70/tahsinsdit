@@ -449,7 +449,11 @@ export default function AdminTeacherAssignments() {
         if (term && !student.nama.toLowerCase().includes(term)) return false;
         return true;
       })
-      .sort((a, b) => a.student.nama.localeCompare(b.student.nama, "id"));
+      .sort((a, b) => {
+        if (a.student.kelas !== b.student.kelas) return a.student.kelas - b.student.kelas;
+        if (a.student.rombel !== b.student.rombel) return a.student.rombel.localeCompare(b.student.rombel, "id");
+        return a.student.nama.localeCompare(b.student.nama, "id");
+      });
   }, [detailClassFilter, detailExactClassLabel, detailSearch, selectedTeacherSummary, studentsById]);
 
   const detailTotalPages = Math.max(1, Math.ceil(detailRows.length / PAGE_SIZE));
