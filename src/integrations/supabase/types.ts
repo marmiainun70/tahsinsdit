@@ -341,7 +341,6 @@ export type Database = {
           end_page: number
           id: string
           iqra_level: string | null
-          attendance_percentage: number
           kategori_progres: string
           kelas_snapshot: number | null
           level_snapshot: string | null
@@ -376,7 +375,6 @@ export type Database = {
           end_page?: number
           id?: string
           iqra_level?: string | null
-          attendance_percentage?: number
           kategori_progres?: string
           kelas_snapshot?: number | null
           level_snapshot?: string | null
@@ -411,7 +409,6 @@ export type Database = {
           end_page?: number
           id?: string
           iqra_level?: string | null
-          attendance_percentage?: number
           kategori_progres?: string
           kelas_snapshot?: number | null
           level_snapshot?: string | null
@@ -704,6 +701,39 @@ export type Database = {
         }
         Relationships: []
       }
+      spreadsheet_layout_settings: {
+        Row: {
+          created_at: string
+          id: string
+          page_key: string
+          scope: string
+          settings: Json
+          updated_at: string
+          updated_by: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          page_key: string
+          scope: string
+          settings?: Json
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page_key?: string
+          scope?: string
+          settings?: Json
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       students: {
         Row: {
           catatan_perhatian: string | null
@@ -965,6 +995,146 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_diagnostics: {
+        Row: {
+          category: string
+          coaching_recommendation: string | null
+          created_at: string
+          evaluation_date: string
+          evaluator_id: string | null
+          fluency_score: number
+          id: string
+          improvement_note: string | null
+          makhraj_score: number
+          mapping_score: number
+          placement_recommendation: string | null
+          sifat_score: number
+          strengths_note: string | null
+          tajwid_score: number
+          teacher_profile_id: string
+          teaching_readiness_score: number
+          test_material: string | null
+          updated_at: string
+          waqaf_ibtida_score: number
+        }
+        Insert: {
+          category?: string
+          coaching_recommendation?: string | null
+          created_at?: string
+          evaluation_date?: string
+          evaluator_id?: string | null
+          fluency_score?: number
+          id?: string
+          improvement_note?: string | null
+          makhraj_score?: number
+          mapping_score?: number
+          placement_recommendation?: string | null
+          sifat_score?: number
+          strengths_note?: string | null
+          tajwid_score?: number
+          teacher_profile_id: string
+          teaching_readiness_score?: number
+          test_material?: string | null
+          updated_at?: string
+          waqaf_ibtida_score?: number
+        }
+        Update: {
+          category?: string
+          coaching_recommendation?: string | null
+          created_at?: string
+          evaluation_date?: string
+          evaluator_id?: string | null
+          fluency_score?: number
+          id?: string
+          improvement_note?: string | null
+          makhraj_score?: number
+          mapping_score?: number
+          placement_recommendation?: string | null
+          sifat_score?: number
+          strengths_note?: string | null
+          tajwid_score?: number
+          teacher_profile_id?: string
+          teaching_readiness_score?: number
+          test_material?: string | null
+          updated_at?: string
+          waqaf_ibtida_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_diagnostics_teacher_profile_id_fkey"
+            columns: ["teacher_profile_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_profiles: {
+        Row: {
+          address: string | null
+          birth_date: string | null
+          birth_place: string | null
+          certificates: string | null
+          created_at: string
+          current_classes: string | null
+          full_name: string
+          gender: string | null
+          id: string
+          last_education: string | null
+          notes: string | null
+          phone: string | null
+          previous_classes: string | null
+          specialization: string[]
+          tahsin_background: string | null
+          teaching_experience: string | null
+          teaching_start_year: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          certificates?: string | null
+          created_at?: string
+          current_classes?: string | null
+          full_name: string
+          gender?: string | null
+          id?: string
+          last_education?: string | null
+          notes?: string | null
+          phone?: string | null
+          previous_classes?: string | null
+          specialization?: string[]
+          tahsin_background?: string | null
+          teaching_experience?: string | null
+          teaching_start_year?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          birth_date?: string | null
+          birth_place?: string | null
+          certificates?: string | null
+          created_at?: string
+          current_classes?: string | null
+          full_name?: string
+          gender?: string | null
+          id?: string
+          last_education?: string | null
+          notes?: string | null
+          phone?: string | null
+          previous_classes?: string | null
+          specialization?: string[]
+          tahsin_background?: string | null
+          teaching_experience?: string | null
+          teaching_start_year?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       teacher_students: {
         Row: {
           created_at: string
@@ -1027,6 +1197,52 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_all_pending_teacher_student_requests: {
+        Args: never
+        Returns: number
+      }
+      approve_teacher_student_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          requested_at: string
+          requested_by: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_id: string
+          teacher_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "teacher_students"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      assign_teacher_student: {
+        Args: { p_student_id: string; p_teacher_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          requested_at: string
+          requested_by: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_id: string
+          teacher_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "teacher_students"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_notification: {
         Args: {
           _body: string
@@ -1045,58 +1261,68 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_teacher_account: {
-        Args: {
-          _user_id: string
-        }
+      is_admin_account: { Args: { _user_id: string }; Returns: boolean }
+      is_teacher_account: { Args: { _user_id: string }; Returns: boolean }
+      is_teacher_diagnostic_admin: {
+        Args: { _user_id: string }
         Returns: boolean
       }
       list_active_teacher_accounts: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
-          email: string | null
-          full_name: string | null
-          role: string | null
-          status: string | null
+          email: string
+          full_name: string
+          role: string
+          status: string
           user_id: string
-          username: string | null
+          username: string
         }[]
       }
-      approve_all_pending_teacher_student_requests: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      approve_teacher_student_request: {
-        Args: {
-          p_request_id: string
-        }
-        Returns: Database["public"]["Tables"]["teacher_students"]["Row"]
-      }
-      assign_teacher_student: {
-        Args: {
-          p_student_id: string
-          p_teacher_id: string
-        }
-        Returns: Database["public"]["Tables"]["teacher_students"]["Row"]
-      }
       reject_teacher_student_request: {
-        Args: {
-          p_note?: string | null
-          p_request_id: string
+        Args: { p_note?: string; p_request_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          requested_at: string
+          requested_by: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_id: string
+          teacher_id: string
         }
-        Returns: Database["public"]["Tables"]["teacher_students"]["Row"]
+        SetofOptions: {
+          from: "*"
+          to: "teacher_students"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       release_teacher_student: {
-        Args: {
-          p_student_id: string
-        }
+        Args: { p_student_id: string }
         Returns: number
       }
       request_teacher_student: {
-        Args: {
-          p_student_id: string
+        Args: { p_student_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          requested_at: string
+          requested_by: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_id: string
+          teacher_id: string
         }
-        Returns: Database["public"]["Tables"]["teacher_students"]["Row"]
+        SetofOptions: {
+          from: "*"
+          to: "teacher_students"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
