@@ -210,37 +210,34 @@ const Dashboard = () => {
                           <Users className="w-6 h-6 text-white" />
                         </div>
                       </div>
-                       <div className="mb-3">
-                         <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
-                           <div className="flex gap-2">
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Iqra 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Tahsin 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>Tahfizh 0</span>
+                       <div className="flex gap-2 mb-4">
+                         <div className="flex-1 grid grid-cols-4 gap-1.5">
+                           {(["A", "B", "C", "D"] as const).map((r, ri) => {
+                            const rombelColors = ["bg-blue-500", "bg-emerald-500", "bg-violet-500", "bg-orange-500"];
+                            return (
+                              <div key={r} className="rounded-xl p-2 text-center bg-muted/60 flex flex-col justify-center">
+                                 <div className={`w-3 h-1 rounded-full ${rombelColors[ri]} mx-auto mb-1`} />
+                                 <p className="text-xs font-bold text-foreground">0</p>
+                                 <p className="text-[10px] text-muted-foreground">{r}</p>
+                               </div>);
+                          })}
+                         </div>
+                         <div className="w-[72px] bg-muted rounded-xl p-2 text-center flex flex-col justify-center">
+                           <p className="text-lg font-bold text-foreground">0</p>
+                           <p className="text-[10px] text-muted-foreground">Total</p>
+                         </div>
+                       </div>
+                       
+                       <div className="bg-muted/30 rounded-xl p-3">
+                         <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-2">
+                           <div className="flex gap-3 flex-wrap">
+                             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500"></span>Iqra 0</span>
+                             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500"></span>Tahsin 0</span>
+                             <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-violet-500"></span>Tahfizh 0</span>
                            </div>
                          </div>
                          <div className="h-2 bg-muted rounded-full overflow-hidden flex">
                            <div className="h-full bg-emerald-500 transition-all duration-700" style={{ width: '0%' }} />
-                         </div>
-                       </div>
-                       <div className="grid grid-cols-4 gap-1.5 mb-3">
-                         {(["A", "B", "C", "D"] as const).map((r, ri) => {
-                          const rombelColors = ["bg-blue-500", "bg-emerald-500", "bg-violet-500", "bg-orange-500"];
-                          return (
-                            <div key={r} className="rounded-xl p-2 text-center bg-muted/60">
-                               <div className={`w-4 h-1 rounded-full ${rombelColors[ri]} mx-auto mb-1`} />
-                               <p className="text-xs font-bold text-foreground">0</p>
-                               <p className="text-xs text-muted-foreground">{r}</p>
-                             </div>);
-                        })}
-                       </div>
-                       <div className="grid grid-cols-2 gap-2">
-                         <div className="bg-muted rounded-xl p-2.5 text-center">
-                           <p className="text-lg font-bold text-foreground">0</p>
-                           <p className="text-xs text-muted-foreground">Total</p>
-                         </div>
-                         <div className="bg-muted rounded-xl p-2.5 text-center">
-                           <p className="text-lg font-bold text-foreground">0</p>
-                           <p className="text-xs text-muted-foreground">Tahsin</p>
                          </div>
                        </div>
                       <div className="mt-3 flex items-center gap-1 text-muted-foreground text-xs font-medium">
@@ -263,41 +260,42 @@ const Dashboard = () => {
                           <Users className="w-6 h-6 text-white" />
                         </div>
                       </div>
-                       <div className="mb-3">
-                         <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
-                           <div className="flex gap-2">
-                             {stats.tahsinDasar > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Iqra {stats.tahsinDasar}</span>}
-                             {stats.tahsinLanjutan > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Tahsin {stats.tahsinLanjutan}</span>}
-                             {stats.tahfizh > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>Tahfizh {stats.tahfizh}</span>}
+                       <div className="flex gap-2 mb-4">
+                         <div className="flex-1 grid grid-cols-4 gap-1.5">
+                           {(["A", "B", "C", "D"] as const).map((r, ri) => {
+                            const rombelColors = ["bg-blue-500", "bg-emerald-500", "bg-violet-500", "bg-orange-500"];
+                            return (
+                              <div key={r} className="rounded-xl p-2 text-center bg-muted/60 flex flex-col justify-center">
+                                 <div className={`w-3 h-1 rounded-full ${rombelColors[ri]} mx-auto mb-1`} />
+                                 <p className="text-xs font-bold text-foreground">{stats.rombel[r]}</p>
+                                 <p className="text-[10px] text-muted-foreground">{r}</p>
+                               </div>);
+                          })}
+                         </div>
+                         <div className="w-[72px] bg-muted rounded-xl p-2 text-center flex flex-col justify-center">
+                           <p className="text-lg font-bold text-foreground">{stats.total}</p>
+                           <p className="text-[10px] text-muted-foreground">Total</p>
+                         </div>
+                       </div>
+                       
+                       <div className="bg-muted/30 rounded-xl p-3">
+                         <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-2">
+                           <div className="flex gap-3 flex-wrap">
+                             <span className="flex items-center gap-1.5">
+                               <span className="w-2 h-2 rounded-full bg-emerald-500"></span>Iqra <span className="text-foreground">{stats.tahsinDasar}</span>
+                             </span>
+                             <span className="flex items-center gap-1.5">
+                               <span className="w-2 h-2 rounded-full bg-amber-500"></span>Tahsin <span className="text-foreground">{stats.tahsinLanjutan}</span>
+                             </span>
+                             <span className="flex items-center gap-1.5">
+                               <span className="w-2 h-2 rounded-full bg-violet-500"></span>Tahfizh <span className="text-foreground">{stats.tahfizh}</span>
+                             </span>
                            </div>
                          </div>
                          <div className="h-2 bg-muted rounded-full overflow-hidden flex">
-                           {pctDasar > 0 && <div className="h-full bg-emerald-500 transition-all duration-700" style={{ width: `${pctDasar}%` }} />}
-                           {pctLanjut > 0 && <div className="h-full bg-amber-500 transition-all duration-700 border-l border-white/20" style={{ width: `${pctLanjut}%` }} />}
-                           {pctTahfizh > 0 && <div className="h-full bg-violet-500 transition-all duration-700 border-l border-white/20" style={{ width: `${pctTahfizh}%` }} />}
-                         </div>
-                       </div>
-                       {/* Rombel breakdown */}
-                       <div className="grid grid-cols-4 gap-1.5 mb-3">
-                         {(["A", "B", "C", "D"] as const).map((r, ri) => {
-                          const rombelColors = ["bg-blue-500", "bg-emerald-500", "bg-violet-500", "bg-orange-500"];
-                          return (
-                            <div key={r} className="rounded-xl p-2 text-center bg-muted/60">
-                               <div className={`w-4 h-1 rounded-full ${rombelColors[ri]} mx-auto mb-1`} />
-                               <p className="text-xs font-bold text-foreground">{stats.rombel[r]}</p>
-                               <p className="text-xs text-muted-foreground">{r}</p>
-                             </div>);
-
-                        })}
-                       </div>
-                       <div className="grid grid-cols-2 gap-2">
-                         <div className="bg-muted rounded-xl p-2.5 text-center">
-                           <p className="text-lg font-bold text-foreground">{stats.total}</p>
-                           <p className="text-xs text-muted-foreground">Total</p>
-                         </div>
-                         <div className="bg-muted rounded-xl p-2.5 text-center">
-                           <p className="text-lg font-bold text-foreground">{stats.tahsinDasar + stats.tahsinLanjutan + stats.tahfizh}</p>
-                           <p className="text-xs text-muted-foreground">Tahsin</p>
+                           {pctDasar > 0 && <div className="h-full bg-emerald-500 transition-all duration-700" style={{ width: `${pctDasar}%` }} title={`Iqra: ${stats.tahsinDasar}`} />}
+                           {pctLanjut > 0 && <div className="h-full bg-amber-500 transition-all duration-700 border-l border-white/20" style={{ width: `${pctLanjut}%` }} title={`Tahsin Lanjutan: ${stats.tahsinLanjutan}`} />}
+                           {pctTahfizh > 0 && <div className="h-full bg-violet-500 transition-all duration-700 border-l border-white/20" style={{ width: `${pctTahfizh}%` }} title={`Tahfizh: ${stats.tahfizh}`} />}
                          </div>
                        </div>
                       <div className="mt-3 flex items-center gap-1 text-primary text-xs font-medium group-hover:gap-2 transition-all">

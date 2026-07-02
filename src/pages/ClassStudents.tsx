@@ -314,7 +314,7 @@ const ClassStudents = () => {
                                   animate={{ scale: 1, opacity: 1 }}
                                   className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 whitespace-nowrap"
                                 >
-                                  🎓 {levelUps[s.id].new_level}
+                                  🎓 {levelUps[s.id].to_level}
                                 </motion.span>
                               )}
                             </div>

@@ -108,7 +108,11 @@ const useUpsertResult = () => {
           activity_type: "naik_level",
           judul: `Naik Level: ${levelDiuji} → ${toLevelUp}`,
           deskripsi: `Level bacaan ${studentNama} otomatis naik setelah lulus ujian kenaikan program.`,
-          metadata: { dari: levelDiuji, ke: toLevelUp, tanggal },
+          metadata: {
+            from_level: levelDiuji,
+            to_level: toLevelUp,
+            event_date: tanggal,
+          },
           created_by: user?.id ?? null,
         });
 

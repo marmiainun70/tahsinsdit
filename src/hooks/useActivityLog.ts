@@ -15,11 +15,17 @@ export const useRecentLevelUpsByClass = (kelas: number) =>
         .order("created_at", { ascending: false });
       if (error) throw error;
       // Return a map: studentId → most recent naik_level metadata
-      const map: Record<string, { new_level: string; created_at: string }> = {};
+      const map: Record<string, { to_level: string; created_at: string }> = {};
       (data as Array<{ student_id: string; metadata: Record<string, unknown>; created_at: string }>).forEach(row => {
         if (!map[row.student_id]) {
+          const metadata = row.metadata ?? {};
           map[row.student_id] = {
-            new_level: String(row.metadata?.new_level ?? ""),
+            to_level: String(
+              metadata.to_level ??
+              metadata.ke ??
+              metadata.new_level ??
+              "",
+            ),
             created_at: row.created_at,
           };
         }

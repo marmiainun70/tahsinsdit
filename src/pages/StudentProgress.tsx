@@ -6,6 +6,7 @@ import {
   useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS,
   useTahsinAssessments, getLevelDisplayLabel, isTahsinDasar,
 } from "@/hooks/useSupabaseData";
+import { useMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
 import { useAddActivityLog } from "@/hooks/useActivityLog";
 import ActivityLogPanel from "@/components/ActivityLogPanel";
 import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle, FileDown, ArrowRightLeft } from "lucide-react";
@@ -60,6 +61,7 @@ const StudentProgress = () => {
   const { studentId } = useParams();
   const { data: student, isLoading: loadingStudent } = useStudent(studentId ?? "");
   const { data: progres = [], isLoading: loadingProgress } = useProgressEntries(studentId ?? "");
+  const { data: monthlyReports = [], isLoading: loadingMonthlyReports } = useMonthlyReports(studentId ?? "");
   const { data: tahsinData = [] } = useTahsinAssessments(studentId ?? "");
   const addProgress = useAddProgress();
   const updateStudent = useUpdateStudent();
@@ -346,6 +348,77 @@ const StudentProgress = () => {
                       </td>
                     ))}
                     <td className="py-3 px-4 text-sm text-muted-foreground max-w-xs truncate">{p.catatan}</td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Monthly Reports Table */}
+      <div className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+        <div className="p-5 border-b border-border flex items-center gap-2">
+          <ClipboardList className="w-5 h-5 text-primary" />
+          <h2 className="font-bold text-foreground">Rekap Progres Bulanan</h2>
+          <span className="ml-auto text-xs text-muted-foreground">{monthlyReports.length} laporan</span>
+        </div>
+        {loadingMonthlyReports ? (
+          <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 text-primary animate-spin" /></div>
+        ) : monthlyReports.length === 0 ? (
+          <div className="py-10 text-center text-muted-foreground text-sm">Belum ada rekap laporan bulanan.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
+              <thead>
+                <tr className="bg-muted/50 border-b border-border">
+                  {["Periode", "Program", "Level", "Capaian Hal", "Hadir", "Nilai", "Kategori", "Catatan"].map(h => (
+                    <th key={h} className="text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider py-3 px-4">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {monthlyReports.map((r, i) => (
+                  <motion.tr key={r.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: i * 0.04 }} className="hover:bg-muted/20">
+                    <td className="py-3 px-4 text-sm font-medium text-foreground whitespace-nowrap">
+                      {MONTH_NAMES[r.month - 1]} {r.year}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-foreground capitalize">{r.program_type}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">
+                      {r.iqra_level === r.end_iqra_level 
+                        ? r.iqra_level 
+                        : `${r.iqra_level} ➔ ${r.end_iqra_level}`}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-muted-foreground">
+                      Hal. {r.start_page} ➔ {r.end_page} <br />
+                      <span className="text-xs">({r.pages_read} hal)</span>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-muted-foreground">
+                      {r.attendance_percentage ?? 0}%
+                    </td>
+                    <td className="py-3 px-4">
+                      {r.nilai_akhir_progresif !== null ? (
+                        <span className={`text-sm font-semibold px-2 py-0.5 rounded-lg ${
+                          r.nilai_akhir_progresif >= 80 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : 
+                          r.nilai_akhir_progresif >= 65 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" : 
+                          "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                        }`}>
+                          {r.nilai_akhir_progresif}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
+                      {r.kategori_progres ? (
+                        <span className="text-xs bg-muted text-foreground px-2 py-1 rounded-full whitespace-nowrap border border-border">
+                          {r.kategori_progres}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-muted-foreground min-w-[200px] whitespace-pre-wrap">{r.notes}</td>
                   </motion.tr>
                 ))}
               </tbody>

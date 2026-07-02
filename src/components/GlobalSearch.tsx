@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, Filter, ChevronRight, BookOpen } from "lucide-react";
 import { useStudents, LEVELS, LEVEL_COLORS } from "@/hooks/useSupabaseData";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -43,13 +46,56 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
   }, [onClose]);
 
   const { data: allStudents = [] } = useStudents();
+  const { user, profile } = useAuth();
 
-  const results: Student[] = allStudents.filter(s => {
-    const matchQuery = query.trim() === "" || s.nama.toLowerCase().includes(query.toLowerCase());
-    const matchKelas = filterKelas === null || s.kelas === filterKelas;
-    const matchLevel = filterLevel === null || s.level === filterLevel;
-    return matchQuery && matchKelas && matchLevel;
+  const { data: linkedStudentIds = [] } = useQuery({
+    queryKey: ["linked_students_search", user?.id, profile?.role],
+    enabled: open && !!user,
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data: parentLinks } = await supabase
+        .from("parents")
+        .select("student_id")
+        .eq("user_id", user.id);
+        
+      const { data: teacherLinks } = await supabase
+        .from("teacher_students")
+        .select("student_id")
+        .eq("teacher_id", user.id)
+        .eq("status", "approved");
+
+      const ids = new Set([
+        ...(parentLinks?.map(d => d.student_id) || []),
+        ...(teacherLinks?.map(d => d.student_id) || [])
+      ]);
+      return Array.from(ids);
+    }
   });
+
+  const isSearching = query.trim() !== "" || filterKelas !== null || filterLevel !== null;
+
+  const results = useMemo(() => {
+    if (!isSearching) {
+      // Recommendation: linked students (binaan/anak) if they exist, otherwise fallback to top active
+      const linked = allStudents.filter(s => linkedStudentIds.includes(s.id));
+      if (linked.length > 0) {
+        return linked
+          .sort((a, b) => b.halaman_terakhir - a.halaman_terakhir)
+          .slice(0, 8);
+      }
+      return [...allStudents]
+        .sort((a, b) => b.halaman_terakhir - a.halaman_terakhir)
+        .slice(0, 8);
+    }
+
+    return allStudents.filter(s => {
+      const matchQuery = query.trim() === "" || s.nama.toLowerCase().includes(query.toLowerCase());
+      const matchKelas = filterKelas === null || s.kelas === filterKelas;
+      const matchLevel = filterLevel === null || s.level === filterLevel;
+      return matchQuery && matchKelas && matchLevel;
+    }).slice(0, 20); // Limit results for better performance
+  }, [allStudents, isSearching, query, filterKelas, filterLevel]);
 
   const handleSelect = (s: Student) => {
     onClose();
@@ -211,13 +257,20 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
               {/* Results */}
               <div className="max-h-[55vh] overflow-y-auto scrollbar-thin">
                 {/* Results count */}
-                <div className="px-4 py-2.5 bg-muted/20 border-b border-border">
+                <div className="px-4 py-2.5 bg-muted/20 border-b border-border flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">
-                    Menampilkan <span className="font-semibold text-foreground">{results.length}</span> siswa
+                    {isSearching ? (
+                      <>Menampilkan maks <span className="font-semibold text-foreground">{results.length}</span> siswa</>
+                    ) : (
+                      <>Rekomendasi <span className="font-semibold text-foreground">Siswa Aktif</span></>
+                    )}
                     {query && <> untuk "<span className="font-semibold text-primary">{query}</span>"</>}
                     {filterKelas && <> · Kelas <span className="font-semibold">{filterKelas}</span></>}
                     {filterLevel && <> · Level <span className="font-semibold">{filterLevel}</span></>}
                   </p>
+                  {isSearching && results.length === 20 && (
+                     <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-medium">Batas 20 data</span>
+                  )}
                 </div>
 
                 {results.length === 0 ? (
