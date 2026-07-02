@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStudents, LEVELS, LEVEL_COLORS, getLevelDisplayLabel, getLevelGroup, IQRO_LEVELS, IQRO_JILID_COLORS } from "@/hooks/useSupabaseData";
@@ -8,6 +9,8 @@ import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { isTeacherRole } from "@/lib/roleLabels";
 import { useTeacherStudents } from "@/hooks/useTeacherStudents";
+import { useAllMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 
 const classColors = [
 "from-blue-500 to-blue-600",
@@ -25,6 +28,7 @@ const Dashboard = () => {
   const { data: allStudents = [], isLoading: loadingStudents } = useStudents();
   const { data: assignments = [], isLoading: loadingAssignments } = useTeacherStudents(user?.id, "approved");
 
+  const { data: allReports = [] } = useAllMonthlyReports();
   const isLoading = loadingStudents || (isTeacher && loadingAssignments);
 
   const myStudentIds = new Set(assignments.map((a) => a.student_id));
@@ -328,63 +332,32 @@ const Dashboard = () => {
       </div>
 
       {students.length > 0 &&
-      <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
-          <h2 className="text-base font-bold text-foreground mb-1">Distribusi Level Seluruh Siswa</h2>
-          <p className="text-xs text-muted-foreground mb-4">Iqro Jilid 1–6 merupakan bagian dari program <span className="font-semibold text-foreground">Tahsin Dasar</span></p>
-
-          {/* Grup Tahsin Dasar (Iqro 1-6) */}
-          <div className="mb-4 border border-amber-200 rounded-xl overflow-hidden bg-amber-50/40">
-            <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-100/70 border-b border-amber-200">
-              <BookOpen className="w-4 h-4 text-amber-700" />
-              <span className="text-xs font-bold text-amber-800 uppercase tracking-wide">Tahsin Dasar — Iqro Jilid 1–6</span>
-            </div>
-            <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {IQRO_LEVELS.map((level, i) => {
-              const count = students.filter((s) => s.level === level).length;
-              const pct = total > 0 ? count / total * 100 : 0;
-              const jilidNum = i + 1;
-              return (
-                <div key={level} className="flex items-center gap-2 bg-card rounded-lg px-3 py-2 border border-amber-100">
-                    <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">{jilidNum}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate">Jilid {jilidNum}</p>
-                      <div className="h-1 bg-muted rounded-full overflow-hidden mt-0.5">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ delay: 0.2 + i * 0.05, duration: 0.5 }} className="h-full bg-amber-400 rounded-full" />
-                      </div>
-                    </div>
-                    <span className="text-sm font-bold text-foreground">{count}</span>
-                  </div>);
-
-            })}
-            </div>
-            <div className="px-4 py-2 border-t border-amber-200 bg-amber-100/40 flex items-center justify-between">
-              <span className="text-xs text-amber-700 font-medium">Total Tahsin Dasar (Iqro)</span>
-              <span className="text-sm font-bold text-amber-800">{IQRO_LEVELS.reduce((a, l) => a + students.filter((s) => s.level === l).length, 0)} siswa</span>
-            </div>
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="w-5 h-5 text-primary" />
+            <h2 className="text-base font-bold text-foreground">Statistik Tren 6 Bulan</h2>
           </div>
-
-          {/* Tahsin Lanjutan + Tahfizh */}
-          <div className="space-y-2">
-            {(["Tahsin Lanjutan", "Tahfizh"] as const).map((level) => {
-            const count = students.filter((s) => s.level === level).length;
-            const pct = total > 0 ? count / total * 100 : 0;
-            return (
-              <div key={level} className="flex items-center gap-3">
-                  <span className={`text-xs font-medium px-2.5 py-1 rounded-full w-32 text-center flex-shrink-0 ${LEVEL_COLORS[level]}`}>
-                    {level}
-                  </span>
-                  <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
-                    <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ delay: 0.5, duration: 0.6 }}
-                    className="h-full bg-gradient-hero rounded-full" />
-                  
-                  </div>
-                  <span className="text-sm font-semibold text-foreground w-8 text-right">{count}</span>
-                </div>);
-
-          })}
+          
+          <div className="h-72 mt-2">
+            {trendData.filter(d => d.totalCount > 0).length === 0 ? (
+               <div className="flex items-center justify-center h-full text-sm text-muted-foreground border-2 border-dashed border-border rounded-xl">
+                 Belum ada data laporan bulanan yang cukup untuk menampilkan tren.
+               </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <RechartsTooltip 
+                    contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                  <Line type="monotone" dataKey="Kelulusan Target (%)" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="Rata-rata Nilai" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       }
