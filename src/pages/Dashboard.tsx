@@ -149,7 +149,7 @@ const Dashboard = () => {
         <div className="relative z-10">
           <p className="text-primary-foreground/70 text-sm mb-1">Selamat Datang 👋</p>
           <h1 className="text-2xl font-bold mb-1">Sistem Monitoring Iqro & Tahsin</h1>
-          <p className="text-primary-foreground/70 text-sm">SDIT Luqmanul Hakim— Tahun Ajaran 2025/2026</p>
+          <p className="text-primary-foreground/70 text-sm">SDIT Luqmanul Hakim— Tahun Ajaran 2026/2027</p>
         </div>
       </motion.div>
 
