@@ -8,7 +8,6 @@ import { isTeacherRole } from "@/lib/roleLabels";
 import { useStudents } from "@/hooks/useSupabaseData";
 import { useTeacherClasses, useTeacherStudents } from "@/hooks/useTeacherStudents";
 import { useProfileMap } from "@/hooks/useProfiles";
-import { useAttendanceForRecapPeriod, useAttendancePeriodSettingsByGroups } from "@/hooks/useAttendance";
 import { MONTH_NAMES, useMonthlyReportsForPeriod } from "@/hooks/useMonthlyReports";
 import { buildRecapJoinedGroups, type RecapJoinedRow } from "@/utils/recapMonthlyReportRows";
 import { Badge } from "@/components/ui/badge";
@@ -17,8 +16,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MonitoringSiswa } from "@/components/monitoring/MonitoringSiswa";
 import { MonitoringGuru } from "@/components/monitoring/MonitoringGuru";
 
 const now = new Date();
@@ -160,22 +157,16 @@ export default function Monitoring() {
   const { data: allTeacherStudents = [] } = useTeacherStudents("all", "approved");
   const profileMap = useProfileMap();
 
-  const [activeTab, setActiveTab] = useState("siswa");
   const [filterSemester, setFilterSemester] = useState<string>(initialSemester);
   const [filterMonth, setFilterMonth] = useState<string>(String(currentMonthIdx + 1));
   const [filterYear, setFilterYear] = useState<string>(String(now.getFullYear()));
   const [filterKelas, setFilterKelas] = useState<string>("all");
   const [filterRombel, setFilterRombel] = useState<string>("all");
   const [filterTeacher, setFilterTeacher] = useState<string>("all");
-  const [filterCategory, setFilterCategory] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [search, setSearch] = useState("");
-  const [expandedRombels, setExpandedRombels] = useState<Record<string, boolean>>({});
   const [teacherLoadChartLimit, setTeacherLoadChartLimit] = useState<TeacherLoadChartLimit>("8");
-  const [showAllJenjang, setShowAllJenjang] = useState(false);
   const deferredSearch = useDeferredValue(search);
-  const isStudentTabActive = activeTab === "siswa";
-  const isTeacherTabActive = activeTab === "guru";
+  const isTeacherTabActive = true;
 
   const selectedMonth = Number(filterMonth);
   const selectedYear = Number(filterYear);
@@ -292,19 +283,6 @@ export default function Monitoring() {
   const teacherLoadStudentIds = useMemo(() => filteredStudents.map((student) => student.id), [filteredStudents]);
   const teacherLoadStudentIdSet = useMemo(() => new Set(teacherLoadStudentIds), [teacherLoadStudentIds]);
 
-  const attendanceQuery = useAttendanceForRecapPeriod({
-    month: selectedMonth,
-    year: selectedYear,
-    enabled: hasAccess && isStudentTabActive,
-  });
-
-  const attendanceSettingsQuery = useAttendancePeriodSettingsByGroups({
-    month: selectedMonth,
-    year: selectedYear,
-    groups: visibleGroupKeys,
-    enabled: visibleGroupKeys.length > 0 && hasAccess && isStudentTabActive,
-  });
-
   const groups = useMemo(() => {
     if (!hasAccess) return [];
     return buildRecapJoinedGroups({
@@ -313,16 +291,13 @@ export default function Monitoring() {
       year: selectedYear,
       monthName: MONTH_NAMES[selectedMonth - 1],
       reports,
-      attendance: isStudentTabActive ? (attendanceQuery.data ?? []) : [],
-      attendanceSettings: isStudentTabActive ? (attendanceSettingsQuery.data ?? []) : [],
+      attendance: [],
+      attendanceSettings: [],
       getTeacherName: (userId) => (userId ? profileMap.get(userId) : undefined),
     });
   }, [
-    attendanceQuery.data,
-    attendanceSettingsQuery.data,
     filteredStudents,
     hasAccess,
-    isStudentTabActive,
     profileMap,
     reports,
     selectedMonth,
@@ -347,353 +322,7 @@ export default function Monitoring() {
     return result;
   }, [allTeacherStudents, profileMap, students]);
 
-  const allRows = useMemo(() => {
-    let rows = groups.flatMap((group) => group.rows);
-    if (filterCategory !== "all") {
-      rows = rows.filter((row) => {
-        if (filterCategory === "Tahsin Dasar") {
-          return row.level.startsWith("Iqro") || row.level === "Tahsin Dasar";
-        }
-        if (filterCategory === "Tahsin Lanjutan") return row.level === "Tahsin Lanjutan";
-        if (filterCategory === "Tahfizh") return row.level === "Tahfizh";
-        return true;
-      });
-    }
-    if (filterStatus !== "all") {
-      rows = rows.filter((row) => {
-        if (filterStatus === "filled") return row.reportStatus === "filled";
-        if (filterStatus === "empty") return row.reportStatus === "empty";
-        if (filterStatus === "attention") {
-          return (
-            row.reportStatus === "filled" &&
-            ((row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70) ||
-              row.kategoriProgres === "Kurang Konsisten" ||
-              row.kategoriProgres === "Tidak Konsisten")
-          );
-        }
-        return true;
-      });
-    }
-    return rows;
-  }, [filterCategory, filterStatus, groups]);
-
-  const stats = useMemo(() => {
-    if (!isStudentTabActive) {
-      return {
-        total: 0,
-        tahsinDasar: 0,
-        tahsinLanjutan: 0,
-        tahfizh: 0,
-        latestProgress: 0,
-        emptyProgress: 0,
-        needsAttention: 0,
-      };
-    }
-    const baseRows = allRows;
-    const total = baseRows.length;
-    let tahsinDasar = 0;
-    let tahsinLanjutan = 0;
-    let tahfizh = 0;
-    let latestProgress = 0;
-    let emptyProgress = 0;
-    let needsAttention = 0;
-
-    baseRows.forEach((row) => {
-      if (row.level === "Tahfizh") tahfizh++;
-      else if (row.level === "Tahsin Lanjutan") tahsinLanjutan++;
-      else if (row.level.startsWith("Iqro") || row.level === "Tahsin Dasar") tahsinDasar++;
-
-      if (row.reportStatus === "filled") latestProgress++;
-      else emptyProgress++;
-
-      if (
-        row.reportStatus === "filled" &&
-        ((row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70) ||
-          row.kategoriProgres === "Kurang Konsisten" ||
-          row.kategoriProgres === "Tidak Konsisten")
-      ) {
-        needsAttention++;
-      }
-    });
-
-    return {
-      total,
-      tahsinDasar,
-      tahsinLanjutan,
-      tahfizh,
-      latestProgress,
-      emptyProgress,
-      needsAttention,
-    };
-  }, [allRows, isStudentTabActive]);
-
-  const actionStats = useMemo(() => {
-    if (!isStudentTabActive) {
-      return {
-        empty: 0,
-        attention: 0,
-        below70: 0,
-        stagnant: 0,
-        emptyRombelsCount: 0,
-      };
-    }
-    let below70 = 0;
-    let stagnant = 0;
-    const emptyRombels = new Set<string>();
-
-    allRows.forEach((row) => {
-      if (row.reportStatus === "filled") {
-        if (row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70) below70++;
-        if (
-          row.kategoriProgres === "Stagnan" ||
-          row.kategoriProgres === "Tidak Konsisten" ||
-          row.kategoriProgres === "Kurang Konsisten"
-        ) {
-          stagnant++;
-        }
-      } else {
-        emptyRombels.add(`${row.kelas}-${row.rombel}`);
-      }
-    });
-
-    return {
-      empty: stats.emptyProgress,
-      attention: stats.needsAttention,
-      below70,
-      stagnant,
-      emptyRombelsCount: emptyRombels.size,
-    };
-  }, [allRows, isStudentTabActive, stats.emptyProgress, stats.needsAttention]);
-
-  const rowsByGrade = useMemo(() => {
-    if (!isStudentTabActive) {
-      return { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] } as Record<number, RecapJoinedRow[]>;
-    }
-    const map: Record<number, RecapJoinedRow[]> = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
-    allRows.forEach((row) => {
-      if (map[row.kelas]) map[row.kelas].push(row);
-    });
-    return map;
-  }, [allRows, isStudentTabActive]);
-
-  const gradeSummaries = useMemo(() => {
-    if (!isStudentTabActive) return [];
-    return [1, 2, 3, 4, 5, 6]
-      .map((grade) => {
-        const gradeRows = rowsByGrade[grade] ?? [];
-        if (gradeRows.length === 0) return null;
-
-        const rombelMap = new Map<string, RecapJoinedRow[]>();
-        gradeRows.forEach((row) => {
-          const current = rombelMap.get(row.rombel) ?? [];
-          current.push(row);
-          rombelMap.set(row.rombel, current);
-        });
-
-        return {
-          grade,
-          rombels: Array.from(rombelMap.entries())
-            .map(([rombel, rows]) => {
-              let tahsinDasar = 0;
-              let tahsinLanjutan = 0;
-              let tahfizh = 0;
-              let filled = 0;
-              let empty = 0;
-              let attention = 0;
-              let totalScore = 0;
-              let scoreCount = 0;
-
-              rows.forEach((row) => {
-                if (row.level.startsWith("Iqro") || row.level === "Tahsin Dasar") tahsinDasar++;
-                else if (row.level === "Tahsin Lanjutan") tahsinLanjutan++;
-                else if (row.level === "Tahfizh") tahfizh++;
-
-                if (row.reportStatus === "filled") {
-                  filled++;
-                  if (row.nilaiAkhirProgresif !== null) {
-                    totalScore += row.nilaiAkhirProgresif;
-                    scoreCount++;
-                  }
-                  if (
-                    (row.nilaiAkhirProgresif !== null && row.nilaiAkhirProgresif < 70) ||
-                    row.kategoriProgres === "Kurang Konsisten" ||
-                    row.kategoriProgres === "Tidak Konsisten"
-                  ) {
-                    attention++;
-                  }
-                } else {
-                  empty++;
-                }
-              });
-
-              return {
-                rombel,
-                total: rows.length,
-                tahsinDasar,
-                tahsinLanjutan,
-                tahfizh,
-                filled,
-                empty,
-                attention,
-                avgScore: scoreCount > 0 ? Math.round(totalScore / scoreCount) : null,
-              };
-            })
-            .sort((a, b) => a.rombel.localeCompare(b.rombel)),
-        };
-      })
-      .filter((value): value is NonNullable<typeof value> => Boolean(value));
-  }, [isStudentTabActive, rowsByGrade]);
-
-  const toggleRombelExpand = (key: string) => {
-    setExpandedRombels((current) => ({ ...current, [key]: !current[key] }));
-  };
-
-  const past6MonthsKeys = useMemo(() => {
-    const keys = [];
-    for (let i = 5; i >= 0; i -= 1) {
-      let month = selectedMonth - i;
-      let year = selectedYear;
-      if (month <= 0) {
-        month += 12;
-        year -= 1;
-      }
-      keys.push({ month, year });
-    }
-    return keys;
-  }, [selectedMonth, selectedYear]);
-
-  const historicalStudentIds = useMemo(() => filteredStudents.map((student) => student.id), [filteredStudents]);
-
-  const { data: historicalReports = [] } = useQuery({
-    queryKey: ["historical-reports", historicalStudentIds, past6MonthsKeys],
-    queryFn: async () => {
-      if (historicalStudentIds.length === 0) return [];
-      const conditions = past6MonthsKeys.map((key) => `and(month.eq.${key.month},year.eq.${key.year})`).join(",");
-      const allData: Array<{ month: number; year: number; student_id: string; program_type: string | null }> = [];
-      let from = 0;
-      const PAGE_SIZE = 1000;
-
-      while (true) {
-        const { data, error } = await supabase
-          .from("monthly_reports")
-          .select("month, year, student_id, program_type")
-          .in("student_id", historicalStudentIds)
-          .or(conditions)
-          .order("year", { ascending: false })
-          .order("month", { ascending: false })
-          .order("id", { ascending: true })
-          .range(from, from + PAGE_SIZE - 1);
-
-        if (error) throw error;
-        const batch = data ?? [];
-        allData.push(...batch);
-        if (batch.length < PAGE_SIZE) break;
-        from += PAGE_SIZE;
-      }
-
-      return allData;
-    },
-    enabled: isStudentTabActive && hasAccess && historicalStudentIds.length > 0,
-    placeholderData: (previousData) => previousData,
-  });
-
-  const lineChartData = useMemo(() => {
-    if (!isStudentTabActive) return [];
-    return past6MonthsKeys.map((key) => {
-      const label = `${MONTH_NAMES[key.month - 1].substring(0, 3)} ${String(key.year).slice(2)}`;
-      const reportsForMonth = historicalReports.filter(
-        (report) => report.month === key.month && report.year === key.year,
-      );
-
-      const seenStudents = new Set<string>();
-      let tahsinDasar = 0;
-      let tahsinLanjutan = 0;
-      let tahfizh = 0;
-
-      reportsForMonth.forEach((report) => {
-        if (seenStudents.has(report.student_id)) return;
-        seenStudents.add(report.student_id);
-        const programType = report.program_type?.toLowerCase() ?? "";
-        if (programType === "iqra" || programType === "tahsin dasar (iqra)") tahsinDasar++;
-        else if (programType === "tahsin" || programType === "tahsin lanjutan") tahsinLanjutan++;
-        else if (programType === "tahfizh") tahfizh++;
-      });
-
-      return {
-        name: label,
-        "Tahsin Dasar": tahsinDasar,
-        "Tahsin Lanjutan": tahsinLanjutan,
-        Tahfizh: tahfizh,
-      };
-    });
-  }, [historicalReports, isStudentTabActive, past6MonthsKeys]);
-
-  const jenjangKelasRows = useMemo(() => {
-    if (!isStudentTabActive) return [];
-    return groups
-      .map((group) => {
-        const key = `${group.kelas}-${group.rombel}`;
-        const assignedTeachers = teachersForClassRombel.get(key) ?? [];
-        const teacherMap = new Map<string, { total: number; td: number; tl: number; tfz: number }>();
-
-        assignedTeachers.forEach((teacherName) => {
-          teacherMap.set(teacherName, { total: 0, td: 0, tl: 0, tfz: 0 });
-        });
-
-        group.rows.forEach((row) => {
-          const teacherName = normalizeTeacherNameForRow(
-            row,
-            assignedTeachers,
-            studentAssignedTeachers.get(row.studentId) ?? [],
-          );
-
-          if (!teacherMap.has(teacherName)) {
-            teacherMap.set(teacherName, { total: 0, td: 0, tl: 0, tfz: 0 });
-          }
-
-          const counts = teacherMap.get(teacherName)!;
-          counts.total += 1;
-          if (row.program === "Tahsin Dasar" || row.program === "Tahsin Dasar (Iqra)") counts.td += 1;
-          else if (row.program === "Tahsin Lanjutan") counts.tl += 1;
-          else if (row.program === "Tahfizh") counts.tfz += 1;
-        });
-
-        const prioritizedTeachers = [
-          ...assignedTeachers.map((teacherName) => [teacherName, teacherMap.get(teacherName) ?? { total: 0, td: 0, tl: 0, tfz: 0 }] as const),
-          ...Array.from(teacherMap.entries())
-            .filter(([teacherName, counts]) => !assignedTeachers.includes(teacherName) && counts.total > 0)
-            .sort((a, b) => b[1].total - a[1].total),
-        ];
-
-        if (prioritizedTeachers.length > 4) {
-          let total = 0;
-          let td = 0;
-          let tl = 0;
-          let tfz = 0;
-          prioritizedTeachers.slice(3).forEach(([, counts]) => {
-            total += counts.total;
-            td += counts.td;
-            tl += counts.tl;
-            tfz += counts.tfz;
-          });
-          prioritizedTeachers.splice(3, prioritizedTeachers.length - 3, [
-            "Guru Lainnya",
-            { total, td, tl, tfz },
-          ]);
-        }
-
-        return {
-          kelas: group.kelas,
-          rombel: group.rombel,
-          originalRows: group.rows,
-          teacher1: prioritizedTeachers[0] ?? null,
-          teacher2: prioritizedTeachers[1] ?? null,
-          teacher3: prioritizedTeachers[2] ?? null,
-          teacher4: prioritizedTeachers[3] ?? null,
-        };
-      })
-      .sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
-  }, [groups, isStudentTabActive, studentAssignedTeachers, teachersForClassRombel]);
+  // Removed unused Siswa metrics
 
   const teacherLoadRows = useMemo(() => {
     if (!isTeacherTabActive) return [];
@@ -976,19 +605,6 @@ export default function Monitoring() {
       );
   }, [baseFilteredStudents, isTeacherTabActive, studentAssignedTeachers]);
 
-  const getStatusColor = (kategori: string | null, nilai: number | null) => {
-    if (nilai !== null && nilai < 70) {
-      return "bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-400 border-rose-200 dark:border-rose-900/40";
-    }
-    if (kategori === "Konsisten & Progresif" || kategori === "Ada Progres") {
-      return "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/40";
-    }
-    if (kategori === "Kurang Konsisten" || kategori === "Tidak Konsisten") {
-      return "bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-900/40";
-    }
-    return "bg-muted text-foreground border-border dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800/40";
-  };
-
   const handleResetFilters = () => {
     setFilterSemester(initialSemester);
     setFilterMonth(String(currentMonthIdx + 1));
@@ -996,8 +612,6 @@ export default function Monitoring() {
     setFilterKelas("all");
     setFilterRombel("all");
     setFilterTeacher("all");
-    setFilterCategory("all");
-    setFilterStatus("all");
     setSearch("");
   };
 
@@ -1195,36 +809,6 @@ export default function Monitoring() {
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Kategori</label>
-              <Select value={filterCategory} onValueChange={setFilterCategory}>
-                <SelectTrigger className="h-10 bg-background text-sm">
-                  <SelectValue placeholder="Semua Kategori" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Kategori</SelectItem>
-                  <SelectItem value="Tahsin Dasar">Tahsin Dasar</SelectItem>
-                  <SelectItem value="Tahsin Lanjutan">Tahsin Lanjutan</SelectItem>
-                  <SelectItem value="Tahfizh">Tahfizh</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status Laporan</label>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="h-10 bg-background text-sm">
-                  <SelectValue placeholder="Semua Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Status</SelectItem>
-                  <SelectItem value="filled">Sudah Diisi</SelectItem>
-                  <SelectItem value="empty">Belum Diisi</SelectItem>
-                  <SelectItem value="attention">Perlu Perhatian</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -1251,62 +835,25 @@ export default function Monitoring() {
         </CardContent>
       </Card>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid h-auto w-full grid-cols-1 gap-1 rounded-2xl bg-muted/50 p-1 sm:grid-cols-2">
-          <TabsTrigger value="siswa" className="h-11 rounded-xl text-sm font-semibold">
-            Monitoring Siswa
-          </TabsTrigger>
-          <TabsTrigger value="guru" className="h-11 rounded-xl text-sm font-semibold">
-            Beban & Perkembangan Guru
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="siswa" className="space-y-6">
-          {attendanceQuery.isLoading || attendanceSettingsQuery.isLoading ? (
-            <div className="grid gap-4">
-              <Skeleton className="h-28 rounded-2xl" />
-              <Skeleton className="h-96 rounded-2xl" />
-            </div>
-          ) : (
-            <MonitoringSiswa
-              stats={stats}
-              actionStats={actionStats}
-              filterKelas={filterKelas}
-              setFilterKelas={setFilterKelas}
-              setFilterRombel={setFilterRombel}
-              lineChartData={lineChartData}
-              jenjangKelasRows={jenjangKelasRows}
-              expandedRombels={expandedRombels}
-              toggleRombelExpand={toggleRombelExpand}
-              getStatusColor={getStatusColor}
-              showAllJenjang={showAllJenjang}
-              setShowAllJenjang={setShowAllJenjang}
-              tableScrollRef={tableScrollRef}
-              tableContentRef={tableContentRef}
-            />
-          )}
-        </TabsContent>
-
-        <TabsContent value="guru" className="space-y-6">
-          <MonitoringGuru
-            teacherLoadLoading={teacherLoadLoading}
-            selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
-            previousPeriodLabel={getMonthLabel(previousLoadPeriod.month, previousLoadPeriod.year)}
-            teacherLoadTotals={teacherLoadTotals}
-            currentTeacherLoads={currentTeacherLoads}
-            dominantTdTeachers={dominantTdTeachers}
-            teacherLoadChartLimit={teacherLoadChartLimit}
-            setTeacherLoadChartLimit={setTeacherLoadChartLimit}
-            teacherLoadChartLimitLabel={teacherLoadChartLimitLabel}
-            teacherLoadChartData={teacherLoadChartData}
-            teacherLoadComparisonRows={teacherLoadComparisonRows}
-            teacherOverviewRows={teacherOverviewRows}
-            orphanStudents={orphanStudents}
-            formatPercent={formatPercent}
-            teacherFilterLabel={filterTeacher === "all" ? "Semua guru aktif" : filterTeacher}
-          />
-        </TabsContent>
-      </Tabs>
+      <div className="space-y-6">
+        <MonitoringGuru
+          teacherLoadLoading={teacherLoadLoading}
+          selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
+          previousPeriodLabel={getMonthLabel(previousLoadPeriod.month, previousLoadPeriod.year)}
+          teacherLoadTotals={teacherLoadTotals}
+          currentTeacherLoads={currentTeacherLoads}
+          dominantTdTeachers={dominantTdTeachers}
+          teacherLoadChartLimit={teacherLoadChartLimit}
+          setTeacherLoadChartLimit={setTeacherLoadChartLimit}
+          teacherLoadChartLimitLabel={teacherLoadChartLimitLabel}
+          teacherLoadChartData={teacherLoadChartData}
+          teacherLoadComparisonRows={teacherLoadComparisonRows}
+          teacherOverviewRows={teacherOverviewRows}
+          orphanStudents={orphanStudents}
+          formatPercent={formatPercent}
+          teacherFilterLabel={filterTeacher === "all" ? "Semua guru aktif" : filterTeacher}
+        />
+      </div>
     </motion.div>
   );
 }
