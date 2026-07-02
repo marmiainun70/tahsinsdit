@@ -321,11 +321,17 @@ const ScheduleFormFields = ({
         <div className="relative">
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
+            list="lokasi-options"
             placeholder="Contoh: Aula Utama, Ruang 12..."
             value={form.lokasi}
             onChange={(e) => setForm(f => ({ ...f, lokasi: e.target.value }))}
             className="pl-9"
           />
+          <datalist id="lokasi-options">
+            <option value="Ruang Kantor Ikhwan" />
+            <option value="Ruang Kantor Kepala Sekolah SDIT" />
+            <option value="Maktabah SDIT" />
+          </datalist>
         </div>
       </div>
 
