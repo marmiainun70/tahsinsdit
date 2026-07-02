@@ -236,15 +236,15 @@ const Dashboard = () => {
                        
                        <div className="bg-muted/30 rounded-xl p-3">
                          <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-2">
-                           <div className="flex gap-1.5 sm:gap-2 flex-wrap">
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-300"></span>I1 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>I2 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>I3 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>I4 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-700"></span>I5 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-800"></span>I6 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>TL 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>TF 0</span>
+                           <div className="flex gap-1 sm:gap-1.5 flex-wrap text-[8.5px] leading-tight">
+                             <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-green-300"></span>Iqra 1 0</span>
+                             <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-emerald-400"></span>Iqra 2 0</span>
+                             <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-green-500"></span>Iqra 3 0</span>
+                             <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-emerald-600"></span>Iqra 4 0</span>
+                             <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-green-700"></span>Iqra 5 0</span>
+                             <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-emerald-800"></span>Iqra 6 0</span>
+                             <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-amber-500"></span>Tahsin 0</span>
+                             <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-violet-500"></span>Tahfizh 0</span>
                            </div>
                          </div>
                          <div className="h-2 bg-muted rounded-full overflow-hidden flex">
@@ -291,15 +291,15 @@ const Dashboard = () => {
                        
                        <div className="bg-muted/30 rounded-xl p-3">
                          <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-2">
-                           <div className="flex gap-1.5 sm:gap-2 flex-wrap">
-                             {stats.iqro1 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-300"></span>I1 <span className="text-foreground">{stats.iqro1}</span></span>}
-                             {stats.iqro2 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>I2 <span className="text-foreground">{stats.iqro2}</span></span>}
-                             {stats.iqro3 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>I3 <span className="text-foreground">{stats.iqro3}</span></span>}
-                             {stats.iqro4 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>I4 <span className="text-foreground">{stats.iqro4}</span></span>}
-                             {stats.iqro5 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-700"></span>I5 <span className="text-foreground">{stats.iqro5}</span></span>}
-                             {stats.iqro6 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-800"></span>I6 <span className="text-foreground">{stats.iqro6}</span></span>}
-                             {stats.tahsinLanjutan > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>TL <span className="text-foreground">{stats.tahsinLanjutan}</span></span>}
-                             {stats.tahfizh > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>TF <span className="text-foreground">{stats.tahfizh}</span></span>}
+                           <div className="flex gap-1 sm:gap-1.5 flex-wrap text-[8.5px] leading-tight">
+                             {stats.iqro1 > 0 && <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-green-300"></span>Iqra 1 <span className="text-foreground">{stats.iqro1}</span></span>}
+                             {stats.iqro2 > 0 && <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-emerald-400"></span>Iqra 2 <span className="text-foreground">{stats.iqro2}</span></span>}
+                             {stats.iqro3 > 0 && <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-green-500"></span>Iqra 3 <span className="text-foreground">{stats.iqro3}</span></span>}
+                             {stats.iqro4 > 0 && <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-emerald-600"></span>Iqra 4 <span className="text-foreground">{stats.iqro4}</span></span>}
+                             {stats.iqro5 > 0 && <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-green-700"></span>Iqra 5 <span className="text-foreground">{stats.iqro5}</span></span>}
+                             {stats.iqro6 > 0 && <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-emerald-800"></span>Iqra 6 <span className="text-foreground">{stats.iqro6}</span></span>}
+                             {stats.tahsinLanjutan > 0 && <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-amber-500"></span>Tahsin <span className="text-foreground">{stats.tahsinLanjutan}</span></span>}
+                             {stats.tahfizh > 0 && <span className="flex items-center gap-0.5 whitespace-nowrap"><span className="w-1 h-1 rounded-full bg-violet-500"></span>Tahfizh <span className="text-foreground">{stats.tahfizh}</span></span>}
                            </div>
                          </div>
                          <div className="h-2 bg-muted rounded-full overflow-hidden flex">
