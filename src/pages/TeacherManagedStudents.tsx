@@ -370,7 +370,7 @@ export default function TeacherManagedStudents() {
       )}
 
       <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
-        <DialogContent className="fixed inset-0 left-0 top-0 z-50 flex h-[100dvh] w-[100dvw] max-w-none flex-col overflow-hidden rounded-none border-0 bg-background p-4 sm:p-6 !translate-x-0 !translate-y-0">
+        <DialogContent className="fixed inset-0 left-0 top-0 z-50 flex h-[100dvh] w-[100dvw] max-w-none sm:max-w-none max-h-none sm:max-h-none flex-col overflow-hidden rounded-none sm:rounded-none border-0 bg-background p-4 sm:p-6 !translate-x-0 !translate-y-0">
           <DialogHeader>
             <DialogTitle>Ajukan Murid Binaan</DialogTitle>
             <DialogDescription>Pilih siswa yang belum memiliki guru pembina untuk diajukan ke admin.</DialogDescription>
