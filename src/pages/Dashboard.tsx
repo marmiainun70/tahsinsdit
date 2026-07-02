@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isTeacherRole } from "@/lib/roleLabels";
 import { useTeacherStudents } from "@/hooks/useTeacherStudents";
 import { useAllMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
-import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LabelList } from "recharts";
+import { LineChart, AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LabelList } from "recharts";
 
 const classColors = [
 "from-blue-500 to-blue-600",
@@ -411,52 +411,60 @@ const Dashboard = () => {
                </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
-                  <YAxis domain={trendMetric === "Halaman" || trendMetric === "Program" ? ['auto', 'auto'] : [0, 100]} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
-                  <RechartsTooltip 
-                    contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                  {(trendMetric === "Semua" || trendMetric === "Kelulusan") && (
-                    <Line type="monotone" dataKey="Kelulusan Target (%)" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
-                  )}
-                  {(trendMetric === "Semua" || trendMetric === "Nilai") && (
-                    <Line type="monotone" dataKey="Rata-rata Nilai" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
-                  )}
-                  {(trendMetric === "Semua" || trendMetric === "Halaman") && (
-                    <Line type="monotone" dataKey="Total Halaman" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
-                  )}
-                  {trendMetric === "Program" && (
-                    <>
-                      <Bar dataKey="Iqro 1" stackId="a" fill="#064e3b" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
-                        <LabelList dataKey="Iqro 1" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
-                      </Bar>
-                      <Bar dataKey="Iqro 2" stackId="a" fill="#5c7c6a" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
-                        <LabelList dataKey="Iqro 2" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
-                      </Bar>
-                      <Bar dataKey="Iqro 3" stackId="a" fill="#bbf7d0" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
-                        <LabelList dataKey="Iqro 3" position="center" fill="#064e3b" fontSize={11} fontWeight={700} formatter={(val: number) => val > 0 ? val : ""} />
-                      </Bar>
-                      <Bar dataKey="Iqro 4" stackId="a" fill="#22c55e" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
-                        <LabelList dataKey="Iqro 4" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
-                      </Bar>
-                      <Bar dataKey="Iqro 5" stackId="a" fill="#84cc16" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
-                        <LabelList dataKey="Iqro 5" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
-                      </Bar>
-                      <Bar dataKey="Iqro 6" stackId="a" fill="#ca8a04" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
-                        <LabelList dataKey="Iqro 6" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
-                      </Bar>
-                      <Bar dataKey="Tahsin Lanjutan" stackId="a" fill="#f59e0b" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
-                        <LabelList dataKey="Tahsin Lanjutan" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
-                      </Bar>
-                      <Bar dataKey="Tahfizh" stackId="a" fill="#7c3aed" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
-                        <LabelList dataKey="Tahfizh" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
-                      </Bar>
-                    </>
-                  )}
-                </ComposedChart>
+                {trendMetric === "Program" ? (
+                  <AreaChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }} stackOffset="expand">
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                    <YAxis tickFormatter={(val) => `${Math.round(val * 100)}%`} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                    <RechartsTooltip 
+                      contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                    <Area type="monotone" dataKey="Iqro 1" stackId="1" stroke="#064e3b" fill="#064e3b">
+                      <LabelList dataKey="Iqro 1" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                    </Area>
+                    <Area type="monotone" dataKey="Iqro 2" stackId="1" stroke="#5c7c6a" fill="#5c7c6a">
+                      <LabelList dataKey="Iqro 2" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                    </Area>
+                    <Area type="monotone" dataKey="Iqro 3" stackId="1" stroke="#bbf7d0" fill="#bbf7d0">
+                      <LabelList dataKey="Iqro 3" position="center" fill="#064e3b" fontSize={11} fontWeight={700} formatter={(val: number) => val > 0 ? val : ""} />
+                    </Area>
+                    <Area type="monotone" dataKey="Iqro 4" stackId="1" stroke="#22c55e" fill="#22c55e">
+                      <LabelList dataKey="Iqro 4" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                    </Area>
+                    <Area type="monotone" dataKey="Iqro 5" stackId="1" stroke="#84cc16" fill="#84cc16">
+                      <LabelList dataKey="Iqro 5" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                    </Area>
+                    <Area type="monotone" dataKey="Iqro 6" stackId="1" stroke="#ca8a04" fill="#ca8a04">
+                      <LabelList dataKey="Iqro 6" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                    </Area>
+                    <Area type="monotone" dataKey="Tahsin Lanjutan" stackId="1" stroke="#f59e0b" fill="#f59e0b">
+                      <LabelList dataKey="Tahsin Lanjutan" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                    </Area>
+                    <Area type="monotone" dataKey="Tahfizh" stackId="1" stroke="#7c3aed" fill="#7c3aed">
+                      <LabelList dataKey="Tahfizh" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                    </Area>
+                  </AreaChart>
+                ) : (
+                  <LineChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                    <YAxis domain={trendMetric === "Halaman" ? ['auto', 'auto'] : [0, 100]} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                    <RechartsTooltip 
+                      contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                    {(trendMetric === "Semua" || trendMetric === "Kelulusan") && (
+                      <Line type="monotone" dataKey="Kelulusan Target (%)" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                    )}
+                    {(trendMetric === "Semua" || trendMetric === "Nilai") && (
+                      <Line type="monotone" dataKey="Rata-rata Nilai" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                    )}
+                    {(trendMetric === "Semua" || trendMetric === "Halaman") && (
+                      <Line type="monotone" dataKey="Total Halaman" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                    )}
+                  </LineChart>
+                )}
               </ResponsiveContainer>
             )}
           </div>
