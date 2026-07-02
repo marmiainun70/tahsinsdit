@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isTeacherRole } from "@/lib/roleLabels";
 import { useTeacherStudents } from "@/hooks/useTeacherStudents";
 import { useAllMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 
 const classColors = [
 "from-blue-500 to-blue-600",
@@ -411,7 +411,7 @@ const Dashboard = () => {
                </div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
+                <ComposedChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
                   <YAxis domain={trendMetric === "Halaman" || trendMetric === "Program" ? ['auto', 'auto'] : [0, 100]} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
@@ -430,17 +430,17 @@ const Dashboard = () => {
                   )}
                   {trendMetric === "Program" && (
                     <>
-                      <Line type="monotone" dataKey="Iqro 1" stroke="#86efac" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="Iqro 2" stroke="#34d399" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="Iqro 3" stroke="#22c55e" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="Iqro 4" stroke="#059669" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="Iqro 5" stroke="#15803d" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="Iqro 6" stroke="#065f46" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="Tahsin Lanjutan" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="Tahfizh" stroke="#7c3aed" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                      <Bar dataKey="Iqro 1" stackId="a" fill="#86efac" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Iqro 2" stackId="a" fill="#34d399" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Iqro 3" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Iqro 4" stackId="a" fill="#059669" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Iqro 5" stackId="a" fill="#15803d" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Iqro 6" stackId="a" fill="#065f46" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Tahsin Lanjutan" stackId="a" fill="#f59e0b" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="Tahfizh" stackId="a" fill="#7c3aed" radius={[4, 4, 0, 0]} />
                     </>
                   )}
-                </LineChart>
+                </ComposedChart>
               </ResponsiveContainer>
             )}
           </div>
