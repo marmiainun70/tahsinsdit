@@ -73,6 +73,38 @@ const Dashboard = () => {
   ];
 
 
+  const studentIds = useMemo(() => new Set(students.map(s => s.id)), [students]);
+  
+  const trendData = useMemo(() => {
+    if (!allReports.length || !studentIds.size) return [];
+    
+    const now = new Date();
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({ month: d.getMonth() + 1, year: d.getFullYear() });
+    }
+
+    return months.map(m => {
+      const monthReports = allReports.filter(r => r.month === m.month && r.year === m.year && studentIds.has(r.student_id));
+      const totalCount = monthReports.length;
+      const achieved = monthReports.filter(r => r.achievement_status === "achieved").length;
+      const achievementRate = totalCount > 0 ? Math.round((achieved / totalCount) * 100) : 0;
+      
+      const sumNilai = monthReports.reduce((sum, r) => sum + (r.nilai_akhir_progresif || 0), 0);
+      const avgNilai = totalCount > 0 ? Math.round(sumNilai / totalCount) : 0;
+      const sumHalaman = monthReports.reduce((sum, r) => sum + (r.pages_read || 0), 0);
+
+      return {
+        name: `${MONTH_NAMES[m.month - 1].substring(0,3)} ${m.year}`,
+        "Kelulusan Target (%)": achievementRate,
+        "Rata-rata Nilai": avgNilai,
+        "Total Halaman": sumHalaman,
+        totalCount
+      };
+    });
+  }, [allReports, studentIds]);
+
   if (isLoading) return (
     <div className="flex items-center justify-center h-64">
       <div className="flex flex-col items-center gap-3">
