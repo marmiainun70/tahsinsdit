@@ -192,11 +192,6 @@ export default function TeacherManagedStudents() {
   const requestRows = useMemo(() => {
     const term = requestSearch.toLowerCase();
     return (data?.students ?? [])
-      .filter((student) => {
-        if (requestClassFilter !== ALL && String(student.kelas) !== requestClassFilter) return false;
-        if (term && !student.nama.toLowerCase().includes(term)) return false;
-        return true;
-      })
       .map((student) => {
         const relatedAssignments = assignmentsByStudent.get(student.id) ?? [];
         const approvedAssignment = relatedAssignments.find((assignment) => assignment.status === "approved") ?? null;
@@ -210,6 +205,12 @@ export default function TeacherManagedStudents() {
           myPending,
           disabled,
         };
+      })
+      .filter((row) => {
+        if (requestClassFilter !== ALL && String(row.student.kelas) !== requestClassFilter) return false;
+        if (term && !row.student.nama.toLowerCase().includes(term)) return false;
+        if (!term && row.disabled) return false;
+        return true;
       });
   }, [assignmentsByStudent, data?.students, requestClassFilter, requestSearch, user?.id]);
 
