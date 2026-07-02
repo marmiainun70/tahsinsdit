@@ -159,6 +159,7 @@ export default function AdminTeacherAssignments() {
   const [detailSearchInput, setDetailSearchInput] = useState("");
   const [detailSearch, setDetailSearch] = useState("");
   const [detailClassFilter, setDetailClassFilter] = useState(ALL);
+  const [detailExactClassLabel, setDetailExactClassLabel] = useState<string | null>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [addPage, setAddPage] = useState(1);
@@ -294,6 +295,29 @@ export default function AdminTeacherAssignments() {
       }),
   });
 
+  const releaseClass = useMutation({
+    mutationFn: async (studentIds: string[]) => {
+      await Promise.all(
+        studentIds.map(async (studentId) => {
+          const { error } = await supabase.rpc("release_teacher_student", { p_student_id: studentId });
+          if (error) throw error;
+        })
+      );
+      return studentIds.length;
+    },
+    onSuccess: async (count) => {
+      await invalidateDashboard();
+      setDetailExactClassLabel(null);
+      toast({ title: "Kelas berhasil dihapus", description: `${count} siswa telah dilepas penugasannya.` });
+    },
+    onError: (error: Error) =>
+      toast({
+        title: "Gagal menghapus kelas",
+        description: getFriendlyError(error, "Silakan coba lagi."),
+        variant: "destructive",
+      }),
+  });
+
   const assignStudents = useMutation({
     mutationFn: async ({ teacherId, studentIds }: { teacherId: string; studentIds: string[] }) => {
       await Promise.all(
@@ -420,12 +444,13 @@ export default function AdminTeacherAssignments() {
       }))
       .filter((row): row is { assignment: Assignment; student: Student } => Boolean(row.student))
       .filter(({ student }) => {
+        if (detailExactClassLabel && getStudentClassLabel(student) !== detailExactClassLabel) return false;
         if (detailClassFilter !== ALL && String(student.kelas) !== detailClassFilter) return false;
         if (term && !student.nama.toLowerCase().includes(term)) return false;
         return true;
       })
       .sort((a, b) => a.student.nama.localeCompare(b.student.nama, "id"));
-  }, [detailClassFilter, detailSearch, selectedTeacherSummary, studentsById]);
+  }, [detailClassFilter, detailExactClassLabel, detailSearch, selectedTeacherSummary, studentsById]);
 
   const detailTotalPages = Math.max(1, Math.ceil(detailRows.length / PAGE_SIZE));
   const visibleDetailRows = detailRows.slice((detailPage - 1) * PAGE_SIZE, detailPage * PAGE_SIZE);
@@ -754,9 +779,18 @@ export default function AdminTeacherAssignments() {
                         <div className="mt-3 flex flex-wrap gap-2">
                           {teacher.classLabels.length > 0 ? (
                             teacher.classLabels.slice(0, 4).map((label) => (
-                              <Badge key={label} variant="outline">
+                              <button
+                                key={label}
+                                onClick={() => {
+                                  setDetailTeacherId(teacher.user_id);
+                                  setDetailExactClassLabel(label);
+                                  setDetailClassFilter(ALL);
+                                  setDetailSearchInput("");
+                                }}
+                                className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                              >
                                 {label}
-                              </Badge>
+                              </button>
                             ))
                           ) : (
                             <Badge variant="outline">Belum ada kelas binaan</Badge>
@@ -818,6 +852,7 @@ export default function AdminTeacherAssignments() {
         onOpenChange={(open) => {
           if (!open) {
             setDetailTeacherId(null);
+            setDetailExactClassLabel(null);
             setDetailSearchInput("");
             setDetailClassFilter(ALL);
           }
@@ -858,6 +893,28 @@ export default function AdminTeacherAssignments() {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {detailExactClassLabel && visibleDetailRows.length > 0 && (
+                  <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-destructive">Hapus {detailExactClassLabel}</p>
+                      <p className="text-sm text-destructive/80 mt-1">Lepas penugasan {visibleDetailRows.length} siswa secara bersamaan.</p>
+                    </div>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => {
+                        if (confirm(`Yakin ingin melepas semua murid di ${detailExactClassLabel} dari guru ini?`)) {
+                          releaseClass.mutate(detailRows.map(r => r.student.id));
+                        }
+                      }}
+                      disabled={releaseClass.isPending}
+                    >
+                      {releaseClass.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                      Hapus Kelas Ini
+                    </Button>
+                  </div>
+                )}
 
                 {visibleDetailRows.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-border p-8 text-center">
