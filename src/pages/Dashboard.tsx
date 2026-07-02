@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isTeacherRole } from "@/lib/roleLabels";
 import { useTeacherStudents } from "@/hooks/useTeacherStudents";
 import { useAllMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
-import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
+import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LabelList } from "recharts";
 
 const classColors = [
 "from-blue-500 to-blue-600",
@@ -430,14 +430,30 @@ const Dashboard = () => {
                   )}
                   {trendMetric === "Program" && (
                     <>
-                      <Bar dataKey="Iqro 1" stackId="a" fill="#86efac" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="Iqro 2" stackId="a" fill="#34d399" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="Iqro 3" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="Iqro 4" stackId="a" fill="#059669" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="Iqro 5" stackId="a" fill="#15803d" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="Iqro 6" stackId="a" fill="#065f46" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="Tahsin Lanjutan" stackId="a" fill="#f59e0b" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="Tahfizh" stackId="a" fill="#7c3aed" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="Iqro 1" stackId="a" fill="#064e3b" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
+                        <LabelList dataKey="Iqro 1" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                      </Bar>
+                      <Bar dataKey="Iqro 2" stackId="a" fill="#5c7c6a" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
+                        <LabelList dataKey="Iqro 2" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                      </Bar>
+                      <Bar dataKey="Iqro 3" stackId="a" fill="#bbf7d0" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
+                        <LabelList dataKey="Iqro 3" position="center" fill="#064e3b" fontSize={11} fontWeight={700} formatter={(val: number) => val > 0 ? val : ""} />
+                      </Bar>
+                      <Bar dataKey="Iqro 4" stackId="a" fill="#22c55e" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
+                        <LabelList dataKey="Iqro 4" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                      </Bar>
+                      <Bar dataKey="Iqro 5" stackId="a" fill="#84cc16" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
+                        <LabelList dataKey="Iqro 5" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                      </Bar>
+                      <Bar dataKey="Iqro 6" stackId="a" fill="#ca8a04" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
+                        <LabelList dataKey="Iqro 6" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                      </Bar>
+                      <Bar dataKey="Tahsin Lanjutan" stackId="a" fill="#f59e0b" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
+                        <LabelList dataKey="Tahsin Lanjutan" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                      </Bar>
+                      <Bar dataKey="Tahfizh" stackId="a" fill="#7c3aed" stroke="hsl(var(--background))" strokeWidth={2} radius={[4, 4, 4, 4]}>
+                        <LabelList dataKey="Tahfizh" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                      </Bar>
                     </>
                   )}
                 </ComposedChart>
