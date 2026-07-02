@@ -79,6 +79,40 @@ export const fetchApprovedManagedStudentIds = async (userId?: string, role?: str
   return Array.from(new Set((data ?? []).map((item: { student_id: string }) => item.student_id)));
 };
 
+// ─── ROLE PERMISSIONS ─────────────────────────────────────────────────────────
+export const useRolePermissions = () => {
+  return useQuery({
+    queryKey: ["role_permissions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("role_permissions" as any)
+        .select("*")
+        .order("feature_name", { ascending: true });
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+};
+
+export const useUpdateRolePermission = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: any }) => {
+      const { data, error } = await supabase
+        .from("role_permissions" as any)
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["role_permissions"] });
+    },
+  });
+};
+
 // ─── STUDENTS ────────────────────────────────────────────────────────────────
 export const useStudents = () => {
   const { user, profile } = useAuth();

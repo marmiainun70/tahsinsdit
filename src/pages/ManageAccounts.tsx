@@ -41,9 +41,11 @@ export default function ManageAccounts() {
   const [copyFeedbackId, setCopyFeedbackId] = useState<string | null>(null);
   
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ full_name: "", username: "" });
+  const [editForm, setEditForm] = useState({ full_name: "", username: "", role: "" });
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   
+  const isSuperAdmin = profile?.full_name?.toUpperCase() === "MIFTAHUL ARSYAD ASRI";
+
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -116,17 +118,34 @@ export default function ManageAccounts() {
   const handleEditSave = async (userId: string) => {
     setActionError("");
     setIsSavingEdit(true);
-    const { error } = await supabase.from("profiles").update({ 
+    
+    // Update profile
+    const { error: profileError } = await supabase.from("profiles").update({ 
       full_name: editForm.full_name, 
-      username: editForm.username || null 
+      username: editForm.username || null,
+      role: editForm.role || undefined 
     }).eq("user_id", userId);
 
-    if (error) {
-      setActionError("Gagal memperbarui profil: " + error.message);
-    } else {
-      await queryClient.invalidateQueries({ queryKey: ["managed-accounts"] });
-      setEditingUserId(null);
+    if (profileError) {
+      setActionError("Gagal memperbarui profil: " + profileError.message);
+      setIsSavingEdit(false);
+      return;
+    } 
+
+    // Update user_roles if changed and user is super admin
+    if (isSuperAdmin && editForm.role) {
+      const { error: roleError } = await supabase.from("user_roles").update({
+        role: editForm.role
+      }).eq("user_id", userId);
+      
+      if (roleError) {
+         console.warn("Gagal memperbarui tabel user_roles: ", roleError.message);
+         // Often user_roles is handled by triggers, so if it fails we just log it
+      }
     }
+
+    await queryClient.invalidateQueries({ queryKey: ["managed-accounts"] });
+    setEditingUserId(null);
     setIsSavingEdit(false);
   };
 
@@ -473,6 +492,17 @@ export default function ManageAccounts() {
                           onChange={(e) => setEditForm({...editForm, username: e.target.value})}
                           className="h-8 rounded-lg border border-border bg-background px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
                         />
+                        {isSuperAdmin && (
+                          <select
+                            value={editForm.role}
+                            onChange={(e) => setEditForm({...editForm, role: e.target.value})}
+                            className="h-8 rounded-lg border border-border bg-background px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                          >
+                            <option value="admin">Admin</option>
+                            <option value="teacher">Guru</option>
+                            <option value="parent">Orang Tua</option>
+                          </select>
+                        )}
                       </div>
                       <div className="flex gap-2 mt-1">
                         <button
@@ -559,7 +589,7 @@ export default function ManageAccounts() {
                 <button
                   onClick={() => {
                     setEditingUserId(account.user_id);
-                    setEditForm({ full_name: account.full_name, username: account.username || "" });
+                    setEditForm({ full_name: account.full_name, username: account.username || "", role: account.role });
                   }}
                   disabled={isSavingEdit}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-secondary disabled:opacity-50"

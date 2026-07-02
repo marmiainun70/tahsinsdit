@@ -149,7 +149,6 @@ export default function ManageStudents() {
     }
   };
 
-
   // Active query filters from search params
   const page = parseInt(searchParams.get("page") || "1");
   const search = searchParams.get("search") || "";
@@ -193,6 +192,7 @@ export default function ManageStudents() {
   const students = data?.students || [];
   const totalCount = data?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / 20);
+
 
 
   // Actions
@@ -736,6 +736,108 @@ export default function ManageStudents() {
                                   title="Hapus Siswa"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              {/* Mobile table – full size, no zoom */}
+              <table className="w-full min-w-[760px] md:hidden">
+                <thead className="bg-muted/40">
+                  <tr className="border-b border-border">
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase py-3.5 px-5 w-16">No</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase py-3.5 px-5 w-1/3">Nama Siswa</th>
+                    <th className="text-center text-xs font-semibold text-muted-foreground uppercase py-3.5 px-5">Kelas</th>
+                    <th className="text-center text-xs font-semibold text-muted-foreground uppercase py-3.5 px-5">Rombel</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase py-3.5 px-5">Level Bacaan</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground uppercase py-3.5 px-5">Progres</th>
+                    <th className="text-center text-xs font-semibold text-muted-foreground uppercase py-3.5 px-5">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {students.map((s, i) => {
+                    const numberIdx = (page - 1) * 20 + i + 1;
+                    const flagged = s.perlu_perhatian === true;
+                    return (
+                      <tr key={`mob-${s.id}`} className={`hover:bg-muted/30 transition-colors ${flagged ? "bg-destructive/5" : ""}`}>
+                        <td className="py-3.5 px-5 text-sm text-muted-foreground">{numberIdx}</td>
+                        <td className="py-3.5 px-5">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-9 h-9 rounded-full ${ROMBEL_COLORS[s.rombel as Rombel] ?? "bg-primary"} flex items-center justify-center flex-shrink-0 text-white font-bold text-sm`}>
+                              {s.nama.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-semibold text-foreground">{s.nama}</span>
+                                {flagged && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-destructive/10 text-destructive border border-destructive/20">
+                                    <AlertTriangle className="w-2.5 h-2.5" /> Perlu Perhatian
+                                  </span>
+                                )}
+                              </div>
+                              {(s.nis || s.nisn) && (
+                                <p className="text-xs text-muted-foreground mt-0.5">
+                                  {s.nis && `NIS: ${s.nis}`} {s.nis && s.nisn && "·"} {s.nisn && `NISN: ${s.nisn}`}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-5 text-center">
+                          <select
+                            value={s.kelas}
+                            onChange={(e) => handleInlineUpdate(s.id, "kelas", parseInt(e.target.value))}
+                            className="w-16 px-1.5 py-1 text-sm font-bold text-center border-border bg-transparent hover:bg-muted focus:bg-background focus:ring-1 focus:ring-primary rounded cursor-pointer"
+                          >
+                            {[1, 2, 3, 4, 5, 6].map(k => <option key={k} value={k} className="bg-background text-foreground text-left">Kelas {k}</option>)}
+                          </select>
+                        </td>
+                        <td className="py-3.5 px-5 text-center">
+                          <select
+                            value={s.rombel}
+                            onChange={(e) => handleInlineUpdate(s.id, "rombel", e.target.value)}
+                            className={`inline-flex px-2 py-0.5 text-xs font-bold text-white rounded-md cursor-pointer border-none outline-none text-center ${ROMBEL_COLORS[s.rombel as Rombel] ?? "bg-primary"}`}
+                            style={{ appearance: 'none', WebkitAppearance: 'none' }}
+                          >
+                            {ROMBELS.map(r => <option key={r} value={r} className="bg-background text-foreground text-left">Rombel {r}</option>)}
+                          </select>
+                        </td>
+                        <td className="py-3.5 px-5">
+                          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${LEVEL_COLORS[s.level]}`}>
+                            {s.level.startsWith("Iqro") ? `Tahsin Dasar — ${s.level}` : s.level}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-5 text-sm font-semibold text-foreground">
+                          {formatProgress(s.level, s.halaman_terakhir)}
+                        </td>
+                        <td className="py-3.5 px-5">
+                          <div className="flex items-center justify-center gap-2">
+                            <Link to={`/student/${s.id}`}>
+                              <button className="flex items-center gap-1 px-2.5 py-1.5 bg-secondary hover:bg-primary/10 hover:text-primary text-secondary-foreground rounded-lg text-xs font-medium transition-colors">
+                                <Eye className="w-3.5 h-3.5" />
+                                Detail
+                              </button>
+                            </Link>
+                            {isAdmin && (
+                              <>
+                                <button
+                                  onClick={() => openEdit(s)}
+                                  className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                  title="Edit Siswa"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(s.id, s.kelas)}
+                                  className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                                  title="Hapus Siswa"
+                                >
+                                  <Trash2 className="w-4 h-4" />
                                 </button>
                               </>
                             )}

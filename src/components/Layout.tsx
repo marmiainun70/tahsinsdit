@@ -14,26 +14,27 @@ import NotificationBell from "@/components/NotificationBell";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { getRoleLabel, isTeacherRole } from "@/lib/roleLabels";
+import { useRolePermissions } from "@/hooks/useSupabaseData";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const navItems = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/kelola-siswa", icon: Users, label: "Kelola Siswa" },
-  { to: "/murid-binaan", icon: UserCheck, label: "Murid Binaan", teacherOnly: true },
-  { to: "/penugasan-guru", icon: UserCog, label: "Penugasan Guru", adminOnly: true },
-  { to: "/profil-diagnostik-guru", icon: BookOpen, label: "Profil Kompetensi Guru", teacherOnly: true },
-  { to: "/laporan-bulanan", icon: FileText, label: "Absensi Bulanan" },
-  { to: "/input-cepat", icon: FileSpreadsheet, label: "Input Laporan Bulanan" },
-  { to: "/rekap-laporan", icon: FileSpreadsheet, label: "Rekap Laporan" },
-  { to: "/monitoring", icon: BarChart3, label: "Monitoring" },
-  { to: "/jadwal-ujian", icon: GraduationCap, label: "Jadwal Ujian" },
-  { to: "/pengumuman", icon: Megaphone, label: "Pengumuman" },
-  { to: "/pengaturan-notifikasi", icon: Bell, label: "Pengaturan Notifikasi" },
-  { to: "/pengaturan-lembaga", icon: Settings, label: "Pengaturan Lembaga" },
-  { to: "/kelola-akun", icon: UserCog, label: "Manajemen Akun All User", adminOnly: true },
+  { featureKey: "dashboard", to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { featureKey: "kelola_siswa", to: "/kelola-siswa", icon: Users, label: "Kelola Siswa" },
+  { featureKey: "murid_binaan", to: "/murid-binaan", icon: UserCheck, label: "Murid Binaan" },
+  { featureKey: "penugasan_guru", to: "/penugasan-guru", icon: UserCog, label: "Penugasan Guru" },
+  { featureKey: "profil_kompetensi_guru", to: "/profil-diagnostik-guru", icon: BookOpen, label: "Profil Kompetensi Guru" },
+  { featureKey: "laporan_bulanan", to: "/laporan-bulanan", icon: FileText, label: "Absensi Bulanan" },
+  { featureKey: "input_cepat", to: "/input-cepat", icon: FileSpreadsheet, label: "Input Laporan Bulanan" },
+  { featureKey: "rekap_laporan", to: "/rekap-laporan", icon: FileSpreadsheet, label: "Rekap Laporan" },
+  { featureKey: "monitoring", to: "/monitoring", icon: BarChart3, label: "Monitoring" },
+  { featureKey: "jadwal_ujian", to: "/jadwal-ujian", icon: GraduationCap, label: "Jadwal Ujian" },
+  { featureKey: "pengumuman", to: "/pengumuman", icon: Megaphone, label: "Pengumuman" },
+  { featureKey: "pengaturan_notifikasi", to: "/pengaturan-notifikasi", icon: Bell, label: "Pengaturan Notifikasi" },
+  { featureKey: "pengaturan_lembaga", to: "/pengaturan-lembaga", icon: Settings, label: "Pengaturan Lembaga" },
+  { featureKey: "kelola_akun", to: "/kelola-akun", icon: UserCog, label: "Manajemen Akun All User" },
 ];
 
 interface SidebarContentProps {
@@ -43,7 +44,24 @@ interface SidebarContentProps {
   onClose?: () => void;
 }
 
-const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContentProps) => (
+const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContentProps) => {
+  const { data: permissions } = useRolePermissions();
+
+  const isAllowed = (featureKey: string) => {
+    if (!permissions || !profile?.role) return false;
+    // Always allow admin, but let's check the database anyway (or fallback to true for admin)
+    if (profile.role === "admin") return true;
+
+    const perm = permissions.find(p => p.feature_key === featureKey);
+    if (!perm) return false;
+
+    if (isTeacherRole(profile.role)) return perm.teacher_access;
+    if (profile.role === "parent") return perm.parent_access;
+
+    return false;
+  };
+
+  return (
   <div className="flex flex-col h-full">
     <div className="p-5 border-b border-sidebar-border flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -72,8 +90,7 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
       <nav className="sidebar-scroll h-full overflow-y-auto px-4 py-4 space-y-1">
         <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-3">Menu Utama</p>
         {navItems
-          .filter((item) => !item.adminOnly || profile?.role === "admin")
-          .filter((item) => !item.teacherOnly || profile?.role === "admin" || isTeacherRole(profile?.role))
+          .filter((item) => isAllowed(item.featureKey))
           .map(({ to, icon: Icon, label }) => {
           const active = location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
           return (
@@ -167,7 +184,8 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
       </button>
     </div>
   </div>
-);
+  );
+};
 
 const Breadcrumb = ({ pathname }: { pathname: string }) => {
   if (pathname === "/") return <h2 className="font-semibold text-foreground text-base">Dashboard</h2>;
