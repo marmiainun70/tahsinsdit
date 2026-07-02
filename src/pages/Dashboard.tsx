@@ -430,19 +430,19 @@ const Dashboard = () => {
                       <LabelList dataKey="Iqro 3" position="center" fill="#064e3b" fontSize={11} fontWeight={700} formatter={(val: number) => val > 0 ? val : ""} />
                     </Area>
                     <Area type="monotone" dataKey="Iqro 4" stackId="1" stroke="#22c55e" fill="#22c55e">
-                      <LabelList dataKey="Iqro 4" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                      <LabelList dataKey="Iqro 4" position="center" fill="#1e293b" fontSize={11} fontWeight={800} formatter={(val: number) => val > 0 ? val : ""} />
                     </Area>
                     <Area type="monotone" dataKey="Iqro 5" stackId="1" stroke="#84cc16" fill="#84cc16">
-                      <LabelList dataKey="Iqro 5" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                      <LabelList dataKey="Iqro 5" position="center" fill="#1e293b" fontSize={11} fontWeight={800} formatter={(val: number) => val > 0 ? val : ""} />
                     </Area>
                     <Area type="monotone" dataKey="Iqro 6" stackId="1" stroke="#ca8a04" fill="#ca8a04">
-                      <LabelList dataKey="Iqro 6" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                      <LabelList dataKey="Iqro 6" position="center" fill="#1e293b" fontSize={11} fontWeight={800} formatter={(val: number) => val > 0 ? val : ""} />
                     </Area>
                     <Area type="monotone" dataKey="Tahsin Lanjutan" stackId="1" stroke="#f59e0b" fill="#f59e0b">
-                      <LabelList dataKey="Tahsin Lanjutan" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                      <LabelList dataKey="Tahsin Lanjutan" position="center" fill="#1e293b" fontSize={11} fontWeight={800} formatter={(val: number) => val > 0 ? val : ""} />
                     </Area>
                     <Area type="monotone" dataKey="Tahfizh" stackId="1" stroke="#7c3aed" fill="#7c3aed">
-                      <LabelList dataKey="Tahfizh" position="center" fill="#ffffff" fontSize={11} fontWeight={600} formatter={(val: number) => val > 0 ? val : ""} />
+                      <LabelList dataKey="Tahfizh" position="center" fill="#ffffff" fontSize={11} fontWeight={800} formatter={(val: number) => val > 0 ? val : ""} />
                     </Area>
                   </AreaChart>
                 ) : (
