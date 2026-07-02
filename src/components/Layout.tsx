@@ -48,9 +48,11 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
   const { data: permissions } = useRolePermissions();
 
   const isAllowed = (featureKey: string) => {
+    // Admin selalu punya akses penuh ke semua menu (bypass table check)
+    if (profile?.role === "admin") return true;
+    
+    // Jika belum loading atau bukan admin, maka cek tabel role_permissions
     if (!permissions || !profile?.role) return false;
-    // Always allow admin, but let's check the database anyway (or fallback to true for admin)
-    if (profile.role === "admin") return true;
 
     const perm = permissions.find(p => p.feature_key === featureKey);
     if (!perm) return false;
