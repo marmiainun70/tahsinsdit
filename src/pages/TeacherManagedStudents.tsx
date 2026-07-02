@@ -370,7 +370,7 @@ export default function TeacherManagedStudents() {
       )}
 
       <Dialog open={requestDialogOpen} onOpenChange={setRequestDialogOpen}>
-        <DialogContent className="flex max-h-[95vh] w-[min(98vw,1400px)] flex-col overflow-hidden">
+        <DialogContent className="fixed inset-0 left-0 top-0 z-50 flex h-[100dvh] w-[100dvw] max-w-none flex-col overflow-hidden rounded-none border-0 bg-background p-4 sm:p-6 !translate-x-0 !translate-y-0">
           <DialogHeader>
             <DialogTitle>Ajukan Murid Binaan</DialogTitle>
             <DialogDescription>Pilih siswa yang belum memiliki guru pembina untuk diajukan ke admin.</DialogDescription>
@@ -438,17 +438,18 @@ export default function TeacherManagedStudents() {
                 <p className="mt-2 text-sm text-muted-foreground">Coba ubah pencarian atau filter kelas.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5 pb-6">
                 {visibleRequestRows.map(({ student, approvedAssignment, myPending, disabled }) => {
                 const checked = selectedStudentIds.includes(student.id);
                 return (
                   <label
                     key={student.id}
-                    className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition-colors ${
+                    className={`flex cursor-pointer items-start gap-2.5 rounded-xl border p-3 transition-colors ${
                       disabled ? "border-border bg-muted/20 opacity-75" : checked ? "border-primary/40 bg-primary/5" : "border-border bg-card hover:border-primary/30"
                     }`}
                   >
                     <Checkbox
+                      className="mt-0.5"
                       checked={checked}
                       disabled={disabled}
                       onCheckedChange={(value) => {
@@ -461,26 +462,19 @@ export default function TeacherManagedStudents() {
                     />
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-foreground">{student.nama}</span>
-                        <Badge variant="secondary">{getStudentClassLabel(student)}</Badge>
+                        <span className="font-semibold text-foreground text-sm">{student.nama}</span>
+                        <Badge variant="secondary" className="px-1.5 py-0 text-[10px]">{getStudentClassLabel(student)}</Badge>
                         {approvedAssignment && (
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass.approved}`}>
-                            Sudah dibina guru lain
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusClass.approved}`}>
+                            Sudah dibina
                           </span>
                         )}
                         {myPending && (
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass.pending}`}>
-                            Sudah menunggu admin
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusClass.pending}`}>
+                            Menunggu admin
                           </span>
                         )}
                       </div>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        {approvedAssignment
-                          ? "Siswa ini sudah memiliki guru pembina aktif."
-                          : myPending
-                            ? "Permintaan untuk siswa ini sudah dikirim dan sedang menunggu persetujuan admin."
-                            : "Siswa ini masih tersedia untuk diajukan."}
-                      </p>
                     </div>
                   </label>
                 );
