@@ -623,16 +623,12 @@ export default function Monitoring() {
       filterKelas !== "all" ||
       filterRombel !== "all" ||
       filterTeacher !== "all" ||
-      filterCategory !== "all" ||
-      filterStatus !== "all" ||
       search.trim() !== "",
     [
-      filterCategory,
       filterKelas,
       filterMonth,
       filterRombel,
       filterSemester,
-      filterStatus,
       filterTeacher,
       filterYear,
       search,
