@@ -213,8 +213,9 @@ export default function TeacherManagedStudents() {
       });
   }, [assignmentsByStudent, data?.students, requestClassFilter, requestSearch, user?.id]);
 
-  const visibleRequestRows = requestRows.slice((requestPage - 1) * PAGE_SIZE, requestPage * PAGE_SIZE);
-  const requestTotalPages = Math.max(1, Math.ceil(requestRows.length / PAGE_SIZE));
+  const REQUEST_PAGE_SIZE = 50;
+  const visibleRequestRows = requestRows.slice((requestPage - 1) * REQUEST_PAGE_SIZE, requestPage * REQUEST_PAGE_SIZE);
+  const requestTotalPages = Math.max(1, Math.ceil(requestRows.length / REQUEST_PAGE_SIZE));
 
   useEffect(() => {
     setPage(1);
@@ -400,9 +401,34 @@ export default function TeacherManagedStudents() {
             </Select>
           </div>
 
-          <div className="rounded-2xl border border-border bg-muted/30 p-4 text-sm">
-            <p className="font-medium text-foreground">Guru pengaju: {profile ? getTeacherName({ ...profile, email: user?.email ?? null, username: null, user_id: user?.id ?? "" }) : "Akun ini"}</p>
-            <p className="mt-1 text-muted-foreground">{selectedStudentIds.length} siswa siap diajukan ke admin.</p>
+          <div className="rounded-2xl border border-border bg-muted/30 p-4 text-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <p className="font-medium text-foreground">Guru pengaju: {profile ? getTeacherName({ ...profile, email: user?.email ?? null, username: null, user_id: user?.id ?? "" }) : "Akun ini"}</p>
+              <p className="mt-1 text-muted-foreground">{selectedStudentIds.length} siswa siap diajukan ke admin.</p>
+            </div>
+            {visibleRequestRows.length > 0 && (
+              <div className="flex items-center gap-2 rounded-lg bg-background border px-3 py-2 shadow-sm">
+                <Checkbox
+                  id="select-all-dialog"
+                  checked={visibleRequestRows.some(r => !r.disabled) && visibleRequestRows.filter(r => !r.disabled).every(r => selectedStudentIds.includes(r.student.id))}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      const newIds = [...selectedStudentIds];
+                      visibleRequestRows.forEach(r => {
+                        if (!r.disabled && !newIds.includes(r.student.id)) newIds.push(r.student.id);
+                      });
+                      setSelectedStudentIds(newIds);
+                    } else {
+                      const visibleIds = visibleRequestRows.map(r => r.student.id);
+                      setSelectedStudentIds(selectedStudentIds.filter(id => !visibleIds.includes(id)));
+                    }
+                  }}
+                />
+                <label htmlFor="select-all-dialog" className="text-sm font-semibold cursor-pointer">
+                  Pilih Semua ({visibleRequestRows.filter(r => !r.disabled).length} Siswa)
+                </label>
+              </div>
+            )}
           </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto pr-1">
