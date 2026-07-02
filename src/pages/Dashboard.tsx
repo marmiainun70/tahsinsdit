@@ -237,12 +237,12 @@ const Dashboard = () => {
                        <div className="bg-muted/30 rounded-xl p-3">
                          <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-2">
                            <div className="flex gap-1.5 sm:gap-2 flex-wrap">
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-200"></span>I1 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-300"></span>I2 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>I3 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>I4 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>I5 0</span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-700"></span>I6 0</span>
+                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-300"></span>I1 0</span>
+                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>I2 0</span>
+                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>I3 0</span>
+                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>I4 0</span>
+                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-700"></span>I5 0</span>
+                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-800"></span>I6 0</span>
                              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>TL 0</span>
                              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>TF 0</span>
                            </div>
@@ -292,23 +292,23 @@ const Dashboard = () => {
                        <div className="bg-muted/30 rounded-xl p-3">
                          <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-2">
                            <div className="flex gap-1.5 sm:gap-2 flex-wrap">
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-200"></span>I1 <span className="text-foreground">{stats.iqro1}</span></span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-300"></span>I2 <span className="text-foreground">{stats.iqro2}</span></span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>I3 <span className="text-foreground">{stats.iqro3}</span></span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>I4 <span className="text-foreground">{stats.iqro4}</span></span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>I5 <span className="text-foreground">{stats.iqro5}</span></span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-700"></span>I6 <span className="text-foreground">{stats.iqro6}</span></span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>TL <span className="text-foreground">{stats.tahsinLanjutan}</span></span>
-                             <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>TF <span className="text-foreground">{stats.tahfizh}</span></span>
+                             {stats.iqro1 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-300"></span>I1 <span className="text-foreground">{stats.iqro1}</span></span>}
+                             {stats.iqro2 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>I2 <span className="text-foreground">{stats.iqro2}</span></span>}
+                             {stats.iqro3 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>I3 <span className="text-foreground">{stats.iqro3}</span></span>}
+                             {stats.iqro4 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>I4 <span className="text-foreground">{stats.iqro4}</span></span>}
+                             {stats.iqro5 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-700"></span>I5 <span className="text-foreground">{stats.iqro5}</span></span>}
+                             {stats.iqro6 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-800"></span>I6 <span className="text-foreground">{stats.iqro6}</span></span>}
+                             {stats.tahsinLanjutan > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>TL <span className="text-foreground">{stats.tahsinLanjutan}</span></span>}
+                             {stats.tahfizh > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500"></span>TF <span className="text-foreground">{stats.tahfizh}</span></span>}
                            </div>
                          </div>
                          <div className="h-2 bg-muted rounded-full overflow-hidden flex">
-                           {stats.iqro1 > 0 && <div className="h-full bg-emerald-200 transition-all duration-700" style={{ width: `${(stats.iqro1 / stats.total) * 100}%` }} title={`Iqro 1: ${stats.iqro1}`} />}
-                           {stats.iqro2 > 0 && <div className="h-full bg-emerald-300 transition-all duration-700 border-l border-white/20" style={{ width: `${(stats.iqro2 / stats.total) * 100}%` }} title={`Iqro 2: ${stats.iqro2}`} />}
-                           {stats.iqro3 > 0 && <div className="h-full bg-emerald-400 transition-all duration-700 border-l border-white/20" style={{ width: `${(stats.iqro3 / stats.total) * 100}%` }} title={`Iqro 3: ${stats.iqro3}`} />}
-                           {stats.iqro4 > 0 && <div className="h-full bg-emerald-500 transition-all duration-700 border-l border-white/20" style={{ width: `${(stats.iqro4 / stats.total) * 100}%` }} title={`Iqro 4: ${stats.iqro4}`} />}
-                           {stats.iqro5 > 0 && <div className="h-full bg-emerald-600 transition-all duration-700 border-l border-white/20" style={{ width: `${(stats.iqro5 / stats.total) * 100}%` }} title={`Iqro 5: ${stats.iqro5}`} />}
-                           {stats.iqro6 > 0 && <div className="h-full bg-emerald-700 transition-all duration-700 border-l border-white/20" style={{ width: `${(stats.iqro6 / stats.total) * 100}%` }} title={`Iqro 6: ${stats.iqro6}`} />}
+                           {stats.iqro1 > 0 && <div className="h-full bg-green-300 transition-all duration-700" style={{ width: `${(stats.iqro1 / stats.total) * 100}%` }} title={`Iqro 1: ${stats.iqro1}`} />}
+                           {stats.iqro2 > 0 && <div className="h-full bg-emerald-400 transition-all duration-700 border-l border-white/20" style={{ width: `${(stats.iqro2 / stats.total) * 100}%` }} title={`Iqro 2: ${stats.iqro2}`} />}
+                           {stats.iqro3 > 0 && <div className="h-full bg-green-500 transition-all duration-700 border-l border-white/20" style={{ width: `${(stats.iqro3 / stats.total) * 100}%` }} title={`Iqro 3: ${stats.iqro3}`} />}
+                           {stats.iqro4 > 0 && <div className="h-full bg-emerald-600 transition-all duration-700 border-l border-white/20" style={{ width: `${(stats.iqro4 / stats.total) * 100}%` }} title={`Iqro 4: ${stats.iqro4}`} />}
+                           {stats.iqro5 > 0 && <div className="h-full bg-green-700 transition-all duration-700 border-l border-white/20" style={{ width: `${(stats.iqro5 / stats.total) * 100}%` }} title={`Iqro 5: ${stats.iqro5}`} />}
+                           {stats.iqro6 > 0 && <div className="h-full bg-emerald-800 transition-all duration-700 border-l border-white/20" style={{ width: `${(stats.iqro6 / stats.total) * 100}%` }} title={`Iqro 6: ${stats.iqro6}`} />}
                            {stats.tahsinLanjutan > 0 && <div className="h-full bg-amber-500 transition-all duration-700 border-l border-white/20" style={{ width: `${(stats.tahsinLanjutan / stats.total) * 100}%` }} title={`Tahsin Lanjutan: ${stats.tahsinLanjutan}`} />}
                            {stats.tahfizh > 0 && <div className="h-full bg-violet-500 transition-all duration-700 border-l border-white/20" style={{ width: `${(stats.tahfizh / stats.total) * 100}%` }} title={`Tahfizh: ${stats.tahfizh}`} />}
                          </div>
