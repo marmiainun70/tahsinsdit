@@ -258,27 +258,19 @@ export default function Monitoring() {
 
   const availableTeachers = useMemo(() => {
     const set = new Set<string>();
-    baseFilteredStudents.forEach((student) => {
-      (studentAssignedTeachers.get(student.id) ?? []).forEach((teacherName) => set.add(teacherName));
+    reports.forEach((report) => {
+      let teacherName = report.teacher_name_snapshot?.trim() || report.teacher_name?.trim() || "Tidak Diketahui";
+      if (teacherName === "Tidak Diketahui" && report.teacher_id_snapshot) {
+        teacherName = profileMap.get(report.teacher_id_snapshot) || "Tidak Diketahui";
+      }
+      if (teacherName !== "Tidak Diketahui") {
+        set.add(teacherName);
+      }
     });
     return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [baseFilteredStudents, studentAssignedTeachers]);
+  }, [profileMap, reports]);
 
-  const filteredStudents = useMemo(() => {
-    if (filterTeacher === "all") return baseFilteredStudents;
-    return baseFilteredStudents.filter((student) =>
-      (studentAssignedTeachers.get(student.id) ?? []).includes(filterTeacher),
-    );
-  }, [baseFilteredStudents, filterTeacher, studentAssignedTeachers]);
-
-  const visibleGroupKeys = useMemo(() => {
-    const keys = new Set<string>();
-    filteredStudents.forEach((student) => keys.add(`${student.kelas}-${student.rombel}`));
-    return Array.from(keys).map((key) => {
-      const [kelas, rombel] = key.split("-");
-      return { kelas: Number(kelas), rombel };
-    });
-  }, [filteredStudents]);
+  const filteredStudents = baseFilteredStudents;
 
   const teacherLoadStudentIds = useMemo(() => filteredStudents.map((student) => student.id), [filteredStudents]);
   const teacherLoadStudentIdSet = useMemo(() => new Set(teacherLoadStudentIds), [teacherLoadStudentIds]);
