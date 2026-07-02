@@ -746,44 +746,6 @@ export default function ManageStudents() {
                   })}
                 </tbody>
               </table>
-              {/* Mobile table – full size, no zoom */}
-              <table className="w-full min-w-[760px] md:hidden">
-                        <td className="py-3.5 px-5 text-sm font-semibold text-foreground">
-                          {formatProgress(s.level, s.halaman_terakhir)}
-                        </td>
-                        <td className="py-3.5 px-5">
-                          <div className="flex items-center justify-center gap-2">
-                            <Link to={`/student/${s.id}`}>
-                              <button className="flex items-center gap-1 px-2.5 py-1.5 bg-secondary hover:bg-primary/10 hover:text-primary text-secondary-foreground rounded-lg text-xs font-medium transition-colors">
-                                <Eye className="w-3.5 h-3.5" />
-                                Detail
-                              </button>
-                            </Link>
-                            {isAdmin && (
-                              <>
-                                <button
-                                  onClick={() => openEdit(s)}
-                                  className="p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                                  title="Edit Siswa"
-                                >
-                                  <Pencil className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleDelete(s.id, s.kelas)}
-                                  className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                                  title="Hapus Siswa"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
             </div>
             {/* Pagination controls */}
             <DataTablePagination
