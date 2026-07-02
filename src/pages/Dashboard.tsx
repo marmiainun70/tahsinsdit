@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStudents, LEVELS, LEVEL_COLORS, getLevelDisplayLabel, getLevelGroup, IQRO_LEVELS, IQRO_JILID_COLORS } from "@/hooks/useSupabaseData";
@@ -27,6 +27,8 @@ const Dashboard = () => {
 
   const { data: allStudents = [], isLoading: loadingStudents } = useStudents();
   const { data: assignments = [], isLoading: loadingAssignments } = useTeacherStudents(user?.id, "approved");
+
+  const [trendMetric, setTrendMetric] = useState<"Semua" | "Kelulusan" | "Nilai" | "Halaman">("Semua");
 
   const { data: allReports = [] } = useAllMonthlyReports();
   const isLoading = loadingStudents || (isTeacher && loadingAssignments);
@@ -192,9 +194,6 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((kelas, i) => {
             const stats = getClassStats(kelas);
-            const pctDasar = stats.total > 0 ? (stats.tahsinDasar / stats.total) * 100 : 0;
-            const pctLanjut = stats.total > 0 ? (stats.tahsinLanjutan / stats.total) * 100 : 0;
-            const pctTahfizh = stats.total > 0 ? (stats.tahfizh / stats.total) * 100 : 0;
             return (
               <motion.div
                 key={kelas}
@@ -333,9 +332,20 @@ const Dashboard = () => {
 
       {students.length > 0 &&
         <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-primary" />
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <TrendingUp className="w-5 h-5 text-primary flex-shrink-0" />
             <h2 className="text-base font-bold text-foreground">Statistik Tren 6 Bulan</h2>
+            <div className="ml-auto flex items-center gap-1.5 bg-muted p-1 rounded-lg">
+              {(["Semua", "Kelulusan", "Nilai", "Halaman"] as const).map(m => (
+                <button 
+                  key={m} 
+                  onClick={() => setTrendMetric(m)} 
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-all ${trendMetric === m ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
           </div>
           
           <div className="h-72 mt-2">
@@ -348,13 +358,20 @@ const Dashboard = () => {
                 <LineChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
-                  <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <YAxis domain={trendMetric === "Halaman" ? ['auto', 'auto'] : [0, 100]} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
                   <RechartsTooltip 
                     contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
                   />
                   <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                  <Line type="monotone" dataKey="Kelulusan Target (%)" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="Rata-rata Nilai" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                  {(trendMetric === "Semua" || trendMetric === "Kelulusan") && (
+                    <Line type="monotone" dataKey="Kelulusan Target (%)" stroke="#10b981" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                  )}
+                  {(trendMetric === "Semua" || trendMetric === "Nilai") && (
+                    <Line type="monotone" dataKey="Rata-rata Nilai" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                  )}
+                  {(trendMetric === "Semua" || trendMetric === "Halaman") && (
+                    <Line type="monotone" dataKey="Total Halaman" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             )}
