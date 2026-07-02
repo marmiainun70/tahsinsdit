@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useStudentsByClass, useAddStudent, useDeleteStudent, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
+import { useStudentsByClass, useAddStudent, useUpdateStudent, useDeleteStudent, LEVEL_COLORS, LEVELS } from "@/hooks/useSupabaseData";
 import { useRecentLevelUpsByClass } from "@/hooks/useActivityLog";
-import { ChevronRight, Search, UserPlus, FileText, Eye, Trash2, Loader2, X, AlertTriangle, Upload } from "lucide-react";
+import { ChevronRight, Search, UserPlus, Eye, Trash2, Loader2, X, AlertTriangle, Upload, Edit2, Check } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import BulkImportStudents from "@/components/BulkImportStudents";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,6 +44,7 @@ const ClassStudents = () => {
   const { data: allStudents = [], isLoading: loadingStudents } = useStudentsByClass(kelas);
   const { data: levelUps = {} } = useRecentLevelUpsByClass(kelas);
   const addStudent = useAddStudent();
+  const updateStudent = useUpdateStudent();
   const deleteStudent = useDeleteStudent();
 
   const { user, profile } = useAuth();
@@ -69,6 +70,12 @@ const ClassStudents = () => {
   const [newLevel, setNewLevel] = useState<ReadingLevel>("Iqro 1");
   const [newRombel, setNewRombel] = useState<Rombel>("A");
 
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editLevel, setEditLevel] = useState<ReadingLevel>("Iqro 1");
+  const [editHalaman, setEditHalaman] = useState(0);
+  const [editStatus, setEditStatus] = useState<any>("Lancar");
+
   const rombelStudents = students.filter(s => (s as any).rombel === activeRombel);
   const filtered = rombelStudents.filter(s =>
     s.nama.toLowerCase().includes(search.toLowerCase())
@@ -81,6 +88,30 @@ const ClassStudents = () => {
     setNewName("");
     setNewLevel("Iqro 1");
     setShowAddForm(false);
+  };
+
+  const handleEditClick = (student: any) => {
+    setEditingStudentId(student.id);
+    setEditName(student.nama);
+    setEditLevel(student.level);
+    setEditHalaman(student.halaman_terakhir || 0);
+    setEditStatus(student.status_bacaan || "Lancar");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingStudentId(null);
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    if (!editName.trim()) return;
+    await updateStudent.mutateAsync({
+      id,
+      nama: editName.trim(),
+      level: editLevel,
+      halaman_terakhir: editHalaman,
+      status_bacaan: editStatus,
+    });
+    setEditingStudentId(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -286,6 +317,82 @@ const ClassStudents = () => {
               <tbody className="divide-y divide-border">
                 {filtered.map((s, i) => {
                   const flagged = (s as any).perlu_perhatian === true;
+                  
+                  if (editingStudentId === s.id) {
+                    return (
+                      <tr key={s.id} className="bg-muted/10">
+                        <td className="py-3.5 px-4 text-sm text-muted-foreground">{i + 1}</td>
+                        <td className="py-3.5 px-4">
+                          <input
+                            type="text"
+                            value={editName}
+                            onChange={e => setEditName(e.target.value)}
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                            autoFocus
+                          />
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <select
+                            value={editLevel}
+                            onChange={e => setEditLevel(e.target.value as ReadingLevel)}
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          >
+                            <optgroup label="Tahsin Dasar (Iqro)">
+                              {["Iqro 1", "Iqro 2", "Iqro 3", "Iqro 4", "Iqro 5", "Iqro 6"].map(l => (
+                                <option key={l} value={l}>{l}</option>
+                              ))}
+                            </optgroup>
+                            <optgroup label="Program Lanjutan">
+                              {["Tahsin Lanjutan", "Tahfizh"].map(l => (
+                                <option key={l} value={l}>{l}</option>
+                              ))}
+                            </optgroup>
+                          </select>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <input
+                            type="number"
+                            min="0"
+                            value={editHalaman}
+                            onChange={e => setEditHalaman(parseInt(e.target.value) || 0)}
+                            className="w-16 px-2.5 py-1.5 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          />
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <select
+                            value={editStatus}
+                            onChange={e => setEditStatus(e.target.value)}
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          >
+                            {Object.keys(STATUS_COLORS).map(status => (
+                              <option key={status} value={status}>{status}</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleSaveEdit(s.id)}
+                              disabled={updateStudent.isPending}
+                              className="p-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg transition-colors"
+                              title="Simpan"
+                            >
+                              {updateStudent.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              disabled={updateStudent.isPending}
+                              className="p-2 bg-rose-100 text-rose-700 hover:bg-rose-200 rounded-lg transition-colors"
+                              title="Batal"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
+
                   return (
                     <motion.tr
                       key={s.id}
@@ -321,7 +428,7 @@ const ClassStudents = () => {
                           </div>
                         </div>
                       </td>
-                       <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4">
                         <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${LEVEL_COLORS[s.level]}`}>{s.level.startsWith("Iqro") ? `Tahsin Dasar — ${s.level}` : s.level}</span>
                       </td>
                       <td className="py-3.5 px-4 text-sm font-medium text-foreground">{s.halaman_terakhir}</td>
@@ -331,15 +438,17 @@ const ClassStudents = () => {
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-2">
                           <Link to={`/student/${s.id}`}>
-                            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-primary/10 hover:text-primary text-secondary-foreground rounded-lg text-xs font-medium transition-colors">
-                              <Eye className="w-3.5 h-3.5" />Detail
+                            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-secondary hover:bg-primary/10 hover:text-primary text-secondary-foreground rounded-lg text-xs font-medium transition-colors" title="Detail Siswa">
+                              <Eye className="w-3.5 h-3.5" />
                             </button>
                           </Link>
-                          <Link to={`/exam/${s.id}`}>
-                            <button className="flex items-center gap-1.5 px-3 py-1.5 bg-gold/10 hover:bg-gold/20 text-yellow-700 rounded-lg text-xs font-medium transition-colors">
-                              <FileText className="w-3.5 h-3.5" />Ujian
-                            </button>
-                          </Link>
+                          <button
+                            onClick={() => handleEditClick(s)}
+                            className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                            title="Edit Data"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
                           <button
                             onClick={() => handleDelete(s.id)}
                             className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
