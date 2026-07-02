@@ -28,7 +28,7 @@ const Dashboard = () => {
   const { data: allStudents = [], isLoading: loadingStudents } = useStudents();
   const { data: assignments = [], isLoading: loadingAssignments } = useTeacherStudents(user?.id, "approved");
 
-  const [trendMetric, setTrendMetric] = useState<"Semua" | "Kelulusan" | "Nilai" | "Halaman">("Semua");
+  const [trendMetric, setTrendMetric] = useState<"Semua" | "Kelulusan" | "Nilai" | "Halaman" | "Program">("Semua");
 
   const { data: allReports = [] } = useAllMonthlyReports();
   const isLoading = loadingStudents || (isTeacher && loadingAssignments);
@@ -73,6 +73,13 @@ const Dashboard = () => {
   ];
 
 
+  const getProgramBucket = (level: string | null): "TD" | "TL" | "TFZ" => {
+    const normalized = (level ?? "").toLowerCase();
+    if (normalized.includes("tahfizh")) return "TFZ";
+    if (normalized.includes("lanjutan") || normalized === "tahsin") return "TL";
+    return "TD";
+  };
+
   const studentIds = useMemo(() => new Set(students.map(s => s.id)), [students]);
   
   const trendData = useMemo(() => {
@@ -94,12 +101,19 @@ const Dashboard = () => {
       const sumNilai = monthReports.reduce((sum, r) => sum + (r.nilai_akhir_progresif || 0), 0);
       const avgNilai = totalCount > 0 ? Math.round(sumNilai / totalCount) : 0;
       const sumHalaman = monthReports.reduce((sum, r) => sum + (r.pages_read || 0), 0);
+      
+      const countTD = monthReports.filter(r => getProgramBucket(r.students?.level) === "TD").length;
+      const countTL = monthReports.filter(r => getProgramBucket(r.students?.level) === "TL").length;
+      const countTFZ = monthReports.filter(r => getProgramBucket(r.students?.level) === "TFZ").length;
 
       return {
         name: `${MONTH_NAMES[m.month - 1].substring(0,3)} ${m.year}`,
         "Kelulusan Target (%)": achievementRate,
         "Rata-rata Nilai": avgNilai,
         "Total Halaman": sumHalaman,
+        "Tahsin Dasar": countTD,
+        "Tahsin Lanjutan": countTL,
+        "Tahfizh": countTFZ,
         totalCount
       };
     });
@@ -368,7 +382,7 @@ const Dashboard = () => {
             <TrendingUp className="w-5 h-5 text-primary flex-shrink-0" />
             <h2 className="text-base font-bold text-foreground">Statistik Tren 6 Bulan</h2>
             <div className="ml-auto flex items-center gap-1.5 bg-muted p-1 rounded-lg">
-              {(["Semua", "Kelulusan", "Nilai", "Halaman"] as const).map(m => (
+              {(["Semua", "Kelulusan", "Nilai", "Halaman", "Program"] as const).map(m => (
                 <button 
                   key={m} 
                   onClick={() => setTrendMetric(m)} 
@@ -390,7 +404,7 @@ const Dashboard = () => {
                 <LineChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
-                  <YAxis domain={trendMetric === "Halaman" ? ['auto', 'auto'] : [0, 100]} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                  <YAxis domain={trendMetric === "Halaman" || trendMetric === "Program" ? ['auto', 'auto'] : [0, 100]} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
                   <RechartsTooltip 
                     contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
                   />
@@ -403,6 +417,13 @@ const Dashboard = () => {
                   )}
                   {(trendMetric === "Semua" || trendMetric === "Halaman") && (
                     <Line type="monotone" dataKey="Total Halaman" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                  )}
+                  {trendMetric === "Program" && (
+                    <>
+                      <Line type="monotone" dataKey="Tahsin Dasar" stroke="#d97706" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="Tahsin Lanjutan" stroke="#059669" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="Tahfizh" stroke="#7c3aed" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                    </>
                   )}
                 </LineChart>
               </ResponsiveContainer>
