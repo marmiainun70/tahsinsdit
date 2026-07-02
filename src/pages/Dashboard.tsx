@@ -102,7 +102,12 @@ const Dashboard = () => {
       const avgNilai = totalCount > 0 ? Math.round(sumNilai / totalCount) : 0;
       const sumHalaman = monthReports.reduce((sum, r) => sum + (r.pages_read || 0), 0);
       
-      const countTD = monthReports.filter(r => getProgramBucket(r.students?.level) === "TD").length;
+      const countIqro1 = monthReports.filter(r => r.students?.level === "Iqro 1").length;
+      const countIqro2 = monthReports.filter(r => r.students?.level === "Iqro 2").length;
+      const countIqro3 = monthReports.filter(r => r.students?.level === "Iqro 3").length;
+      const countIqro4 = monthReports.filter(r => r.students?.level === "Iqro 4").length;
+      const countIqro5 = monthReports.filter(r => r.students?.level === "Iqro 5").length;
+      const countIqro6 = monthReports.filter(r => r.students?.level === "Iqro 6").length;
       const countTL = monthReports.filter(r => getProgramBucket(r.students?.level) === "TL").length;
       const countTFZ = monthReports.filter(r => getProgramBucket(r.students?.level) === "TFZ").length;
 
@@ -111,7 +116,12 @@ const Dashboard = () => {
         "Kelulusan Target (%)": achievementRate,
         "Rata-rata Nilai": avgNilai,
         "Total Halaman": sumHalaman,
-        "Tahsin Dasar": countTD,
+        "Iqro 1": countIqro1,
+        "Iqro 2": countIqro2,
+        "Iqro 3": countIqro3,
+        "Iqro 4": countIqro4,
+        "Iqro 5": countIqro5,
+        "Iqro 6": countIqro6,
         "Tahsin Lanjutan": countTL,
         "Tahfizh": countTFZ,
         totalCount
@@ -420,8 +430,13 @@ const Dashboard = () => {
                   )}
                   {trendMetric === "Program" && (
                     <>
-                      <Line type="monotone" dataKey="Tahsin Dasar" stroke="#d97706" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="Tahsin Lanjutan" stroke="#059669" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="Iqro 1" stroke="#86efac" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="Iqro 2" stroke="#34d399" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="Iqro 3" stroke="#22c55e" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="Iqro 4" stroke="#059669" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="Iqro 5" stroke="#15803d" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="Iqro 6" stroke="#065f46" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
+                      <Line type="monotone" dataKey="Tahsin Lanjutan" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
                       <Line type="monotone" dataKey="Tahfizh" stroke="#7c3aed" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: "#card" }} activeDot={{ r: 6 }} />
                     </>
                   )}
