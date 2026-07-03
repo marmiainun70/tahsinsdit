@@ -48,14 +48,19 @@ interface TeacherSessionData {
 
 const getPoinLevel = (level: string | null): number => {
   const l = (level || "").toLowerCase();
-  if (l.includes("iqra 1") || l === "1") return 10;
-  if (l.includes("iqra 2") || l === "2") return 9;
-  if (l.includes("iqra 3") || l === "3") return 8;
-  if (l.includes("iqra 4") || l === "4") return 7;
-  if (l.includes("iqra 5") || l === "5") return 6;
-  if (l.includes("iqra 6") || l === "6") return 5;
+  
+  // Prioritize program types that might contain numbers (e.g., Juz 30)
   if (l.includes("lanjutan") || l === "tl") return 4;
-  if (l.includes("tahfizh") || l.includes("tahfidz")) return 3;
+  if (l.includes("tahfizh") || l.includes("tahfidz") || l.includes("tfz")) return 3;
+
+  // For Iqra/Tahsin Dasar
+  if (l.includes("1")) return 10;
+  if (l.includes("2")) return 9;
+  if (l.includes("3")) return 8;
+  if (l.includes("4")) return 7;
+  if (l.includes("5")) return 6;
+  if (l.includes("6")) return 5;
+  
   return 5; // Default fallback
 };
 
