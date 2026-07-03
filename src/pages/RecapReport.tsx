@@ -43,7 +43,7 @@ import {
   type RecapJoinedGroup,
   type RecapJoinedRow,
 } from "@/utils/recapMonthlyReportRows";
-import { Eye, FileText, Download, Calendar, Users, ListChecks, FileWarning, Filter, RotateCcw, Search, ShieldCheck, AlertCircle, Star, ClipboardList, Loader2 } from "lucide-react";
+import { Eye, FileText, Download, Calendar, Users, ListChecks, FileWarning, Filter, RotateCcw, Search, ShieldCheck, AlertCircle, Star, ClipboardList, Loader2, BookOpen, BookOpenCheck, Award } from "lucide-react";
 import { StickyScrollbar } from "../components/StickyScrollbar";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -173,6 +173,7 @@ type FilterReportStatusType = "all" | "filled" | "empty";
 type FilterAttendanceStatusType = "all" | RecapAttendanceStatus;
 type FilterCategoryType = "all" | (typeof PROGRESS_CATEGORIES)[number];
 type FilterScoreType = "all" | "good" | "medium" | "low" | "empty";
+type FilterProgramType = "all" | "TD" | "TL" | "TFZ";
 
 const getReportStatusClass = (status: "filled" | "empty") =>
   status === "filled"
@@ -193,6 +194,13 @@ const scoreMatchesFilter = (score: number | null, filter: FilterScoreType) => {
   if (filter === "good") return score >= 85;
   if (filter === "medium") return score >= 70 && score < 85;
   return score < 70;
+};
+
+const getProgramBucket = (level: string | null): "TD" | "TL" | "TFZ" => {
+  const normalized = (level ?? "").toLowerCase();
+  if (normalized.includes("tahfizh")) return "TFZ";
+  if (normalized.includes("lanjutan") || normalized === "tahsin") return "TL";
+  return "TD";
 };
 
 const RECAP_IDENTITY_COLUMNS = RECAP_REPORT_COLUMNS.filter((column) => column.group === "identity");
@@ -229,6 +237,7 @@ const RecapReport = () => {
   const [filterAttendanceStatus, setFilterAttendanceStatus] = useState<FilterAttendanceStatusType>("all");
   const [filterCategory, setFilterCategory] = useState<FilterCategoryType>("all");
   const [filterScore, setFilterScore] = useState<FilterScoreType>("all");
+  const [filterProgram, setFilterProgram] = useState<FilterProgramType>("all");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [pdfPreviewSize, setPdfPreviewSize] = useState<PdfPaperSize>("a4");
@@ -360,12 +369,13 @@ const RecapReport = () => {
           if (filterAttendanceStatus !== "all" && r.attendanceStatus !== filterAttendanceStatus) return false;
           if (filterCategory !== "all" && r.kategoriProgres !== filterCategory) return false;
           if (!scoreMatchesFilter(r.nilaiAkhirProgresif, filterScore)) return false;
+          if (filterProgram !== "all" && getProgramBucket(r.level) !== filterProgram) return false;
           return true;
         }).map((r, i) => ({ ...r, no: i + 1 }));
         return { ...g, rows: filtered };
       })
       .filter(g => g.rows.length > 0);
-  }, [filterAttendanceStatus, filterCategory, filterReportStatus, filterScore, groups]);
+  }, [filterAttendanceStatus, filterCategory, filterReportStatus, filterScore, filterProgram, groups]);
 
   const stats = useMemo(() => {
     const all = groups.flatMap(g => g.rows);
@@ -380,6 +390,17 @@ const RecapReport = () => {
       : 0;
     const percentOfTotal = (value: number) => total ? `${Math.round((value / total) * 100)}%` : "0%";
     const scoreLabel = averageScore >= 85 ? "Sangat baik" : averageScore >= 70 ? "Baik" : averageScore > 0 ? "Perlu perhatian" : "Belum ada nilai";
+    
+    const iqro1 = all.filter(r => r.level === "Iqro 1").length;
+    const iqro2 = all.filter(r => r.level === "Iqro 2").length;
+    const iqro3 = all.filter(r => r.level === "Iqro 3").length;
+    const iqro4 = all.filter(r => r.level === "Iqro 4").length;
+    const iqro5 = all.filter(r => r.level === "Iqro 5").length;
+    const iqro6 = all.filter(r => r.level === "Iqro 6").length;
+    const tahsinDasar = all.filter(r => getProgramBucket(r.level) === "TD").length;
+    const tahsinLanjutan = all.filter(r => getProgramBucket(r.level) === "TL").length;
+    const tahfizh = all.filter(r => getProgramBucket(r.level) === "TFZ").length;
+
     return {
       total,
       filled,
@@ -392,6 +413,8 @@ const RecapReport = () => {
       attendanceCompletePercent: percentOfTotal(attendanceComplete),
       attendanceIncompletePercent: percentOfTotal(attendanceIncomplete),
       scoreLabel,
+      iqro1, iqro2, iqro3, iqro4, iqro5, iqro6,
+      tahsinDasar, tahsinLanjutan, tahfizh
     };
   }, [groups]);
 
@@ -400,6 +423,7 @@ const RecapReport = () => {
     setFilterAttendanceStatus("all");
     setFilterCategory("all");
     setFilterScore("all");
+    setFilterProgram("all");
     setFilterKelas("all");
     setFilterRombel("all");
     setSearch("");
@@ -1456,8 +1480,9 @@ const RecapReport = () => {
                 setFilterAttendanceStatus("all");
                 setFilterCategory("all");
                 setFilterScore("all");
+                setFilterProgram("all");
               }}
-              isActive={filterReportStatus === "all" && filterAttendanceStatus === "all" && filterCategory === "all" && filterScore === "all"}
+              isActive={filterReportStatus === "all" && filterAttendanceStatus === "all" && filterCategory === "all" && filterScore === "all" && filterProgram === "all"}
               activeColor="border-blue-500 ring-2 ring-blue-500/20 bg-blue-50/30 dark:bg-blue-950/20"
               subtitle="Semua siswa"
             />
@@ -1510,12 +1535,89 @@ const RecapReport = () => {
             />
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
+            <div 
+              onClick={() => setFilterProgram(filterProgram === "TD" ? "all" : "TD")}
+              className={`bg-card rounded-xl p-4 border shadow-sm cursor-pointer transition-all duration-200 hover:border-gold hover:shadow-md ${filterProgram === "TD" ? "border-gold ring-2 ring-gold/20 bg-gold/5" : "border-border"}`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
+                    <BookOpen className="w-5 h-5 text-gold" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Total Tahsin Dasar</p>
+                    <p className="text-2xl font-bold text-foreground leading-tight">{stats.tahsinDasar}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-muted/30 rounded-lg p-2.5 mt-2">
+                <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
+                  <div className="flex gap-2 flex-wrap text-[9px]">
+                    {stats.iqro1 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-300"></span>Iqra 1 <span className="text-foreground">{stats.iqro1}</span></span>}
+                    {stats.iqro2 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Iqra 2 <span className="text-foreground">{stats.iqro2}</span></span>}
+                    {stats.iqro3 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>Iqra 3 <span className="text-foreground">{stats.iqro3}</span></span>}
+                    {stats.iqro4 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>Iqra 4 <span className="text-foreground">{stats.iqro4}</span></span>}
+                    {stats.iqro5 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-700"></span>Iqra 5 <span className="text-foreground">{stats.iqro5}</span></span>}
+                    {stats.iqro6 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-800"></span>Iqra 6 <span className="text-foreground">{stats.iqro6}</span></span>}
+                  </div>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden flex">
+                  {stats.iqro1 > 0 && <div className="h-full bg-green-300 transition-all" style={{ width: `${(stats.iqro1 / (stats.tahsinDasar || 1)) * 100}%` }} title={`Iqro 1: ${stats.iqro1}`} />}
+                  {stats.iqro2 > 0 && <div className="h-full bg-emerald-400 transition-all" style={{ width: `${(stats.iqro2 / (stats.tahsinDasar || 1)) * 100}%` }} title={`Iqro 2: ${stats.iqro2}`} />}
+                  {stats.iqro3 > 0 && <div className="h-full bg-green-500 transition-all" style={{ width: `${(stats.iqro3 / (stats.tahsinDasar || 1)) * 100}%` }} title={`Iqro 3: ${stats.iqro3}`} />}
+                  {stats.iqro4 > 0 && <div className="h-full bg-emerald-600 transition-all" style={{ width: `${(stats.iqro4 / (stats.tahsinDasar || 1)) * 100}%` }} title={`Iqro 4: ${stats.iqro4}`} />}
+                  {stats.iqro5 > 0 && <div className="h-full bg-green-700 transition-all" style={{ width: `${(stats.iqro5 / (stats.tahsinDasar || 1)) * 100}%` }} title={`Iqro 5: ${stats.iqro5}`} />}
+                  {stats.iqro6 > 0 && <div className="h-full bg-emerald-800 transition-all" style={{ width: `${(stats.iqro6 / (stats.tahsinDasar || 1)) * 100}%` }} title={`Iqro 6: ${stats.iqro6}`} />}
+                </div>
+              </div>
+            </div>
+
+            <div 
+              onClick={() => setFilterProgram(filterProgram === "TL" ? "all" : "TL")}
+              className={`bg-card rounded-xl p-4 border shadow-sm cursor-pointer transition-all duration-200 hover:border-emerald-500 hover:shadow-md ${filterProgram === "TL" ? "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-500/5" : "border-border"}`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <BookOpenCheck className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Total Tahsin Lanjutan</p>
+                  <p className="text-2xl font-bold text-foreground leading-tight">{stats.tahsinLanjutan}</p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 ml-1">Pembelajaran Al-Qur'an</p>
+            </div>
+
+            <div 
+              onClick={() => setFilterProgram(filterProgram === "TFZ" ? "all" : "TFZ")}
+              className={`bg-card rounded-xl p-4 border shadow-sm cursor-pointer transition-all duration-200 hover:border-purple-500 hover:shadow-md ${filterProgram === "TFZ" ? "border-purple-500 ring-2 ring-purple-500/20 bg-purple-500/5" : "border-border"}`}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                  <Award className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Total Tahfizh</p>
+                  <p className="text-2xl font-bold text-foreground leading-tight">{stats.tahfizh}</p>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 ml-1">Program Hafalan Al-Qur'an</p>
+            </div>
+          </div>
+
           {/* Active Filter Cues */}
-          {(filterReportStatus !== "all" || filterAttendanceStatus !== "all" || filterCategory !== "all" || filterScore !== "all" || search.trim() || filterKelas !== "all" || filterRombel !== "all") && (
+          {(filterProgram !== "all" || filterReportStatus !== "all" || filterAttendanceStatus !== "all" || filterCategory !== "all" || filterScore !== "all" || search.trim() || filterKelas !== "all" || filterRombel !== "all") && (
             <div className="flex flex-wrap items-center gap-2 p-2.5 bg-muted/40 border border-border rounded-lg text-xs transition-all duration-200">
               <span className="text-muted-foreground font-medium flex items-center gap-1">
                 Filter Aktif:
               </span>
+              {filterProgram !== "all" && (
+                <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
+                  Program: {filterProgram === "TD" ? "Tahsin Dasar" : filterProgram === "TL" ? "Tahsin Lanjutan" : "Tahfizh"}
+                  <button onClick={() => setFilterProgram("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
+                </Badge>
+              )}
               {filterReportStatus !== "all" && (
                 <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
                   Status laporan: {filterReportStatus === "filled" ? "Sudah Diisi" : "Belum Diisi"}
