@@ -214,6 +214,13 @@ const getRecapHeaderClass = (group: "identity" | "monthlyProgress" | "attendance
   return "border-slate-200 bg-slate-50 text-slate-900 dark:border-slate-800/60 dark:bg-slate-900/50 dark:text-slate-300/90";
 };
 
+const DYNAMIC_BAR_COLORS = [
+  "bg-emerald-400", "bg-indigo-400", "bg-purple-400", "bg-pink-400", "bg-amber-400", "bg-teal-400",
+  "bg-emerald-500", "bg-indigo-500", "bg-purple-500", "bg-pink-500", "bg-amber-500", "bg-teal-500",
+  "bg-emerald-600", "bg-indigo-600", "bg-purple-600", "bg-pink-600", "bg-amber-600", "bg-teal-600",
+  "bg-emerald-700", "bg-indigo-700", "bg-purple-700", "bg-pink-700", "bg-amber-700", "bg-teal-700",
+];
+
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Terjadi kesalahan saat memproses layout.";
 
@@ -401,29 +408,25 @@ const RecapReport = () => {
     
     const tl = all.filter(r => getProgramBucket(r.level) === "TL");
     const tahsinLanjutan = tl.length;
-    const tlKelas1 = tl.filter(r => r.kelas === 1).length;
-    const tlKelas2 = tl.filter(r => r.kelas === 2).length;
-    const tlKelas3 = tl.filter(r => r.kelas === 3).length;
-    const tlKelas4 = tl.filter(r => r.kelas === 4).length;
-    const tlKelas5 = tl.filter(r => r.kelas === 5).length;
-    const tlKelas6 = tl.filter(r => r.kelas === 6).length;
-    const tlRombelA = tl.filter(r => r.rombel === "A").length;
-    const tlRombelB = tl.filter(r => r.rombel === "B").length;
-    const tlRombelC = tl.filter(r => r.rombel === "C").length;
-    const tlRombelD = tl.filter(r => r.rombel === "D").length;
+    const tlGroupsMap = tl.reduce((acc, r) => {
+      const key = `${r.kelas}${r.rombel}`;
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    const tlGroups = Object.keys(tlGroupsMap).sort((a, b) => a.localeCompare(b)).map((key, i) => ({
+      label: key, count: tlGroupsMap[key], color: DYNAMIC_BAR_COLORS[i % DYNAMIC_BAR_COLORS.length]
+    }));
 
     const tfz = all.filter(r => getProgramBucket(r.level) === "TFZ");
     const tahfizh = tfz.length;
-    const tfzKelas1 = tfz.filter(r => r.kelas === 1).length;
-    const tfzKelas2 = tfz.filter(r => r.kelas === 2).length;
-    const tfzKelas3 = tfz.filter(r => r.kelas === 3).length;
-    const tfzKelas4 = tfz.filter(r => r.kelas === 4).length;
-    const tfzKelas5 = tfz.filter(r => r.kelas === 5).length;
-    const tfzKelas6 = tfz.filter(r => r.kelas === 6).length;
-    const tfzRombelA = tfz.filter(r => r.rombel === "A").length;
-    const tfzRombelB = tfz.filter(r => r.rombel === "B").length;
-    const tfzRombelC = tfz.filter(r => r.rombel === "C").length;
-    const tfzRombelD = tfz.filter(r => r.rombel === "D").length;
+    const tfzGroupsMap = tfz.reduce((acc, r) => {
+      const key = `${r.kelas}${r.rombel}`;
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    const tfzGroups = Object.keys(tfzGroupsMap).sort((a, b) => a.localeCompare(b)).map((key, i) => ({
+      label: key, count: tfzGroupsMap[key], color: DYNAMIC_BAR_COLORS[(i + 3) % DYNAMIC_BAR_COLORS.length]
+    }));
 
     return {
       total,
@@ -439,10 +442,7 @@ const RecapReport = () => {
       scoreLabel,
       iqro1, iqro2, iqro3, iqro4, iqro5, iqro6,
       tahsinDasar, tahsinLanjutan, tahfizh,
-      tlKelas1, tlKelas2, tlKelas3, tlKelas4, tlKelas5, tlKelas6,
-      tlRombelA, tlRombelB, tlRombelC, tlRombelD,
-      tfzKelas1, tfzKelas2, tfzKelas3, tfzKelas4, tfzKelas5, tfzKelas6,
-      tfzRombelA, tfzRombelB, tfzRombelC, tfzRombelD
+      tlGroups, tfzGroups
     };
   }, [groups]);
 
@@ -1619,36 +1619,18 @@ const RecapReport = () => {
               <div className="bg-muted/30 rounded-lg p-2.5 mt-2">
                 <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
                   <div className="flex gap-2 flex-wrap text-[9px]">
-                    {stats.tlKelas1 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-300"></span>Kls 1 <span className="text-foreground">{stats.tlKelas1}</span></span>}
-                    {stats.tlKelas2 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Kls 2 <span className="text-foreground">{stats.tlKelas2}</span></span>}
-                    {stats.tlKelas3 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Kls 3 <span className="text-foreground">{stats.tlKelas3}</span></span>}
-                    {stats.tlKelas4 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>Kls 4 <span className="text-foreground">{stats.tlKelas4}</span></span>}
-                    {stats.tlKelas5 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-700"></span>Kls 5 <span className="text-foreground">{stats.tlKelas5}</span></span>}
-                    {stats.tlKelas6 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-800"></span>Kls 6 <span className="text-foreground">{stats.tlKelas6}</span></span>}
+                    {stats.tlGroups.map(g => (
+                      <span key={g.label} className="flex items-center gap-1">
+                        <span className={`w-1.5 h-1.5 rounded-full ${g.color}`}></span>
+                        {g.label} <span className="text-foreground">{g.count}</span>
+                      </span>
+                    ))}
                   </div>
                 </div>
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden flex">
-                  {stats.tlKelas1 > 0 && <div className="h-full bg-emerald-300 transition-all" style={{ width: `${(stats.tlKelas1 / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Kelas 1: ${stats.tlKelas1}`} />}
-                  {stats.tlKelas2 > 0 && <div className="h-full bg-emerald-400 transition-all" style={{ width: `${(stats.tlKelas2 / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Kelas 2: ${stats.tlKelas2}`} />}
-                  {stats.tlKelas3 > 0 && <div className="h-full bg-emerald-500 transition-all" style={{ width: `${(stats.tlKelas3 / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Kelas 3: ${stats.tlKelas3}`} />}
-                  {stats.tlKelas4 > 0 && <div className="h-full bg-emerald-600 transition-all" style={{ width: `${(stats.tlKelas4 / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Kelas 4: ${stats.tlKelas4}`} />}
-                  {stats.tlKelas5 > 0 && <div className="h-full bg-emerald-700 transition-all" style={{ width: `${(stats.tlKelas5 / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Kelas 5: ${stats.tlKelas5}`} />}
-                  {stats.tlKelas6 > 0 && <div className="h-full bg-emerald-800 transition-all" style={{ width: `${(stats.tlKelas6 / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Kelas 6: ${stats.tlKelas6}`} />}
-                </div>
-
-                <div className="flex justify-between text-[10px] font-bold text-muted-foreground mt-2 mb-1.5">
-                  <div className="flex gap-2 flex-wrap text-[9px]">
-                    {stats.tlRombelA > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-300"></span>A <span className="text-foreground">{stats.tlRombelA}</span></span>}
-                    {stats.tlRombelB > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>B <span className="text-foreground">{stats.tlRombelB}</span></span>}
-                    {stats.tlRombelC > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>C <span className="text-foreground">{stats.tlRombelC}</span></span>}
-                    {stats.tlRombelD > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>D <span className="text-foreground">{stats.tlRombelD}</span></span>}
-                  </div>
-                </div>
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden flex">
-                  {stats.tlRombelA > 0 && <div className="h-full bg-indigo-300 transition-all" style={{ width: `${(stats.tlRombelA / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Rombel A: ${stats.tlRombelA}`} />}
-                  {stats.tlRombelB > 0 && <div className="h-full bg-indigo-400 transition-all" style={{ width: `${(stats.tlRombelB / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Rombel B: ${stats.tlRombelB}`} />}
-                  {stats.tlRombelC > 0 && <div className="h-full bg-indigo-500 transition-all" style={{ width: `${(stats.tlRombelC / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Rombel C: ${stats.tlRombelC}`} />}
-                  {stats.tlRombelD > 0 && <div className="h-full bg-indigo-600 transition-all" style={{ width: `${(stats.tlRombelD / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Rombel D: ${stats.tlRombelD}`} />}
+                  {stats.tlGroups.map(g => (
+                    <div key={g.label} className={`h-full ${g.color} transition-all`} style={{ width: `${(g.count / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Kelas ${g.label}: ${g.count}`} />
+                  ))}
                 </div>
               </div>
             </div>
@@ -1671,36 +1653,18 @@ const RecapReport = () => {
               <div className="bg-muted/30 rounded-lg p-2.5 mt-2">
                 <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
                   <div className="flex gap-2 flex-wrap text-[9px]">
-                    {stats.tfzKelas1 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-300"></span>Kls 1 <span className="text-foreground">{stats.tfzKelas1}</span></span>}
-                    {stats.tfzKelas2 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>Kls 2 <span className="text-foreground">{stats.tfzKelas2}</span></span>}
-                    {stats.tfzKelas3 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>Kls 3 <span className="text-foreground">{stats.tfzKelas3}</span></span>}
-                    {stats.tfzKelas4 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-600"></span>Kls 4 <span className="text-foreground">{stats.tfzKelas4}</span></span>}
-                    {stats.tfzKelas5 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-700"></span>Kls 5 <span className="text-foreground">{stats.tfzKelas5}</span></span>}
-                    {stats.tfzKelas6 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-800"></span>Kls 6 <span className="text-foreground">{stats.tfzKelas6}</span></span>}
+                    {stats.tfzGroups.map(g => (
+                      <span key={g.label} className="flex items-center gap-1">
+                        <span className={`w-1.5 h-1.5 rounded-full ${g.color}`}></span>
+                        {g.label} <span className="text-foreground">{g.count}</span>
+                      </span>
+                    ))}
                   </div>
                 </div>
                 <div className="h-1.5 bg-muted rounded-full overflow-hidden flex">
-                  {stats.tfzKelas1 > 0 && <div className="h-full bg-purple-300 transition-all" style={{ width: `${(stats.tfzKelas1 / (stats.tahfizh || 1)) * 100}%` }} title={`Kelas 1: ${stats.tfzKelas1}`} />}
-                  {stats.tfzKelas2 > 0 && <div className="h-full bg-purple-400 transition-all" style={{ width: `${(stats.tfzKelas2 / (stats.tahfizh || 1)) * 100}%` }} title={`Kelas 2: ${stats.tfzKelas2}`} />}
-                  {stats.tfzKelas3 > 0 && <div className="h-full bg-purple-500 transition-all" style={{ width: `${(stats.tfzKelas3 / (stats.tahfizh || 1)) * 100}%` }} title={`Kelas 3: ${stats.tfzKelas3}`} />}
-                  {stats.tfzKelas4 > 0 && <div className="h-full bg-purple-600 transition-all" style={{ width: `${(stats.tfzKelas4 / (stats.tahfizh || 1)) * 100}%` }} title={`Kelas 4: ${stats.tfzKelas4}`} />}
-                  {stats.tfzKelas5 > 0 && <div className="h-full bg-purple-700 transition-all" style={{ width: `${(stats.tfzKelas5 / (stats.tahfizh || 1)) * 100}%` }} title={`Kelas 5: ${stats.tfzKelas5}`} />}
-                  {stats.tfzKelas6 > 0 && <div className="h-full bg-purple-800 transition-all" style={{ width: `${(stats.tfzKelas6 / (stats.tahfizh || 1)) * 100}%` }} title={`Kelas 6: ${stats.tfzKelas6}`} />}
-                </div>
-
-                <div className="flex justify-between text-[10px] font-bold text-muted-foreground mt-2 mb-1.5">
-                  <div className="flex gap-2 flex-wrap text-[9px]">
-                    {stats.tfzRombelA > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-300"></span>A <span className="text-foreground">{stats.tfzRombelA}</span></span>}
-                    {stats.tfzRombelB > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-400"></span>B <span className="text-foreground">{stats.tfzRombelB}</span></span>}
-                    {stats.tfzRombelC > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-500"></span>C <span className="text-foreground">{stats.tfzRombelC}</span></span>}
-                    {stats.tfzRombelD > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-600"></span>D <span className="text-foreground">{stats.tfzRombelD}</span></span>}
-                  </div>
-                </div>
-                <div className="h-1.5 bg-muted rounded-full overflow-hidden flex">
-                  {stats.tfzRombelA > 0 && <div className="h-full bg-pink-300 transition-all" style={{ width: `${(stats.tfzRombelA / (stats.tahfizh || 1)) * 100}%` }} title={`Rombel A: ${stats.tfzRombelA}`} />}
-                  {stats.tfzRombelB > 0 && <div className="h-full bg-pink-400 transition-all" style={{ width: `${(stats.tfzRombelB / (stats.tahfizh || 1)) * 100}%` }} title={`Rombel B: ${stats.tfzRombelB}`} />}
-                  {stats.tfzRombelC > 0 && <div className="h-full bg-pink-500 transition-all" style={{ width: `${(stats.tfzRombelC / (stats.tahfizh || 1)) * 100}%` }} title={`Rombel C: ${stats.tfzRombelC}`} />}
-                  {stats.tfzRombelD > 0 && <div className="h-full bg-pink-600 transition-all" style={{ width: `${(stats.tfzRombelD / (stats.tahfizh || 1)) * 100}%` }} title={`Rombel D: ${stats.tfzRombelD}`} />}
+                  {stats.tfzGroups.map(g => (
+                    <div key={g.label} className={`h-full ${g.color} transition-all`} style={{ width: `${(g.count / (stats.tahfizh || 1)) * 100}%` }} title={`Kelas ${g.label}: ${g.count}`} />
+                  ))}
                 </div>
               </div>
             </div>
