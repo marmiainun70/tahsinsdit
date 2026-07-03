@@ -378,7 +378,7 @@ const RecapReport = () => {
   }, [filterAttendanceStatus, filterCategory, filterReportStatus, filterScore, filterProgram, groups]);
 
   const stats = useMemo(() => {
-    const all = groups.flatMap(g => g.rows);
+    const all = groups.flatMap(g => g.rows.map(r => ({ ...r, kelas: g.kelas, rombel: g.rombel })));
     const total = all.length;
     const filled = all.filter(r => r.reportStatus === "filled").length;
     const empty = total - filled;
@@ -398,8 +398,32 @@ const RecapReport = () => {
     const iqro5 = all.filter(r => r.level === "Iqro 5").length;
     const iqro6 = all.filter(r => r.level === "Iqro 6").length;
     const tahsinDasar = all.filter(r => getProgramBucket(r.level) === "TD").length;
-    const tahsinLanjutan = all.filter(r => getProgramBucket(r.level) === "TL").length;
-    const tahfizh = all.filter(r => getProgramBucket(r.level) === "TFZ").length;
+    
+    const tl = all.filter(r => getProgramBucket(r.level) === "TL");
+    const tahsinLanjutan = tl.length;
+    const tlKelas1 = tl.filter(r => r.kelas === 1).length;
+    const tlKelas2 = tl.filter(r => r.kelas === 2).length;
+    const tlKelas3 = tl.filter(r => r.kelas === 3).length;
+    const tlKelas4 = tl.filter(r => r.kelas === 4).length;
+    const tlKelas5 = tl.filter(r => r.kelas === 5).length;
+    const tlKelas6 = tl.filter(r => r.kelas === 6).length;
+    const tlRombelA = tl.filter(r => r.rombel === "A").length;
+    const tlRombelB = tl.filter(r => r.rombel === "B").length;
+    const tlRombelC = tl.filter(r => r.rombel === "C").length;
+    const tlRombelD = tl.filter(r => r.rombel === "D").length;
+
+    const tfz = all.filter(r => getProgramBucket(r.level) === "TFZ");
+    const tahfizh = tfz.length;
+    const tfzKelas1 = tfz.filter(r => r.kelas === 1).length;
+    const tfzKelas2 = tfz.filter(r => r.kelas === 2).length;
+    const tfzKelas3 = tfz.filter(r => r.kelas === 3).length;
+    const tfzKelas4 = tfz.filter(r => r.kelas === 4).length;
+    const tfzKelas5 = tfz.filter(r => r.kelas === 5).length;
+    const tfzKelas6 = tfz.filter(r => r.kelas === 6).length;
+    const tfzRombelA = tfz.filter(r => r.rombel === "A").length;
+    const tfzRombelB = tfz.filter(r => r.rombel === "B").length;
+    const tfzRombelC = tfz.filter(r => r.rombel === "C").length;
+    const tfzRombelD = tfz.filter(r => r.rombel === "D").length;
 
     return {
       total,
@@ -414,7 +438,11 @@ const RecapReport = () => {
       attendanceIncompletePercent: percentOfTotal(attendanceIncomplete),
       scoreLabel,
       iqro1, iqro2, iqro3, iqro4, iqro5, iqro6,
-      tahsinDasar, tahsinLanjutan, tahfizh
+      tahsinDasar, tahsinLanjutan, tahfizh,
+      tlKelas1, tlKelas2, tlKelas3, tlKelas4, tlKelas5, tlKelas6,
+      tlRombelA, tlRombelB, tlRombelC, tlRombelD,
+      tfzKelas1, tfzKelas2, tfzKelas3, tfzKelas4, tfzKelas5, tfzKelas6,
+      tfzRombelA, tfzRombelB, tfzRombelC, tfzRombelD
     };
   }, [groups]);
 
@@ -1577,32 +1605,104 @@ const RecapReport = () => {
               onClick={() => setFilterProgram(filterProgram === "TL" ? "all" : "TL")}
               className={`bg-card rounded-xl p-4 border shadow-sm cursor-pointer transition-all duration-200 hover:border-emerald-500 hover:shadow-md ${filterProgram === "TL" ? "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-500/5" : "border-border"}`}
             >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <BookOpenCheck className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Total Tahsin Lanjutan</p>
-                  <p className="text-2xl font-bold text-foreground leading-tight">{stats.tahsinLanjutan}</p>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <BookOpenCheck className="w-5 h-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Total Tahsin Lanjutan</p>
+                    <p className="text-2xl font-bold text-foreground leading-tight">{stats.tahsinLanjutan}</p>
+                  </div>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 ml-1">Pembelajaran Al-Qur'an</p>
+              <div className="bg-muted/30 rounded-lg p-2.5 mt-2">
+                <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
+                  <div className="flex gap-2 flex-wrap text-[9px]">
+                    {stats.tlKelas1 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-300"></span>Kls 1 <span className="text-foreground">{stats.tlKelas1}</span></span>}
+                    {stats.tlKelas2 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Kls 2 <span className="text-foreground">{stats.tlKelas2}</span></span>}
+                    {stats.tlKelas3 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Kls 3 <span className="text-foreground">{stats.tlKelas3}</span></span>}
+                    {stats.tlKelas4 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>Kls 4 <span className="text-foreground">{stats.tlKelas4}</span></span>}
+                    {stats.tlKelas5 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-700"></span>Kls 5 <span className="text-foreground">{stats.tlKelas5}</span></span>}
+                    {stats.tlKelas6 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-800"></span>Kls 6 <span className="text-foreground">{stats.tlKelas6}</span></span>}
+                  </div>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden flex">
+                  {stats.tlKelas1 > 0 && <div className="h-full bg-emerald-300 transition-all" style={{ width: `${(stats.tlKelas1 / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Kelas 1: ${stats.tlKelas1}`} />}
+                  {stats.tlKelas2 > 0 && <div className="h-full bg-emerald-400 transition-all" style={{ width: `${(stats.tlKelas2 / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Kelas 2: ${stats.tlKelas2}`} />}
+                  {stats.tlKelas3 > 0 && <div className="h-full bg-emerald-500 transition-all" style={{ width: `${(stats.tlKelas3 / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Kelas 3: ${stats.tlKelas3}`} />}
+                  {stats.tlKelas4 > 0 && <div className="h-full bg-emerald-600 transition-all" style={{ width: `${(stats.tlKelas4 / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Kelas 4: ${stats.tlKelas4}`} />}
+                  {stats.tlKelas5 > 0 && <div className="h-full bg-emerald-700 transition-all" style={{ width: `${(stats.tlKelas5 / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Kelas 5: ${stats.tlKelas5}`} />}
+                  {stats.tlKelas6 > 0 && <div className="h-full bg-emerald-800 transition-all" style={{ width: `${(stats.tlKelas6 / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Kelas 6: ${stats.tlKelas6}`} />}
+                </div>
+
+                <div className="flex justify-between text-[10px] font-bold text-muted-foreground mt-2 mb-1.5">
+                  <div className="flex gap-2 flex-wrap text-[9px]">
+                    {stats.tlRombelA > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-300"></span>A <span className="text-foreground">{stats.tlRombelA}</span></span>}
+                    {stats.tlRombelB > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>B <span className="text-foreground">{stats.tlRombelB}</span></span>}
+                    {stats.tlRombelC > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>C <span className="text-foreground">{stats.tlRombelC}</span></span>}
+                    {stats.tlRombelD > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>D <span className="text-foreground">{stats.tlRombelD}</span></span>}
+                  </div>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden flex">
+                  {stats.tlRombelA > 0 && <div className="h-full bg-indigo-300 transition-all" style={{ width: `${(stats.tlRombelA / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Rombel A: ${stats.tlRombelA}`} />}
+                  {stats.tlRombelB > 0 && <div className="h-full bg-indigo-400 transition-all" style={{ width: `${(stats.tlRombelB / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Rombel B: ${stats.tlRombelB}`} />}
+                  {stats.tlRombelC > 0 && <div className="h-full bg-indigo-500 transition-all" style={{ width: `${(stats.tlRombelC / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Rombel C: ${stats.tlRombelC}`} />}
+                  {stats.tlRombelD > 0 && <div className="h-full bg-indigo-600 transition-all" style={{ width: `${(stats.tlRombelD / (stats.tahsinLanjutan || 1)) * 100}%` }} title={`Rombel D: ${stats.tlRombelD}`} />}
+                </div>
+              </div>
             </div>
 
             <div 
               onClick={() => setFilterProgram(filterProgram === "TFZ" ? "all" : "TFZ")}
               className={`bg-card rounded-xl p-4 border shadow-sm cursor-pointer transition-all duration-200 hover:border-purple-500 hover:shadow-md ${filterProgram === "TFZ" ? "border-purple-500 ring-2 ring-purple-500/20 bg-purple-500/5" : "border-border"}`}
             >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                  <Award className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Total Tahfizh</p>
-                  <p className="text-2xl font-bold text-foreground leading-tight">{stats.tahfizh}</p>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                    <Award className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Total Tahfizh</p>
+                    <p className="text-2xl font-bold text-foreground leading-tight">{stats.tahfizh}</p>
+                  </div>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-2 ml-1">Program Hafalan Al-Qur'an</p>
+              <div className="bg-muted/30 rounded-lg p-2.5 mt-2">
+                <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
+                  <div className="flex gap-2 flex-wrap text-[9px]">
+                    {stats.tfzKelas1 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-300"></span>Kls 1 <span className="text-foreground">{stats.tfzKelas1}</span></span>}
+                    {stats.tfzKelas2 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>Kls 2 <span className="text-foreground">{stats.tfzKelas2}</span></span>}
+                    {stats.tfzKelas3 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>Kls 3 <span className="text-foreground">{stats.tfzKelas3}</span></span>}
+                    {stats.tfzKelas4 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-600"></span>Kls 4 <span className="text-foreground">{stats.tfzKelas4}</span></span>}
+                    {stats.tfzKelas5 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-700"></span>Kls 5 <span className="text-foreground">{stats.tfzKelas5}</span></span>}
+                    {stats.tfzKelas6 > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-purple-800"></span>Kls 6 <span className="text-foreground">{stats.tfzKelas6}</span></span>}
+                  </div>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden flex">
+                  {stats.tfzKelas1 > 0 && <div className="h-full bg-purple-300 transition-all" style={{ width: `${(stats.tfzKelas1 / (stats.tahfizh || 1)) * 100}%` }} title={`Kelas 1: ${stats.tfzKelas1}`} />}
+                  {stats.tfzKelas2 > 0 && <div className="h-full bg-purple-400 transition-all" style={{ width: `${(stats.tfzKelas2 / (stats.tahfizh || 1)) * 100}%` }} title={`Kelas 2: ${stats.tfzKelas2}`} />}
+                  {stats.tfzKelas3 > 0 && <div className="h-full bg-purple-500 transition-all" style={{ width: `${(stats.tfzKelas3 / (stats.tahfizh || 1)) * 100}%` }} title={`Kelas 3: ${stats.tfzKelas3}`} />}
+                  {stats.tfzKelas4 > 0 && <div className="h-full bg-purple-600 transition-all" style={{ width: `${(stats.tfzKelas4 / (stats.tahfizh || 1)) * 100}%` }} title={`Kelas 4: ${stats.tfzKelas4}`} />}
+                  {stats.tfzKelas5 > 0 && <div className="h-full bg-purple-700 transition-all" style={{ width: `${(stats.tfzKelas5 / (stats.tahfizh || 1)) * 100}%` }} title={`Kelas 5: ${stats.tfzKelas5}`} />}
+                  {stats.tfzKelas6 > 0 && <div className="h-full bg-purple-800 transition-all" style={{ width: `${(stats.tfzKelas6 / (stats.tahfizh || 1)) * 100}%` }} title={`Kelas 6: ${stats.tfzKelas6}`} />}
+                </div>
+
+                <div className="flex justify-between text-[10px] font-bold text-muted-foreground mt-2 mb-1.5">
+                  <div className="flex gap-2 flex-wrap text-[9px]">
+                    {stats.tfzRombelA > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-300"></span>A <span className="text-foreground">{stats.tfzRombelA}</span></span>}
+                    {stats.tfzRombelB > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-400"></span>B <span className="text-foreground">{stats.tfzRombelB}</span></span>}
+                    {stats.tfzRombelC > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-500"></span>C <span className="text-foreground">{stats.tfzRombelC}</span></span>}
+                    {stats.tfzRombelD > 0 && <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-pink-600"></span>D <span className="text-foreground">{stats.tfzRombelD}</span></span>}
+                  </div>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden flex">
+                  {stats.tfzRombelA > 0 && <div className="h-full bg-pink-300 transition-all" style={{ width: `${(stats.tfzRombelA / (stats.tahfizh || 1)) * 100}%` }} title={`Rombel A: ${stats.tfzRombelA}`} />}
+                  {stats.tfzRombelB > 0 && <div className="h-full bg-pink-400 transition-all" style={{ width: `${(stats.tfzRombelB / (stats.tahfizh || 1)) * 100}%` }} title={`Rombel B: ${stats.tfzRombelB}`} />}
+                  {stats.tfzRombelC > 0 && <div className="h-full bg-pink-500 transition-all" style={{ width: `${(stats.tfzRombelC / (stats.tahfizh || 1)) * 100}%` }} title={`Rombel C: ${stats.tfzRombelC}`} />}
+                  {stats.tfzRombelD > 0 && <div className="h-full bg-pink-600 transition-all" style={{ width: `${(stats.tfzRombelD / (stats.tahfizh || 1)) * 100}%` }} title={`Rombel D: ${stats.tfzRombelD}`} />}
+                </div>
+              </div>
             </div>
           </div>
 
