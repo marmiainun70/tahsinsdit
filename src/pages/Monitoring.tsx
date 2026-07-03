@@ -9,6 +9,7 @@ import { useStudents } from "@/hooks/useSupabaseData";
 import { useTeacherClasses, useTeacherStudents } from "@/hooks/useTeacherStudents";
 import { useProfileMap } from "@/hooks/useProfiles";
 import { MONTH_NAMES, useMonthlyReportsForPeriod } from "@/hooks/useMonthlyReports";
+import { MonitoringIPP } from "@/components/monitoring/MonitoringIPP";
 import { buildRecapJoinedGroups, type RecapJoinedRow } from "@/utils/recapMonthlyReportRows";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -194,6 +195,23 @@ export default function Monitoring() {
   const { data: reports = [], isLoading: lr } = useMonthlyReportsForPeriod({
     month: selectedMonth,
     year: selectedYear,
+    enabled: hasAccess,
+  });
+
+  const prevMonth1 = selectedMonth === 1 ? 12 : selectedMonth - 1;
+  const prevYear1 = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
+  const prevMonth2 = prevMonth1 === 1 ? 12 : prevMonth1 - 1;
+  const prevYear2 = prevMonth1 === 1 ? prevYear1 - 1 : prevYear1;
+
+  const { data: reportsM1 = [] } = useMonthlyReportsForPeriod({
+    month: prevMonth1,
+    year: prevYear1,
+    enabled: hasAccess,
+  });
+
+  const { data: reportsM2 = [] } = useMonthlyReportsForPeriod({
+    month: prevMonth2,
+    year: prevYear2,
     enabled: hasAccess,
   });
 
@@ -828,8 +846,13 @@ export default function Monitoring() {
       <Tabs defaultValue="ibp" className="space-y-6">
         <div className="flex justify-center sm:justify-start">
           <TabsList>
-            <TabsTrigger value="ibp">Indeks Beban (IBP)</TabsTrigger>
-            <TabsTrigger value="statistik">Statistik & Ringkasan</TabsTrigger>
+            <TabsTrigger value="ibp" className="flex items-center gap-2">
+              Indeks Beban (IBP)
+            </TabsTrigger>
+            <TabsTrigger value="ipp" className="flex items-center gap-2">
+              Indeks Perkembangan (IPP)
+            </TabsTrigger>
+            <TabsTrigger value="statistik" className="flex items-center gap-2">Statistik & Ringkasan</TabsTrigger>
           </TabsList>
         </div>
         
@@ -837,6 +860,18 @@ export default function Monitoring() {
           <MonitoringIBP 
             reports={reports}
             students={students}
+            allTeacherStudents={allTeacherStudents}
+            profileMap={profileMap}
+            selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
+          />
+        </TabsContent>
+
+        <TabsContent value="ipp" className="mt-0 outline-none space-y-6">
+          <MonitoringIPP 
+            reports={reports}
+            reportsM1={reportsM1}
+            reportsM2={reportsM2}
+            students={accessibleStudents}
             allTeacherStudents={allTeacherStudents}
             profileMap={profileMap}
             selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
