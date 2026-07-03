@@ -17,6 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MonitoringGuru } from "@/components/monitoring/MonitoringGuru";
+import { MonitoringIBP } from "@/components/monitoring/MonitoringIBP";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const now = new Date();
 const currentMonthIdx = now.getMonth();
@@ -823,25 +825,44 @@ export default function Monitoring() {
         </CardContent>
       </Card>
 
-      <div className="space-y-6">
-        <MonitoringGuru
-          teacherLoadLoading={teacherLoadLoading}
-          selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
-          previousPeriodLabel={getMonthLabel(previousLoadPeriod.month, previousLoadPeriod.year)}
-          teacherLoadTotals={teacherLoadTotals}
-          currentTeacherLoads={currentTeacherLoads}
-          dominantTdTeachers={dominantTdTeachers}
-          teacherLoadChartLimit={teacherLoadChartLimit}
-          setTeacherLoadChartLimit={setTeacherLoadChartLimit}
-          teacherLoadChartLimitLabel={teacherLoadChartLimitLabel}
-          teacherLoadChartData={teacherLoadChartData}
-          teacherLoadComparisonRows={teacherLoadComparisonRows}
-          teacherOverviewRows={teacherOverviewRows}
-          orphanStudents={orphanStudents}
-          formatPercent={formatPercent}
-          teacherFilterLabel={filterTeacher === "all" ? "Semua guru aktif" : filterTeacher}
-        />
-      </div>
+      <Tabs defaultValue="ibp" className="space-y-6">
+        <div className="flex justify-center sm:justify-start">
+          <TabsList>
+            <TabsTrigger value="ibp">Indeks Beban (IBP)</TabsTrigger>
+            <TabsTrigger value="statistik">Statistik & Ringkasan</TabsTrigger>
+          </TabsList>
+        </div>
+        
+        <TabsContent value="ibp" className="mt-0 outline-none space-y-6">
+          <MonitoringIBP 
+            reports={reports}
+            students={students}
+            allTeacherStudents={allTeacherStudents}
+            profileMap={profileMap}
+            selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
+          />
+        </TabsContent>
+
+        <TabsContent value="statistik" className="mt-0 outline-none space-y-6">
+          <MonitoringGuru
+            teacherLoadLoading={teacherLoadLoading}
+            selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
+            previousPeriodLabel={getMonthLabel(previousLoadPeriod.month, previousLoadPeriod.year)}
+            teacherLoadTotals={teacherLoadTotals}
+            currentTeacherLoads={currentTeacherLoads}
+            dominantTdTeachers={dominantTdTeachers}
+            teacherLoadChartLimit={teacherLoadChartLimit}
+            setTeacherLoadChartLimit={setTeacherLoadChartLimit}
+            teacherLoadChartLimitLabel={teacherLoadChartLimitLabel}
+            teacherLoadChartData={teacherLoadChartData}
+            teacherLoadComparisonRows={teacherLoadComparisonRows}
+            teacherOverviewRows={teacherOverviewRows}
+            orphanStudents={orphanStudents}
+            formatPercent={formatPercent}
+            teacherFilterLabel={filterTeacher === "all" ? "Semua guru aktif" : filterTeacher}
+          />
+        </TabsContent>
+      </Tabs>
     </motion.div>
   );
 }
