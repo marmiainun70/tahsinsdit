@@ -10,6 +10,7 @@ import { useTeacherClasses, useTeacherStudents } from "@/hooks/useTeacherStudent
 import { useProfileMap } from "@/hooks/useProfiles";
 import { MONTH_NAMES, useMonthlyReportsForPeriod } from "@/hooks/useMonthlyReports";
 import { MonitoringIPP } from "@/components/monitoring/MonitoringIPP";
+import { MonitoringSEP } from "@/components/monitoring/MonitoringSEP";
 import { buildRecapJoinedGroups, type RecapJoinedRow } from "@/utils/recapMonthlyReportRows";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -852,12 +853,15 @@ export default function Monitoring() {
             <TabsTrigger value="ipp" className="flex items-center gap-2">
               Indeks Perkembangan (IPP)
             </TabsTrigger>
+            <TabsTrigger value="sep" className="flex items-center gap-2">
+              Status Efektivitas (SEP)
+            </TabsTrigger>
             <TabsTrigger value="statistik" className="flex items-center gap-2">Statistik & Ringkasan</TabsTrigger>
           </TabsList>
         </div>
-        
+
         <TabsContent value="ibp" className="mt-0 outline-none space-y-6">
-          <MonitoringIBP 
+          <MonitoringIBP
             reports={reports}
             students={students}
             allTeacherStudents={allTeacherStudents}
@@ -867,7 +871,19 @@ export default function Monitoring() {
         </TabsContent>
 
         <TabsContent value="ipp" className="mt-0 outline-none space-y-6">
-          <MonitoringIPP 
+          <MonitoringIPP
+            reports={reports}
+            reportsM1={reportsM1}
+            reportsM2={reportsM2}
+            students={accessibleStudents}
+            allTeacherStudents={allTeacherStudents}
+            profileMap={profileMap}
+            selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
+          />
+        </TabsContent>
+
+        <TabsContent value="sep" className="mt-0 outline-none space-y-6">
+          <MonitoringSEP
             reports={reports}
             reportsM1={reportsM1}
             reportsM2={reportsM2}
