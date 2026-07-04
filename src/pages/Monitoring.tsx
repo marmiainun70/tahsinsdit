@@ -19,7 +19,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MonitoringGuru } from "@/components/monitoring/MonitoringGuru";
+
 import { MonitoringIBP } from "@/components/monitoring/MonitoringIBP";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -860,7 +860,6 @@ export default function Monitoring() {
             <TabsTrigger value="rekomendasi" className="flex items-center gap-2">
               Rekomendasi Otomatis
             </TabsTrigger>
-            <TabsTrigger value="statistik" className="flex items-center gap-2">Statistik & Ringkasan</TabsTrigger>
           </TabsList>
         </div>
 
@@ -905,26 +904,6 @@ export default function Monitoring() {
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
             profileMap={profileMap}
-          />
-        </TabsContent>
-
-        <TabsContent value="statistik" className="mt-0 outline-none space-y-6">
-          <MonitoringGuru
-            teacherLoadLoading={teacherLoadLoading}
-            selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
-            previousPeriodLabel={getMonthLabel(previousLoadPeriod.month, previousLoadPeriod.year)}
-            teacherLoadTotals={teacherLoadTotals}
-            currentTeacherLoads={currentTeacherLoads}
-            dominantTdTeachers={dominantTdTeachers}
-            teacherLoadChartLimit={teacherLoadChartLimit}
-            setTeacherLoadChartLimit={setTeacherLoadChartLimit}
-            teacherLoadChartLimitLabel={teacherLoadChartLimitLabel}
-            teacherLoadChartData={teacherLoadChartData}
-            teacherLoadComparisonRows={teacherLoadComparisonRows}
-            teacherOverviewRows={teacherOverviewRows}
-            orphanStudents={orphanStudents}
-            formatPercent={formatPercent}
-            teacherFilterLabel={filterTeacher === "all" ? "Semua guru aktif" : filterTeacher}
           />
         </TabsContent>
       </Tabs>
