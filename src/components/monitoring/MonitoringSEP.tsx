@@ -383,26 +383,28 @@ export function MonitoringSEP({
         <p className="text-muted-foreground text-sm">
           Interpretasi gabungan antara Beban (IBP) dan Perkembangan Siswa (IPP) untuk melihat seberapa efektif hasil pembinaan seorang guru.
         </p>
-        <div className="mt-4 pt-4 flex items-center justify-center gap-4">
-           <Button 
-             variant={isSnapshotExists ? "secondary" : "default"} 
-             onClick={() => saveSnapshot(formattedMonth, [...sesi1, ...sesi2, ...sesi3])}
-             disabled={saving || (sesi1.length === 0 && sesi2.length === 0 && sesi3.length === 0)}
-           >
-             <Save className="w-4 h-4 mr-2" />
-             {saving ? "Menyimpan..." : isSnapshotExists ? "Perbarui Snapshot Bulan Ini" : "Simpan Snapshot Bulan Ini"}
-           </Button>
-           {isSnapshotExists && <span className="text-xs text-muted-foreground">Tersimpan di database</span>}
-        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex justify-center w-full mb-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+        <div className="flex flex-col sm:flex-row justify-between items-center w-full mb-6 gap-4">
+          <TabsList className="grid w-full sm:w-auto sm:min-w-[400px] grid-cols-3">
             <TabsTrigger value="sesi1">Sesi 1 (Kls 1-2)</TabsTrigger>
             <TabsTrigger value="sesi2">Sesi 2 (Kls 5-6)</TabsTrigger>
             <TabsTrigger value="sesi3">Sesi 3 (Kls 3-4)</TabsTrigger>
           </TabsList>
+          
+          <div className="flex items-center gap-3">
+            {isSnapshotExists && <span className="text-xs text-muted-foreground hidden sm:inline-block">Tersimpan di database</span>}
+            <Button 
+              variant={isSnapshotExists ? "secondary" : "default"} 
+              size="sm"
+              onClick={() => saveSnapshot(formattedMonth, [...sesi1, ...sesi2, ...sesi3])}
+              disabled={saving || (sesi1.length === 0 && sesi2.length === 0 && sesi3.length === 0)}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {saving ? "Menyimpan..." : isSnapshotExists ? "Perbarui Snapshot" : "Simpan Snapshot"}
+            </Button>
+          </div>
         </div>
 
         <TabsContent value="sesi1" className="mt-0 outline-none">
