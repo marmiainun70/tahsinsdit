@@ -11,6 +11,7 @@ import { useProfileMap } from "@/hooks/useProfiles";
 import { MONTH_NAMES, useMonthlyReportsForPeriod } from "@/hooks/useMonthlyReports";
 import { MonitoringIPP } from "@/components/monitoring/MonitoringIPP";
 import { MonitoringSEP } from "@/components/monitoring/MonitoringSEP";
+import { MonitoringRekomendasi } from "@/components/monitoring/MonitoringRekomendasi";
 import { buildRecapJoinedGroups, type RecapJoinedRow } from "@/utils/recapMonthlyReportRows";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -856,6 +857,9 @@ export default function Monitoring() {
             <TabsTrigger value="sep" className="flex items-center gap-2">
               Status Efektivitas (SEP)
             </TabsTrigger>
+            <TabsTrigger value="rekomendasi" className="flex items-center gap-2">
+              Rekomendasi Otomatis
+            </TabsTrigger>
             <TabsTrigger value="statistik" className="flex items-center gap-2">Statistik & Ringkasan</TabsTrigger>
           </TabsList>
         </div>
@@ -891,6 +895,16 @@ export default function Monitoring() {
             allTeacherStudents={allTeacherStudents}
             profileMap={profileMap}
             selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+          />
+        </TabsContent>
+
+        <TabsContent value="rekomendasi" className="mt-0 outline-none space-y-6">
+          <MonitoringRekomendasi 
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            profileMap={profileMap}
           />
         </TabsContent>
 

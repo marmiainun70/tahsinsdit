@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      monitoring_settings: {
+        Row: {
+          id: number
+          ipp_trend_threshold: number
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          ipp_trend_threshold?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          ipp_trend_threshold?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       activity_logs: {
         Row: {
           activity_type: Database["public"]["Enums"]["activity_type"]
@@ -441,6 +459,59 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      riwayat_kinerja_guru: {
+        Row: {
+          active_students: number
+          bulan: string
+          dibuat_pada: string
+          guru_id: string
+          ibp_raw: number
+          ibp_status: string
+          id: string
+          ipp_score: number
+          ipp_status: string
+          sep_status: string
+          sesi: string
+          versi_formula: string
+        }
+        Insert: {
+          active_students?: number
+          bulan: string
+          dibuat_pada?: string
+          guru_id: string
+          ibp_raw: number
+          ibp_status: string
+          id?: string
+          ipp_score: number
+          ipp_status: string
+          sep_status: string
+          sesi: string
+          versi_formula?: string
+        }
+        Update: {
+          active_students?: number
+          bulan?: string
+          dibuat_pada?: string
+          guru_id?: string
+          ibp_raw?: number
+          ibp_status?: string
+          id?: string
+          ipp_score?: number
+          ipp_status?: string
+          sep_status?: string
+          sesi?: string
+          versi_formula?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "riwayat_kinerja_guru_guru_id_fkey"
+            columns: ["guru_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

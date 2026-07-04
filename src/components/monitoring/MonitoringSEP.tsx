@@ -2,8 +2,10 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Info, AlertCircle, CheckCircle2, TrendingUp, HelpCircle } from "lucide-react";
+import { Info, AlertCircle, CheckCircle2, TrendingUp, HelpCircle, Save } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
+import { Button } from "@/components/ui/button";
+import { useKinerjaSnapshot } from "@/hooks/useKinerjaSnapshot";
 
 type MonthlyReport = Database["public"]["Tables"]["monthly_reports"]["Row"] & {
   attendance_percentage?: number;
@@ -19,6 +21,8 @@ interface MonitoringSEPProps {
   allTeacherStudents: TeacherStudent[];
   profileMap: Map<string, string>;
   selectedPeriodLabel: string;
+  selectedMonth: number;
+  selectedYear: number;
 }
 
 interface TeacherSEPData {
@@ -199,8 +203,14 @@ export function MonitoringSEP({
   allTeacherStudents,
   profileMap,
   selectedPeriodLabel,
+  selectedMonth,
+  selectedYear,
 }: MonitoringSEPProps) {
   const [activeTab, setActiveTab] = useState("sesi1");
+  const { saveSnapshot, saving, historySnapshots } = useKinerjaSnapshot();
+
+  const formattedMonth = `${selectedYear}-${selectedMonth.toString().padStart(2, "0")}`;
+  const isSnapshotExists = historySnapshots.some(s => s.bulan === formattedMonth);
 
   const { sesi1, sesi2, sesi3 } = useMemo(() => {
     const sessionMap = new Map<string, TeacherSEPData>();
@@ -368,11 +378,22 @@ export function MonitoringSEP({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="text-center max-w-2xl mx-auto space-y-2 mb-6">
+      <div className="text-center max-w-2xl mx-auto space-y-2 mb-6 relative">
         <h2 className="text-2xl font-bold tracking-tight">Status Efektivitas Pembinaan (SEP)</h2>
         <p className="text-muted-foreground text-sm">
           Interpretasi gabungan antara Beban (IBP) dan Perkembangan Siswa (IPP) untuk melihat seberapa efektif hasil pembinaan seorang guru.
         </p>
+        <div className="mt-4 pt-4 flex items-center justify-center gap-4">
+           <Button 
+             variant={isSnapshotExists ? "secondary" : "default"} 
+             onClick={() => saveSnapshot(formattedMonth, [...sesi1, ...sesi2, ...sesi3])}
+             disabled={saving || (sesi1.length === 0 && sesi2.length === 0 && sesi3.length === 0)}
+           >
+             <Save className="w-4 h-4 mr-2" />
+             {saving ? "Menyimpan..." : isSnapshotExists ? "Perbarui Snapshot Bulan Ini" : "Simpan Snapshot Bulan Ini"}
+           </Button>
+           {isSnapshotExists && <span className="text-xs text-muted-foreground">Tersimpan di database</span>}
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
