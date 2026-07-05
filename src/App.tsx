@@ -29,6 +29,9 @@ import NotificationSettings from "@/pages/NotificationSettings";
 import BroadcastAnnouncement from "@/pages/BroadcastAnnouncement";
 import TeacherProfileDiagnostics from "@/pages/TeacherProfileDiagnostics";
 import Landing from "@/pages/Landing";
+import KalenderAkademik from "@/pages/KalenderAkademik";
+import KalenderMenungguKonfirmasi from "@/pages/KalenderMenungguKonfirmasi";
+import KalenderRiwayatSinkronisasi from "@/pages/KalenderRiwayatSinkronisasi";
 
 import NotFound from "@/pages/NotFound";
 import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotification";
@@ -108,6 +111,9 @@ const AppRoutes = () => {
       <Route path="/pengumuman" element={<ProtectedRoute><BroadcastAnnouncement /></ProtectedRoute>} />
       <Route path="/profil-diagnostik-guru" element={<ProtectedRoute><TeacherProfileDiagnostics /></ProtectedRoute>} />
       <Route path="/profil-diagnostik-guru/:profileId" element={<ProtectedRoute><TeacherProfileDiagnostics /></ProtectedRoute>} />
+      <Route path="/kalender-akademik" element={<ProtectedRoute><KalenderAkademik /></ProtectedRoute>} />
+      <Route path="/kalender-akademik/menunggu-konfirmasi" element={<ProtectedRoute><KalenderMenungguKonfirmasi /></ProtectedRoute>} />
+      <Route path="/kalender-akademik/riwayat-sinkronisasi" element={<ProtectedRoute><KalenderRiwayatSinkronisasi /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
