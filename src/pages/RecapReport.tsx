@@ -1313,7 +1313,7 @@ const RecapReport = () => {
   }
 
   return (
-    <div className="container max-w-none py-6 space-y-4 spreadsheet-report-page" style={{ zoom: "65%" }}>
+    <div className="container max-w-none py-6 space-y-4 spreadsheet-report-page" style={{ zoom: "70%" }}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
@@ -1406,7 +1406,7 @@ const RecapReport = () => {
                 </Select>
               </div>
               <div className="col-span-1">
-                <Label className="text-xs">Status laporan</Label>
+                <Label className="text-xs">Laporan</Label>
                 <Select
                   value={filterReportStatus}
                   onValueChange={(v) => setFilterReportStatus(v as FilterReportStatusType)}
@@ -1422,7 +1422,7 @@ const RecapReport = () => {
                 </Select>
               </div>
               <div className="col-span-1">
-                <Label className="text-xs">Status absensi</Label>
+                <Label className="text-xs">Absen</Label>
                 <Select
                   value={filterAttendanceStatus}
                   onValueChange={(v) => setFilterAttendanceStatus(v as FilterAttendanceStatusType)}
@@ -1440,7 +1440,7 @@ const RecapReport = () => {
                 </Select>
               </div>
               <div className="col-span-1">
-                <Label className="text-xs">Kategori progres</Label>
+                <Label className="text-xs">Progres</Label>
                 <Select
                   value={filterCategory}
                   onValueChange={(v) => setFilterCategory(v as FilterCategoryType)}
@@ -1476,20 +1476,20 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-2 flex items-end gap-1.5">
+              <div className="col-span-2 flex flex-col justify-end gap-1.5 h-[52px] pb-[1px]">
                 <Button
-                  className="h-9 flex-1 gap-2 bg-emerald-700 text-xs hover:bg-emerald-800"
+                  className="h-6 gap-1.5 bg-emerald-700 text-[10px] hover:bg-emerald-800"
                   onClick={() => toast({ title: "Filter rekap sudah diterapkan." })}
                 >
-                  <Filter className="h-3.5 w-3.5" />
-                  Terapkan Filter
+                  <Filter className="h-3 w-3" />
+                  Terapkan
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-9 flex-1 gap-2 text-xs"
+                  className="h-6 gap-1.5 text-[10px]"
                   onClick={resetFilters}
                 >
-                  <RotateCcw className="h-3.5 w-3.5" />
+                  <RotateCcw className="h-3 w-3" />
                   Reset
                 </Button>
               </div>
