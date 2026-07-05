@@ -22,6 +22,17 @@ import {
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const DAY_HEADERS = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
 
@@ -214,20 +225,39 @@ export function KalenderAkademikMain() {
                 </Button>
 
                 {/* Rekap Bulanan */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs gap-1.5 text-amber-600 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-950/30"
-                  onClick={handleRecap}
-                  disabled={runRecap.isPending}
-                >
-                  {runRecap.isPending ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <ClipboardCheck className="w-3.5 h-3.5" />
-                  )}
-                  Rekap Bulanan
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs gap-1.5 text-amber-600 border-amber-300 hover:bg-amber-50 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-950/30"
+                      disabled={runRecap.isPending}
+                    >
+                      {runRecap.isPending ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <ClipboardCheck className="w-3.5 h-3.5" />
+                      )}
+                      Rekap Bulanan
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Lakukan Rekap Bulanan?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tindakan ini akan memproses kalender bulan ini. Semua hari libur yang masih berstatus <strong>"Menunggu Konfirmasi"</strong> akan otomatis diubah menjadi <strong>"Tidak Efektif"</strong> agar target siswa tidak memberatkan.
+                        <br /><br />
+                        Jangan khawatir, jika ada kekeliruan, Anda tetap bisa mengubah hari tersebut kembali kapan pun meskipun rekap sudah dilakukan.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Batal</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleRecap} className="bg-amber-600 hover:bg-amber-700 text-white">
+                        Lanjutkan Rekap
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
 
