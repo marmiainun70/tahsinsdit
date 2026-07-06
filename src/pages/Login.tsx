@@ -135,7 +135,7 @@ const Login = () => {
 
   const handleForgotPassword = () => {
     toast.info(
-      "Silakan hubungi wali kelas atau admin sekolah untuk reset password akun Anda.",
+      "Silakan hubungi Musyrifah Kelas atau Koordinator Tahfizh untuk reset password akun Anda.",
     );
   };
 
@@ -147,7 +147,7 @@ const Login = () => {
   const displayError = isNetworkError
     ? "Tidak dapat terhubung ke server. Periksa koneksi internet Anda."
     : combinedError?.toLowerCase().includes("not found")
-      ? "Email tidak ditemukan. Hubungi wali kelas/admin sekolah untuk info akun."
+      ? "Email tidak ditemukan. Hubungi Musyrifah Kelas atau Koordinator Tahfizh untuk info akun."
       : combinedError;
 
   return (
