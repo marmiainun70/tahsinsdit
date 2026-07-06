@@ -181,8 +181,8 @@ const Login = () => {
 
           <div className="relative z-10 flex flex-col justify-center flex-1">
             <h1 className="font-serif text-4xl xl:text-5xl font-semibold leading-tight mb-4">
-              Portal Tahsin{" "}
-              <span className="text-[#eacb7b] block">& Tahfizh</span>
+              Sistem Laporan{" "}
+              <span className="text-[#eacb7b] block text-3xl xl:text-4xl mt-3 leading-snug">Setoran dan Ujian Tahsin & Tahfizh</span>
             </h1>
 
             {!isReturningUser && (
@@ -252,11 +252,16 @@ const Login = () => {
                 alt="Logo"
                 className="w-16 h-16 object-contain mb-4"
               />
-              <h1 className="font-serif text-3xl font-semibold text-[#073e34] mb-2">
-                Portal Tahsin & Tahfizh
+              <h1 className="font-serif text-2xl font-semibold text-[#073e34] mb-2">
+                Sistem Laporan
               </h1>
+              <div className="bg-[#073e34] px-4 py-1.5 rounded-full mb-3 shadow-sm">
+                <p className="text-xs sm:text-sm font-medium text-[#eacb7b]">
+                  Setoran dan Ujian Tahsin & Tahfizh
+                </p>
+              </div>
               <p className="text-sm text-[#4b675f]">
-                Pantau perkembangan Tahsin dan Tahfizh putra/putri Anda
+                Masuk ke sistem untuk melanjutkan
               </p>
             </div>
 
@@ -266,7 +271,7 @@ const Login = () => {
                 Selamat Datang
               </h2>
               <p className="text-sm text-[#4b675f] font-medium">
-                Masuk untuk melanjutkan akses ke portal
+                Masuk ke sistem untuk melanjutkan
               </p>
             </div>
 
