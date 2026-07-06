@@ -33,6 +33,7 @@ import KalenderAkademik from "@/pages/KalenderAkademik";
 import KalenderMenungguKonfirmasi from "@/pages/KalenderMenungguKonfirmasi";
 import KalenderRiwayatSinkronisasi from "@/pages/KalenderRiwayatSinkronisasi";
 import OAuthConsent from "@/pages/OAuthConsent";
+import KenaikanTahunAjaran from "@/pages/KenaikanTahunAjaran";
 
 import NotFound from "@/pages/NotFound";
 import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotification";
@@ -116,6 +117,7 @@ const AppRoutes = () => {
       <Route path="/kalender-akademik/menunggu-konfirmasi" element={<ProtectedRoute><KalenderMenungguKonfirmasi /></ProtectedRoute>} />
       <Route path="/kalender-akademik/riwayat-sinkronisasi" element={<ProtectedRoute><KalenderRiwayatSinkronisasi /></ProtectedRoute>} />
       <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+      <Route path="/kenaikan-tahun-ajaran" element={<ProtectedRoute><KenaikanTahunAjaran /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

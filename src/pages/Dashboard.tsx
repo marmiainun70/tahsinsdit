@@ -11,6 +11,7 @@ import { isTeacherRole } from "@/lib/roleLabels";
 import { useTeacherStudents } from "@/hooks/useTeacherStudents";
 import { useAllMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
 import { LineChart, AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LabelList } from "recharts";
+import TransitionAlertCard from "@/components/kenaikan/TransitionAlertCard";
 
 const classColors = [
 "from-blue-500 to-blue-600",
@@ -152,6 +153,9 @@ const Dashboard = () => {
           <p className="text-primary-foreground/70 text-sm">SDIT Luqmanul Hakim— Tahun Ajaran 2026/2027</p>
         </div>
       </motion.div>
+
+      {/* Dashboard Alert: Kenaikan Tahun Ajaran */}
+      <TransitionAlertCard />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((s, i) => (

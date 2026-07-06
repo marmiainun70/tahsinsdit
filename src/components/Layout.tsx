@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen, LayoutDashboard, BarChart3, ClipboardList, PieChart,
-  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings, Megaphone, ExternalLink, UserCheck, UserCog, Users, CalendarDays
+  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings, Megaphone, ExternalLink, UserCheck, UserCog, Users, CalendarDays, ArrowUpCircle
 } from "lucide-react";
 import { RELATED_SYSTEM } from "@/components/RelatedSystemCard";
 import GlobalSearch from "@/components/GlobalSearch";
@@ -27,6 +27,7 @@ const navItems = [
   { featureKey: "penugasan_guru", to: "/penugasan-guru", icon: UserCog, label: "Penugasan Guru" },
   { featureKey: "profil_kompetensi_guru", to: "/profil-diagnostik-guru", icon: BookOpen, label: "Profil Kompetensi Guru" },
   { featureKey: "kalender_akademik", to: "/kalender-akademik", icon: CalendarDays, label: "Kalender Akademik" },
+  { featureKey: "kenaikan_tahun_ajaran", to: "/kenaikan-tahun-ajaran", icon: ArrowUpCircle, label: "Kenaikan Tahun Ajaran" },
   { featureKey: "laporan_bulanan", to: "/laporan-bulanan", icon: FileText, label: "Absensi Bulanan" },
   { featureKey: "input_cepat", to: "/input-cepat", icon: FileSpreadsheet, label: "Input Laporan Bulanan" },
   { featureKey: "rekap_laporan", to: "/rekap-laporan", icon: FileSpreadsheet, label: "Rekap Laporan" },
