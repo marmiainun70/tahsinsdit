@@ -7,6 +7,10 @@ import type { TransitionPreview, ClassMapping } from "@/types/academicTransition
 interface Step1PreviewProps {
   preview: TransitionPreview | undefined;
   isLoading: boolean;
+  isError?: boolean;
+  error?: Error | null;
+  isMissingYear?: boolean;
+  isLoadingYears?: boolean;
 }
 
 const StatCard = ({
@@ -69,8 +73,15 @@ const ClassRow = ({ mapping }: { mapping: ClassMapping }) => (
   </div>
 );
 
-const Step1Preview = ({ preview, isLoading }: Step1PreviewProps) => {
-  if (isLoading) {
+const Step1Preview = ({
+  preview,
+  isLoading,
+  isError,
+  error,
+  isMissingYear,
+  isLoadingYears,
+}: Step1PreviewProps) => {
+  if (isLoading || isLoadingYears) {
     return (
       <div className="space-y-4">
         <div className="grid grid-cols-3 gap-4">
@@ -79,6 +90,31 @@ const Step1Preview = ({ preview, isLoading }: Step1PreviewProps) => {
           ))}
         </div>
         <Skeleton className="h-64 rounded-xl" />
+      </div>
+    );
+  }
+
+  if (isMissingYear) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-3">
+        <Users className="w-8 h-8 text-muted-foreground/50" />
+        <p className="text-sm font-medium">Tidak ada Tahun Ajaran Aktif</p>
+        <p className="text-xs text-center max-w-sm">
+          Semua tahun ajaran telah selesai diproses atau belum ada tahun ajaran baru yang berstatus draft/active. 
+          Tambahkan tahun ajaran baru di menu Pengaturan Lembaga terlebih dahulu.
+        </p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-destructive gap-3">
+        <TrendingUp className="w-8 h-8 opacity-50" />
+        <p className="text-sm font-bold">Gagal mengambil data preview</p>
+        <p className="text-xs opacity-80 text-center max-w-sm">
+          {error?.message || "Terjadi kesalahan yang tidak diketahui pada server."}
+        </p>
       </div>
     );
   }

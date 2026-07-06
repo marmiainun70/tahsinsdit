@@ -88,7 +88,7 @@ const KenaikanTahunAjaran = () => {
   const [result, setResult] = useState<TransitionExecuteResult | null>(null);
 
   const { data: years = [], isLoading: loadingYears } = useAcademicYears();
-  const { data: preview, isLoading: loadingPreview } = useTransitionPreview(selectedYearId);
+  const { data: preview, isLoading: loadingPreview, isError: isPreviewError, error: previewError } = useTransitionPreview(selectedYearId);
   const { data: suggestions = [] } = useClassMappingSuggestion(selectedYearId);
   const executeMutation = useExecuteTransition();
 
@@ -173,6 +173,10 @@ const KenaikanTahunAjaran = () => {
       <Step1Preview
         preview={preview}
         isLoading={loadingPreview}
+        isError={isPreviewError}
+        error={previewError}
+        isMissingYear={!selectedYearId}
+        isLoadingYears={loadingYears}
       />
     ),
     2: (
