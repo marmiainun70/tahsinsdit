@@ -90,7 +90,7 @@ export async function fetchHolidaysFromAPI(year: number) {
     
     // Map response dari libur.deno.dev ke format yang diharapkan aplikasi
     // Asumsi: data adalah array [{ date, name, is_national_holiday }, ...]
-    return data.map((item: any) => ({
+    return data.map((item: { date: string; name: string; is_national_holiday: boolean }) => ({
       date: item.date,
       name: item.name,
       type: item.is_national_holiday ? "holiday" : "cuti_bersama"
