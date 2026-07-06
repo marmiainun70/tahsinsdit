@@ -273,7 +273,7 @@ const Login = () => {
             {/* Form */}
             <form
               onSubmit={handleLogin}
-              className="space-y-5 flex-1 flex flex-col justify-center"
+              className="space-y-4 flex-1 flex flex-col justify-center"
             >
               <div>
                 <label className="block text-sm font-semibold text-[#103F35] mb-2">
@@ -331,7 +331,7 @@ const Login = () => {
               </div>
 
               {/* Error Message Space (Reserved height to prevent jumping) */}
-              <div className="min-h-[40px] flex flex-col justify-end">
+              <div className="min-h-[32px] flex flex-col justify-end">
                 <AnimatePresence>
                   {displayError && (
                     <motion.div
@@ -350,7 +350,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 lg:h-14 mt-2 bg-[#073e34] hover:bg-[#052b24] text-white rounded-xl font-medium text-lg flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.99] disabled:opacity-70 disabled:active:scale-100"
+                className="w-full h-12 lg:h-14 bg-[#073e34] hover:bg-[#052b24] text-white rounded-xl font-medium text-lg flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.99] disabled:opacity-70 disabled:active:scale-100"
               >
                 {loading ? (
                   <>
@@ -365,42 +365,6 @@ const Login = () => {
                 )}
               </button>
 
-              {/* PWA Install Card (Conditional) */}
-              <AnimatePresence>
-                {showInstallCard && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                    className="mt-4 p-4 bg-[#eacb7b]/10 border border-[#eacb7b]/30 rounded-xl relative flex items-center justify-between gap-4"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-[#073e34] mb-0.5">
-                        📱 Install Aplikasi Tahsin
-                      </p>
-                      <p className="text-xs text-[#073e34]/70">
-                        Akses lebih cepat langsung dari layar utama HP.
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={handleInstallApp}
-                        className="px-3 py-1.5 bg-[#eacb7b] hover:bg-[#d9a328] text-[#073e34] text-xs font-semibold rounded-lg transition-colors"
-                      >
-                        Install
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleDismissInstall}
-                        className="p-1.5 text-[#073e34]/50 hover:text-[#073e34] bg-black/5 hover:bg-black/10 rounded-lg transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </form>
 
             {/* Bottom Section (Register Link & Mobile Extra Branding) */}
@@ -432,6 +396,43 @@ const Login = () => {
                   Daftar <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
+
+              {/* PWA Install Card (Conditional) */}
+              <AnimatePresence>
+                {showInstallCard && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    className="w-full mb-6 p-4 bg-[#eacb7b]/10 border border-[#eacb7b]/30 rounded-xl relative flex items-center justify-between gap-4"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-[#073e34] mb-0.5">
+                        📱 Install Aplikasi Tahsin
+                      </p>
+                      <p className="text-xs text-[#073e34]/70">
+                        Akses lebih cepat langsung dari layar utama HP.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleInstallApp}
+                        className="px-3 py-1.5 bg-[#eacb7b] hover:bg-[#d9a328] text-[#073e34] text-xs font-semibold rounded-lg transition-colors"
+                      >
+                        Install
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDismissInstall}
+                        className="p-1.5 text-[#073e34]/50 hover:text-[#073e34] bg-black/5 hover:bg-black/10 rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Headphones className="w-4 h-4" />
