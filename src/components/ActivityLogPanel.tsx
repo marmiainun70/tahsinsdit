@@ -16,7 +16,12 @@ const formatRelative = (iso: string) => {
 };
 
 const ActivityItem = ({ log, index }: { log: ActivityLog; index: number }) => {
-  const meta = ACTIVITY_META[log.activity_type];
+  const meta = ACTIVITY_META[log.activity_type] || {
+    icon: "📌", 
+    color: "text-slate-700", 
+    bgColor: "bg-slate-50", 
+    borderColor: "border-slate-200"
+  };
   return (
     <motion.div
       initial={{ opacity: 0, x: -12 }}
