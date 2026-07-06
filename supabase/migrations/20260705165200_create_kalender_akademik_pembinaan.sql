@@ -60,7 +60,7 @@ create table config_audit_log (
   old_value text,
   new_value text,
   changed_by uuid references auth.users(id),
-  changed_by_role text not null check (changed_by_role in ('koordinator', 'kepala_sekolah', 'system')),
+  changed_by_role text not null check (changed_by_role in ('koordinator', 'kepala_sekolah', 'system', 'admin')),
   alasan text,
   batch_id uuid,
   changed_at timestamptz not null default now()

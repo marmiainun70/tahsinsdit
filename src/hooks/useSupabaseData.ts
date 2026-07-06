@@ -144,6 +144,7 @@ export const usePaginatedStudents = ({
   kelas,
   rombel,
   level,
+  statusSiswa = "aktif",
 }: {
   page: number;
   pageSize: number;
@@ -151,11 +152,12 @@ export const usePaginatedStudents = ({
   kelas: string;
   rombel: string;
   level: string;
+  statusSiswa?: string;
 }) => {
   const { user, profile } = useAuth();
 
   return useQuery({
-    queryKey: ["students", "paginated", { page, pageSize, search, kelas, rombel, level, userId: user?.id ?? "anon", role: profile?.role ?? "none" }],
+    queryKey: ["students", "paginated", { page, pageSize, search, kelas, rombel, level, statusSiswa, userId: user?.id ?? "anon", role: profile?.role ?? "none" }],
     queryFn: async () => {
       let query = supabase
         .from("students")
@@ -194,6 +196,10 @@ export const usePaginatedStudents = ({
         } else {
           query = query.eq("level", level as ReadingLevel);
         }
+      }
+
+      if (statusSiswa !== "all" && statusSiswa !== "semua") {
+        query = query.eq("status_siswa", statusSiswa.toLowerCase());
       }
 
       const from = (page - 1) * pageSize;
@@ -282,7 +288,7 @@ export const useAddStudent = () => {
 export const useUpdateStudent = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string; nama?: string; kelas?: number; level?: ReadingLevel; halaman_terakhir?: number; status_bacaan?: ReadingStatus; rombel?: string; nis?: string | null; nisn?: string | null }) => {
+    mutationFn: async ({ id, ...updates }: { id: string; nama?: string; kelas?: number; level?: ReadingLevel; halaman_terakhir?: number; status_bacaan?: ReadingStatus; rombel?: string; nis?: string | null; nisn?: string | null; status_siswa?: string }) => {
       const { data, error } = await supabase
         .from("students")
         .update(updates)

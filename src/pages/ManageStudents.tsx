@@ -155,6 +155,7 @@ export default function ManageStudents() {
   const kelas = searchParams.get("kelas") || "all";
   const rombel = searchParams.get("rombel") || "all";
   const level = searchParams.get("level") || "all";
+  const statusSiswa = searchParams.get("statusSiswa") || "aktif";
 
   // Local state for search input debounce
   const [searchVal, setSearchVal] = useState(search);
@@ -187,6 +188,7 @@ export default function ManageStudents() {
     kelas,
     rombel,
     level,
+    statusSiswa,
   });
 
   const students = data?.students || [];
@@ -218,6 +220,7 @@ export default function ManageStudents() {
   const [editKelas, setEditKelas] = useState<number>(1);
   const [editRombel, setEditRombel] = useState<Rombel>("A");
   const [editLevel, setEditLevel] = useState<ReadingLevel>("Iqro 1");
+  const [editStatusSiswa, setEditStatusSiswa] = useState<string>("aktif");
 
   const openEdit = (student: StudentRow) => {
     setEditId(student.id);
@@ -227,6 +230,7 @@ export default function ManageStudents() {
     setEditKelas(student.kelas);
     setEditRombel((student.rombel as Rombel) || "A");
     setEditLevel(student.level as ReadingLevel);
+    setEditStatusSiswa(student.status_siswa || "aktif");
     setEditOpen(true);
   };
 
@@ -293,8 +297,9 @@ export default function ManageStudents() {
         level: editLevel,
         nis: editNis.trim() || null,
         nisn: editNisn.trim() || null,
+        status_siswa: editStatusSiswa,
       });
-      toast({ title: "Data siswa berhasil diperbarui" });
+      toast({ title: "Siswa berhasil diupdate" });
       setEditOpen(false);
     } catch (error) {
       const e = error as Error;
@@ -551,7 +556,22 @@ export default function ManageStudents() {
 
         {/* Dropdowns & Reset */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 flex-1">
+            {/* Filter Status Akademik */}
+            <div>
+              <select
+                value={statusSiswa}
+                onChange={(e) => handleParamChange("statusSiswa", e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm font-medium"
+              >
+                <option value="semua">Semua Status</option>
+                <option value="aktif">Aktif</option>
+                <option value="alumni">Alumni</option>
+                <option value="mutasi">Mutasi</option>
+                <option value="nonaktif">Nonaktif</option>
+              </select>
+            </div>
+
             {/* Filter Kelas */}
             <div>
               <select
@@ -930,24 +950,39 @@ export default function ManageStudents() {
                   </select>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Level Pembelajaran *</label>
-                <select
-                  value={editLevel}
-                  onChange={(e) => setEditLevel(e.target.value as ReadingLevel)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
-                >
-                  <optgroup label="Tahsin Dasar (Iqro)">
-                    {["Iqro 1", "Iqro 2", "Iqro 3", "Iqro 4", "Iqro 5", "Iqro 6"].map((l) => (
-                      <option key={l} value={l}>Jilid {l.split(" ")[1]}</option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Program Lanjutan">
-                    {["Tahsin Lanjutan", "Tahfizh"].map((l) => (
-                      <option key={l} value={l}>{l}</option>
-                    ))}
-                  </optgroup>
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Level Pembelajaran *</label>
+                  <select
+                    value={editLevel}
+                    onChange={(e) => setEditLevel(e.target.value as ReadingLevel)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+                  >
+                    <optgroup label="Tahsin Dasar (Iqro)">
+                      {["Iqro 1", "Iqro 2", "Iqro 3", "Iqro 4", "Iqro 5", "Iqro 6"].map((l) => (
+                        <option key={l} value={l}>Jilid {l.split(" ")[1]}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="Program Lanjutan">
+                      {["Tahsin Lanjutan", "Tahfizh"].map((l) => (
+                        <option key={l} value={l}>{l}</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1">Status Siswa *</label>
+                  <select
+                    value={editStatusSiswa}
+                    onChange={(e) => setEditStatusSiswa(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 text-sm"
+                  >
+                    <option value="aktif">Aktif</option>
+                    <option value="alumni">Alumni</option>
+                    <option value="mutasi">Mutasi</option>
+                    <option value="nonaktif">Nonaktif</option>
+                  </select>
+                </div>
               </div>
               <div className="flex gap-2 justify-end pt-2">
                 <button

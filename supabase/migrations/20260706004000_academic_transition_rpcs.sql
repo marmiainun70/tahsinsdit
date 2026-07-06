@@ -274,7 +274,9 @@ BEGIN
   RETURNING id INTO v_transition_id;
 
   -- ── Langkah 4 & 5: Proses setiap mapping kelas ─────────────
-  FOR v_mapping IN SELECT * FROM jsonb_array_elements(p_class_mappings)
+  FOR v_mapping IN 
+    SELECT * FROM jsonb_array_elements(p_class_mappings) AS elem
+    ORDER BY (elem->>'from_kelas')::INTEGER DESC
   LOOP
     v_from_kelas    := (v_mapping->>'from_kelas')::INTEGER;
     v_from_rombel   := v_mapping->>'from_rombel';
@@ -368,7 +370,7 @@ BEGIN
       );
 
     -- Hapus juga relasi guru-kelas (akan di-assign ulang oleh admin)
-    DELETE FROM public.teacher_classes;
+    DELETE FROM public.teacher_classes WHERE true;
   END IF;
   -- 'pertahankan' → tidak ada perubahan
   -- 'baru' → admin assign manual, tidak ada perubahan di sini
