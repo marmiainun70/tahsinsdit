@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertCircle,
   ArrowRight,
-  BookHeart,
-  ClipboardCheck,
+  Check,
   Eye,
   EyeOff,
   Headphones,
@@ -12,17 +12,12 @@ import {
   Lock,
   LogIn,
   Mail,
-  Quote,
-  ShieldCheck,
-  Sparkle,
   UserPlus,
-  Users,
+  X,
 } from "lucide-react";
-import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner"; // Using sonner for simple toasts like 'Lupa Password'
 
-// If the user was sent here by /.lovable/oauth/consent (or any other route),
-// preserve the redirect target so we can return them after sign-in.
 function safeNextParam(): string | null {
   const raw = new URLSearchParams(window.location.search).get("next");
   if (!raw) return null;
@@ -34,12 +29,53 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [credError, setCredError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  // Returning User Logic
+  const [isReturningUser, setIsReturningUser] = useState(false);
+
+  // PWA Logic
+  const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
+  const [showInstallCard, setShowInstallCard] = useState(false);
+
   const { signIn, authError, clearAuthError, session } = useAuth();
 
-  // After a successful sign-in, if there's a preserved `next` path,
-  // send the user there (e.g. back to the OAuth consent screen).
+  // Initialization: check returning user & PWA prompt
+  useEffect(() => {
+    // 1. Check returning user flag
+    const hasLoggedInBefore = localStorage.getItem("has_logged_in_before");
+    if (hasLoggedInBefore === "true") {
+      setIsReturningUser(true);
+    }
+
+    // 2. Setup PWA prompt listener
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+
+      // Check if dismissed recently (14 days)
+      const dismissedAt = localStorage.getItem("install_prompt_dismissed_at");
+      if (dismissedAt) {
+        const dismissDate = new Date(dismissedAt);
+        const daysSince =
+          (new Date().getTime() - dismissDate.getTime()) / (1000 * 3600 * 24);
+        if (daysSince < 14) {
+          return; // don't show yet
+        }
+      }
+      setShowInstallCard(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () =>
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
+  }, []);
+
+  // Redirect if logged in
   useEffect(() => {
     if (!session) return;
     const next = safeNextParam();
@@ -48,11 +84,11 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCredError("");
+    setFormError("");
     clearAuthError();
 
     if (!email || !password) {
-      setCredError("Email dan password harus diisi.");
+      setFormError("Email dan password harus diisi.");
       return;
     }
 
@@ -63,373 +99,383 @@ const Login = () => {
       setLoading(false);
       const r = result as Extract<typeof result, { success: false }>;
       if (r.type === "credentials") {
-        setCredError(r.message);
+        // Customize error messages based on spec
+        if (r.message.toLowerCase().includes("invalid login credentials")) {
+          setFormError(
+            "Email atau Password salah. Coba lagi atau gunakan opsi lupa password.",
+          );
+        } else {
+          setFormError(r.message);
+        }
       }
+    } else {
+      // Set flag for returning user
+      localStorage.setItem("has_logged_in_before", "true");
     }
   };
 
+  const handleInstallApp = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === "accepted") {
+        setShowInstallCard(false);
+      }
+      setDeferredPrompt(null);
+    }
+  };
+
+  const handleDismissInstall = () => {
+    localStorage.setItem(
+      "install_prompt_dismissed_at",
+      new Date().toISOString(),
+    );
+    setShowInstallCard(false);
+  };
+
+  const handleForgotPassword = () => {
+    toast.info(
+      "Silakan hubungi wali kelas atau admin sekolah untuk reset password akun Anda.",
+    );
+  };
+
+  // Error logic combining context authError and local formError
+  const combinedError = formError || authError;
+  const isNetworkError =
+    combinedError?.toLowerCase().includes("fetch") ||
+    combinedError?.toLowerCase().includes("network");
+  const displayError = isNetworkError
+    ? "Tidak dapat terhubung ke server. Periksa koneksi internet Anda."
+    : combinedError?.toLowerCase().includes("not found")
+      ? "Email tidak ditemukan. Hubungi wali kelas/admin sekolah untuk info akun."
+      : combinedError;
+
   return (
-    <main className="login-page min-h-screen w-full overflow-x-hidden bg-[radial-gradient(circle_at_top,#0f4c3f_0%,#082d27_48%,#051d19_100%)] px-4 py-4 text-[#123F35] sm:px-6 sm:py-6 lg:px-8">
-      <motion.section
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.65, ease: "easeOut" }}
-        className="login-shell mx-auto flex min-h-[720px] w-full max-w-[1500px] flex-col overflow-hidden rounded-[28px] border border-[#d8b25d]/50 bg-[#082d27]/90 shadow-[0_30px_90px_rgba(0,0,0,0.35)] backdrop-blur lg:min-h-[820px] lg:flex-row"
-      >
-        <section className="login-left-panel relative flex flex-col overflow-hidden bg-[radial-gradient(circle_at_18%_20%,rgba(234,203,123,0.16),transparent_26%),radial-gradient(circle_at_82%_24%,rgba(255,255,255,0.08),transparent_18%),linear-gradient(160deg,#0d4a3c_0%,#0a3a31_42%,#082d27_76%,#06251f_100%)] p-6 text-[#fbf8f1] sm:p-10 lg:w-[54%] lg:p-12 xl:p-16">
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 opacity-[0.05]"
-            style={{
-              backgroundImage:
-                "linear-gradient(30deg, transparent 47%, #eacb7b 48%, transparent 49%), linear-gradient(150deg, transparent 47%, #eacb7b 48%, transparent 49%)",
-              backgroundSize: "86px 86px",
-            }}
-          />
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,transparent_0%,rgba(0,0,0,0.34)_100%)]"
-          />
-          <div aria-hidden="true" className="absolute -left-8 bottom-20 h-52 w-44 rotate-[-18deg] rounded-[80%_20%_70%_30%] bg-[#031c18]/45 blur-sm sm:h-64 sm:w-56" />
-          <div aria-hidden="true" className="absolute -right-8 bottom-20 h-56 w-44 rotate-[18deg] rounded-[20%_80%_30%_70%] bg-[#031c18]/45 blur-sm sm:h-72 sm:w-56" />
+    <main className="min-h-[100dvh] w-full flex bg-[#FDFBF7] lg:p-4 text-[#123F35]">
+      <div className="flex w-full max-w-[1400px] mx-auto bg-white lg:rounded-3xl lg:shadow-xl lg:border border-border/50 overflow-hidden flex-col lg:flex-row relative">
+        {/* =========================================
+            LEFT PANEL (BRANDING)
+            ========================================= */}
+        {/* Mobile: Order 1 & 2 (Logo & Title) is inside the form panel on mobile to keep DOM simple, 
+            so this left panel is hidden on mobile and only shown on Desktop (lg) */}
+        <section
+          className={`hidden lg:flex flex-col relative bg-[#082d27] text-white p-10 overflow-hidden transition-all duration-500 ease-in-out ${isReturningUser ? "w-[30%] opacity-90" : "w-[40%]"}`}
+        >
+          {/* Subtle background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0f4c3f]/80 to-[#051d19] z-0" />
 
-          <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
-            <div className="login-brand flex items-center gap-3">
-              <img src="/logo.png" alt="Logo SDIT Luqmanul Hakim" className="login-logo h-11 w-11 object-contain lg:h-12 lg:w-12" />
+          <div className="relative z-10 flex items-center gap-3 mb-10">
+            <img
+              src="/logo.png"
+              alt="Logo"
+              className="w-10 h-10 object-contain"
+            />
+            {!isReturningUser && (
               <div>
-                <p className="login-brand-text font-['Georgia',serif] text-[21px] leading-none text-[#fbf8f1] lg:text-[25px]">
-                  Tahsin SDIT Luqmanul Hakim
+                <p className="font-serif text-xl font-medium text-white leading-none">
+                  SDIT Luqmanul Hakim
                 </p>
-                <p className="mt-1 text-xs uppercase tracking-[0.26em] text-[#eacb7b]/85">Portal pembelajaran Al-Qur'an</p>
               </div>
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#eacb7b]/35 bg-white/10 px-3 py-1.5 text-xs font-medium text-[#f8e7b4] backdrop-blur">
-              <Leaf className="h-3.5 w-3.5" />
-              Tumbuh bersama dalam adab dan bacaan
-            </div>
+            )}
           </div>
 
-          <div className="login-left-copy relative z-10 mt-8 max-w-[640px] lg:mt-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3 py-1.5 text-sm font-medium text-[#f5e5a8]">
-              <BookHeart className="h-4 w-4" />
-              Ruang tenang untuk memantau perjalanan belajar
-            </div>
-            <h1 className="login-left-title mt-5 font-['Georgia',serif] text-[42px] font-semibold leading-[0.96] tracking-normal text-[#fbf8f1] sm:text-[54px] lg:text-[58px] xl:text-[68px]">
-              Mendampingi tahsin
-              <span className="block text-[#eacb7b]">dengan rapi, hangat, dan aman.</span>
+          <div className="relative z-10 flex flex-col justify-center flex-1">
+            <h1 className="font-serif text-4xl xl:text-5xl font-semibold leading-tight mb-4">
+              Portal Tahsin{" "}
+              <span className="text-[#eacb7b] block">& Tahfizh</span>
             </h1>
-            <p className="login-description mt-5 max-w-[560px] text-[15px] leading-7 text-[#fbf8f1]/84 lg:text-[17px]">
-              Guru, orang tua, dan admin masuk ke satu portal yang sama untuk melihat progres, evaluasi, dan tindak lanjut pembelajaran Al-Qur'an dengan alur yang ringan dipakai setiap hari.
-            </p>
-          </div>
 
-          <div className="login-benefits relative z-10 mt-8 grid max-w-[620px] gap-3 sm:grid-cols-3">
-            <Benefit icon={ClipboardCheck} first="Progres" second="terdokumentasi" />
-            <Benefit icon={Users} first="Kolaborasi" second="lebih mudah" />
-            <Benefit icon={ShieldCheck} first="Akses" second="lebih aman" />
-          </div>
+            {!isReturningUser && (
+              <>
+                <p className="text-white/80 text-lg mb-8 max-w-sm">
+                  Pantau perkembangan Tahsin dan Tahfizh putra/putri Anda
+                </p>
 
-          <div className="relative z-10 mt-8 flex flex-1 flex-col justify-end">
-            <div className="login-illustration relative mx-auto flex w-full max-w-[560px] items-end justify-center rounded-[32px] border border-white/10 bg-white/6 px-6 pb-0 pt-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-              <div className="absolute inset-x-10 bottom-7 h-16 rounded-[50%] bg-[#0b4a3b]/75 blur-xl" />
-              <img
-                src="/login-quran-illustration-crop.png"
-                alt="Ilustrasi Al-Qur'an terbuka di atas rehal"
-                className="relative z-10 max-h-[220px] w-full object-contain opacity-95 drop-shadow-[0_24px_34px_rgba(0,0,0,0.34)] lg:max-h-[260px] xl:max-h-[300px]"
-              />
-              <Sparkle className="absolute left-[18%] top-[16%] h-3 w-3 text-[#eacb7b]/90" />
-              <Sparkle className="absolute right-[18%] top-[22%] h-4 w-4 text-[#eacb7b]/80" />
-            </div>
-
-            <div className="login-quote mt-6 max-w-[620px] rounded-[28px] border border-[#eacb7b]/20 bg-black/10 p-5 text-left text-[#f7e7b7] backdrop-blur-sm">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full border border-[#eacb7b]/35 bg-white/10">
-                  <Quote className="h-4 w-4" />
+                <div className="space-y-4 mb-10">
+                  {[
+                    "Progres terdokumentasi",
+                    "Kolaborasi guru lebih mudah",
+                    "Data tersimpan aman",
+                  ].map((benefit, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#eacb7b]/20 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-[#eacb7b]" />
+                      </div>
+                      <span className="text-white/90 text-sm font-medium">
+                        {benefit}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <div className="font-['Georgia',serif]">
-                  <p className="text-[16px] leading-7 italic lg:text-[18px]">
-                    Sebaik-baik kalian adalah yang belajar Al-Qur'an dan mengajarkannya.
+
+                <div className="mt-auto pt-8 border-t border-white/10">
+                  <p className="font-serif italic text-white/90 text-sm">
+                    "Sebaik-baik kalian adalah yang belajar Al-Qur'an dan
+                    mengajarkannya."
                   </p>
-                  <p className="mt-2 text-sm not-italic text-[#fbf8f1]/72">(HR. Bukhari)</p>
+                  <p className="text-white/60 text-xs mt-1">— HR. Bukhari</p>
+                </div>
+              </>
+            )}
+
+            {isReturningUser && (
+              <div className="mt-auto pt-8">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-[#eacb7b]">
+                  <Leaf className="w-3.5 h-3.5" />
+                  Tumbuh bersama dalam adab
                 </div>
               </div>
-            </div>
+            )}
           </div>
+
+          {/* Heavy illustration only for new users */}
+          {!isReturningUser && (
+            <img
+              src="/login-quran-illustration-crop.png"
+              alt="Al-Qur'an"
+              className="absolute -bottom-10 -right-10 w-72 opacity-20 pointer-events-none mix-blend-luminosity"
+            />
+          )}
         </section>
 
-        <section className="login-right-panel relative flex flex-1 items-center justify-center overflow-hidden bg-[linear-gradient(180deg,#fffdf8_0%,#f8f2e8_100%)] p-5 sm:p-8 lg:w-[46%] lg:p-10 xl:p-12">
-          <RightPanelDecor />
-          <div className="login-form-panel relative z-10 w-full max-w-[560px]">
-            <div className="rounded-[28px] border border-[#d8c9b2] bg-white/86 p-5 shadow-[0_20px_60px_rgba(69,45,20,0.12)] backdrop-blur sm:p-7 lg:p-8">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-[#e8dcc8] bg-[#fcf7ef] px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-[#8a6a2e]">
-                    <Sparkle className="h-3.5 w-3.5" />
-                    Masuk
-                  </div>
-                  <h2 className="login-title mt-4 font-['Georgia',serif] text-[34px] font-semibold leading-tight text-[#073e34] sm:text-[44px] lg:text-[48px]">
-                    Portal Tahsin
-                  </h2>
-                  <p className="login-subtitle mt-3 max-w-[440px] text-[15px] font-medium leading-6 text-[#4b675f] sm:text-[16px]">
-                    Masuk untuk melihat perkembangan belajar, evaluasi, dan informasi pembinaan dalam satu tempat.
-                  </p>
-                </div>
-                <div className="hidden rounded-2xl border border-[#d7c19a] bg-[#fcf6ea] px-4 py-3 text-right lg:block">
-                  <p className="text-xs uppercase tracking-[0.2em] text-[#8c6b35]">Akses</p>
-                  <p className="mt-1 text-sm font-semibold text-[#073e34]">Orang Tua, Guru, Admin</p>
+        {/* =========================================
+            RIGHT PANEL (LOGIN FORM)
+            ========================================= */}
+        <section
+          className={`flex-1 flex flex-col w-full relative z-10 px-6 py-8 sm:px-12 lg:px-16 xl:px-24 overflow-y-auto ${isReturningUser ? "bg-white" : "bg-[#FDFBF7]"}`}
+        >
+          <div className="w-full max-w-[520px] mx-auto flex flex-col min-h-full">
+            {/* Mobile Header (Hidden on Desktop, replacing the left panel for mobile flow) */}
+            <div className="lg:hidden flex flex-col items-center text-center mb-8 pt-4">
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="w-16 h-16 object-contain mb-4"
+              />
+              <h1 className="font-serif text-3xl font-semibold text-[#073e34] mb-2">
+                Portal Tahsin & Tahfizh
+              </h1>
+              <p className="text-sm text-[#4b675f]">
+                Pantau perkembangan Tahsin dan Tahfizh putra/putri Anda
+              </p>
+            </div>
+
+            {/* Desktop Header */}
+            <div className="hidden lg:block mb-10 pt-8">
+              <h2 className="font-serif text-3xl font-semibold text-[#073e34] mb-2">
+                Selamat Datang
+              </h2>
+              <p className="text-sm text-[#4b675f] font-medium">
+                Masuk untuk melanjutkan akses ke portal
+              </p>
+            </div>
+
+            {/* Form */}
+            <form
+              onSubmit={handleLogin}
+              className="space-y-5 flex-1 flex flex-col justify-center"
+            >
+              <div>
+                <label className="block text-sm font-semibold text-[#103F35] mb-2">
+                  Alamat Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0B4A3B]/60 w-5 h-5" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="email@contoh.com"
+                    disabled={loading}
+                    className="w-full h-12 pl-12 pr-4 rounded-xl border border-[#CABDA9] bg-white text-[#103F35] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0B4A3B] transition-shadow shadow-sm"
+                  />
                 </div>
               </div>
 
-              <BismillahDivider className="login-bismillah my-6" />
-
-              <form onSubmit={handleLogin} className="login-form space-y-4 sm:space-y-5">
-                <InputGroup
-                  label="Alamat Email"
-                  icon={<Mail className="h-5 w-5 sm:h-6 sm:w-6" />}
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="email@contoh.com"
-                />
-
-                <div>
-                  <label className="login-input-label mb-3 block text-[15px] font-semibold text-[#103f35]">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-semibold text-[#103F35]">
                     Password
                   </label>
-                  <div className="relative">
-                    <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#0b4a3b] sm:left-5 sm:h-6 sm:w-6" />
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Password Anda"
-                      className="login-input h-12 w-full rounded-[14px] border border-[#d9ccb8] bg-[#fffdf8] pl-11 pr-11 text-[16px] text-[#103f35] outline-none transition placeholder:text-[#9ca39f] focus:border-[#0b4a3b] focus:ring-4 focus:ring-[#0b4a3b]/12 sm:h-[58px] sm:pl-14 sm:pr-14"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((s) => !s)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#0b4a3b] transition hover:text-[#d9a328] sm:right-5"
-                      aria-label={showPassword ? "Sembunyikan" : "Tampilkan"}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5 sm:h-6 sm:w-6" />
-                      ) : (
-                        <Eye className="h-5 w-5 sm:h-6 sm:w-6" />
-                      )}
-                    </button>
-                  </div>
-                  <div className="mt-2 flex justify-end">
-                    <button type="button" className="login-forgot text-sm font-medium text-[#0b4a3b] hover:text-[#d9a328]">
-                      Lupa password?
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-xs font-medium text-[#0b4a3b] hover:text-[#d9a328] transition-colors"
+                  >
+                    Lupa password?
+                  </button>
                 </div>
-
-                {authError && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-sm text-amber-800"
-                  >
-                    <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                    <span>{authError}</span>
-                  </motion.div>
-                )}
-
-                {credError && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive"
-                  >
-                    {credError}
-                  </motion.div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="login-submit relative mt-2 flex h-14 w-full items-center justify-center gap-3 overflow-hidden rounded-[16px] bg-[linear-gradient(100deg,#d9a328_0%,#e1b64e_54%,#eacb7b_100%)] font-['Georgia',serif] text-lg font-semibold text-[#073e34] shadow-[0_14px_24px_rgba(217,163,40,0.24)] transition hover:brightness-105 active:scale-[0.99] disabled:opacity-60 sm:h-[62px] sm:gap-4 sm:text-[21px]"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="absolute right-0 top-0 h-full w-32 opacity-20"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(30deg, transparent 47%, #fbf8f1 48%, transparent 49%), linear-gradient(150deg, transparent 47%, #fbf8f1 48%, transparent 49%)",
-                      backgroundSize: "30px 30px",
-                    }}
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#0B4A3B]/60 w-5 h-5" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Masukkan password"
+                    disabled={loading}
+                    className="w-full h-12 pl-12 pr-12 rounded-xl border border-[#CABDA9] bg-white text-[#103F35] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#0B4A3B] transition-shadow shadow-sm"
                   />
-                  {loading ? (
-                    <>
-                      <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#073e34]/30 border-t-[#073e34]" />
-                      Memverifikasi...
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="h-6 w-6" />
-                      Masuk ke Portal
-                    </>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#0B4A3B]/60 hover:text-[#0B4A3B] transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Error Message Space (Reserved height to prevent jumping) */}
+              <div className="min-h-[40px] flex flex-col justify-end">
+                <AnimatePresence>
+                  {displayError && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3 flex items-start gap-2"
+                    >
+                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <span>{displayError}</span>
+                    </motion.div>
                   )}
-                </button>
-              </form>
+                </AnimatePresence>
+              </div>
 
-              <OrnamentDivider className="login-register-divider my-6" />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full h-12 lg:h-14 mt-2 bg-[#073e34] hover:bg-[#052b24] text-white rounded-xl font-medium text-lg flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.99] disabled:opacity-70 disabled:active:scale-100"
+              >
+                {loading ? (
+                  <>
+                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-5 h-5" />
+                    Masuk ke Portal
+                  </>
+                )}
+              </button>
 
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-                <div className="login-register-card flex items-center gap-4 rounded-[18px] border border-[#dcc8a4]/50 bg-[#fcf7ef] p-4">
-                  <div className="flex h-14 w-14 flex-none items-center justify-center rounded-full bg-[#063f34] text-[#eacb7b] shadow-[inset_0_0_0_1px_rgba(234,203,123,0.28)]">
-                    <UserPlus className="h-7 w-7" />
+              {/* PWA Install Card (Conditional) */}
+              <AnimatePresence>
+                {showInstallCard && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    className="mt-4 p-4 bg-[#eacb7b]/10 border border-[#eacb7b]/30 rounded-xl relative flex items-center justify-between gap-4"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-[#073e34] mb-0.5">
+                        📱 Install Aplikasi Tahsin
+                      </p>
+                      <p className="text-xs text-[#073e34]/70">
+                        Akses lebih cepat langsung dari layar utama HP.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleInstallApp}
+                        className="px-3 py-1.5 bg-[#eacb7b] hover:bg-[#d9a328] text-[#073e34] text-xs font-semibold rounded-lg transition-colors"
+                      >
+                        Install
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDismissInstall}
+                        className="p-1.5 text-[#073e34]/50 hover:text-[#073e34] bg-black/5 hover:bg-black/10 rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </form>
+
+            {/* Bottom Section (Register Link & Mobile Extra Branding) */}
+            <div className="mt-8 pb-8 flex flex-col items-center">
+              <div className="w-full h-px bg-border/60 mb-6 relative">
+                <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-[#FDFBF7] px-2 text-xs text-muted-foreground uppercase tracking-widest font-medium">
+                  Atau
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between w-full p-4 rounded-xl border border-border/60 bg-white/50 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#073e34]/5 flex items-center justify-center">
+                    <UserPlus className="w-5 h-5 text-[#073e34]" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-[17px] font-semibold text-[#073e34]">Belum punya akun?</p>
-                    <p className="mt-1 text-sm leading-5 text-[#315e55]">
-                      Daftar sebagai Orang Tua, Guru, atau Admin.
+                  <div>
+                    <p className="text-sm font-semibold text-[#073e34]">
+                      Belum punya akun?
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Daftar sebagai Orang Tua/Guru
                     </p>
                   </div>
                 </div>
                 <Link
                   to="/register"
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-[14px] border border-[#cabda9] bg-white px-5 text-sm font-semibold text-[#073e34] transition hover:bg-[#efe5d4] lg:w-auto"
+                  className="px-4 py-2 bg-white border border-border hover:bg-muted text-sm font-semibold text-[#073e34] rounded-lg transition-colors flex items-center gap-1.5"
                 >
-                  Daftar di sini
-                  <ArrowRight className="h-4 w-4" />
+                  Daftar <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
 
-              <p className="login-help mt-5 flex items-center justify-center gap-3 text-center text-sm text-[#315e55] lg:justify-start">
-                <Headphones className="h-5 w-5 text-[#0b4a3b]" />
-                <span>
-                  Kesulitan masuk? <span className="font-semibold text-[#073e34]">Hubungi admin.</span>
-                </span>
-              </p>
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Headphones className="w-4 h-4" />
+                <span>Kesulitan masuk? Hubungi admin sekolah.</span>
+              </div>
             </div>
+
+            {/* Mobile Branding Extra (Rendered below form strictly on mobile) */}
+            {!isReturningUser && (
+              <div className="lg:hidden flex flex-col items-center text-center mt-6 mb-8 border-t border-border pt-8">
+                <div className="space-y-3 mb-6 w-full max-w-sm text-left px-4">
+                  {[
+                    "Progres terdokumentasi",
+                    "Kolaborasi guru lebih mudah",
+                    "Data tersimpan aman",
+                  ].map((benefit, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 p-3 bg-white rounded-lg border border-border shadow-sm"
+                    >
+                      <div className="flex-shrink-0 w-5 h-5 rounded-full bg-[#eacb7b]/20 flex items-center justify-center">
+                        <Check className="w-3 h-3 text-[#d9a328]" />
+                      </div>
+                      <span className="text-sm font-medium text-[#103F35]">
+                        {benefit}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-6 py-4 bg-[#082d27]/5 rounded-xl border border-[#082d27]/10 w-full">
+                  <p className="font-serif italic text-[#073e34] text-sm">
+                    "Sebaik-baik kalian adalah yang belajar Al-Qur'an dan
+                    mengajarkannya."
+                  </p>
+                  <p className="text-[#073e34]/70 text-xs mt-1 font-medium">
+                    — HR. Bukhari
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </section>
-      </motion.section>
-    </main>
-  );
-};
-
-const Benefit = ({
-  icon: Icon,
-  first,
-  second,
-}: {
-  icon: typeof ClipboardCheck;
-  first: string;
-  second: string;
-}) => (
-  <div className="login-benefit flex min-w-0 items-center gap-3 rounded-[22px] border border-white/12 bg-white/8 p-3 backdrop-blur-sm">
-    <span className="login-benefit-icon flex h-12 w-12 flex-none items-center justify-center rounded-2xl border border-[#eacb7b]/55 bg-[#d9a328]/10 text-[#eacb7b]">
-      <Icon className="h-5 w-5" />
-    </span>
-    <span className="login-benefit-text min-w-0 text-[14px] leading-5 text-[#fbf8f1] sm:text-[15px]">
-      {first}
-      <br />
-      {second}
-    </span>
-  </div>
-);
-
-const BismillahDivider = ({ className = "" }: { className?: string }) => (
-  <div className={`flex items-center justify-center gap-4 text-[#c98d22] ${className}`}>
-    <Sparkle className="h-6 w-6 flex-none" />
-    <span className="h-px flex-1 bg-[#d9a328]/40" />
-    <span className="text-[13px] font-semibold uppercase tracking-[0.55em]">Bismillah</span>
-    <span className="h-px flex-1 bg-[#d9a328]/40" />
-    <Sparkle className="h-6 w-6 flex-none" />
-  </div>
-);
-
-const OrnamentDivider = ({ className = "" }: { className?: string }) => (
-  <div className={`flex items-center justify-center gap-5 text-[#D9A328]/58 ${className}`}>
-    <span className="h-px flex-1 bg-[#D9A328]/35" />
-    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#D9A328]/35">
-      <Sparkle className="h-4 w-4" />
-    </span>
-    <span className="h-px flex-1 bg-[#D9A328]/35" />
-  </div>
-);
-
-const RightPanelDecor = () => (
-  <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-    <div
-      className="absolute -right-20 -top-20 h-80 w-80 rounded-full opacity-[0.16]"
-      style={{
-        background:
-          "radial-gradient(circle, rgba(11,74,59,0.28) 0%, rgba(11,74,59,0.12) 44%, transparent 72%)",
-      }}
-    />
-    <div
-      className="absolute -bottom-24 -left-28 h-96 w-96 rounded-full opacity-[0.16]"
-      style={{
-        background:
-          "radial-gradient(circle, rgba(217,163,40,0.2) 0%, rgba(11,74,59,0.16) 45%, transparent 72%)",
-      }}
-    />
-    <FloralSprig className="-right-3 top-12 rotate-[-18deg] scale-90 opacity-[0.14] lg:opacity-[0.18]" />
-    <FloralSprig className="-left-9 bottom-16 rotate-[156deg] scale-75 opacity-[0.1] lg:opacity-[0.14]" />
-    <FloralSprig className="right-12 bottom-9 rotate-[34deg] scale-[0.52] opacity-[0.08] lg:opacity-[0.12]" />
-    <div
-      className="absolute inset-x-8 bottom-10 h-px opacity-45"
-      style={{
-        background:
-          "linear-gradient(90deg, transparent, rgba(11,74,59,0.2), rgba(217,163,40,0.26), rgba(11,74,59,0.2), transparent)",
-      }}
-    />
-    <div
-      className="absolute right-10 top-[42%] h-44 w-44 opacity-[0.035]"
-      style={{
-        backgroundImage:
-          "linear-gradient(30deg, transparent 47%, #0B4A3B 48%, transparent 49%), linear-gradient(150deg, transparent 47%, #0B4A3B 48%, transparent 49%)",
-        backgroundSize: "34px 34px",
-      }}
-    />
-  </div>
-);
-
-const FloralSprig = ({ className = "" }: { className?: string }) => (
-  <div className={`absolute h-72 w-44 ${className}`}>
-    <span className="absolute left-1/2 top-4 h-64 w-px origin-top -rotate-6 bg-gradient-to-b from-[#0B4A3B]/0 via-[#0B4A3B]/70 to-[#0B4A3B]/0" />
-    <span className="absolute left-[48%] top-14 h-16 w-8 -rotate-[42deg] rounded-[90%_0_90%_0] bg-[#0B4A3B]/70" />
-    <span className="absolute left-[54%] top-24 h-20 w-10 rotate-[38deg] rounded-[0_90%_0_90%] bg-[#0B4A3B]/65" />
-    <span className="absolute left-[42%] top-40 h-20 w-10 -rotate-[48deg] rounded-[90%_0_90%_0] bg-[#0B4A3B]/62" />
-    <span className="absolute left-[58%] top-52 h-16 w-8 rotate-[42deg] rounded-[0_90%_0_90%] bg-[#0B4A3B]/58" />
-    <span className="absolute left-[47%] top-10 h-4 w-4 rounded-full border border-[#D9A328]/65" />
-    <span className="absolute left-[37%] top-32 h-3 w-3 rounded-full border border-[#D9A328]/55" />
-    <span className="absolute left-[62%] top-48 h-3 w-3 rounded-full bg-[#D9A328]/55" />
-  </div>
-);
-
-const InputGroup = ({
-  label,
-  icon,
-  ...inputProps
-}: React.InputHTMLAttributes<HTMLInputElement> & {
-  label: string;
-  icon?: React.ReactNode;
-}) => {
-  return (
-    <div>
-      <label className="login-input-label mb-3 block text-[16px] font-semibold text-[#103F35]">
-        {label}
-      </label>
-      <div className="relative">
-        {icon && (
-          <span className="pointer-events-none absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-[#0B4A3B]">
-            {icon}
-          </span>
-        )}
-        <input
-          {...inputProps}
-          className={[
-            "login-input h-12 sm:h-[58px] w-full rounded-xl sm:rounded-[14px] border border-[#CABDA9] bg-[#FBF8F1]/80 text-[16px] text-[#103F35] outline-none transition placeholder:text-[#9CA39F] focus:border-[#0B4A3B] focus:ring-4 focus:ring-[#0B4A3B]/12",
-            icon ? "pl-11 sm:pl-14 pr-4 sm:pr-5" : "px-4 sm:px-5",
-          ].join(" ")}
-        />
       </div>
-    </div>
+    </main>
   );
 };
 
