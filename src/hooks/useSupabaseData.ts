@@ -231,6 +231,7 @@ export const useStudentsByClass = (kelas: number) => {
         .from("students")
         .select("*")
         .eq("kelas", kelas)
+        .neq("status_siswa", "alumni")
         .order("nama", { ascending: true });
 
       const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
