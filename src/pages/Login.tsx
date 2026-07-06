@@ -330,22 +330,19 @@ const Login = () => {
                 </div>
               </div>
 
-              {/* Error Message Space (Reserved height to prevent jumping) */}
-              <div className="min-h-[32px] flex flex-col justify-end">
-                <AnimatePresence>
-                  {displayError && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3 flex items-start gap-2"
-                    >
-                      <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                      <span>{displayError}</span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              <AnimatePresence>
+                {displayError && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginBottom: 4 }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3 flex items-start gap-2 overflow-hidden"
+                  >
+                    <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <span>{displayError}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               <button
                 type="submit"
