@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   AlertCircle,
@@ -21,13 +21,30 @@ import {
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
+// If the user was sent here by /.lovable/oauth/consent (or any other route),
+// preserve the redirect target so we can return them after sign-in.
+function safeNextParam(): string | null {
+  const raw = new URLSearchParams(window.location.search).get("next");
+  if (!raw) return null;
+  if (!raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [credError, setCredError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn, authError, clearAuthError } = useAuth();
+  const { signIn, authError, clearAuthError, session } = useAuth();
+
+  // After a successful sign-in, if there's a preserved `next` path,
+  // send the user there (e.g. back to the OAuth consent screen).
+  useEffect(() => {
+    if (!session) return;
+    const next = safeNextParam();
+    if (next) window.location.replace(next);
+  }, [session]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
