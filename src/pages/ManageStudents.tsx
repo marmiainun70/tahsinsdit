@@ -707,23 +707,35 @@ export default function ManageStudents() {
                           </div>
                         </td>
                         <td className="py-2.5 px-4 text-center">
-                          <select
-                            value={s.kelas}
-                            onChange={(e) => handleInlineUpdate(s.id, "kelas", parseInt(e.target.value))}
-                            className="w-16 px-1 py-1 text-xs font-bold text-center border-border bg-transparent hover:bg-muted focus:bg-background focus:ring-1 focus:ring-primary rounded cursor-pointer"
-                          >
-                            {[1, 2, 3, 4, 5, 6].map(k => <option key={k} value={k} className="bg-background text-foreground text-left">Kelas {k}</option>)}
-                          </select>
+                          {s.status_siswa === "alumni" ? (
+                            <span className="inline-flex items-center justify-center px-2 py-1 text-[10px] font-bold rounded-md bg-amber-500/10 text-amber-600 border border-amber-200 cursor-default">
+                              {s.tahun_lulus ? `${(s.tahun_lulus - 1).toString().slice(-2)}/${s.tahun_lulus.toString().slice(-2)}` : "Alumni"}
+                            </span>
+                          ) : (
+                            <select
+                              value={s.kelas}
+                              onChange={(e) => handleInlineUpdate(s.id, "kelas", parseInt(e.target.value))}
+                              className="w-16 px-1 py-1 text-xs font-bold text-center border-border bg-transparent hover:bg-muted focus:bg-background focus:ring-1 focus:ring-primary rounded cursor-pointer"
+                            >
+                              {[1, 2, 3, 4, 5, 6].map(k => <option key={k} value={k} className="bg-background text-foreground text-left">Kelas {k}</option>)}
+                            </select>
+                          )}
                         </td>
                         <td className="py-2.5 px-4 text-center">
-                          <select
-                            value={s.rombel}
-                            onChange={(e) => handleInlineUpdate(s.id, "rombel", e.target.value)}
-                            className={`inline-flex px-2 py-0.5 text-[10px] font-bold text-white rounded-md cursor-pointer border-none outline-none text-center ${ROMBEL_COLORS[s.rombel as Rombel] ?? "bg-primary"}`}
-                            style={{ appearance: 'none', WebkitAppearance: 'none' }}
-                          >
-                            {ROMBELS.map(r => <option key={r} value={r} className="bg-background text-foreground text-left">Rombel {r}</option>)}
-                          </select>
+                          {s.status_siswa === "alumni" ? (
+                            <span className="inline-flex px-2 py-0.5 text-[10px] font-bold text-muted-foreground rounded-md bg-muted cursor-default">
+                              -
+                            </span>
+                          ) : (
+                            <select
+                              value={s.rombel}
+                              onChange={(e) => handleInlineUpdate(s.id, "rombel", e.target.value)}
+                              className={`inline-flex px-2 py-0.5 text-[10px] font-bold text-white rounded-md cursor-pointer border-none outline-none text-center ${ROMBEL_COLORS[s.rombel as Rombel] ?? "bg-primary"}`}
+                              style={{ appearance: 'none', WebkitAppearance: 'none' }}
+                            >
+                              {ROMBELS.map(r => <option key={r} value={r} className="bg-background text-foreground text-left">Rombel {r}</option>)}
+                            </select>
+                          )}
                         </td>
                         <td className="py-2.5 px-4">
                           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${LEVEL_COLORS[s.level]}`}>

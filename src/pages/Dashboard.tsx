@@ -35,7 +35,8 @@ const Dashboard = () => {
   const isLoading = loadingStudents || (isTeacher && loadingAssignments);
 
   const myStudentIds = new Set(assignments.map((a) => a.student_id));
-  const students = isTeacher ? allStudents.filter((s) => myStudentIds.has(s.id)) : allStudents;
+  const baseStudents = isTeacher ? allStudents.filter((s) => myStudentIds.has(s.id)) : allStudents;
+  const students = baseStudents.filter(s => s.status_siswa !== "alumni");
 
   const total = students.length;
   // Tahsin Dasar = semua Iqro 1-6 (mereka adalah sub-level Tahsin Dasar)
