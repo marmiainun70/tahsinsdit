@@ -147,7 +147,7 @@ export function MultipleDayEditPanel({ selectedDates, onClose }: MultipleDayEdit
   const batchUpdate = useBatchUpdateCalendarDays();
 
   const [status, setStatus] = useState<StatusHari>("tidak_efektif");
-  const [jenis, setJenis] = useState<JenisHari>("kegiatan_khusus");
+  const [jenis, setJenis] = useState<JenisHari>("kegiatan_sekolah");
   const [keterangan, setKeterangan] = useState("");
   const [alasan, setAlasan] = useState("");
 
@@ -254,7 +254,7 @@ export function DateRangeForm({ onClose }: DateRangeFormProps) {
   const [tanggalMulai, setTanggalMulai] = useState("");
   const [tanggalSelesai, setTanggalSelesai] = useState("");
   const [status, setStatus] = useState<StatusHari>("tidak_efektif");
-  const [jenis, setJenis] = useState<JenisHari>("pts");
+  const [jenis, setJenis] = useState<JenisHari>("ujian");
   const [keterangan, setKeterangan] = useState("");
 
   const handleSave = async () => {

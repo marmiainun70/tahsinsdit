@@ -7,7 +7,16 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO } from "d
 // ─── Tipe Data ────────────────────────────────────────────────────────────────
 
 export type StatusHari = "efektif" | "tidak_efektif" | "menunggu_konfirmasi";
-export type JenisHari = "reguler" | "weekend" | "libur_nasional" | "cuti_bersama" | "pts" | "pas" | "kegiatan_khusus";
+export type JenisHari = 
+  | "reguler" 
+  | "weekend" 
+  | "libur_nasional" 
+  | "cuti_bersama" 
+  | "libur_semester" 
+  | "libur_akhir_tahun" 
+  | "kegiatan_sekolah" 
+  | "ujian" 
+  | "lainnya";
 export type SourceHari = "sistem_default" | "api_libur" | "admin_override" | "sistem_fallback";
 
 export interface AcademicYear {

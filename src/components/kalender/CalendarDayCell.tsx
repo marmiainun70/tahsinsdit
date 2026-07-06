@@ -41,9 +41,11 @@ export const JENIS_CONFIG: Record<JenisHari, { label: string; color: string; bad
   weekend: { label: "Akhir Pekan", color: "text-slate-500", badge: "bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300" },
   libur_nasional: { label: "Libur Nasional", color: "text-red-600", badge: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300" },
   cuti_bersama: { label: "Cuti Bersama", color: "text-amber-600", badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" },
-  pts: { label: "PTS", color: "text-amber-600", badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" },
-  pas: { label: "PAS", color: "text-amber-600", badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" },
-  kegiatan_khusus: { label: "Kegiatan Khusus", color: "text-blue-600", badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300" },
+  libur_semester: { label: "Libur Semester", color: "text-amber-600", badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" },
+  libur_akhir_tahun: { label: "Libur Kenaikan Kelas / Akhir Tahun", color: "text-amber-600", badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" },
+  kegiatan_sekolah: { label: "Kegiatan Sekolah/Yayasan", color: "text-blue-600", badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300" },
+  ujian: { label: "Ujian (Diliburkan)", color: "text-blue-600", badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300" },
+  lainnya: { label: "Lainnya", color: "text-slate-600", badge: "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300" },
 };
 
 // ─── Helper: Warna sel kalender ───────────────────────────────────────────────
@@ -52,8 +54,8 @@ export function getDayCellClass(day: CalendarDay | undefined, jenis: JenisHari |
   if (!day) return "";
   if (day.status === "menunggu_konfirmasi") return "bg-violet-50 border-violet-300 border-dashed dark:bg-violet-950/30 dark:border-violet-700";
   if (jenis === "libur_nasional") return "bg-red-50 dark:bg-red-950/30";
-  if (jenis === "pts" || jenis === "pas") return "bg-amber-50 dark:bg-amber-950/30";
-  if (jenis === "kegiatan_khusus") return "bg-blue-50 dark:bg-blue-950/30";
+  if (jenis === "cuti_bersama" || jenis === "libur_semester" || jenis === "libur_akhir_tahun") return "bg-amber-50 dark:bg-amber-950/30";
+  if (jenis === "kegiatan_sekolah" || jenis === "ujian") return "bg-blue-50 dark:bg-blue-950/30";
   if (jenis === "weekend" || day.status === "tidak_efektif") return "bg-slate-50 dark:bg-slate-800/30";
   if (day.status === "efektif") return "bg-emerald-50/60 dark:bg-emerald-950/20";
   return "";
