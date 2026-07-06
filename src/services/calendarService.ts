@@ -77,7 +77,8 @@ export async function fetchHolidaysFromAPI(year: number) {
   const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 detik timeout
 
   try {
-    const response = await fetch(`https://tanggalmerah.upset.dev/api/holidays?year=${year}`, {
+    // Menggunakan API libur.deno.dev sebagai pengganti karena upset.dev 404
+    const response = await fetch(`https://libur.deno.dev/api?year=${year}`, {
       signal: controller.signal
     });
     
@@ -86,11 +87,14 @@ export async function fetchHolidaysFromAPI(year: number) {
     }
     
     const data = await response.json();
-    if (!data.success) {
-       throw new Error("API returned success: false");
-    }
     
-    return data.data; // array of holidays
+    // Map response dari libur.deno.dev ke format yang diharapkan aplikasi
+    // Asumsi: data adalah array [{ date, name, is_national_holiday }, ...]
+    return data.map((item: any) => ({
+      date: item.date,
+      name: item.name,
+      type: item.is_national_holiday ? "holiday" : "cuti_bersama"
+    }));
   } catch (error) {
     console.error(`Gagal mengambil data libur tahun ${year}:`, error);
     throw error;
