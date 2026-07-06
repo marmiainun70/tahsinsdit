@@ -14,21 +14,138 @@ export type Database = {
   }
   public: {
     Tables: {
-      monitoring_settings: {
+      academic_calendar_days: {
         Row: {
-          id: number
-          ipp_trend_threshold: number
+          created_at: string
+          id: string
+          is_override: boolean
+          jenis: string
+          keterangan: string | null
+          last_synced_at: string | null
+          source: string
+          status: string
+          tanggal: string
           updated_at: string
         }
         Insert: {
-          id?: number
-          ipp_trend_threshold?: number
+          created_at?: string
+          id?: string
+          is_override?: boolean
+          jenis: string
+          keterangan?: string | null
+          last_synced_at?: string | null
+          source: string
+          status: string
+          tanggal: string
           updated_at?: string
         }
         Update: {
-          id?: number
-          ipp_trend_threshold?: number
+          created_at?: string
+          id?: string
+          is_override?: boolean
+          jenis?: string
+          keterangan?: string | null
+          last_synced_at?: string | null
+          source?: string
+          status?: string
+          tanggal?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      academic_calendar_settings: {
+        Row: {
+          cutover_date: string | null
+          id: number
+          last_api_sync_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          cutover_date?: string | null
+          id?: number
+          last_api_sync_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cutover_date?: string | null
+          id?: number
+          last_api_sync_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      academic_calendar_sync_history: {
+        Row: {
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          jumlah_dilewati: number
+          jumlah_ditambah: number
+          jumlah_diupdate: number
+          started_at: string
+          status: string
+          tahun_yang_disync: string
+          trigger_type: string
+          triggered_by: string | null
+          triggered_by_role: string
+        }
+        Insert: {
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          jumlah_dilewati?: number
+          jumlah_ditambah?: number
+          jumlah_diupdate?: number
+          started_at?: string
+          status: string
+          tahun_yang_disync: string
+          trigger_type: string
+          triggered_by?: string | null
+          triggered_by_role: string
+        }
+        Update: {
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          jumlah_dilewati?: number
+          jumlah_ditambah?: number
+          jumlah_diupdate?: number
+          started_at?: string
+          status?: string
+          tahun_yang_disync?: string
+          trigger_type?: string
+          triggered_by?: string | null
+          triggered_by_role?: string
+        }
+        Relationships: []
+      }
+      academic_years: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          nama: string
+          status: string
+          tanggal_mulai: string
+          tanggal_selesai: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nama: string
+          status?: string
+          tanggal_mulai: string
+          tanggal_selesai: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nama?: string
+          status?: string
+          tanggal_mulai?: string
+          tanggal_selesai?: string
         }
         Relationships: []
       }
@@ -162,6 +279,48 @@ export type Database = {
           rombel?: string
           updated_at?: string
           year?: number
+        }
+        Relationships: []
+      }
+      config_audit_log: {
+        Row: {
+          alasan: string | null
+          batch_id: string | null
+          changed_at: string
+          changed_by: string | null
+          changed_by_role: string
+          entity_id: string
+          field_changed: string
+          id: string
+          modul: string
+          new_value: string | null
+          old_value: string | null
+        }
+        Insert: {
+          alasan?: string | null
+          batch_id?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          changed_by_role: string
+          entity_id: string
+          field_changed: string
+          id?: string
+          modul: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          alasan?: string | null
+          batch_id?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          changed_by_role?: string
+          entity_id?: string
+          field_changed?: string
+          id?: string
+          modul?: string
+          new_value?: string | null
+          old_value?: string | null
         }
         Relationships: []
       }
@@ -350,6 +509,24 @@ export type Database = {
         }
         Relationships: []
       }
+      monitoring_settings: {
+        Row: {
+          id: number
+          ipp_trend_threshold: number
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          ipp_trend_threshold?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          ipp_trend_threshold?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       monthly_reports: {
         Row: {
           achievement_status: string
@@ -459,59 +636,6 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      riwayat_kinerja_guru: {
-        Row: {
-          active_students: number
-          bulan: string
-          dibuat_pada: string
-          guru_id: string
-          ibp_raw: number
-          ibp_status: string
-          id: string
-          ipp_score: number
-          ipp_status: string
-          sep_status: string
-          sesi: string
-          versi_formula: string
-        }
-        Insert: {
-          active_students?: number
-          bulan: string
-          dibuat_pada?: string
-          guru_id: string
-          ibp_raw: number
-          ibp_status: string
-          id?: string
-          ipp_score: number
-          ipp_status: string
-          sep_status: string
-          sesi: string
-          versi_formula?: string
-        }
-        Update: {
-          active_students?: number
-          bulan?: string
-          dibuat_pada?: string
-          guru_id?: string
-          ibp_raw?: number
-          ibp_status?: string
-          id?: string
-          ipp_score?: number
-          ipp_status?: string
-          sep_status?: string
-          sesi?: string
-          versi_formula?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "riwayat_kinerja_guru_guru_id_fkey"
-            columns: ["guru_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -769,6 +893,92 @@ export type Database = {
           p256dh?: string
           user_agent?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      riwayat_kinerja_guru: {
+        Row: {
+          active_students: number
+          bulan: string
+          dibuat_pada: string
+          guru_id: string
+          ibp_raw: number
+          ibp_status: string
+          id: string
+          ipp_score: number
+          ipp_status: string
+          sep_status: string
+          sesi: string
+          versi_formula: string
+        }
+        Insert: {
+          active_students?: number
+          bulan: string
+          dibuat_pada?: string
+          guru_id: string
+          ibp_raw: number
+          ibp_status: string
+          id?: string
+          ipp_score: number
+          ipp_status: string
+          sep_status: string
+          sesi: string
+          versi_formula?: string
+        }
+        Update: {
+          active_students?: number
+          bulan?: string
+          dibuat_pada?: string
+          guru_id?: string
+          ibp_raw?: number
+          ibp_status?: string
+          id?: string
+          ipp_score?: number
+          ipp_status?: string
+          sep_status?: string
+          sesi?: string
+          versi_formula?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "riwayat_kinerja_guru_guru_id_fkey"
+            columns: ["guru_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_permissions: {
+        Row: {
+          admin_access: boolean | null
+          created_at: string | null
+          feature_key: string
+          feature_name: string
+          id: string
+          parent_access: boolean | null
+          teacher_access: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          admin_access?: boolean | null
+          created_at?: string | null
+          feature_key: string
+          feature_name: string
+          id?: string
+          parent_access?: boolean | null
+          teacher_access?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          admin_access?: boolean | null
+          created_at?: string | null
+          feature_key?: string
+          feature_name?: string
+          id?: string
+          parent_access?: boolean | null
+          teacher_access?: boolean | null
+          updated_at?: string | null
         }
         Relationships: []
       }
