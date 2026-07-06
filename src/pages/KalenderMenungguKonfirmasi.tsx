@@ -81,9 +81,9 @@ const MenungguKonfirmasi = () => {
                     {day.jenis && (
                       <span className={cn(
                         "text-[10px] font-medium px-2 py-0.5 rounded-full inline-block",
-                        JENIS_CONFIG[day.jenis as JenisHari]?.badge
+                        (JENIS_CONFIG[day.jenis as JenisHari] || JENIS_CONFIG.lainnya).badge
                       )}>
-                        {JENIS_CONFIG[day.jenis as JenisHari]?.label}
+                        {(JENIS_CONFIG[day.jenis as JenisHari] || JENIS_CONFIG.lainnya).label}
                       </span>
                     )}
                     {day.keterangan && (

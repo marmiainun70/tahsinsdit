@@ -118,10 +118,10 @@ export function DayCell({ date, calendarDay, currentMonth, isSelected, isMultiSe
             <span
               className={cn(
                 "text-[9px] font-medium leading-none px-1 py-0.5 rounded truncate block max-w-full",
-                JENIS_CONFIG[jenis].badge
+                (JENIS_CONFIG[jenis] || JENIS_CONFIG.lainnya).badge
               )}
             >
-              {JENIS_CONFIG[jenis].label}
+              {(JENIS_CONFIG[jenis] || JENIS_CONFIG.lainnya).label}
             </span>
           )}
           {calendarDay.keterangan && (
