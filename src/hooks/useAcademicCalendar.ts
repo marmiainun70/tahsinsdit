@@ -247,6 +247,23 @@ export function useUpdateAcademicYearStatus() {
   });
 }
 
+export function useDeleteAcademicYear() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("academic_years").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["academic_years"] });
+      toast({ title: "Tahun ajaran berhasil dihapus" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Gagal menghapus tahun ajaran", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
 // ─── Hooks: Hari Kalender ─────────────────────────────────────────────────────
 
 export function useCalendarDays(month: Date) {

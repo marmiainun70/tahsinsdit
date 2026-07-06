@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAcademicYears, useCreateAcademicYear, useUpdateAcademicYearStatus } from "@/hooks/useAcademicCalendar";
+import { useAcademicYears, useCreateAcademicYear, useUpdateAcademicYearStatus, useDeleteAcademicYear } from "@/hooks/useAcademicCalendar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +14,24 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Plus, GraduationCap, CheckCircle2, Archive, FileEdit } from "lucide-react";
+import { Loader2, Plus, GraduationCap, CheckCircle2, Archive, FileEdit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { AcademicYear } from "@/hooks/useAcademicCalendar";
@@ -42,6 +53,7 @@ export function AcademicYearManager({ onSelectYear, selectedYearId }: AcademicYe
   const { data: years, isLoading } = useAcademicYears();
   const createYear = useCreateAcademicYear();
   const updateStatus = useUpdateAcademicYearStatus();
+  const deleteYear = useDeleteAcademicYear();
 
   const [openDialog, setOpenDialog] = useState(false);
   const [form, setForm] = useState({ nama: "", tanggal_mulai: "", tanggal_selesai: "" });
@@ -60,6 +72,10 @@ export function AcademicYearManager({ onSelectYear, selectedYearId }: AcademicYe
 
   const handleStatusChange = async (year: AcademicYear, newStatus: "draft" | "aktif" | "selesai") => {
     await updateStatus.mutateAsync({ id: year.id, status: newStatus });
+  };
+
+  const handleDelete = async (yearId: string) => {
+    await deleteYear.mutateAsync(yearId);
   };
 
   if (isLoading) {
@@ -182,6 +198,38 @@ export function AcademicYearManager({ onSelectYear, selectedYearId }: AcademicYe
                       <SelectItem value="selesai" className="text-xs">Selesai</SelectItem>
                     </SelectContent>
                   </Select>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="max-w-sm">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus Tahun Ajaran?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tindakan ini tidak dapat dibatalkan. Menghapus tahun ajaran <strong>{year.nama}</strong> juga akan menghapus hari efektif yang terkait jika ada.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Batal</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(year.id);
+                          }}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Hapus
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </div>
