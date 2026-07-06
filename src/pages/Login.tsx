@@ -37,7 +37,7 @@ const Login = () => {
 
   // PWA Logic
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
-  const [showInstallCard, setShowInstallCard] = useState(false);
+  const [showInstallCard, setShowInstallCard] = useState(true); // DIPAKSA MUNCUL UNTUK TESTING
 
   const { signIn, authError, clearAuthError, session } = useAuth();
 
