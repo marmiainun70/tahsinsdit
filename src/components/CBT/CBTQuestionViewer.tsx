@@ -17,7 +17,7 @@ export function CBTQuestionViewer({
   currentAnswer,
   onAnswerChange,
 }: CBTQuestionViewerProps) {
-  const isPilihanGanda = soal.tipe_soal.toLowerCase().includes("pilihan ganda");
+  const isPilihanGanda = !soal.tipe_soal.toLowerCase().includes("reflektif");
 
   return (
     <div className="space-y-6">
