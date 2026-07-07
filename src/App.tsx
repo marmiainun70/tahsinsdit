@@ -35,6 +35,7 @@ import KalenderRiwayatSinkronisasi from "@/pages/KalenderRiwayatSinkronisasi";
 import OAuthConsent from "@/pages/OAuthConsent";
 import KenaikanTahunAjaran from "@/pages/KenaikanTahunAjaran";
 import MasterBankSoal from "@/pages/MasterBankSoal";
+import MasterPaketAsesmen from "@/pages/MasterPaketAsesmen";
 
 import NotFound from "@/pages/NotFound";
 import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotification";
@@ -115,6 +116,7 @@ const AppRoutes = () => {
       <Route path="/profil-diagnostik-guru" element={<ProtectedRoute><TeacherProfileDiagnostics /></ProtectedRoute>} />
       <Route path="/profil-diagnostik-guru/:profileId" element={<ProtectedRoute><TeacherProfileDiagnostics /></ProtectedRoute>} />
       <Route path="/profil-diagnostik-guru/bank-soal" element={<ProtectedRoute><MasterBankSoal /></ProtectedRoute>} />
+      <Route path="/profil-diagnostik-guru/paket-asesmen" element={<ProtectedRoute><MasterPaketAsesmen /></ProtectedRoute>} />
       <Route path="/kalender-akademik" element={<ProtectedRoute><KalenderAkademik /></ProtectedRoute>} />
       <Route path="/kalender-akademik/menunggu-konfirmasi" element={<ProtectedRoute><KalenderMenungguKonfirmasi /></ProtectedRoute>} />
       <Route path="/kalender-akademik/riwayat-sinkronisasi" element={<ProtectedRoute><KalenderRiwayatSinkronisasi /></ProtectedRoute>} />

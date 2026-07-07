@@ -354,12 +354,20 @@ function TeacherProfileDiagnostics() {
                 ))}
               </SelectContent>
             </Select>
-            <Button asChild variant="outline" className="gap-2">
-              <Link to="/profil-diagnostik-guru/bank-soal">
-                <Database className="w-4 h-4" />
-                Master Bank Soal
-              </Link>
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline" className="gap-2">
+                <Link to="/profil-diagnostik-guru/bank-soal">
+                  <Database className="w-4 h-4" />
+                  Master Bank Soal
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="gap-2 border-primary/20 text-primary hover:bg-primary/5">
+                <Link to="/profil-diagnostik-guru/paket-asesmen">
+                  <BookOpenCheck className="w-4 h-4" />
+                  Paket Asesmen
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
