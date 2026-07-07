@@ -89,14 +89,18 @@ export const useActiveTeachersForPeserta = () => {
       // (Bypass masalah foreign key jika admin belum membuat profil gurunya)
       const upsertData = activeProfiles.map(p => ({
         user_id: p.user_id,
-        full_name: p.full_name
+        full_name: p.full_name,
+        specialization: []
       }));
 
       const { error: upsertErr } = await supabase
         .from('teacher_profiles')
         .upsert(upsertData, { onConflict: 'user_id', ignoreDuplicates: true });
 
-      if (upsertErr) console.warn("Gagal sinkronisasi otomatis teacher_profiles:", upsertErr);
+      if (upsertErr) {
+        toast({ title: "Gagal sinkronisasi profil guru", description: upsertErr.message, variant: "destructive" });
+        console.warn("Gagal sinkronisasi otomatis teacher_profiles:", upsertErr);
+      }
 
       const activeUserIds = new Set(activeProfiles.map(p => p.user_id));
 
