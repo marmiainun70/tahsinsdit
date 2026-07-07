@@ -74,17 +74,33 @@ export const useActiveTeachersForPeserta = () => {
   return useQuery({
     queryKey: ['active-teachers-for-peserta'],
     queryFn: async () => {
-      // 1. Dapatkan daftar user_id yang statusnya approved (Aktif)
+      // 1. Dapatkan daftar user_id yang statusnya approved dan role guru/admin
       const { data: activeProfiles, error: profileErr } = await supabase
         .from('profiles')
-        .select('user_id')
-        .eq('status', 'approved');
+        .select('user_id, full_name')
+        .eq('status', 'approved')
+        .in('role', ['teacher', 'admin']);
 
       if (profileErr) throw new Error(profileErr.message);
 
+      if (!activeProfiles || activeProfiles.length === 0) return [];
+
+      // 2. Pastikan mereka memiliki entri di teacher_profiles
+      // (Bypass masalah foreign key jika admin belum membuat profil gurunya)
+      const upsertData = activeProfiles.map(p => ({
+        user_id: p.user_id,
+        full_name: p.full_name
+      }));
+
+      const { error: upsertErr } = await supabase
+        .from('teacher_profiles')
+        .upsert(upsertData, { onConflict: 'user_id', ignoreDuplicates: true });
+
+      if (upsertErr) console.warn("Gagal sinkronisasi otomatis teacher_profiles:", upsertErr);
+
       const activeUserIds = new Set(activeProfiles.map(p => p.user_id));
 
-      // 2. Dapatkan semua profil guru
+      // 3. Dapatkan semua profil guru
       const { data: teachers, error: teacherErr } = await supabase
         .from('teacher_profiles')
         .select('id, full_name, user_id')
@@ -92,7 +108,7 @@ export const useActiveTeachersForPeserta = () => {
 
       if (teacherErr) throw new Error(teacherErr.message);
 
-      // 3. Filter guru yang statusnya aktif
+      // 4. Filter guru yang statusnya aktif dan perannya sesuai
       return teachers.filter(t => activeUserIds.has(t.user_id));
     },
   });
