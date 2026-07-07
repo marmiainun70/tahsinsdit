@@ -35,6 +35,7 @@ function isReflectiveRecord(record: BankSoalImportRecord) {
 
 export function mapImportRecordToBankSoalInput(record: BankSoalImportRecord): BankSoalInput & { id?: string } {
   const reflective = isReflectiveRecord(record);
+  const jawabanBenar = record.jawaban_benar || (record as any).kunci_jawaban || "";
   return {
     id: record.uuid,
     kategori: record.kategori.trim(),
@@ -48,7 +49,7 @@ export function mapImportRecordToBankSoalInput(record: BankSoalImportRecord): Ba
     opsi_b: reflective ? null : record.pilihan?.B?.trim() ?? null,
     opsi_c: reflective ? null : record.pilihan?.C?.trim() ?? null,
     opsi_d: reflective ? null : record.pilihan?.D?.trim() ?? null,
-    jawaban_benar: record.jawaban_benar.trim().toUpperCase(),
+    jawaban_benar: jawabanBenar.trim().toUpperCase(),
     pembahasan: (record.pembahasan ?? record.rubrik_penilaian ?? "").trim() || null,
     bobot: Number.isFinite(record.bobot ?? 1) ? Number(record.bobot ?? 1) : 1,
     aktif: record.aktif ?? true,
@@ -63,17 +64,13 @@ export function validateBankSoalImportRecord(
   const errors: string[] = [];
   const normalizedSoal = normalizeBankSoalText(record.soal);
   const reflective = isReflectiveRecord(record);
+  const jawabanBenar = record.jawaban_benar || (record as any).kunci_jawaban || "";
 
   if (!hasText(record.id_soal)) {
     errors.push("id_soal kosong");
   }
-  if (!hasText(record.uuid)) {
-    errors.push("uuid kosong");
-  } else if (!isValidUuid(record.uuid)) {
+  if (record.uuid && !isValidUuid(record.uuid)) {
     errors.push("uuid tidak valid");
-  }
-  if (!hasText(record.versi)) {
-    errors.push("versi kosong");
   }
   if (!hasText(record.kategori)) {
     errors.push("kategori kosong");
@@ -109,8 +106,8 @@ export function validateBankSoalImportRecord(
     if (!hasChoices(record.pilihan)) {
       errors.push("opsi A-D harus lengkap");
     }
-    if (!ANSWER_KEYS.includes(record.jawaban_benar.trim().toUpperCase() as (typeof ANSWER_KEYS)[number])) {
-      errors.push("jawaban_benar harus A/B/C/D");
+    if (!ANSWER_KEYS.includes(jawabanBenar.trim().toUpperCase() as (typeof ANSWER_KEYS)[number])) {
+      errors.push("jawaban_benar/kunci_jawaban harus A/B/C/D");
     }
   }
 
@@ -159,8 +156,11 @@ export function validateBankSoalImportRows(
     const errors = [...validation.errors, ...duplicateErrors];
 
     if (validation.valid && !validation.isReflective) {
-      const key = record.jawaban_benar.trim().toUpperCase() as "A" | "B" | "C" | "D";
-      answerDistribution[key] += 1;
+      const jawabanBenar = record.jawaban_benar || (record as any).kunci_jawaban || "";
+      const key = jawabanBenar.trim().toUpperCase() as "A" | "B" | "C" | "D";
+      if (key in answerDistribution) {
+        answerDistribution[key] += 1;
+      }
     }
 
     return {
