@@ -154,7 +154,13 @@ export const useGenerateSoalOtomatis = () => {
         query = query.eq('tingkat_kesulitan', tingkatKesulitan);
       }
       if (tipeSoal && tipeSoal !== 'all') {
-        query = query.eq('tipe_soal', tipeSoal);
+        if (tipeSoal === 'Pilihan Ganda') {
+          query = query.not('tipe_soal', 'ilike', '%reflektif%');
+        } else if (tipeSoal === 'Reflektif') {
+          query = query.ilike('tipe_soal', '%reflektif%');
+        } else {
+          query = query.eq('tipe_soal', tipeSoal);
+        }
       }
 
       const { data: existingRows, error: existingError } = await supabase
