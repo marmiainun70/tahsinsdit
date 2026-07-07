@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Pencil, Trash2, Search, Plus, ListChecks } from "lucide-react";
+import { Loader2, Pencil, Trash2, Search, Plus, ListChecks, Users } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { PaketAsesmenFilter, PaketAsesmen } from "@/types/paketAsesmen";
 
@@ -13,9 +13,10 @@ interface PaketAsesmenListProps {
   onEdit: (paket: PaketAsesmen) => void;
   onCreate: () => void;
   onManageSoal: (paket: PaketAsesmen) => void;
+  onManagePeserta: (paket: PaketAsesmen) => void;
 }
 
-export function PaketAsesmenList({ onEdit, onCreate, onManageSoal }: PaketAsesmenListProps) {
+export function PaketAsesmenList({ onEdit, onCreate, onManageSoal, onManagePeserta }: PaketAsesmenListProps) {
   const [filters, setFilters] = useState<PaketAsesmenFilter>({});
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -141,6 +142,9 @@ export function PaketAsesmenList({ onEdit, onCreate, onManageSoal }: PaketAsesme
                     <TableCell>{item.jumlah_soal} Soal</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="icon" onClick={() => onManagePeserta(item)} title="Kelola Peserta Ujian">
+                          <Users className="w-4 h-4 text-emerald-600" />
+                        </Button>
                         <Button variant="outline" size="icon" onClick={() => onManageSoal(item)} title="Kelola Soal Paket">
                           <ListChecks className="w-4 h-4 text-blue-600" />
                         </Button>

@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { PaketAsesmenList } from "@/components/PaketAsesmen/PaketAsesmenList";
 import { PaketAsesmenForm } from "@/components/PaketAsesmen/PaketAsesmenForm";
 import { PaketAsesmenSoalManager } from "@/components/PaketAsesmen/PaketAsesmenSoalManager";
+import { PaketAsesmenPesertaManager } from "@/components/PaketAsesmen/PaketAsesmenPesertaManager";
 import { useCreatePaketAsesmen, useUpdatePaketAsesmen } from "@/hooks/usePaketAsesmen";
 import type { PaketAsesmen, PaketAsesmenInput } from "@/types/paketAsesmen";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function MasterPaketAsesmen() {
-  const [view, setView] = useState<"list" | "create" | "edit" | "manage-soal">("list");
+  const [view, setView] = useState<"list" | "create" | "edit" | "manage-soal" | "manage-peserta">("list");
   const [selectedPaket, setSelectedPaket] = useState<PaketAsesmen | null>(null);
 
   const createMutation = useCreatePaketAsesmen();
@@ -28,6 +29,11 @@ export default function MasterPaketAsesmen() {
   const handleManageSoal = (paket: PaketAsesmen) => {
     setSelectedPaket(paket);
     setView("manage-soal");
+  };
+
+  const handleManagePeserta = (paket: PaketAsesmen) => {
+    setSelectedPaket(paket);
+    setView("manage-peserta");
   };
 
   const handleCancel = () => {
@@ -64,7 +70,7 @@ export default function MasterPaketAsesmen() {
       </div>
 
       {view === "list" && (
-        <PaketAsesmenList onEdit={handleEdit} onCreate={handleCreate} onManageSoal={handleManageSoal} />
+        <PaketAsesmenList onEdit={handleEdit} onCreate={handleCreate} onManageSoal={handleManageSoal} onManagePeserta={handleManagePeserta} />
       )}
 
       {(view === "create" || view === "edit") && (
@@ -88,6 +94,13 @@ export default function MasterPaketAsesmen() {
 
       {view === "manage-soal" && selectedPaket && (
         <PaketAsesmenSoalManager 
+          paket={selectedPaket} 
+          onBack={handleCancel} 
+        />
+      )}
+
+      {view === "manage-peserta" && selectedPaket && (
+        <PaketAsesmenPesertaManager
           paket={selectedPaket} 
           onBack={handleCancel} 
         />
