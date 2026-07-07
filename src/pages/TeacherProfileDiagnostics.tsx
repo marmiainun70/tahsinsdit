@@ -81,6 +81,7 @@ type Diagnostic = {
 };
 
 type Category = "Sangat Siap" | "Siap" | "Cukup Siap" | "Perlu Pembinaan" | "Pembinaan Intensif";
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TeacherProfileTable = { from: (table: "teacher_profiles" | "teacher_diagnostics" | "profiles" | "teacher_students" | "students") => any };
 
 const ALL = "all";
@@ -171,6 +172,13 @@ const toNumber = (value: unknown) => Number(value ?? 0);
 const formatDate = (date?: string | null) => (date ? new Date(date).toLocaleDateString("id-ID") : "-");
 const getFirstName = (name: string | null | undefined) => name?.trim().split(/\s+/)[0] || "Guru";
 
+const formatNameWithTitle = (name: string | null | undefined, gender: string | null | undefined) => {
+  const baseName = name || "Guru";
+  if (gender === "Laki-laki") return `Ustadz ${baseName}`;
+  if (gender === "Perempuan") return `Ustadzah ${baseName}`;
+  return baseName;
+};
+
 function TeacherProfileDiagnostics() {
   const { profile, user } = useAuth();
   const navigate = useNavigate();
@@ -243,6 +251,7 @@ function TeacherProfileDiagnostics() {
   }, [listData?.diagnostics]);
 
   const classLabelsByTeacher = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const students = new Map((listData?.students ?? []).map((student: any) => [student.id, `Kelas ${student.kelas}${student.rombel ?? ""}`]));
     const map = new Map<string, string[]>();
     for (const assignment of listData?.assignments ?? []) {
@@ -361,7 +370,7 @@ function TeacherProfileDiagnostics() {
               {rows.map(({ account, teacherProfile, latest, classLabels }) => (
                 <article key={account.user_id} className="grid gap-3 p-4 lg:grid-cols-[1.4fr_.8fr_1fr_1fr_.7fr_.9fr_.7fr] lg:items-center">
                   <div>
-                    <p className="font-semibold text-foreground">{teacherProfile?.full_name ?? account.full_name ?? "Guru"}</p>
+                    <p className="font-semibold text-foreground">{formatNameWithTitle(teacherProfile?.full_name ?? account.full_name, teacherProfile?.gender)}</p>
                     {!teacherProfile && <p className="text-xs text-muted-foreground">Profil guru belum dilengkapi.</p>}
                   </div>
                   <Badge variant="secondary" className="w-fit">{getRoleLabel(account.role)}</Badge>
@@ -576,9 +585,9 @@ function TeacherDetail({
             {latest && <CategoryBadge category={latest.category} />}
           </div>
           <div className="max-w-3xl">
-            <p className="text-sm font-semibold text-teal-700 dark:text-teal-300">Selamat datang, {getFirstName(teacherProfile.full_name)}.</p>
+            <p className="text-sm font-semibold text-teal-700 dark:text-teal-300">Selamat datang, {formatNameWithTitle(getFirstName(teacherProfile.full_name), teacherProfile.gender)}.</p>
             <h1 className="mt-2 text-3xl font-bold tracking-normal text-foreground md:text-4xl">
-              {teacherProfile.full_name || "Lengkapi Profil Guru"}
+              {teacherProfile.full_name ? formatNameWithTitle(teacherProfile.full_name, teacherProfile.gender) : "Lengkapi Profil Guru"}
             </h1>
             <p className="mt-3 text-sm leading-6 text-muted-foreground md:text-base">
               Halaman ini merangkum perjalanan kompetensi, kekuatan bacaan, dan arah pembinaan dengan bahasa yang menumbuhkan. Data di sini menjadi bekal agar tugas mengajar terasa lebih tepat dan terarah.
