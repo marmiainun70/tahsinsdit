@@ -97,11 +97,11 @@ const categoryStyle: Record<Category, string> = {
 };
 
 const scoreFields = [
-  ["makhraj_score", "Makhraj Huruf"],
-  ["sifat_score", "Sifat Huruf"],
-  ["tajwid_score", "Tajwid Praktis"],
-  ["waqaf_ibtida_score", "Waqaf dan Ibtida'"],
   ["fluency_score", "Kelancaran Bacaan"],
+  ["makhraj_score", "Lahn Jali"],
+  ["tajwid_score", "Lahn Khofi"],
+  ["waqaf_ibtida_score", "Waqaf dan Ibtida'"],
+  ["sifat_score", "Sifat Huruf"],
   ["teaching_readiness_score", "Kesiapan Mengajar"],
 ] as const;
 
@@ -134,7 +134,7 @@ const defaultDiagnosticForm = () => ({
   sifat_score: 0,
   tajwid_score: 0,
   waqaf_ibtida_score: 0,
-  fluency_score: 0,
+  fluency_score: 100,
   teaching_readiness_score: 0,
 });
 
@@ -559,10 +559,14 @@ function TeacherDetail({
     onError: (error: Error) => toast({ title: "Gagal menyimpan evaluasi diagnostik", description: error.message, variant: "destructive" }),
   });
 
-  const mappingScore = useMemo(
-    () => Math.round(scoreFields.reduce((sum, [key]) => sum + Number(diagnosticForm[key] ?? 0), 0) / scoreFields.length),
-    [diagnosticForm],
-  );
+  const mappingScore = useMemo(() => {
+    const kelancaran = Number(diagnosticForm.fluency_score ?? 0);
+    const lahnJali = Number(diagnosticForm.makhraj_score ?? 0);
+    const lahnKhofi = Number(diagnosticForm.tajwid_score ?? 0);
+    
+    const nilai = kelancaran - (lahnJali * 2) - (lahnKhofi * 1);
+    return Math.round(Math.max(0, Math.min(100, nilai)));
+  }, [diagnosticForm]);
   const mappingCategory = getCategory(mappingScore);
 
   if (detailQuery.isLoading) return <LoadingCards />;
