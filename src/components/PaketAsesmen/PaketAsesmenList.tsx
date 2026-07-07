@@ -70,8 +70,9 @@ export function PaketAsesmenList({ onEdit, onCreate, onManageSoal, onManagePeser
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Jenis</SelectItem>
-              <SelectItem value="Tahsin">Tahsin</SelectItem>
-              <SelectItem value="Tahfizh">Tahfizh</SelectItem>
+              <SelectItem value="Tahsin & Tahfizh">Tahsin & Tahfizh</SelectItem>
+              <SelectItem value="Bahasa Arab">Bahasa Arab</SelectItem>
+              <SelectItem value="Lainnya">Lainnya</SelectItem>
             </SelectContent>
           </Select>
 

@@ -35,7 +35,18 @@ interface PaketAsesmenFormProps {
   onCancel: () => void;
 }
 
-const kompetensiOptions = ["Tahsin Dasar", "Tahsin Lanjutan", "Tahfizh", "Tajwid", "Makhraj"];
+const kompetensiOptions = [
+  "Tahsin Dasar", 
+  "Tahsin Lanjutan", 
+  "Tahfizh", 
+  "Tajwid", 
+  "Makhraj",
+  "Profesionalisme Guru",
+  "Pedagogik",
+  "Sosial & Kepribadian",
+  "Bahasa Arab",
+  "Dinniyah"
+];
 
 export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel }: PaketAsesmenFormProps) {
   const form = useForm<PaketAsesmenFormValues>({
@@ -49,7 +60,7 @@ export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel
       : {
           nama_paket: "",
           kode_paket: "",
-          jenis_asesmen: "Tahsin",
+          jenis_asesmen: "Tahsin & Tahfizh",
           periode: "Ganjil 2026/2027",
           tanggal_mulai: new Date().toISOString().slice(0, 16),
           tanggal_selesai: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
@@ -116,8 +127,7 @@ export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel
                     <SelectTrigger><SelectValue placeholder="Pilih jenis asesmen" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Tahsin">Tahsin</SelectItem>
-                    <SelectItem value="Tahfizh">Tahfizh</SelectItem>
+                    <SelectItem value="Tahsin & Tahfizh">Tahsin & Tahfizh</SelectItem>
                     <SelectItem value="Bahasa Arab">Bahasa Arab</SelectItem>
                     <SelectItem value="Lainnya">Lainnya</SelectItem>
                   </SelectContent>

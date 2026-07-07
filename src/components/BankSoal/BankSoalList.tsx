@@ -71,6 +71,11 @@ export function BankSoalList({ onEdit, onCreate, onImport }: BankSoalListProps) 
               <SelectItem value="all">Semua Kategori</SelectItem>
               <SelectItem value="Tahsin">Tahsin</SelectItem>
               <SelectItem value="Tahfizh">Tahfizh</SelectItem>
+              <SelectItem value="Profesionalisme Guru">Profesionalisme Guru</SelectItem>
+              <SelectItem value="Pedagogik">Pedagogik</SelectItem>
+              <SelectItem value="Sosial & Kepribadian">Sosial & Kepribadian</SelectItem>
+              <SelectItem value="Bahasa Arab">Bahasa Arab</SelectItem>
+              <SelectItem value="Dinniyah">Dinniyah</SelectItem>
             </SelectContent>
           </Select>
 
