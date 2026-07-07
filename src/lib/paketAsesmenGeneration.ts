@@ -42,7 +42,15 @@ export function selectSoalForPaket(
     }
     if (filters.subAspek && row.sub_aspek !== filters.subAspek) return false;
     if (filters.tingkatKesulitan && row.tingkat_kesulitan !== filters.tingkatKesulitan) return false;
-    if (filters.tipeSoal && filters.tipeSoal !== "all" && row.tipe_soal !== filters.tipeSoal) return false;
+    if (filters.tipeSoal && filters.tipeSoal !== "all") {
+      if (filters.tipeSoal === 'Pilihan Ganda') {
+        if (row.tipe_soal.toLowerCase().includes('reflektif')) return false;
+      } else if (filters.tipeSoal === 'Reflektif') {
+        if (!row.tipe_soal.toLowerCase().includes('reflektif')) return false;
+      } else {
+        if (row.tipe_soal !== filters.tipeSoal) return false;
+      }
+    }
     return true;
   });
 
