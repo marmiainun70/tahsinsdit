@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { PaketAsesmen, PaketAsesmenInput, PaketAsesmenFilter } from '@/types/paketAsesmen';
 import { toast } from '@/hooks/use-toast';
+import { selectSoalForPaket } from '@/lib/paketAsesmenGeneration';
 
 type GenerateSoalArgs = {
   paketId: string;
@@ -11,15 +12,6 @@ type GenerateSoalArgs = {
   tipeSoal?: string;
   jumlahSoal: number;
 };
-
-function shuffleArray<T>(items: T[]) {
-  const copy = [...items];
-  for (let i = copy.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 export const usePaketAsesmen = (filters: PaketAsesmenFilter, page: number, pageSize: number = 10) => {
   return useQuery({
@@ -141,7 +133,7 @@ export const useGenerateSoalOtomatis = () => {
     }: GenerateSoalArgs) => {
       let query = supabase
         .from('bank_soal')
-        .select('id, tipe_soal')
+        .select('id, kategori, sub_aspek, tingkat_kesulitan, tipe_soal')
         .eq('aktif', true);
 
       if (kategori) {
@@ -168,8 +160,24 @@ export const useGenerateSoalOtomatis = () => {
       const { data, error } = await query;
       if (error) throw new Error(error.message);
 
-      const available = shuffleArray((data ?? []).filter((row) => !existingIds.has(row.id)));
-      const selected = available.slice(0, jumlahSoal);
+      const selected = selectSoalForPaket(
+        (data ?? []).map((row) => ({
+          id: row.id,
+          kategori: row.kategori,
+          sub_aspek: row.sub_aspek,
+          tingkat_kesulitan: row.tingkat_kesulitan,
+          tipe_soal: row.tipe_soal,
+          aktif: true,
+        })),
+        existingIds,
+        {
+          kategori,
+          subAspek,
+          tingkatKesulitan,
+          tipeSoal,
+        },
+        jumlahSoal,
+      );
 
       if (selected.length === 0) {
         return 0;
