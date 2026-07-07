@@ -74,14 +74,26 @@ export const useActiveTeachersForPeserta = () => {
   return useQuery({
     queryKey: ['active-teachers-for-peserta'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // 1. Dapatkan daftar user_id yang statusnya Aktif
+      const { data: activeProfiles, error: profileErr } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('status', 'Aktif');
+
+      if (profileErr) throw new Error(profileErr.message);
+
+      const activeUserIds = new Set(activeProfiles.map(p => p.user_id));
+
+      // 2. Dapatkan semua profil guru
+      const { data: teachers, error: teacherErr } = await supabase
         .from('teacher_profiles')
-        .select('id, full_name, is_active')
-        .eq('is_active', true)
+        .select('id, full_name, user_id')
         .order('full_name', { ascending: true });
 
-      if (error) throw new Error(error.message);
-      return data;
+      if (teacherErr) throw new Error(teacherErr.message);
+
+      // 3. Filter guru yang statusnya aktif
+      return teachers.filter(t => activeUserIds.has(t.user_id));
     },
   });
 };
