@@ -94,7 +94,8 @@ export function BankSoalForm({ initialData, onSubmit, isSubmitting, onCancel }: 
                     <SelectTrigger><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Tahsin">Tahsin</SelectItem>
+                    <SelectItem value="Tahsin Dasar">Tahsin Dasar</SelectItem>
+                    <SelectItem value="Tahsin Lanjutan">Tahsin Lanjutan</SelectItem>
                     <SelectItem value="Tahfizh">Tahfizh</SelectItem>
                     <SelectItem value="Profesionalisme Guru">Profesionalisme Guru</SelectItem>
                     <SelectItem value="Pedagogik">Pedagogik</SelectItem>
