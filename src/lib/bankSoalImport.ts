@@ -187,15 +187,19 @@ export function validateBankSoalImportRows(
 }
 
 export function parseBankSoalImportJson(text: string) {
-  let parsed: unknown;
+  let parsed: any;
   try {
     parsed = JSON.parse(text);
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : "JSON tidak valid");
   }
 
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && Array.isArray(parsed.soal)) {
+    return parsed.soal as BankSoalImportRecord[];
+  }
+
   if (!Array.isArray(parsed)) {
-    throw new Error("File JSON harus berupa array soal");
+    throw new Error("File JSON harus berupa array soal atau memiliki properti 'soal' berupa array");
   }
 
   return parsed as BankSoalImportRecord[];
