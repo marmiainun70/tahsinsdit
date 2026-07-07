@@ -711,16 +711,40 @@ function TeacherDetail({
             <CardHeader>
               <CardTitle>Asesmen Tertulis</CardTitle>
               <CardDescription>
-                Bagian ini diperuntukkan untuk mencatat evaluasi dan tes tertulis kompetensi guru.
+                Alur pengerjaan asesmen tertulis sudah diarahkan ke Dashboard Ujian CBT.
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex min-h-[300px] flex-col items-center justify-center space-y-4 p-8 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted/50">
-                <FileText className="h-8 w-8 text-muted-foreground/50" />
-              </div>
-              <div>
-                <p className="font-medium text-foreground">Dalam Tahap Pengembangan</p>
-                <p className="mt-1 text-sm text-muted-foreground">Form asesmen tertulis sedang disiapkan.</p>
+            <CardContent className="space-y-6 p-8">
+              <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-6 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-background">
+                  <MonitorPlay className="h-8 w-8 text-primary" />
+                </div>
+                <div className="mt-4">
+                  <p className="font-medium text-foreground">Pengerjaan asesmen ada di CBT Dashboard</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Slide atau lembaran asesmen tertulis masih dalam tahap pengembangan. Untuk saat ini, gunakan alur aktif berikut:
+                  </p>
+                </div>
+                <div className="mt-6 grid gap-3 text-left md:grid-cols-4">
+                  <StepChip number="1" title="Paket Asesmen" text="Admin menyiapkan paket dan soal." />
+                  <StepChip number="2" title="Peserta Asesmen" text="Guru ditugaskan ke paket tertentu." />
+                  <StepChip number="3" title="Kerjakan" text="Masuk ke CBT Dashboard lalu mulai sesi." />
+                  <StepChip number="4" title="Submit" text="Jawaban tersimpan otomatis lalu dikirim." />
+                </div>
+                <div className="mt-6 flex flex-wrap justify-center gap-3">
+                  <Button asChild className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+                    <Link to="/cbt-dashboard">
+                      <MonitorPlay className="h-4 w-4" />
+                      Buka Dashboard Ujian CBT
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="gap-2">
+                    <Link to="/profil-diagnostik-guru/paket-asesmen">
+                      <BookOpenCheck className="h-4 w-4" />
+                      Lihat Paket Asesmen
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -939,6 +963,22 @@ function SummaryMetric({ label, value }: { label: string; value: string }) {
     <div className="rounded-2xl border border-white/70 bg-white/80 p-3 text-center shadow-sm dark:border-white/10 dark:bg-background/60">
       <p className="text-xl font-bold text-foreground">{value}</p>
       <p className="text-xs text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+function StepChip({ number, title, text }: { number: string; title: string; text: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-background p-4 text-left shadow-sm">
+      <div className="flex items-center gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+          {number}
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-foreground">{title}</p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">{text}</p>
+        </div>
+      </div>
     </div>
   );
 }
