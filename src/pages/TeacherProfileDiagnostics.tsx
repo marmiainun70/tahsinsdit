@@ -16,6 +16,7 @@ import {
   Search,
   Sparkles,
   UserRound,
+  MonitorPlay,
   type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -365,6 +366,12 @@ function TeacherProfileDiagnostics() {
                 <Link to="/profil-diagnostik-guru/paket-asesmen">
                   <BookOpenCheck className="w-4 h-4" />
                   Paket Asesmen
+                </Link>
+              </Button>
+              <Button asChild className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+                <Link to="/cbt-dashboard">
+                  <MonitorPlay className="w-4 h-4" />
+                  Ujian CBT
                 </Link>
               </Button>
             </div>
