@@ -137,7 +137,15 @@ export const useGenerateSoalOtomatis = () => {
         .eq('aktif', true);
 
       if (kategori) {
-        query = query.eq('kategori', kategori);
+        if (kategori === 'Tahsin Dasar') {
+          query = query.in('kategori', ['Tahsin Dasar', 'Makhraj']);
+        } else if (kategori === 'Tahsin Lanjutan') {
+          query = query.in('kategori', ['Tahsin Lanjutan', 'Tajwid', 'Tajwid Lanjutan']);
+        } else if (kategori === 'Tahfizh') {
+          query = query.in('kategori', ['Tahfizh', 'Metodologi Tahfizh']);
+        } else {
+          query = query.eq('kategori', kategori);
+        }
       }
       if (subAspek) {
         query = query.eq('sub_aspek', subAspek);

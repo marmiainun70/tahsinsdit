@@ -34,7 +34,12 @@ export function selectSoalForPaket(
   const eligible = bankSoalRows.filter((row) => {
     if (!row.aktif) return false;
     if (existingSoalIds.has(row.id)) return false;
-    if (filters.kategori && row.kategori !== filters.kategori) return false;
+    if (filters.kategori) {
+      if (filters.kategori === 'Tahsin Dasar' && !['Tahsin Dasar', 'Makhraj'].includes(row.kategori)) return false;
+      else if (filters.kategori === 'Tahsin Lanjutan' && !['Tahsin Lanjutan', 'Tajwid', 'Tajwid Lanjutan'].includes(row.kategori)) return false;
+      else if (filters.kategori === 'Tahfizh' && !['Tahfizh', 'Metodologi Tahfizh'].includes(row.kategori)) return false;
+      else if (!['Tahsin Dasar', 'Tahsin Lanjutan', 'Tahfizh'].includes(filters.kategori) && row.kategori !== filters.kategori) return false;
+    }
     if (filters.subAspek && row.sub_aspek !== filters.subAspek) return false;
     if (filters.tingkatKesulitan && row.tingkat_kesulitan !== filters.tingkatKesulitan) return false;
     if (filters.tipeSoal && filters.tipeSoal !== "all" && row.tipe_soal !== filters.tipeSoal) return false;
