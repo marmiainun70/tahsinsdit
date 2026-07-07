@@ -43,9 +43,7 @@ const kompetensiOptions = [
   "Makhraj",
   "Profesionalisme Guru",
   "Pedagogik",
-  "Sosial & Kepribadian",
-  "Bahasa Arab",
-  "Dinniyah"
+  "Sosial & Kepribadian"
 ];
 
 export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel }: PaketAsesmenFormProps) {
@@ -128,7 +126,6 @@ export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="Tahsin & Tahfizh">Tahsin & Tahfizh</SelectItem>
-                    <SelectItem value="Bahasa Arab">Bahasa Arab</SelectItem>
                     <SelectItem value="Lainnya">Lainnya</SelectItem>
                   </SelectContent>
                 </Select>
