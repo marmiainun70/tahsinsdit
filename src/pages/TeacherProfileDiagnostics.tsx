@@ -7,6 +7,7 @@ import {
   BookOpenCheck,
   CalendarDays,
   ClipboardCheck,
+  FileText,
   HeartHandshake,
   Layers3,
   Loader2,
@@ -609,8 +610,9 @@ function TeacherDetail({
       </section>
 
       <Tabs defaultValue="biodata" className="space-y-4">
-        <TabsList className="grid h-auto grid-cols-2 gap-1 md:grid-cols-4">
+        <TabsList className="grid h-auto grid-cols-2 gap-1 md:grid-cols-5">
           <TabsTrigger value="biodata"><UserRound className="mr-2 h-4 w-4" />Biodata Guru</TabsTrigger>
+          <TabsTrigger value="asesmen"><FileText className="mr-2 h-4 w-4" />Asesmen Tertulis</TabsTrigger>
           <TabsTrigger value="diagnostik"><BookOpenCheck className="mr-2 h-4 w-4" />Diagnostik Bacaan</TabsTrigger>
           <TabsTrigger value="riwayat"><CalendarDays className="mr-2 h-4 w-4" />Riwayat Evaluasi</TabsTrigger>
           <TabsTrigger value="rekomendasi"><ClipboardCheck className="mr-2 h-4 w-4" />Rekomendasi</TabsTrigger>
@@ -678,6 +680,26 @@ function TeacherDetail({
                   Simpan Biodata
                 </Button>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="asesmen">
+          <Card>
+            <CardHeader>
+              <CardTitle>Asesmen Tertulis</CardTitle>
+              <CardDescription>
+                Bagian ini diperuntukkan untuk mencatat evaluasi dan tes tertulis kompetensi guru.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex min-h-[300px] flex-col items-center justify-center space-y-4 p-8 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-muted/50">
+                <FileText className="h-8 w-8 text-muted-foreground/50" />
+              </div>
+              <div>
+                <p className="font-medium text-foreground">Dalam Tahap Pengembangan</p>
+                <p className="mt-1 text-sm text-muted-foreground">Form asesmen tertulis sedang disiapkan.</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
