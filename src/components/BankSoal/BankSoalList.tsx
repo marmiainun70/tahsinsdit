@@ -5,16 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Pencil, Trash2, Search, Plus } from "lucide-react";
+import { Loader2, Pencil, Trash2, Search, Plus, Upload } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { BankSoalFilter, BankSoal } from "@/types/bankSoal";
 
 interface BankSoalListProps {
   onEdit: (soal: BankSoal) => void;
   onCreate: () => void;
+  onImport: () => void;
 }
 
-export function BankSoalList({ onEdit, onCreate }: BankSoalListProps) {
+export function BankSoalList({ onEdit, onCreate, onImport }: BankSoalListProps) {
   const [filters, setFilters] = useState<BankSoalFilter>({});
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -84,6 +85,10 @@ export function BankSoalList({ onEdit, onCreate }: BankSoalListProps) {
               <SelectItem value="Sulit">Sulit</SelectItem>
             </SelectContent>
           </Select>
+
+          <Button variant="outline" onClick={onImport} className="gap-2">
+            <Upload className="w-4 h-4" /> Import JSON
+          </Button>
 
           <Button onClick={onCreate} className="gap-2">
             <Plus className="w-4 h-4" /> Tambah Soal

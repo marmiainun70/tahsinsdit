@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { ArrowLeft, Database } from "lucide-react";
-import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BankSoalList } from "@/components/BankSoal/BankSoalList";
 import { BankSoalForm } from "@/components/BankSoal/BankSoalForm";
 import { useCreateBankSoal, useUpdateBankSoal } from "@/hooks/useBankSoal";
 import type { BankSoal, BankSoalInput } from "@/types/bankSoal";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { BankSoalImportDialog } from "@/components/BankSoal/BankSoalImportDialog";
 
 export default function MasterBankSoal() {
   const [view, setView] = useState<"list" | "create" | "edit">("list");
   const [selectedSoal, setSelectedSoal] = useState<BankSoal | null>(null);
+  const [showImport, setShowImport] = useState(false);
 
   const createMutation = useCreateBankSoal();
   const updateMutation = useUpdateBankSoal();
@@ -59,7 +60,10 @@ export default function MasterBankSoal() {
       </div>
 
       {view === "list" ? (
-        <BankSoalList onEdit={handleEdit} onCreate={handleCreate} />
+        <>
+          <BankSoalList onEdit={handleEdit} onCreate={handleCreate} onImport={() => setShowImport(true)} />
+          <BankSoalImportDialog open={showImport} onOpenChange={setShowImport} />
+        </>
       ) : (
         <Card className="max-w-4xl mx-auto">
           <CardHeader>
