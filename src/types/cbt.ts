@@ -27,4 +27,7 @@ export type SoalCBT = {
   opsi_b: string | null;
   opsi_c: string | null;
   opsi_d: string | null;
+  jawaban_benar: string | null;
+  pembahasan: string | null;
+  rubrik_penilaian?: string | null;
 };

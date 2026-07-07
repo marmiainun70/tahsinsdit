@@ -63,7 +63,7 @@ export const useInitSession = () => {
         .from('asesmen_session')
         .select('*')
         .eq('peserta_asesmen_id', pesertaAsesmenId)
-        .single();
+        .maybeSingle();
 
       if (existing) {
         return existing as AsesmenSession;
@@ -100,7 +100,7 @@ export const useCBTData = (sessionId: string, paketId: string) => {
       // Ambil soal yang berelasi dengan paket
       const { data: relasi, error: relasiError } = await supabase
         .from('paket_asesmen_soal')
-        .select('soal:soal_id (id, soal, tipe_soal, opsi_a, opsi_b, opsi_c, opsi_d)')
+        .select('soal:soal_id (id, soal, tipe_soal, opsi_a, opsi_b, opsi_c, opsi_d, jawaban_benar, pembahasan, bobot)')
         .eq('paket_id', paketId);
 
       if (relasiError) throw new Error(relasiError.message);

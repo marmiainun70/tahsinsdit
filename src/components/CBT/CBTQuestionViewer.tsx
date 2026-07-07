@@ -1,6 +1,7 @@
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import type { SoalCBT } from "@/types/cbt";
 
 interface CBTQuestionViewerProps {
@@ -16,7 +17,7 @@ export function CBTQuestionViewer({
   currentAnswer,
   onAnswerChange,
 }: CBTQuestionViewerProps) {
-  const isPilihanGanda = soal.tipe_soal === "Pilihan Ganda";
+  const isPilihanGanda = soal.tipe_soal.toLowerCase().includes("pilihan ganda");
 
   return (
     <div className="space-y-6">
@@ -25,6 +26,11 @@ export function CBTQuestionViewer({
           {index + 1}
         </div>
         <div className="flex-1">
+          <div className="mb-2 flex items-center gap-2">
+            <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+              {isPilihanGanda ? "Pilihan Ganda" : "Reflektif"}
+            </Badge>
+          </div>
           <p className="text-lg font-medium leading-relaxed whitespace-pre-wrap">
             {soal.soal}
           </p>
@@ -74,6 +80,7 @@ export function CBTQuestionViewer({
             />
             <p className="text-xs text-muted-foreground">
               Jawaban akan tersimpan otomatis saat Anda mengetik atau pindah soal.
+              {soal.rubrik_penilaian ? " Soal ini akan dinilai menggunakan rubrik." : ""}
             </p>
           </div>
         )}

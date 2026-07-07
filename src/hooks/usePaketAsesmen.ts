@@ -3,6 +3,24 @@ import { supabase } from '@/integrations/supabase/client';
 import type { PaketAsesmen, PaketAsesmenInput, PaketAsesmenFilter } from '@/types/paketAsesmen';
 import { toast } from '@/hooks/use-toast';
 
+type GenerateSoalArgs = {
+  paketId: string;
+  kategori?: string;
+  subAspek?: string;
+  tingkatKesulitan?: string;
+  tipeSoal?: string;
+  jumlahSoal: number;
+};
+
+function shuffleArray<T>(items: T[]) {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
 export const usePaketAsesmen = (filters: PaketAsesmenFilter, page: number, pageSize: number = 10) => {
   return useQuery({
     queryKey: ['paket-asesmen', filters, page, pageSize],
@@ -118,24 +136,56 @@ export const useGenerateSoalOtomatis = () => {
       kategori,
       subAspek,
       tingkatKesulitan,
-      jumlahSoal
-    }: {
-      paketId: string;
-      kategori?: string;
-      subAspek?: string;
-      tingkatKesulitan?: string;
-      jumlahSoal: number;
-    }) => {
-      const { data, error } = await supabase.rpc('generate_random_soal_for_paket', {
-        p_paket_id: paketId,
-        p_kategori: kategori || null,
-        p_sub_aspek: subAspek || null,
-        p_tingkat_kesulitan: tingkatKesulitan || null,
-        p_jumlah_soal: jumlahSoal
-      });
+      tipeSoal,
+      jumlahSoal,
+    }: GenerateSoalArgs) => {
+      let query = supabase
+        .from('bank_soal')
+        .select('id, tipe_soal')
+        .eq('aktif', true);
 
+      if (kategori) {
+        query = query.eq('kategori', kategori);
+      }
+      if (subAspek) {
+        query = query.eq('sub_aspek', subAspek);
+      }
+      if (tingkatKesulitan) {
+        query = query.eq('tingkat_kesulitan', tingkatKesulitan);
+      }
+      if (tipeSoal && tipeSoal !== 'all') {
+        query = query.eq('tipe_soal', tipeSoal);
+      }
+
+      const { data: existingRows, error: existingError } = await supabase
+        .from('paket_asesmen_soal')
+        .select('soal_id')
+        .eq('paket_id', paketId);
+
+      if (existingError) throw new Error(existingError.message);
+
+      const existingIds = new Set((existingRows ?? []).map((row) => row.soal_id));
+      const { data, error } = await query;
       if (error) throw new Error(error.message);
-      return data as number; // returns inserted_count
+
+      const available = shuffleArray((data ?? []).filter((row) => !existingIds.has(row.id)));
+      const selected = available.slice(0, jumlahSoal);
+
+      if (selected.length === 0) {
+        return 0;
+      }
+
+      const payload = selected.map((row) => ({
+        paket_id: paketId,
+        soal_id: row.id,
+      }));
+
+      const { error: insertError } = await supabase
+        .from('paket_asesmen_soal')
+        .insert(payload);
+
+      if (insertError) throw new Error(insertError.message);
+      return payload.length;
     },
     onSuccess: (count) => {
       // Invalidate queries that fetch the questions for this package
