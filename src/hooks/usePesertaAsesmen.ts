@@ -74,11 +74,11 @@ export const useActiveTeachersForPeserta = () => {
   return useQuery({
     queryKey: ['active-teachers-for-peserta'],
     queryFn: async () => {
-      // 1. Dapatkan daftar user_id yang statusnya Aktif
+      // 1. Dapatkan daftar user_id yang statusnya approved (Aktif)
       const { data: activeProfiles, error: profileErr } = await supabase
         .from('profiles')
         .select('user_id')
-        .eq('status', 'Aktif');
+        .eq('status', 'approved');
 
       if (profileErr) throw new Error(profileErr.message);
 
