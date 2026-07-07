@@ -7,6 +7,7 @@ import {
   BookOpenCheck,
   CalendarDays,
   ClipboardCheck,
+  Database,
   FileText,
   HeartHandshake,
   Layers3,
@@ -337,7 +338,7 @@ function TeacherProfileDiagnostics() {
         </section>
 
         <Card>
-          <CardContent className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_240px]">
+          <CardContent className="grid gap-3 p-4 md:grid-cols-[minmax(0,1fr)_240px_auto]">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari nama guru..." className="pl-9" />
@@ -353,6 +354,12 @@ function TeacherProfileDiagnostics() {
                 ))}
               </SelectContent>
             </Select>
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/profil-diagnostik-guru/bank-soal">
+                <Database className="w-4 h-4" />
+                Master Bank Soal
+              </Link>
+            </Button>
           </CardContent>
         </Card>
 
