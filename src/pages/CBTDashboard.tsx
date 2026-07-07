@@ -31,7 +31,7 @@ export default function CBTDashboard() {
           Dashboard Ujian CBT
         </h1>
         <p className="text-muted-foreground mt-1">
-          Daftar asesmen yang ditugaskan kepada Anda.
+          Daftar asesmen pilihan ganda yang ditugaskan kepada Anda.
         </p>
       </div>
 

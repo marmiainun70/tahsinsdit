@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { ArrowLeft, Database } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { BankSoalList } from "@/components/BankSoal/BankSoalList";
 import { BankSoalForm } from "@/components/BankSoal/BankSoalForm";
 import { useCreateBankSoal, useUpdateBankSoal } from "@/hooks/useBankSoal";
@@ -9,12 +11,32 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { BankSoalImportDialog } from "@/components/BankSoal/BankSoalImportDialog";
 
 export default function MasterBankSoal() {
+  const { profile } = useAuth();
   const [view, setView] = useState<"list" | "create" | "edit">("list");
   const [selectedSoal, setSelectedSoal] = useState<BankSoal | null>(null);
   const [showImport, setShowImport] = useState(false);
+  const isAdmin = profile?.role?.trim().toLowerCase() === "admin";
 
   const createMutation = useCreateBankSoal();
   const updateMutation = useUpdateBankSoal();
+
+  if (!isAdmin) {
+    return (
+      <Card className="mx-auto max-w-2xl">
+        <CardHeader>
+          <CardTitle>Akses admin saja</CardTitle>
+          <CardDescription>
+            Pengelolaan bank soal hanya untuk admin. Guru cukup membuka CBT Dashboard untuk mengerjakan soal.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild>
+            <Link to="/cbt-dashboard">Buka CBT Dashboard</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const handleCreate = () => {
     setSelectedSoal(null);

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { ArrowLeft, BookOpenCheck } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import { PaketAsesmenList } from "@/components/PaketAsesmen/PaketAsesmenList";
 import { PaketAsesmenForm } from "@/components/PaketAsesmen/PaketAsesmenForm";
 import { PaketAsesmenSoalManager } from "@/components/PaketAsesmen/PaketAsesmenSoalManager";
@@ -10,11 +12,31 @@ import type { PaketAsesmen, PaketAsesmenInput } from "@/types/paketAsesmen";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function MasterPaketAsesmen() {
+  const { profile } = useAuth();
   const [view, setView] = useState<"list" | "create" | "edit" | "manage-soal" | "manage-peserta">("list");
   const [selectedPaket, setSelectedPaket] = useState<PaketAsesmen | null>(null);
+  const isAdmin = profile?.role?.trim().toLowerCase() === "admin";
 
   const createMutation = useCreatePaketAsesmen();
   const updateMutation = useUpdatePaketAsesmen();
+
+  if (!isAdmin) {
+    return (
+      <Card className="mx-auto max-w-2xl">
+        <CardHeader>
+          <CardTitle>Akses admin saja</CardTitle>
+          <CardDescription>
+            Pengelolaan paket dan peserta asesmen hanya untuk admin. Guru cukup membuka CBT Dashboard untuk mengerjakan soal.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild>
+            <Link to="/cbt-dashboard">Buka CBT Dashboard</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const handleCreate = () => {
     setSelectedPaket(null);

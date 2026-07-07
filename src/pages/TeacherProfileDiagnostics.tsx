@@ -240,6 +240,7 @@ function TeacherProfileDiagnostics() {
   }, [isDiagnosticAdmin, navigate, ownProfileQuery.data?.id, profileId]);
 
   const listData = listQuery.data;
+  const isAdmin = profile?.role?.trim().toLowerCase() === "admin";
   const teacherProfilesByUserId = useMemo(
     () => new Map((listData?.teacherProfiles ?? []).map((item) => [item.user_id, item])),
     [listData?.teacherProfiles],
@@ -356,18 +357,22 @@ function TeacherProfileDiagnostics() {
               </SelectContent>
             </Select>
             <div className="flex flex-wrap gap-2">
-              <Button asChild variant="outline" className="gap-2">
-                <Link to="/profil-diagnostik-guru/bank-soal">
-                  <Database className="w-4 h-4" />
-                  Master Bank Soal
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="gap-2 border-primary/20 text-primary hover:bg-primary/5">
-                <Link to="/profil-diagnostik-guru/paket-asesmen">
-                  <BookOpenCheck className="w-4 h-4" />
-                  Paket Asesmen
-                </Link>
-              </Button>
+              {isAdmin && (
+                <>
+                  <Button asChild variant="outline" className="gap-2">
+                    <Link to="/profil-diagnostik-guru/bank-soal">
+                      <Database className="w-4 h-4" />
+                      Master Bank Soal
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="gap-2 border-primary/20 text-primary hover:bg-primary/5">
+                    <Link to="/profil-diagnostik-guru/paket-asesmen">
+                      <BookOpenCheck className="w-4 h-4" />
+                      Paket Asesmen
+                    </Link>
+                  </Button>
+                </>
+              )}
               <Button asChild className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
                 <Link to="/cbt-dashboard">
                   <MonitorPlay className="w-4 h-4" />
@@ -727,9 +732,9 @@ function TeacherDetail({
                 </div>
                 <div className="mt-6 grid gap-3 text-left md:grid-cols-4">
                   <StepChip number="1" title="Paket Asesmen" text="Admin menyiapkan paket dan soal." />
-                  <StepChip number="2" title="Peserta Asesmen" text="Guru ditugaskan ke paket tertentu." />
-                  <StepChip number="3" title="Kerjakan" text="Masuk ke CBT Dashboard lalu mulai sesi." />
-                  <StepChip number="4" title="Submit" text="Jawaban tersimpan otomatis lalu dikirim." />
+                  <StepChip number="2" title="Peserta Asesmen" text="Admin menugaskan guru ke paket." />
+                  <StepChip number="3" title="Kerjakan" text="Guru masuk ke CBT Dashboard lalu mulai sesi." />
+                  <StepChip number="4" title="Submit" text="Jawaban pilihan ganda tersimpan lalu dikirim." />
                 </div>
                 <div className="mt-6 flex flex-wrap justify-center gap-3">
                   <Button asChild className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
@@ -738,12 +743,14 @@ function TeacherDetail({
                       Buka Dashboard Ujian CBT
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" className="gap-2">
-                    <Link to="/profil-diagnostik-guru/paket-asesmen">
-                      <BookOpenCheck className="h-4 w-4" />
-                      Lihat Paket Asesmen
-                    </Link>
-                  </Button>
+                  {isAdmin && (
+                    <Button asChild variant="outline" className="gap-2">
+                      <Link to="/profil-diagnostik-guru/paket-asesmen">
+                        <BookOpenCheck className="h-4 w-4" />
+                        Lihat Paket Asesmen
+                      </Link>
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
