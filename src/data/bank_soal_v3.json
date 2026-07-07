@@ -1,0 +1,2536 @@
+{
+  "metadata": {
+    "nama_bank_soal": "Bank Soal Kompetensi Guru Tahsin & Tahfizh SDIT Luqmanul Hakim",
+    "versi": "V3 (jawaban teracak seimbang)",
+    "total_soal": 141,
+    "jumlah_per_kategori": {
+      "Makharijul Huruf": 19,
+      "Tahsin Dasar/Iqra": 22,
+      "Tajwid Lanjutan": 22,
+      "Tahsin Lanjutan (Expert)": 18,
+      "Metodologi Tahfizh": 28,
+      "Profesionalisme Guru": 32
+    },
+    "jumlah_per_tipe_soal": {
+      "Kasus": 126,
+      "Hafalan": 9,
+      "Reflektif/Open-Ended": 5,
+      "Reflektif": 1
+    }
+  },
+  "soal": [
+    {
+      "id_soal": "MKJ-001",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid mengucapkan huruf 'sa' (س) dan 'sya' (ش) dengan bunyi yang sama, sehingga saat membaca kata yang mengandung kedua huruf itu terdengar tertukar. Apa langkah pertama yang tepat?",
+      "pilihan": {
+        "A": "Suruh murid membaca lebih pelan tanpa penjelasan tambahan",
+        "B": "Perdengarkan perbedaan bunyi keduanya berulang, lalu minta murid menirukan sambil merasakan posisi lidahnya",
+        "C": "Pindahkan ke juz yang lebih mudah",
+        "D": "Biarkan saja, nanti terbiasa sendiri seiring waktu"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Kesalahan pengucapan huruf yang mirip biasanya karena murid belum bisa membedakan posisi keluarnya bunyi. Solusi paling efektif adalah latihan pembeda bunyi (minimal pairs) dengan contoh berulang.",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi kesalahan pengucapan huruf yang mirip bunyi"
+    },
+    {
+      "id_soal": "MKJ-002",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid selalu mengucapkan huruf 'ra' (ر) dengan getaran lidah yang berlebihan sehingga terdengar seperti 'rrra' yang terlalu kuat. Apa kemungkinan penyebab dan solusinya?",
+      "pilihan": {
+        "A": "Penyebab: murid terlalu bersemangat. Solusi: suruh membaca lebih lambat",
+        "B": "Penyebab: kebiasaan lama yang belum dikoreksi. Solusi: contohkan getaran yang wajar (1 kali getar, bukan berlebihan), lalu latih bertahap",
+        "C": "Penyebab: bawaan lahir yang tidak bisa diperbaiki",
+        "D": "Penyebab: murid kurang percaya diri. Solusi: beri pujian saja"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Ra yang terlalu digetarkan umumnya kebiasaan yang terbentuk dari awal belajar. Guru perlu mencontohkan langsung dan melatih bertahap.",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi kesalahan getaran huruf ra"
+    },
+    {
+      "id_soal": "MKJ-003",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Istilah Fundamental",
+      "tipe_soal": "Hafalan",
+      "level_kognitif": "C1",
+      "tingkat_kesulitan": "Mudah",
+      "soal": "Istilah 'makhraj' dalam ilmu tajwid berarti...",
+      "pilihan": {
+        "A": "Cara membaca panjang pendek suatu huruf",
+        "B": "Hukum bacaan nun mati",
+        "C": "Tanda berhenti dalam bacaan",
+        "D": "Tempat keluarnya huruf saat diucapkan"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Makhraj adalah istilah dasar tempat keluarnya bunyi huruf, perlu dipahami sebelum masuk ke kasus deteksi kesalahan.",
+      "indikator_kompetensi": "Guru memahami istilah fundamental tempat keluarnya huruf"
+    },
+    {
+      "id_soal": "MKJ-004",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Seorang murid membaca huruf ظ (zho) tapi bunyinya terdengar seperti ذ (dza) — terlalu ringan dan tipis, tidak ada ketebalan sama sekali. Berdasarkan posisi lidah, apa penyebabnya?",
+      "pilihan": {
+        "A": "Murid seharusnya tidak menggigit lidahnya sama sekali",
+        "B": "Murid kurang bertenaga saat mengucapkan",
+        "C": "Murid menggigit gigi depan terlalu keras",
+        "D": "Lidah bagian belakang murid tidak naik/tidak membentuk gelombang ke langit-langit, padahal posisi gigitan ujung lidahnya sudah benar"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Zho dan dza sama-sama digigit di ujung gigi depan, tapi zho butuh lidah belakang naik membentuk gelombang supaya tebal.",
+      "indikator_kompetensi": "Guru mampu mendiagnosis penyebab bunyi zho yang tertukar dengan dza"
+    },
+    {
+      "id_soal": "MKJ-005",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4/C5",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid selalu mengucapkan huruf ق (qaf) persis seperti ك (kaf) — terdengar ringan, tidak ada kesan berat atau dalam. Apa penyebabnya dan strategi guru membetulkannya?",
+      "pilihan": {
+        "A": "Penyebab: murid tidak fokus. Solusi: minta murid mengulang bacaan lebih keras",
+        "B": "Penyebab: murid kesulitan secara fisik dan tidak bisa diperbaiki. Solusi: lewati huruf ini sementara",
+        "C": "Penyebab: pangkal lidah murid belum didorong cukup jauh ke belakang. Solusi: minta murid ucapkan 'ka' lalu latih mendorong pangkal lidah lebih mundur sampai bunyinya terasa lebih berat",
+        "D": "Penyebab: murid belum hafal definisi qaf. Solusi: jelaskan teori tempat keluarnya huruf secara detail"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Qaf dan kaf sama-sama dari pangkal lidah, tapi qaf butuh dorongan lebih jauh ke belakang. Latihan bertahap membantu murid merasakan bedanya secara langsung.",
+      "indikator_kompetensi": "Guru mampu mendiagnosis dan mengoreksi bunyi qaf yang tertukar dengan kaf"
+    },
+    {
+      "id_soal": "MKJ-006",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Saat menyimak bacaan murid, Anda mendengar huruf ط (tho) diucapkan datar tanpa tekanan, terdengar sama persis seperti ت (ta). Apa yang sebenarnya terjadi?",
+      "pilihan": {
+        "A": "Ujung lidah murid menyentuh langit-langit tapi tidak menekan cukup kuat, sehingga rongga mulut tidak terasa membulat seperti seharusnya pada tho",
+        "B": "Murid melafalkan huruf dengan benar, tho memang boleh terdengar seperti ta",
+        "C": "Murid mengalami gangguan pengucapan permanen",
+        "D": "Murid seharusnya melafalkan tho dari tenggorokan, bukan dari lidah"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Ta dan tho sama-sama dari ujung lidah ke langit-langit, tapi tho butuh tekanan lebih kuat sehingga rongga mulut terasa membulat.",
+      "indikator_kompetensi": "Guru mampu mendiagnosis penyebab bunyi tho yang tertukar dengan ta"
+    },
+    {
+      "id_soal": "MKJ-007",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca huruf ض (dhad) tapi terdengar seperti د (dal) biasa, tidak ada kesan berat/menggembung. Apa yang paling mungkin menjadi masalahnya?",
+      "pilihan": {
+        "A": "Tepi lidah murid (kanan/kiri) belum menempel ke gigi geraham atas dengan benar, sehingga posisi keluarnya bunyi bergeser ke ujung lidah seperti dal",
+        "B": "Murid memang belum mampu secara fisik dan tidak perlu dikoreksi",
+        "C": "Ini kesalahan yang wajar dan tidak memengaruhi makna",
+        "D": "Murid sengaja menyingkat bacaan agar cepat selesai"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Dhad keluar dari tepi lidah menyentuh gigi geraham atas, bukan dari ujung lidah seperti dal. Guru perlu mengarahkan murid merasakan tepi lidahnya, bukan ujungnya.",
+      "indikator_kompetensi": "Guru mampu mendeteksi kesalahan posisi lidah pada huruf dhad"
+    },
+    {
+      "id_soal": "MKJ-008",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid kesulitan membedakan س (sin), ص (shad), dan ز (zai) — ketiganya diucapkan hampir sama datar. Strategi apa yang paling tepat untuk melatihnya?",
+      "pilihan": {
+        "A": "Fokuskan hanya pada satu huruf yang paling sering salah, abaikan yang lain",
+        "B": "Suruh murid mendengarkan murottal berulang tanpa pendampingan",
+        "C": "Latih satu per satu secara berpasangan (sin-shad dulu, baru shad-zai), minta murid merasakan tebal-tipis dan ada-tidaknya getar suara sambil membandingkan langsung",
+        "D": "Jelaskan definisi ketiga huruf secara teori lalu suruh murid menghafalnya"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Melatih huruf yang mirip lebih efektif dengan perbandingan berpasangan dan praktik langsung, dibanding penjelasan teori atau dibiarkan sendiri.",
+      "indikator_kompetensi": "Guru mampu menyusun strategi koreksi untuk kelompok huruf berdesis yang mirip"
+    },
+    {
+      "id_soal": "MKJ-009",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan huruf ج (jim) terdengar seperti ش (syin), keduanya berdesis dan kurang tegas. Apa yang perlu dikoreksi guru?",
+      "pilihan": {
+        "A": "Suruh murid mengeraskan suara saja",
+        "B": "Ganti dengan huruf lain yang lebih mudah",
+        "C": "Biarkan saja karena posisi keluarnya sama",
+        "D": "Ajarkan bahwa jim seharusnya ditekan lebih jelas di tengah lidah (bukan berdesis lebar seperti syin), lalu latih dengan kata sederhana secara berulang"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Jim dan syin sama-sama dari tengah lidah, tapi jim ditekan (bukan berdesis lebar seperti syin). Koreksi perlu dicontohkan langsung.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kerancuan bunyi jim dan syin"
+    },
+    {
+      "id_soal": "MKJ-010",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan mim bertasydid (مّ) tanpa dengung sama sekali, bunyinya terputus datar. Apa yang perlu dilakukan guru?",
+      "pilihan": {
+        "A": "Contohkan cara menahan bunyi mim dengan dengung yang keluar dari hidung (bisa dicek dengan memegang hidung murid saat mengucapkan), lalu latih berulang",
+        "B": "Ganti huruf mim dengan huruf lain yang lebih mudah",
+        "C": "Suruh murid membaca lebih cepat agar dengungnya otomatis muncul",
+        "D": "Biarkan karena dengung bukan hal penting"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Dengung (ghunnah) pada mim bertasydid perlu dirasakan lewat rongga hidung. Teknik memegang hidung membantu murid merasakan dengungnya secara konkret.",
+      "indikator_kompetensi": "Guru mampu mengoreksi hilangnya dengung pada huruf bertasydid"
+    },
+    {
+      "id_soal": "MKJ-011",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Murid mengucapkan huruf ع ('ain) terdengar seperti ء (hamzah) biasa, tanpa tekanan di tengah tenggorokan. Apa yang perlu dikoreksi?",
+      "pilihan": {
+        "A": "Ajarkan bahwa 'ain perlu terasa 'tertekan' di tengah leher (bukan sekadar hentakan di pangkal tenggorokan seperti hamzah), contohkan langsung dan minta murid merasakan bedanya",
+        "B": "Suruh murid berhenti sejenak sebelum mengucapkan huruf itu",
+        "C": "Biarkan saja karena keduanya sama-sama dari tenggorokan",
+        "D": "Ganti dengan huruf ha karena lebih mudah"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "'Ain dan hamzah sama-sama dari tenggorokan tapi beda posisi (tengah vs pangkal) dan tekanan bunyi. Koreksi perlu praktik langsung merasakan posisi.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kerancuan bunyi 'ain dan hamzah"
+    },
+    {
+      "id_soal": "MKJ-012",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan خ (kha) dan غ (ghain) dengan bunyi yang hampir sama, sama-sama kasar dan berdesir. Bagaimana guru membantu murid membedakannya?",
+      "pilihan": {
+        "A": "Jelaskan bahwa kha bunyinya seperti hembusan kasar (mirip membersihkan tenggorokan), sedangkan ghain bunyinya bergetar seperti berkumur ringan; latih keduanya berurutan agar terasa kontrasnya",
+        "B": "Anggap wajar karena keduanya memang mirip dan tidak perlu dibedakan",
+        "C": "Suruh murid membaca lebih pelan tanpa penjelasan",
+        "D": "Fokuskan hanya pada salah satu huruf saja"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Kha (hembusan kasar) dan ghain (getaran) perlu dilatih berurutan agar murid merasakan kontras keduanya secara langsung.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kerancuan bunyi kha dan ghain"
+    },
+    {
+      "id_soal": "MKJ-013",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan huruf ف (fa) dengan menutup dua bibir rapat seperti huruf ba, bukan menyentuhkan bibir bawah ke gigi atas. Apa koreksi yang tepat?",
+      "pilihan": {
+        "A": "Suruh murid mengucapkan lebih keras",
+        "B": "Biarkan karena hasil bunyinya masih mirip",
+        "C": "Ganti huruf fa dengan huruf wau karena lebih mudah",
+        "D": "Contohkan posisi yang benar: bibir bawah menyentuh ujung gigi seri atas (bukan dua bibir rapat), lalu minta murid merasakan bedanya dengan huruf ba"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Fa keluar dari bibir bawah ke gigi atas, berbeda dari ba yang dari dua bibir. Guru perlu mencontohkan posisi yang tepat dan membandingkan langsung.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan posisi bibir pada huruf fa"
+    },
+    {
+      "id_soal": "MKJ-014",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Evaluasi Prioritas",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C5",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Seorang murid baru memiliki banyak kesalahan makhraj sekaligus: sin-syin tertukar, qaf seperti kaf, dan dhad lemah. Waktu bimbingan terbatas. Apa pendekatan paling tepat?",
+      "pilihan": {
+        "A": "Koreksi semua huruf sekaligus dalam satu pertemuan agar cepat selesai",
+        "B": "Pilih satu huruf yang paling sering muncul dan paling mengganggu makna bacaan untuk dikoreksi lebih dulu, baru lanjut ke huruf lain secara bertahap",
+        "C": "Hentikan pembelajaran sampai murid les tambahan di luar",
+        "D": "Biarkan semua kesalahan karena akan hilang sendiri seiring waktu"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Koreksi bertahap dan prioritas pada huruf yang paling berdampak pada makna lebih efektif dibanding mengoreksi semua sekaligus yang membebani murid.",
+      "indikator_kompetensi": "Guru mampu menyusun prioritas koreksi ketika murid memiliki banyak kesalahan makhraj"
+    },
+    {
+      "id_soal": "MKJ-015",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Pengembangan Diri Guru",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang guru baru menyadari dirinya sendiri kesulitan mengucapkan huruf ض (dhad) dengan tepat. Apa langkah yang paling tepat sebelum mengajar murid?",
+      "pilihan": {
+        "A": "Menghindari mengajarkan huruf tersebut selamanya",
+        "B": "Menyuruh murid belajar sendiri dari aplikasi tanpa pendampingan",
+        "C": "Berlatih sendiri terlebih dahulu dengan bantuan rekan guru senior atau rekaman bacaan yang benar, sampai yakin bisa mencontohkan dengan tepat",
+        "D": "Tetap mengajar seperti biasa karena murid tidak akan menyadari"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Guru perlu memastikan kemampuannya sendiri benar sebelum mencontohkan ke murid, karena murid akan meniru persis apa yang dicontohkan guru.",
+      "indikator_kompetensi": "Guru menyadari pentingnya kemampuan diri sendiri sebelum mengoreksi murid"
+    },
+    {
+      "id_soal": "MKJ-016",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Istilah Fundamental",
+      "tipe_soal": "Hafalan",
+      "level_kognitif": "C1",
+      "tingkat_kesulitan": "Mudah",
+      "soal": "Istilah 'tafkhim' dan 'tarqiq' dalam pengucapan huruf merujuk pada...",
+      "pilihan": {
+        "A": "Panjang pendeknya bacaan",
+        "B": "Tebal atau tipisnya bunyi suatu huruf saat diucapkan",
+        "C": "Dengung atau tidaknya suatu huruf",
+        "D": "Berhenti atau lanjutnya bacaan"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Tafkhim (tebal) dan tarqiq (tipis) adalah istilah dasar untuk menjelaskan kualitas bunyi berat-ringan suatu huruf, penting dipahami sebelum masuk ke kasus koreksi.",
+      "indikator_kompetensi": "Guru memahami istilah dasar tafkhim dan tarqiq"
+    },
+    {
+      "id_soal": "MKJ-017",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Istilah Fundamental",
+      "tipe_soal": "Hafalan",
+      "level_kognitif": "C1",
+      "tingkat_kesulitan": "Mudah",
+      "soal": "Kelompok huruf yang keluar dari tenggorokan (halq) terdiri dari huruf-huruf berikut, kecuali...",
+      "pilihan": {
+        "A": "ق (qaf) dan ك (kaf)",
+        "B": "ء (hamzah) dan ه (ha)",
+        "C": "ع ('ain) dan ح (ha)",
+        "D": "غ (ghain) dan خ (kha)"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Qaf dan kaf keluar dari pangkal lidah (lisan), bukan dari tenggorokan (halq).",
+      "indikator_kompetensi": "Guru memahami pengelompokan makhraj huruf tenggorokan"
+    },
+    {
+      "id_soal": "MKJ-018",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca huruf ه (ha) di akhir kata terdengar sangat lemah hampir tidak terdengar, padahal seharusnya jelas. Apa yang perlu dikoreksi guru?",
+      "pilihan": {
+        "A": "Ganti huruf ha dengan hamzah karena lebih mudah",
+        "B": "Latih murid menghembuskan napas dari pangkal tenggorokan dengan lebih tegas saat mengucapkan ha, meski di posisi akhir kata",
+        "C": "Suruh murid membaca lebih cepat agar ha tidak terlalu terasa",
+        "D": "Biarkan karena ha di akhir kata memang boleh lemah"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Ha tetap perlu terdengar jelas dari pangkal tenggorokan meski berada di akhir kata; kelemahan bunyi biasanya karena hembusan napas yang kurang tegas.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kelemahan bunyi ha di posisi akhir kata"
+    },
+    {
+      "id_soal": "MKJ-019",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Deteksi Kesalahan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid mengucapkan huruf ل (lam) dengan getaran seperti huruf ra. Apa penyebab yang paling mungkin dan cara koreksinya?",
+      "pilihan": {
+        "A": "Penyebab: murid tertukar posisi tepi lidah depan (lam) dengan ujung lidah yang bergetar (ra). Solusi: latih lam dengan bunyi jernih tanpa getaran, bandingkan langsung dengan ra",
+        "B": "Penyebab: murid kelelahan. Solusi: istirahatkan murid",
+        "C": "Penyebab: murid belum hafal huruf hijaiyah",
+        "D": "Penyebab: huruf lam memang mirip ra dan tidak perlu dibedakan"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Lam dan ra memiliki posisi berdekatan namun lam seharusnya jernih tanpa getaran. Perbandingan langsung membantu murid merasakan bedanya.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kerancuan bunyi lam dan ra"
+    },
+    {
+      "id_soal": "TSN-001",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid Iqra jilid 2 sudah lancar membaca huruf sambung, tapi setiap bertemu huruf berharakat panjang (mad), dia selalu membacanya pendek. Apa penyebab dan solusinya?",
+      "pilihan": {
+        "A": "Penyebab: murid tidak fokus. Solusi: tegur agar lebih konsentrasi",
+        "B": "Penyebab: buku Iqra kurang jelas. Solusi: ganti metode belajar",
+        "C": "Penyebab: murid belum siap naik jilid. Solusi: turunkan ke jilid 1",
+        "D": "Penyebab: belum terbiasa membedakan panjang-pendek bacaan. Solusi: latih dengan ketukan atau hitungan (2 ketuk untuk mad), beri contoh langsung berulang"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Kesalahan mad pendek-panjang umumnya masalah pembiasaan ritme, bukan kemampuan kognitif. Teknik ketukan membantu murid merasakan durasi secara konkret.",
+      "indikator_kompetensi": "Guru mampu mendiagnosis dan mengoreksi kesalahan panjang-pendek bacaan mad"
+    },
+    {
+      "id_soal": "TSN-002",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Evaluasi & Perlakuan",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C5",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Ada dua murid di kelas Iqra Anda: Murid A cepat naik jilid tapi bacaannya sering terburu-buru dan kurang tepat; Murid B lambat naik jilid tapi bacaannya selalu hati-hati dan benar. Bagaimana sebaiknya Anda memperlakukan keduanya?",
+      "pilihan": {
+        "A": "Biarkan keduanya berjalan sesuai kecepatan masing-masing tanpa intervensi",
+        "B": "Percepat Murid B agar sejajar dengan Murid A",
+        "C": "Gabungkan keduanya dalam satu kelompok belajar yang sama",
+        "D": "Perlambat Murid A untuk fokus ketepatan sebelum lanjut, dan beri apresiasi pada ketelitian Murid B tanpa memaksa dia lebih cepat"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Ketepatan bacaan lebih penting daripada kecepatan naik jilid. Guru perlu menyesuaikan pendekatan sesuai karakter masing-masing murid.",
+      "indikator_kompetensi": "Guru mampu menyesuaikan pendekatan pengajaran sesuai karakter belajar murid"
+    },
+    {
+      "id_soal": "TSN-003",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Komunikasi Orang Tua",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid sudah 2 bulan berada di halaman yang sama dalam Iqra dan tidak kunjung naik. Orang tua mulai bertanya-tanya. Apa langkah pertama yang paling tepat?",
+      "pilihan": {
+        "A": "Segera naikkan halaman agar orang tua tenang",
+        "B": "Evaluasi dulu di bagian mana murid kesulitan (huruf tertentu, ritme, atau fokus), baru komunikasikan hasil evaluasi ke orang tua",
+        "C": "Jelaskan ke orang tua bahwa itu wajar tanpa penjelasan detail",
+        "D": "Sarankan orang tua mencari guru les tambahan di luar"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Sebelum menenangkan orang tua, guru perlu tahu akar masalah secara spesifik dan mengomunikasikannya berdasarkan data nyata, bukan asumsi.",
+      "indikator_kompetensi": "Guru mampu mengevaluasi penyebab stagnasi dan berkomunikasi dengan data ke orang tua"
+    },
+    {
+      "id_soal": "TSN-004",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid sebaliknya dari kasus mad pendek: dia membaca huruf berharakat pendek (bukan mad) terlalu panjang, seolah semua bacaan dipanjangkan. Apa penyebab dan solusinya?",
+      "pilihan": {
+        "A": "Penyebab: murid belum bisa membedakan huruf mad dan bukan mad. Solusi: latih dengan membandingkan langsung kata berharakat pendek vs kata bermad menggunakan ketukan",
+        "B": "Penyebab: murid kesulitan bernapas. Solusi: suruh berhenti lebih sering",
+        "C": "Penyebab: buku bacaan terlalu sulit. Solusi: turunkan jilid",
+        "D": "Penyebab: murid ingin terdengar lebih fasih. Solusi: biarkan karena tidak masalah"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Kebalikan dari kasus mad pendek, di sini murid memanjangkan semua bacaan karena belum bisa membedakan mana yang mad dan mana yang tidak. Latihan komparatif dengan ketukan membantu.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan memanjangkan bacaan yang seharusnya pendek"
+    },
+    {
+      "id_soal": "TSN-005",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid sering berhenti (waqaf) di tengah kalimat tanpa memperhatikan makna, sehingga bacaan terputus di tempat yang tidak seharusnya. Apa yang perlu dilakukan guru?",
+      "pilihan": {
+        "A": "Larang murid berhenti sama sekali sampai satu ayat selesai",
+        "B": "Suruh murid membaca lebih cepat agar tidak sempat berhenti",
+        "C": "Biarkan karena murid masih pemula sehingga wajar berhenti sembarangan",
+        "D": "Ajarkan murid mengenali tanda-tanda waqaf sederhana dan latih membaca per-frasa (kesatuan makna), bukan per-kata, agar tahu tempat berhenti yang tepat"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Berhenti sembarangan biasanya karena murid membaca per-kata tanpa memahami kesatuan makna. Latihan per-frasa membantu murid mengenali tempat berhenti yang wajar.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kebiasaan berhenti sembarangan saat membaca"
+    },
+    {
+      "id_soal": "TSN-006",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid kesulitan membedakan harakat fathah, kasrah, dan dhommah — sering salah menyebutkan bunyi vokalnya. Bagaimana strategi guru yang paling tepat?",
+      "pilihan": {
+        "A": "Lewati harakat yang sulit dan fokus pada yang mudah saja",
+        "B": "Jelaskan definisi ketiga harakat secara teori panjang lebar",
+        "C": "Latih dengan membandingkan bunyi ketiganya secara berurutan pada satu huruf yang sama (misal: ba-bi-bu), sambil menunjuk tanda harakatnya langsung",
+        "D": "Suruh murid menghafal urutan harakat tanpa praktik"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Perbandingan langsung pada satu huruf yang sama membantu murid mengasosiasikan bentuk tanda harakat dengan bunyi yang dihasilkan.",
+      "indikator_kompetensi": "Guru mampu melatih pengenalan harakat dasar pada murid pemula"
+    },
+    {
+      "id_soal": "TSN-007",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid Iqra jilid 3 masih terbata-bata setiap membaca huruf sambung (huruf yang berubah bentuk saat digandeng), meski sudah hafal huruf lepas dengan baik. Apa strategi yang tepat?",
+      "pilihan": {
+        "A": "Ganti metode belajar sepenuhnya dengan metode lain",
+        "B": "Percepat saja ke jilid berikutnya agar terbiasa sendiri",
+        "C": "Latih pengenalan bentuk huruf sambung secara bertahap dengan kata-kata pendek dahulu, sambil membandingkan bentuk lepas dan sambungnya",
+        "D": "Suruh murid kembali menghafal huruf lepas dari awal"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Kesulitan pada huruf sambung adalah tahap wajar dalam Iqra; latihan bertahap dengan kata pendek dan perbandingan bentuk membantu transisi ini.",
+      "indikator_kompetensi": "Guru mampu membantu transisi murid dari huruf lepas ke huruf sambung"
+    },
+    {
+      "id_soal": "TSN-008",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid sering tertukar antara huruf ب (ba), ت (ta), dan ث (tsa) karena bentuknya mirip (hanya beda titik). Bagaimana guru membantu murid membedakannya?",
+      "pilihan": {
+        "A": "Hindari huruf-huruf ini dalam latihan sampai murid lebih besar",
+        "B": "Suruh murid menghafal urutan alfabet hijaiyah berulang-ulang",
+        "C": "Latih pengenalan titik sebagai penanda (satu titik bawah = ba, dua titik atas = ta, tiga titik atas = tsa) sambil dikaitkan dengan bunyi masing-masing huruf",
+        "D": "Fokuskan hanya pada bunyi tanpa memperhatikan bentuk tulisan"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Mengaitkan jumlah dan posisi titik dengan bunyi huruf membantu murid mengingat perbedaan bentuk yang mirip secara sistematis.",
+      "indikator_kompetensi": "Guru mampu membantu murid mengenali perbedaan bentuk huruf yang mirip"
+    },
+    {
+      "id_soal": "TSN-009",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Evaluasi & Psikologi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid biasanya lancar membaca saat latihan, tapi begitu dites langsung banyak salah dan gugup. Bagaimana guru sebaiknya menyikapi ini?",
+      "pilihan": {
+        "A": "Turunkan nilai sesuai hasil tes apa adanya tanpa mempertimbangkan faktor lain",
+        "B": "Beri suasana tes yang lebih santai dan tidak menekan, serta nilai berdasarkan kemampuan saat latihan juga, bukan hanya momen tes yang membuatnya gugup",
+        "C": "Suruh murid tes ulang berkali-kali sampai lancar",
+        "D": "Simpulkan bahwa murid sebenarnya belum benar-benar bisa membaca"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Gugup saat dites adalah hal wajar dan bisa memengaruhi performa. Guru perlu mempertimbangkan konteks, bukan hanya menilai dari satu momen tes.",
+      "indikator_kompetensi": "Guru mampu mengevaluasi murid secara adil dengan mempertimbangkan faktor psikologis"
+    },
+    {
+      "id_soal": "TSN-010",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Manajemen Kelas",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang guru baru pertama kali mengajar Iqra dan bingung harus mulai dari mana untuk menentukan level awal setiap murid. Apa langkah yang paling tepat?",
+      "pilihan": {
+        "A": "Lakukan asesmen awal sederhana dengan meminta setiap murid membaca beberapa halaman dari jilid berbeda untuk menentukan level yang sesuai",
+        "B": "Tanyakan saja ke orang tua tanpa mengecek langsung kemampuan membaca murid",
+        "C": "Mulai semua murid dari jilid 1 tanpa terkecuali agar seragam",
+        "D": "Ikuti saja jilid terakhir yang tertulis di rapor sebelumnya tanpa verifikasi"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Asesmen awal langsung diperlukan untuk memastikan penempatan level yang akurat, tidak hanya mengandalkan laporan sebelumnya atau asumsi.",
+      "indikator_kompetensi": "Guru mampu melakukan asesmen awal untuk menentukan level belajar murid"
+    },
+    {
+      "id_soal": "TSN-011",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Manajemen Kelas",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Ada murid pindahan dari lembaga lain yang mengaku sudah di jilid 4, tapi saat diminta membaca ternyata masih banyak kesalahan dasar. Apa yang sebaiknya guru lakukan?",
+      "pilihan": {
+        "A": "Turunkan murid ke jilid 1 secara langsung tanpa penjelasan",
+        "B": "Lakukan asesmen ulang secara halus tanpa membuat murid merasa direndahkan, lalu tempatkan sesuai kemampuan aktual sambil menjelaskan alasannya ke orang tua",
+        "C": "Percaya saja pada klaim jilid sebelumnya dan lanjutkan dari jilid 4",
+        "D": "Tolak menerima murid pindahan tersebut"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Penempatan harus berdasarkan kemampuan aktual, bukan klaim administratif, namun perlu disampaikan dengan cara yang menjaga kepercayaan diri murid dan komunikasi yang baik ke orang tua.",
+      "indikator_kompetensi": "Guru mampu melakukan asesmen ulang secara bijaksana untuk murid pindahan"
+    },
+    {
+      "id_soal": "TSN-012",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid sudah bisa membaca huruf tertentu dengan benar minggu lalu, tapi minggu ini kembali salah membaca huruf yang sama. Apa yang paling mungkin terjadi dan apa yang perlu dilakukan?",
+      "pilihan": {
+        "A": "Abaikan karena tidak penting selama bisa membaca huruf lain",
+        "B": "Ini wajar terjadi karena kemampuan baru butuh pengulangan untuk menetap; guru perlu menambah porsi pengulangan huruf tersebut, bukan menganggapnya kemunduran serius",
+        "C": "Murid berbohong dan sebenarnya belum pernah bisa. Tegur agar lebih jujur",
+        "D": "Turunkan murid ke jilid sebelumnya karena dianggap gagal"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Lupa sesekali pada kemampuan yang baru dipelajari adalah hal normal dalam proses belajar; solusinya adalah pengulangan, bukan penilaian negatif.",
+      "indikator_kompetensi": "Guru memahami pola wajar lupa-ulang dalam proses belajar membaca"
+    },
+    {
+      "id_soal": "TSN-013",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Manajemen Kelas",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Guru mengajar satu kelas Iqra dengan level yang sangat beragam (dari jilid 1 sampai jilid 5) dan merasa kewalahan membagi waktu. Apa strategi yang paling tepat?",
+      "pilihan": {
+        "A": "Fokus hanya pada murid level tertinggi karena paling dekat lulus",
+        "B": "Minta sekolah mengurangi jumlah murid tanpa mencoba strategi pengelolaan dulu",
+        "C": "Bagi murid dalam kelompok kecil sesuai level, beri instruksi singkat per kelompok secara bergiliran, dan gunakan murid level lebih tinggi sebagai pendamping sesekali",
+        "D": "Ajarkan semua murid materi yang sama agar lebih mudah dikelola"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Pengelompokan berdasarkan level dengan rotasi perhatian guru adalah strategi praktis untuk kelas dengan level beragam, dibanding menyeragamkan materi.",
+      "indikator_kompetensi": "Guru mampu mengelola kelas dengan level kemampuan murid yang beragam"
+    },
+    {
+      "id_soal": "TSN-014",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Komunikasi Orang Tua",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Orang tua meminta anaknya dipercepat naik jilid karena ingin segera masuk tahfizh, padahal menurut penilaian guru murid belum siap. Bagaimana guru sebaiknya merespons?",
+      "pilihan": {
+        "A": "Menuruti permintaan orang tua agar tidak berkonflik",
+        "B": "Menolak mentah-mentah tanpa penjelasan",
+        "C": "Jelaskan dengan data konkret bagian mana yang belum dikuasai murid, dan sampaikan bahwa kesiapan lebih penting daripada kecepatan agar fondasi bacaannya kuat",
+        "D": "Menyuruh orang tua bicara ke kepala sekolah saja"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Komunikasi berbasis data konkret membantu orang tua memahami alasan keputusan guru, sekaligus menjaga kepentingan terbaik murid dalam belajar.",
+      "indikator_kompetensi": "Guru mampu mengomunikasikan keputusan pedagogis berbasis data ke orang tua"
+    },
+    {
+      "id_soal": "TSN-015",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca huruf yang seharusnya memantul (qalqalah, misalnya huruf ba/jim/dal/tha/qaf yang mati) tapi dibaca datar tanpa pantulan sama sekali. Apa koreksi yang tepat?",
+      "pilihan": {
+        "A": "Contohkan bunyi pantulan ringan pada huruf tersebut saat mati (bukan dihentakkan keras, cukup pantulan kecil), lalu latih dengan kata-kata sederhana",
+        "B": "Ganti huruf qalqalah dengan huruf lain saat latihan",
+        "C": "Suruh murid membaca huruf tersebut lebih keras tanpa penjelasan pantulan",
+        "D": "Biarkan karena qalqalah adalah hal detail yang bisa dipelajari nanti"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Qalqalah butuh pantulan ringan yang khas; guru perlu mencontohkan langsung agar murid merasakan bedanya dengan bacaan datar.",
+      "indikator_kompetensi": "Guru mampu mengoreksi ketiadaan pantulan pada huruf qalqalah"
+    },
+    {
+      "id_soal": "TSN-016",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Istilah Fundamental",
+      "tipe_soal": "Hafalan",
+      "level_kognitif": "C1",
+      "tingkat_kesulitan": "Mudah",
+      "soal": "Istilah 'waqaf' dalam bacaan Al-Qur'an berarti...",
+      "pilihan": {
+        "A": "Memanjangkan bunyi huruf tertentu",
+        "B": "Membaca dengan suara keras",
+        "C": "Melebur satu huruf ke huruf lain",
+        "D": "Berhenti sejenak dalam bacaan pada tempat yang sesuai"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Waqaf adalah istilah dasar untuk berhenti sejenak dalam bacaan pada tempat yang tepat, penting dipahami sebelum melatih murid mengenali tempat berhenti yang benar.",
+      "indikator_kompetensi": "Guru memahami istilah dasar waqaf"
+    },
+    {
+      "id_soal": "TSN-017",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Istilah Fundamental",
+      "tipe_soal": "Hafalan",
+      "level_kognitif": "C1",
+      "tingkat_kesulitan": "Mudah",
+      "soal": "Istilah 'mad' dalam ilmu tajwid berarti...",
+      "pilihan": {
+        "A": "Membaca dengan nada yang berbeda",
+        "B": "Memanjangkan bunyi huruf tertentu sesuai ketentuan",
+        "C": "Menghentikan bacaan di akhir kalimat",
+        "D": "Melebur dua huruf yang berdekatan"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Mad adalah istilah dasar tentang memanjangkan bunyi huruf sesuai aturan, menjadi dasar sebelum melatih murid membedakan panjang-pendek bacaan.",
+      "indikator_kompetensi": "Guru memahami istilah dasar mad"
+    },
+    {
+      "id_soal": "TSN-018",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca dengan sangat lancar dan cepat, tapi hampir tidak memperhatikan tajwid sama sekali — asal cepat selesai. Apa yang perlu dilakukan guru?",
+      "pilihan": {
+        "A": "Apresiasi kelancarannya, tapi minta murid memperlambat sedikit sambil memperhatikan tajwid dasar, jelaskan bahwa membaca benar lebih penting daripada cepat",
+        "B": "Turunkan murid ke jilid sebelumnya karena dianggap terburu-buru",
+        "C": "Suruh murid membaca lebih cepat lagi sebagai tantangan",
+        "D": "Puji kelancarannya dan biarkan karena yang penting sudah bisa membaca"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Kelancaran tanpa perhatian pada tajwid perlu diarahkan ulang; guru perlu menekankan bahwa ketepatan lebih penting daripada kecepatan semata.",
+      "indikator_kompetensi": "Guru mampu mengarahkan ulang murid yang lancar namun mengabaikan tajwid"
+    },
+    {
+      "id_soal": "TSN-019",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Evaluasi & Psikologi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid sangat takut salah sehingga membaca sangat pelan dan sering berhenti di tengah kata karena ragu. Bagaimana guru sebaiknya membantu?",
+      "pilihan": {
+        "A": "Tegur agar murid lebih percaya diri dan membaca lebih cepat",
+        "B": "Bandingkan dengan murid lain yang lebih percaya diri agar termotivasi",
+        "C": "Beri suasana belajar yang tidak menghakimi kesalahan, izinkan murid mencoba tanpa takut dikoreksi keras, dan berikan apresiasi pada setiap usaha yang benar",
+        "D": "Biarkan murid membaca sepelan itu selamanya tanpa intervensi"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Rasa takut salah butuh pendekatan yang membangun kepercayaan diri, bukan tekanan tambahan atau perbandingan dengan murid lain.",
+      "indikator_kompetensi": "Guru mampu membangun kepercayaan diri murid yang cemas berlebihan saat membaca"
+    },
+    {
+      "id_soal": "TSN-020",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Manajemen Kelas",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Bagaimana cara guru mengevaluasi kenaikan jilid murid secara adil, tanpa terpengaruh faktor seperti kedekatan personal atau tekanan orang tua?",
+      "pilihan": {
+        "A": "Naikkan jilid berdasarkan lama waktu murid belajar, bukan kemampuan",
+        "B": "Gunakan kriteria kemampuan yang jelas dan konsisten (misalnya membaca lancar tanpa kesalahan besar di beberapa halaman acak), diterapkan sama untuk semua murid",
+        "C": "Serahkan keputusan sepenuhnya ke orang tua",
+        "D": "Naikkan semua murid bersamaan agar tidak ada yang merasa tertinggal"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Kriteria yang jelas dan konsisten menjaga objektivitas penilaian, terlepas dari faktor personal atau tekanan eksternal.",
+      "indikator_kompetensi": "Guru mampu menyusun kriteria evaluasi kenaikan jilid yang objektif"
+    },
+    {
+      "id_soal": "TSN-021",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C5",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Murid sudah lama berada di satu jilid dan sudah dicoba diulang dengan metode yang sama berkali-kali namun tidak ada kemajuan. Apa langkah selanjutnya yang paling tepat?",
+      "pilihan": {
+        "A": "Evaluasi ulang apakah metode yang dipakai cocok dengan gaya belajar murid tersebut, coba pendekatan berbeda (misalnya lebih visual atau lebih banyak praktik lisan), dan pertimbangkan berkonsultasi dengan koordinator",
+        "B": "Serahkan murid ke guru lain tanpa evaluasi lebih lanjut",
+        "C": "Simpulkan murid tidak mampu belajar mengaji",
+        "D": "Terus mengulang metode yang sama karena konsistensi itu penting"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Jika metode yang sama tidak berhasil setelah beberapa kali dicoba, guru perlu mengevaluasi ulang pendekatan, bukan mengulang metode yang sama tanpa hasil.",
+      "indikator_kompetensi": "Guru mampu mengevaluasi dan menyesuaikan metode ketika pendekatan awal tidak efektif"
+    },
+    {
+      "id_soal": "TSN-022",
+      "kategori": "Tahsin Dasar/Iqra",
+      "sub_aspek": "Etika Mengajar",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru terbiasa memberi hadiah kecil setiap kali murid naik jilid. Suatu kali ada murid yang naik jilid karena kebetulan lebih mudah materinya, sementara murid lain bekerja lebih keras tapi belum naik. Bagaimana guru sebaiknya bersikap?",
+      "pilihan": {
+        "A": "Berikan apresiasi juga untuk usaha dan kemajuan murid yang belum naik jilid, agar sistem penghargaan tidak hanya berdasarkan hasil akhir tapi juga proses",
+        "B": "Berikan hadiah ke semua murid tanpa terkecuali agar adil",
+        "C": "Hentikan sistem hadiah sepenuhnya agar tidak menimbulkan kecemburuan",
+        "D": "Tetap memberi hadiah hanya untuk yang naik jilid, tanpa mempertimbangkan usaha murid lain"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Sistem apresiasi yang hanya menghargai hasil akhir bisa mengabaikan usaha murid yang berproses lebih lambat namun tekun; menghargai proses juga penting.",
+      "indikator_kompetensi": "Guru mampu menerapkan sistem apresiasi yang adil dan menghargai proses belajar"
+    },
+    {
+      "id_soal": "TJW-001",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Istilah Fundamental",
+      "tipe_soal": "Hafalan",
+      "level_kognitif": "C1",
+      "tingkat_kesulitan": "Mudah",
+      "soal": "'Idgham' secara sederhana berarti...",
+      "pilihan": {
+        "A": "Memanjangkan bacaan",
+        "B": "Menghentikan bacaan di akhir ayat",
+        "C": "Membaca dengan suara berat",
+        "D": "Melebur satu huruf ke huruf berikutnya sehingga terdengar menyatu"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Idgham adalah istilah fundamental tentang melebur huruf, perlu dipahami sebelum masuk ke kasus-kasus penerapannya.",
+      "indikator_kompetensi": "Guru memahami istilah dasar idgham"
+    },
+    {
+      "id_soal": "TJW-002",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Kelancaran & Ritme",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca dengan tajwid yang secara teknis benar, tapi terdengar kaku dan terputus-putus di setiap kata, tidak mengalir. Apa yang sebaiknya guru lakukan?",
+      "pilihan": {
+        "A": "Fokuskan koreksi hanya pada tajwid, kelancaran bukan prioritas",
+        "B": "Latih murid membaca per-frasa (potongan makna), bukan per-kata, agar terbiasa mengalir sambil tetap menjaga tajwid",
+        "C": "Biarkan saja karena tajwidnya sudah benar",
+        "D": "Suruh murid membaca lebih cepat agar tidak terputus"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Tajwid benar tapi bacaan terputus-putus biasa terjadi karena murid membaca kata per kata tanpa memahami kesatuan frasa. Latihan per-frasa membantu bacaan lebih alami.",
+      "indikator_kompetensi": "Guru mampu mengoreksi bacaan yang secara tajwid benar namun tidak mengalir"
+    },
+    {
+      "id_soal": "TJW-003",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Saat mengoreksi bacaan, Anda mendengar murid membaca huruf yang seharusnya 'tebal' (seperti qaf, tha, shad) dengan bunyi yang terlalu 'tipis'. Bagaimana cara terbaik mengoreksinya?",
+      "pilihan": {
+        "A": "Berikan murid bacaan teori tajwid untuk dibaca sendiri di rumah",
+        "B": "Jelaskan definisi tafkhim secara panjang lebar dahulu sebelum praktik",
+        "C": "Contohkan langsung perbedaan bunyi tebal-tipis, minta murid merasakan getaran di rongga mulut, lalu latih berulang dengan kata-kata sederhana",
+        "D": "Abaikan karena ini kesalahan kecil yang tidak signifikan"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Koreksi bunyi tebal-tipis lebih efektif lewat contoh dan praktik langsung dibanding penjelasan teori panjang.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan tafkhim-tarqiq secara praktis"
+    },
+    {
+      "id_soal": "TJW-004",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca nun mati bertemu huruf ب (ba) tapi tidak diubah bunyinya menjadi mim (iqlab), justru dibaca jelas seperti nun biasa. Apa yang perlu dikoreksi?",
+      "pilihan": {
+        "A": "Ganti kata yang mengandung hukum ini dengan kata lain saat latihan",
+        "B": "Suruh murid mengulang tanpa penjelasan tambahan",
+        "C": "Jelaskan dengan contoh langsung bahwa nun mati/tanwin bertemu ba berubah bunyi menyerupai mim dengan dengung, lalu latih dengan kata contoh berulang",
+        "D": "Biarkan karena perbedaannya tidak terlalu penting"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Iqlab adalah perubahan bunyi nun mati/tanwin menjadi mendekati mim saat bertemu huruf ba; koreksi perlu dicontohkan secara langsung dengan kata nyata.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan penerapan hukum iqlab"
+    },
+    {
+      "id_soal": "TJW-005",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid sering tertukar antara idgham bighunnah (dengan dengung) dan idgham bilaghunnah (tanpa dengung) — semua dibaca dengan dengung. Bagaimana guru membantu membedakannya?",
+      "pilihan": {
+        "A": "Fokuskan pengajaran hanya pada idgham bighunnah saja",
+        "B": "Lewati topik ini karena terlalu rumit untuk tahap ini",
+        "C": "Jelaskan bahwa semua idgham memang harus didengungkan agar seragam",
+        "D": "Ajarkan bahwa hanya huruf tertentu (ya, nun, mim, wau) yang didengungkan, sedangkan lam dan ra tidak; latih dengan membandingkan contoh masing-masing"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Idgham bighunnah dan bilaghunnah dibedakan oleh huruf tujuannya; latihan komparatif dengan contoh nyata membantu murid membedakannya.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kerancuan idgham bighunnah dan bilaghunnah"
+    },
+    {
+      "id_soal": "TJW-006",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca mad wajib muttasil (mad yang bertemu hamzah dalam satu kata) dengan panjang yang dipendekkan, seolah mad biasa 2 harakat. Apa koreksi yang tepat?",
+      "pilihan": {
+        "A": "Biarkan karena selisih panjangnya tidak terlalu signifikan",
+        "B": "Latih dengan hitungan ketukan yang lebih panjang (4-5 harakat) khusus untuk kondisi ini, bandingkan langsung dengan mad biasa yang hanya 2 harakat",
+        "C": "Suruh murid membaca ayat lain yang tidak mengandung mad ini",
+        "D": "Jelaskan teori mad secara mendalam tanpa praktik"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Mad wajib muttasil butuh panjang lebih dari mad biasa; latihan dengan ketukan dan perbandingan langsung membantu murid merasakan selisih panjangnya.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan panjang bacaan pada mad wajib muttasil"
+    },
+    {
+      "id_soal": "TJW-007",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid bingung menentukan panjang bacaan mad jaiz munfasil (mad yang bertemu hamzah di kata berikutnya) — kadang dibaca 2 harakat, kadang 6 harakat, tidak konsisten. Bagaimana guru membantu?",
+      "pilihan": {
+        "A": "Larang murid membaca ayat yang mengandung mad jaiz munfasil",
+        "B": "Sepakati satu pilihan panjang bacaan yang konsisten (sesuai kebiasaan yang diajarkan sekolah, misalnya 4 atau 5 harakat), lalu latih konsisten dengan ketukan yang sama setiap kali",
+        "C": "Biarkan murid memilih panjang sesuai kenyamanannya",
+        "D": "Jelaskan bahwa boleh berapa saja tanpa perlu konsisten"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Mad jaiz munfasil memang punya rentang panjang yang diperbolehkan, tapi penting bagi murid untuk konsisten pada satu pilihan agar bacaannya rapi dan tidak berubah-ubah.",
+      "indikator_kompetensi": "Guru mampu membantu murid konsisten dalam panjang bacaan mad jaiz munfasil"
+    },
+    {
+      "id_soal": "TJW-008",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid berhenti di tempat yang termasuk waqaf lazim (harus berhenti) namun dia lanjutkan terus tanpa berhenti karena mengejar kelancaran. Apa yang perlu dikoreksi?",
+      "pilihan": {
+        "A": "Biarkan karena melanjutkan bacaan menunjukkan penguasaan yang baik",
+        "B": "Suruh murid membaca ulang dari awal setiap kali salah",
+        "C": "Jelaskan bahwa pada tanda waqaf lazim, berhenti itu wajib karena berkaitan dengan makna ayat, bukan sekadar pilihan; latih dengan menunjukkan tandanya langsung",
+        "D": "Hilangkan bagian ayat yang mengandung waqaf lazim saat latihan"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Waqaf lazim berbeda dari waqaf pilihan biasa karena berkaitan dengan pemisahan makna yang penting; guru perlu menjelaskan dan melatih pengenalan tandanya.",
+      "indikator_kompetensi": "Guru mampu mengoreksi murid yang mengabaikan tanda waqaf lazim"
+    },
+    {
+      "id_soal": "TJW-009",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca ghunnah musyaddadah (dengung pada huruf bertasydid nun/mim) terlalu pendek, hampir tidak terasa dengungnya. Apa strategi koreksi yang tepat?",
+      "pilihan": {
+        "A": "Latih dengan menahan bunyi dengung selama sekitar 2 harakat sambil murid merasakan getaran di hidung, gunakan hitungan ketukan sebagai patokan",
+        "B": "Biarkan karena perbedaan panjang dengung tidak terlalu penting",
+        "C": "Suruh murid membaca lebih cepat agar dengungnya otomatis muncul",
+        "D": "Ganti kata yang mengandung ghunnah dengan kata lain"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Ghunnah musyaddadah butuh durasi tertentu (sekitar 2 harakat); latihan dengan hitungan ketukan dan kesadaran fisik pada dengung membantu koreksi.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan durasi ghunnah musyaddadah"
+    },
+    {
+      "id_soal": "TJW-010",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Istilah Fundamental",
+      "tipe_soal": "Hafalan",
+      "level_kognitif": "C1",
+      "tingkat_kesulitan": "Mudah",
+      "soal": "'Ikhfa' dalam ilmu tajwid secara sederhana berarti...",
+      "pilihan": {
+        "A": "Menghentikan bacaan sejenak",
+        "B": "Menyamarkan bunyi nun mati/tanwin dengan tetap mendengungkannya, tidak jelas dan tidak melebur sepenuhnya",
+        "C": "Mengubah bunyi nun mati menjadi mim",
+        "D": "Melebur huruf sepenuhnya tanpa dengung"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Ikhfa adalah istilah dasar untuk menyamarkan bunyi nun mati/tanwin dengan dengung, penting dipahami sebelum masuk ke kasus penerapannya.",
+      "indikator_kompetensi": "Guru memahami istilah dasar ikhfa"
+    },
+    {
+      "id_soal": "TJW-011",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Istilah Fundamental",
+      "tipe_soal": "Hafalan",
+      "level_kognitif": "C1",
+      "tingkat_kesulitan": "Mudah",
+      "soal": "'Qalqalah' dalam ilmu tajwid merujuk pada...",
+      "pilihan": {
+        "A": "Bunyi pantulan ringan pada huruf tertentu (ba, jim, dal, tha, qaf) saat mati",
+        "B": "Melebur dua huruf yang berdekatan",
+        "C": "Memanjangkan bunyi huruf mad",
+        "D": "Bunyi dengung pada huruf nun dan mim"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Qalqalah adalah istilah dasar tentang bunyi pantulan pada huruf-huruf tertentu saat mati, perlu dipahami sebelum masuk ke kasus koreksi.",
+      "indikator_kompetensi": "Guru memahami istilah dasar qalqalah"
+    },
+    {
+      "id_soal": "TJW-012",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Kelancaran & Ritme",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca terlalu cepat sehingga banyak hukum tajwid terlewat atau tercampur aduk, meski sebenarnya dia hafal hukum-hukumnya saat ditanya secara terpisah. Apa yang perlu dilakukan guru?",
+      "pilihan": {
+        "A": "Minta murid memperlambat tempo bacaan secara sengaja saat berlatih, sampai penerapan tajwidnya konsisten, baru secara bertahap kembali ke tempo normal",
+        "B": "Suruh murid membaca lebih cepat lagi sebagai latihan",
+        "C": "Biarkan karena yang penting hafalan hukum tajwidnya sudah benar",
+        "D": "Fokuskan hanya pada teori tajwid tanpa praktik membaca"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Murid yang paham teori tapi belum konsisten dalam praktik butuh latihan memperlambat tempo terlebih dahulu untuk membangun kebiasaan yang benar sebelum kembali ke kecepatan normal.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesenjangan antara pemahaman teori dan praktik tajwid"
+    },
+    {
+      "id_soal": "TJW-013",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Psikologi Belajar",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid sudah bagus tajwidnya secara teknis, tapi sangat gugup dan kurang percaya diri setiap membaca di depan orang lain, sehingga penampilannya jadi terlihat buruk. Bagaimana guru sebaiknya membantu?",
+      "pilihan": {
+        "A": "Hindari memberikan murid tersebut kesempatan tampil di depan umum sama sekali",
+        "B": "Berikan kesempatan tampil bertahap dari kelompok kecil dahulu, beri umpan balik yang membangun, dan apresiasi usaha bukan hanya hasil, sampai kepercayaan dirinya tumbuh",
+        "C": "Suruh murid terus tampil di depan umum meski gugup, agar terbiasa dengan cara keras",
+        "D": "Bandingkan dengan murid lain yang lebih percaya diri"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Kepercayaan diri tumbuh bertahap lewat pengalaman positif berulang, bukan tekanan langsung atau menghindari tantangan sama sekali.",
+      "indikator_kompetensi": "Guru mampu membantu murid mengatasi rasa gugup saat tampil membaca"
+    },
+    {
+      "id_soal": "TJW-014",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Evaluasi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C5",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Guru diminta mengevaluasi apakah seorang murid sudah layak naik dari kelas Tahsin ke kelas Tahfizh. Apa kriteria yang paling tepat digunakan?",
+      "pilihan": {
+        "A": "Rekomendasi dari orang tua murid",
+        "B": "Semangat dan antusiasme murid saja",
+        "C": "Lama waktu murid berada di kelas Tahsin",
+        "D": "Kemampuan membaca dengan tajwid yang konsisten benar pada bacaan baru (belum pernah dilatih sebelumnya), bukan hanya hafal pada bacaan yang sudah sering diulang"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Kemampuan pada bacaan baru menunjukkan penguasaan tajwid yang sesungguhnya, bukan sekadar hafalan pola dari bacaan yang sering diulang.",
+      "indikator_kompetensi": "Guru mampu menentukan kriteria kesiapan naik jenjang berdasarkan kemampuan riil"
+    },
+    {
+      "id_soal": "TJW-015",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca nun mati bertemu huruf ح (ha) tapi malah dileburkan (idgham), padahal seharusnya dibaca jelas (izhar). Apa koreksi yang tepat?",
+      "pilihan": {
+        "A": "Suruh murid melebur semua huruf yang bertemu nun mati",
+        "B": "Biarkan karena hasilnya masih enak didengar",
+        "C": "Ganti kata yang mengandung huruf ha dengan huruf lain",
+        "D": "Jelaskan bahwa nun mati/tanwin bertemu huruf-huruf tenggorokan (termasuk ha) dibaca jelas tanpa dilebur atau didengungkan, lalu latih dengan kata contoh"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Izhar terjadi saat nun mati/tanwin bertemu huruf tenggorokan, dibaca jelas tanpa peleburan; koreksi perlu dicontohkan dengan kata nyata.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan penerapan hukum izhar"
+    },
+    {
+      "id_soal": "TJW-016",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Murid membaca mim mati bertemu huruf mim lainnya, tapi tidak didengungkan (dibaca datar seperti mim biasa). Ini termasuk idgham mimi. Apa koreksi yang tepat?",
+      "pilihan": {
+        "A": "Ganti kata yang mengandung hukum ini saat latihan",
+        "B": "Suruh murid membaca lebih cepat agar dengungnya muncul otomatis",
+        "C": "Biarkan karena mim bertemu mim memang dibaca datar",
+        "D": "Jelaskan bahwa mim mati bertemu mim harus dilebur dengan dengung (idgham mimi), contohkan langsung dengan menahan dengung sejenak, lalu latih berulang"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Idgham mimi (mim mati bertemu mim) harus disertai dengung, berbeda dari mim biasa yang dibaca datar; koreksi perlu dicontohkan langsung.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan penerapan idgham mimi"
+    },
+    {
+      "id_soal": "TJW-017",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Evaluasi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C5",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Saat menyimak murid, guru ragu-ragu sendiri antara dua hukum bacaan yang mirip untuk satu kata tertentu. Apa yang paling tepat dilakukan guru dalam situasi ini?",
+      "pilihan": {
+        "A": "Jujur mengatakan perlu memastikan dulu, lalu cek ke rujukan (kitab tajwid, mushaf rujukan, atau tanya rekan/koordinator) sebelum memberi koreksi final ke murid",
+        "B": "Salahkan murid karena membaca kata yang sulit",
+        "C": "Tetap mengoreksi murid dengan salah satu hukum secara percaya diri meski ragu, agar terlihat kompeten",
+        "D": "Lewati saja bagian tersebut tanpa dikoreksi"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Kejujuran mengakui keraguan dan mencari kepastian dari rujukan yang tepat lebih baik daripada memberi koreksi yang berpotensi salah demi terlihat kompeten.",
+      "indikator_kompetensi": "Guru menunjukkan integritas dan kehati-hatian saat menghadapi keraguan teknis"
+    },
+    {
+      "id_soal": "TJW-018",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Kelancaran & Ritme",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca dengan lagu (nagham) yang berlebihan sampai mengubah durasi bacaan tajwid yang seharusnya (misalnya mad jadi lebih panjang dari aturan demi mengikuti lagu). Bagaimana guru menyikapinya?",
+      "pilihan": {
+        "A": "Fokuskan pengajaran sepenuhnya pada lagu, abaikan tajwid",
+        "B": "Larang murid melagukan bacaan sama sekali",
+        "C": "Apresiasi minat murid pada lagu bacaan, tapi tegaskan bahwa aturan tajwid (terutama panjang-pendek) tidak boleh dikorbankan demi lagu; latih menyeimbangkan keduanya",
+        "D": "Biarkan karena melagukan bacaan menunjukkan bakat yang perlu didukung sepenuhnya"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Minat pada seni membaca perlu didukung, namun aturan tajwid tetap menjadi prioritas utama; keduanya bisa diselaraskan dengan latihan yang tepat.",
+      "indikator_kompetensi": "Guru mampu menyeimbangkan minat murid pada lagu bacaan dengan ketepatan tajwid"
+    },
+    {
+      "id_soal": "TJW-019",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid berhenti di tengah ayat pada tempat yang sebenarnya boleh berhenti (waqaf jaiz) tapi maknanya jadi agak menggantung jika didengar sekilas. Bagaimana guru sebaiknya menyikapi?",
+      "pilihan": {
+        "A": "Larang murid berhenti di tempat tersebut karena dianggap salah total",
+        "B": "Jelaskan bahwa berhenti di situ diperbolehkan (waqaf jaiz), tapi beri wawasan tambahan tentang pilihan tempat berhenti lain yang membuat makna lebih utuh jika didengar",
+        "C": "Suruh murid tidak pernah berhenti sampai satu ayat penuh selesai",
+        "D": "Anggap semua tempat waqaf jaiz setara tanpa perlu penjelasan tambahan"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Waqaf jaiz memang diperbolehkan, namun guru bisa memberi wawasan tambahan tentang pilihan tempat berhenti yang lebih menjaga keutuhan makna, tanpa menyalahkan pilihan murid.",
+      "indikator_kompetensi": "Guru mampu memberi wawasan tambahan seputar pilihan tempat waqaf jaiz"
+    },
+    {
+      "id_soal": "TJW-020",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Istilah Fundamental",
+      "tipe_soal": "Hafalan",
+      "level_kognitif": "C1",
+      "tingkat_kesulitan": "Mudah",
+      "soal": "'Izhar' dalam ilmu tajwid berarti...",
+      "pilihan": {
+        "A": "Membaca nun mati/tanwin dengan jelas tanpa dilebur atau didengungkan saat bertemu huruf tertentu",
+        "B": "Bunyi pantulan pada huruf tertentu saat mati",
+        "C": "Memanjangkan bunyi huruf mad",
+        "D": "Melebur huruf dengan dengung"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Izhar adalah istilah dasar untuk membaca nun mati/tanwin secara jelas tanpa peleburan, penting dipahami sebelum masuk ke kasus penerapannya.",
+      "indikator_kompetensi": "Guru memahami istilah dasar izhar"
+    },
+    {
+      "id_soal": "TJW-021",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Evaluasi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C5",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Seorang murid tingkat lanjut memiliki banyak kesalahan kecil yang tersebar di berbagai hukum tajwid (mad, ghunnah, qalqalah). Bagaimana guru menyusun rencana koreksi yang efektif?",
+      "pilihan": {
+        "A": "Koreksi semua kesalahan sekaligus dalam satu sesi agar cepat selesai",
+        "B": "Susun prioritas berdasarkan hukum yang paling sering muncul kesalahannya dan paling berdampak pada makna, lalu buat rencana koreksi bertahap per sesi dengan target yang jelas",
+        "C": "Turunkan murid ke tingkat sebelumnya karena dianggap belum layak lanjut",
+        "D": "Biarkan semua kesalahan karena murid sudah tingkat lanjut dan dianggap tahu sendiri"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Rencana koreksi bertahap dengan prioritas yang jelas lebih efektif dan tidak membebani murid dibanding mengoreksi semua kesalahan sekaligus.",
+      "indikator_kompetensi": "Guru mampu menyusun rencana koreksi bertahap untuk murid dengan banyak kesalahan tajwid tersebar"
+    },
+    {
+      "id_soal": "TJW-022",
+      "kategori": "Tajwid Lanjutan",
+      "sub_aspek": "Deteksi & Koreksi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca huruf lam pada lafaz Allah (lafzul jalalah) dengan tebal (tafkhim) padahal sebelumnya didahului harakat kasrah yang seharusnya membuatnya tipis (tarqiq). Apa koreksi yang tepat?",
+      "pilihan": {
+        "A": "Anggap kesalahan ini terlalu kecil untuk dikoreksi",
+        "B": "Jelaskan bahwa lam pada lafzul jalalah dibaca tebal hanya jika didahului fathah/dhommah, dan tipis jika didahului kasrah; latih dengan membandingkan kedua kondisi",
+        "C": "Biarkan karena lam pada lafzul jalalah selalu dibaca tebal",
+        "D": "Suruh murid selalu membaca lam tersebut tipis tanpa terkecuali"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Bunyi lam pada lafzul jalalah bergantung pada harakat sebelumnya; guru perlu menjelaskan dan melatih kedua kondisi secara kontras.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan tafkhim-tarqiq pada lam lafzul jalalah"
+    },
+    {
+      "id_soal": "MTH-001",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Memahami Murid",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4/C5",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid hafal lancar hafalan baru, tapi saat dites acak hafalan lama, dia banyak lupa. Apa kemungkinan penyebabnya, dan strategi apa yang paling tepat?",
+      "pilihan": {
+        "A": "Penyebab: murid tidak berbakat menghafal. Solusi: turunkan target hafalan",
+        "B": "Penyebab: metode tes yang salah. Solusi: hentikan tes acak",
+        "C": "Penyebab: kurangnya pengulangan (muraja'ah) hafalan lama secara rutin. Solusi: susun jadwal muraja'ah berkala, bukan hanya fokus hafalan baru",
+        "D": "Penyebab: murid malas. Solusi: beri hukuman agar lebih rajin"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Pola klasik ini biasanya karena minimnya pengulangan terjadwal, bukan soal bakat atau kemalasan.",
+      "indikator_kompetensi": "Guru mampu mendiagnosis dan mengatasi lupa hafalan lama akibat kurang muraja'ah"
+    },
+    {
+      "id_soal": "MTH-002",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Memahami Murid",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4/C5",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid butuh waktu jauh lebih lama dibanding rata-rata teman seangkatannya untuk menghafal jumlah ayat yang sama. Apa langkah yang paling tepat bagi guru?",
+      "pilihan": {
+        "A": "Paksa murid mengejar target yang sama meski butuh waktu ekstra tanpa penyesuaian",
+        "B": "Keluarkan murid dari program tahfizh karena dianggap tidak mampu",
+        "C": "Sesuaikan target hafalan murid tersebut secara personal (misalnya jumlah ayat per pekan lebih sedikit), tanpa mengurangi kualitas hafalannya, dan apresiasi progres sesuai kemampuannya",
+        "D": "Bandingkan terus-menerus dengan murid lain agar termotivasi lebih cepat"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Setiap murid punya kecepatan berbeda; penyesuaian target personal menjaga kualitas hafalan tanpa membebani murid secara tidak realistis.",
+      "indikator_kompetensi": "Guru mampu menyesuaikan target hafalan sesuai kecepatan belajar individu murid"
+    },
+    {
+      "id_soal": "MTH-003",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Memahami Murid",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid hafal dengan lancar tapi ternyata tidak paham arti dari ayat yang dihafalnya sama sekali. Apakah ini masalah yang perlu ditangani, dan bagaimana caranya?",
+      "pilihan": {
+        "A": "Serahkan sepenuhnya ke guru mata pelajaran lain",
+        "B": "Hentikan hafalan sampai murid belajar bahasa Arab secara formal terlebih dahulu",
+        "C": "Bukan masalah, karena tujuan tahfizh hanya menghafal, bukan memahami makna",
+        "D": "Perlu ditangani secara bertahap dengan menyisipkan penjelasan makna sederhana di sela-sela hafalan, agar hafalan lebih bermakna dan mudah diingat jangka panjang"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Pemahaman makna membantu memperkuat daya ingat hafalan jangka panjang dan menjadi bagian penting dari tujuan tahfizh, meski disampaikan bertahap dan sederhana.",
+      "indikator_kompetensi": "Guru memahami pentingnya keterkaitan makna dengan kekuatan hafalan jangka panjang"
+    },
+    {
+      "id_soal": "MTH-004",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Memahami Murid",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid lebih mudah menghafal saat mendengarkan audio murottal berulang-ulang dibanding membaca mushaf langsung. Bagaimana guru sebaiknya menyikapi gaya belajar ini?",
+      "pilihan": {
+        "A": "Manfaatkan audio sebagai alat bantu utama sesuai gaya belajarnya, namun tetap dampingi dengan membaca mushaf agar murid juga mengenali tulisan ayat, bukan hafal dari suara semata",
+        "B": "Anggap gaya belajar ini tidak valid untuk tahfizh",
+        "C": "Biarkan murid hanya mengandalkan audio tanpa pernah membuka mushaf",
+        "D": "Larang murid menggunakan audio dan paksa hanya membaca mushaf"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Memanfaatkan kekuatan gaya belajar murid (audio) itu baik, tapi tetap perlu diimbangi dengan membaca mushaf agar hafalannya utuh dan tidak bergantung sepenuhnya pada suara.",
+      "indikator_kompetensi": "Guru mampu menyesuaikan metode dengan gaya belajar murid tanpa mengorbankan aspek penting lainnya"
+    },
+    {
+      "id_soal": "MTH-005",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Memahami Murid",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid punya hafalan yang banyak dan lancar, tapi saat setoran cepat, tajwidnya jadi berantakan karena terburu-buru mengejar kelancaran. Bagaimana guru sebaiknya menangani?",
+      "pilihan": {
+        "A": "Kurangi jumlah hafalan murid sebagai hukuman",
+        "B": "Biarkan karena yang penting hafalannya sudah banyak",
+        "C": "Fokuskan penilaian hanya pada jumlah hafalan, abaikan tajwid",
+        "D": "Minta murid memperlambat tempo setoran sementara waktu sampai tajwidnya stabil kembali, sambil menjelaskan bahwa kualitas bacaan sama pentingnya dengan jumlah hafalan"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Kecepatan setoran yang mengorbankan tajwid perlu diarahkan ulang dengan memperlambat tempo sementara, karena kualitas bacaan tetap menjadi prioritas.",
+      "indikator_kompetensi": "Guru mampu menyeimbangkan kelancaran hafalan dengan ketepatan tajwid saat setoran"
+    },
+    {
+      "id_soal": "MTH-006",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Memahami Murid",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid sulit duduk tenang dan fokus dalam durasi lama saat sesi hafalan, sering teralihkan perhatiannya. Apa strategi yang paling tepat bagi guru?",
+      "pilihan": {
+        "A": "Paksa murid duduk diam dalam durasi penuh tanpa jeda",
+        "B": "Bagi sesi hafalan menjadi durasi lebih pendek dengan jeda singkat di antaranya, dan gunakan variasi aktivitas (bergerak sedikit, mengulang sambil berjalan) agar tetap fokus",
+        "C": "Biarkan murid melakukan apa saja selama sesi berlangsung tanpa arahan",
+        "D": "Keluarkan murid dari program karena dianggap tidak cocok menghafal"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Durasi fokus setiap murid berbeda; membagi sesi menjadi lebih pendek dengan variasi aktivitas membantu murid yang kesulitan fokus lama tetap produktif.",
+      "indikator_kompetensi": "Guru mampu menyesuaikan metode hafalan untuk murid dengan rentang fokus pendek"
+    },
+    {
+      "id_soal": "MTH-007",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Memahami Murid",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid sangat perfeksionis — setiap merasa ada sedikit kesalahan pelafalan, dia mengulang dari awal berkali-kali sehingga progres hafalannya jadi sangat lambat. Bagaimana guru membantu?",
+      "pilihan": {
+        "A": "Larang murid mengulang sama sekali meski ada kesalahan",
+        "B": "Biarkan karena ketelitian murid patut diapresiasi tanpa perlu diarahkan",
+        "C": "Apresiasi ketelitiannya, tapi bantu murid membuat batasan wajar (misalnya maksimal 2-3 kali mengulang per bagian), dan jelaskan bahwa kesalahan kecil bisa dikoreksi belakangan tanpa harus mengulang total",
+        "D": "Turunkan target hafalannya secara drastis"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Perfeksionisme berlebihan bisa menghambat progres; guru perlu membantu murid menemukan keseimbangan antara ketelitian dan efisiensi belajar.",
+      "indikator_kompetensi": "Guru mampu membantu murid perfeksionis menemukan keseimbangan dalam proses menghafal"
+    },
+    {
+      "id_soal": "MTH-008",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Memahami Murid",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid terlihat bosan dengan rutinitas setoran yang selalu sama setiap hari, semangatnya menurun meski kemampuannya sebenarnya baik. Apa yang bisa dilakukan guru?",
+      "pilihan": {
+        "A": "Kurangi target hafalan agar murid tidak bosan",
+        "B": "Biarkan karena rutinitas memang harus konsisten tanpa variasi",
+        "C": "Variasikan cara setoran sesekali (misalnya setoran berpasangan dengan teman, permainan tebak lanjutan ayat, atau setoran di tempat berbeda) tanpa mengubah target inti hafalan",
+        "D": "Hentikan sementara program hafalan sampai murid meminta sendiri untuk lanjut"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Variasi metode tanpa mengubah target inti membantu menjaga semangat murid yang mulai bosan dengan rutinitas yang monoton.",
+      "indikator_kompetensi": "Guru mampu menjaga semangat murid dengan variasi metode tanpa mengorbankan target hafalan"
+    },
+    {
+      "id_soal": "MTH-009",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Memahami Murid",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid yang cepat menghafal mulai bersikap meremehkan teman-temannya yang lebih lambat, bahkan sesekali mengejek. Bagaimana guru sebaiknya menangani sikap ini?",
+      "pilihan": {
+        "A": "Pisahkan murid tersebut dari kelompok belajar",
+        "B": "Biarkan karena itu bukan urusan guru selama hafalannya bagus",
+        "C": "Kurangi pujian pada murid tersebut sebagai hukuman",
+        "D": "Tegur secara personal dengan cara yang baik, jelaskan pentingnya menghargai proses orang lain, dan arahkan kemampuannya untuk membantu teman (misalnya jadi tutor sebaya) secara positif"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Kemampuan yang baik perlu diarahkan menjadi sikap positif seperti membantu sesama, sambil tetap menegur sikap meremehkan dengan cara yang mendidik.",
+      "indikator_kompetensi": "Guru mampu menangani sikap meremehkan pada murid yang cepat menghafal"
+    },
+    {
+      "id_soal": "MTH-010",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Manajemen Pembelajaran",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru mengelola kelas tahfizh dengan 15 murid dan kesulitan menyusun jadwal setoran individual yang efektif untuk semuanya dalam satu sesi. Apa strategi yang tepat?",
+      "pilihan": {
+        "A": "Buat jadwal rotasi setoran per murid dengan slot waktu tertentu, sambil murid lain melakukan muraja'ah mandiri atau berpasangan menunggu giliran",
+        "B": "Hapuskan sesi setoran individual, ganti dengan setoran kelompok saja",
+        "C": "Setorkan semua murid sekaligus dalam waktu yang sama tanpa jadwal jelas",
+        "D": "Kurangi jumlah murid dalam kelas tanpa mencoba strategi pengelolaan waktu dulu"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Rotasi jadwal dengan aktivitas produktif bagi murid yang menunggu giliran adalah strategi praktis untuk kelas dengan banyak murid.",
+      "indikator_kompetensi": "Guru mampu menyusun jadwal setoran yang efektif untuk kelas dengan banyak murid"
+    },
+    {
+      "id_soal": "MTH-011",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Manajemen Pembelajaran",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru bingung menentukan seberapa sering muraja'ah (pengulangan) hafalan lama harus dilakukan agar tidak mengganggu progres hafalan baru. Apa pendekatan yang tepat?",
+      "pilihan": {
+        "A": "Fokuskan seluruh waktu hanya pada hafalan baru, muraja'ah dilakukan sesekali saja jika sempat",
+        "B": "Hentikan hafalan baru sampai semua hafalan lama benar-benar kuat",
+        "C": "Muraja'ah hanya dilakukan menjelang ujian atau evaluasi besar",
+        "D": "Alokasikan porsi waktu tetap untuk muraja'ah di setiap sesi (misalnya sepertiga waktu), dengan sistem rotasi bagian hafalan lama yang berbeda setiap hari agar semua terulang secara berkala"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Alokasi waktu tetap dengan sistem rotasi menjaga keseimbangan antara hafalan baru dan penguatan hafalan lama secara berkelanjutan.",
+      "indikator_kompetensi": "Guru mampu menyusun proporsi waktu yang seimbang antara hafalan baru dan muraja'ah"
+    },
+    {
+      "id_soal": "MTH-012",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Manajemen Pembelajaran",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru ingin melakukan evaluasi informal terhadap hafalan murid tanpa membuat suasana seperti tes formal yang menegangkan. Bagaimana cara yang tepat?",
+      "pilihan": {
+        "A": "Lakukan evaluasi lewat kegiatan santai seperti setoran acak dalam permainan kelompok atau sesi tanya-jawab ringan, sambil tetap mencatat hasil secara objektif",
+        "B": "Evaluasi hanya berdasarkan kesan umum guru tanpa pencatatan sistematis",
+        "C": "Hilangkan evaluasi sepenuhnya karena dianggap membebani murid",
+        "D": "Tetap gunakan format tes formal dengan pengawasan ketat agar hasilnya akurat"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Evaluasi informal yang tetap sistematis (dicatat objektif) namun dikemas santai bisa mengurangi tekanan psikologis murid tanpa mengorbankan keakuratan data.",
+      "indikator_kompetensi": "Guru mampu merancang evaluasi informal yang tetap objektif dan tidak menekan psikologis murid"
+    },
+    {
+      "id_soal": "MTH-013",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Manajemen Pembelajaran",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru kekurangan waktu untuk memberi perhatian penuh ke semua murid di kelas besar, sehingga beberapa murid terasa kurang terpantau perkembangannya. Apa strategi yang tepat?",
+      "pilihan": {
+        "A": "Fokuskan perhatian hanya pada murid yang paling menonjol atau paling bermasalah",
+        "B": "Serahkan sepenuhnya pemantauan ke orang tua di rumah",
+        "C": "Kurangi jumlah target hafalan untuk semua murid agar lebih mudah dipantau",
+        "D": "Buat sistem pencatatan progres sederhana untuk semua murid (misalnya kartu perkembangan), dan sisihkan waktu singkat namun rutin untuk setiap murid meski hanya beberapa menit"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Sistem pencatatan yang sederhana namun konsisten membantu guru memantau semua murid secara adil meski dengan waktu terbatas per individu.",
+      "indikator_kompetensi": "Guru mampu merancang sistem pemantauan progres yang adil untuk kelas besar"
+    },
+    {
+      "id_soal": "MTH-014",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Manajemen Pembelajaran",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menyusun target hafalan tahunan yang sama untuk semua murid, padahal kemampuan mereka berbeda-beda. Bagaimana pendekatan target yang lebih tepat?",
+      "pilihan": {
+        "A": "Biarkan setiap murid menentukan targetnya sendiri tanpa arahan guru",
+        "B": "Tetap gunakan target seragam agar mudah dievaluasi",
+        "C": "Susun target dasar minimal yang harus dicapai semua murid, namun beri ruang penyesuaian (target tambahan untuk yang lebih cepat, atau perpanjangan waktu wajar untuk yang butuh lebih lama) tanpa mengorbankan kualitas",
+        "D": "Hapus target tahunan karena dianggap terlalu memberatkan"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Target dasar yang seragam dengan ruang penyesuaian personal menjaga standar kualitas sekaligus mengakomodasi perbedaan kecepatan belajar.",
+      "indikator_kompetensi": "Guru mampu menyusun target hafalan yang realistis namun tetap terukur untuk setiap murid"
+    },
+    {
+      "id_soal": "MTH-015",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Manajemen Pembelajaran",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid sering izin atau absen sehingga jadwal hafalannya tertinggal jauh dibanding rencana awal. Bagaimana guru sebaiknya menangani situasi ini?",
+      "pilihan": {
+        "A": "Keluarkan murid dari program karena dianggap tidak serius",
+        "B": "Paksa murid mengejar seluruh ketertinggalan dalam waktu singkat agar sejajar dengan target awal",
+        "C": "Susun ulang jadwal personal yang realistis berdasarkan sisa waktu yang ada, prioritaskan kualitas hafalan dibanding mengejar jumlah semata, dan komunikasikan penyesuaian ini ke orang tua",
+        "D": "Biarkan target tetap sama tanpa penyesuaian apa pun"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Penyesuaian jadwal yang realistis dan komunikasi terbuka ke orang tua lebih membantu murid yang tertinggal dibanding memaksakan pengejaran target yang tidak realistis.",
+      "indikator_kompetensi": "Guru mampu menyusun ulang rencana hafalan bagi murid yang sering absen"
+    },
+    {
+      "id_soal": "MTH-016",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Manajemen Pembelajaran",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru memiliki beberapa teknik menghafal yang berbeda (talqin/dituntun guru, sima'i/mendengarkan, mandiri membaca-hafal sendiri) namun bingung kapan menggunakan masing-masing teknik. Bagaimana pendekatan yang tepat?",
+      "pilihan": {
+        "A": "Sesuaikan teknik dengan kebutuhan: talqin untuk murid pemula atau ayat yang sulit, sima'i untuk murid yang lebih auditif, dan mandiri untuk murid yang sudah percaya diri dan mandiri belajarnya",
+        "B": "Ganti teknik setiap hari secara acak tanpa pertimbangan kebutuhan murid",
+        "C": "Serahkan sepenuhnya pemilihan teknik ke murid tanpa arahan guru",
+        "D": "Gunakan hanya satu teknik untuk semua murid agar konsisten"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Setiap teknik punya kegunaan berbeda sesuai kondisi murid dan tingkat kesulitan materi; guru perlu menyesuaikan pilihan teknik secara fleksibel, bukan menyeragamkan atau mengacak tanpa dasar.",
+      "indikator_kompetensi": "Guru mampu memilih teknik hafalan yang sesuai dengan kondisi murid dan materi"
+    },
+    {
+      "id_soal": "MTH-017",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Manajemen Pembelajaran",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru ingin mengevaluasi progres hafalan murid secara jangka panjang (per semester), bukan hanya harian. Apa pendekatan yang tepat untuk evaluasi ini?",
+      "pilihan": {
+        "A": "Evaluasi hanya berdasarkan kesan subjektif guru tanpa data konkret",
+        "B": "Serahkan evaluasi semester sepenuhnya ke hasil ujian akhir sekolah",
+        "C": "Cukup jumlahkan total ayat/halaman yang sudah dihafal tanpa mengecek kualitasnya",
+        "D": "Kombinasikan data kuantitas (jumlah hafalan) dengan kualitas (ketepatan tajwid dan kelancaran saat muraja'ah acak), serta catat pola perkembangan dari waktu ke waktu untuk melihat tren, bukan sekadar angka akhir"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Evaluasi jangka panjang yang baik menggabungkan kuantitas dan kualitas serta melihat tren perkembangan, bukan hanya angka akhir semata.",
+      "indikator_kompetensi": "Guru mampu merancang evaluasi progres hafalan jangka panjang yang komprehensif"
+    },
+    {
+      "id_soal": "MTH-018",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Manajemen Pembelajaran",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C5",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Di akhir tahun ajaran, target hafalan tahunan untuk sebagian besar murid ternyata tidak tercapai. Apa langkah yang paling tepat bagi guru dan koordinator?",
+      "pilihan": {
+        "A": "Salahkan murid-murid karena dianggap kurang usaha",
+        "B": "Biarkan saja dan pertahankan target yang sama untuk tahun depan tanpa evaluasi",
+        "C": "Evaluasi bersama penyebab tidak tercapainya target (apakah target terlalu tinggi, metode kurang efektif, atau faktor eksternal seperti banyak hari libur), lalu susun rencana perbaikan yang realistis untuk tahun berikutnya",
+        "D": "Naikkan target tahun depan untuk mengejar ketertinggalan tanpa mengubah pendekatan"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Evaluasi menyeluruh terhadap penyebab kegagalan target penting sebelum menyusun rencana perbaikan, bukan menyalahkan murid atau mengulang pendekatan yang sama.",
+      "indikator_kompetensi": "Guru dan koordinator mampu mengevaluasi dan memperbaiki perencanaan target hafalan tahunan"
+    },
+    {
+      "id_soal": "MTH-019",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Motivasi & Psikologi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4/C5",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid tiba-tiba menutup mulut dan menolak setoran hafalan, padahal biasanya rajin. Apa langkah pertama guru?",
+      "pilihan": {
+        "A": "Laporkan langsung ke orang tua bahwa anaknya bermasalah",
+        "B": "Paksa murid tetap setoran karena target harus tercapai",
+        "C": "Ganti murid ke kelompok hafalan yang lain",
+        "D": "Cari tahu dulu penyebabnya secara pribadi (bisa jadi capek, masalah pribadi, atau tekanan), baru tentukan pendekatan selanjutnya tanpa memaksa"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Perubahan sikap mendadak biasanya sinyal ada masalah di luar hafalan itu sendiri. Guru perlu memahami akar masalah dulu sebelum bertindak.",
+      "indikator_kompetensi": "Guru mampu merespons perubahan sikap mendadak murid dengan pendekatan yang tepat"
+    },
+    {
+      "id_soal": "MTH-020",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Motivasi & Psikologi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4/C5",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid sudah 3 bulan berada di juz yang sama dan belum naik, padahal murid lain seangkatan sudah maju. Apa langkah pertama yang paling tepat?",
+      "pilihan": {
+        "A": "Bandingkan langsung dengan murid lain di depan kelas agar termotivasi",
+        "B": "Naikkan saja juznya agar tidak tertinggal terlalu jauh",
+        "C": "Sarankan murid berhenti mengikuti program tahfizh",
+        "D": "Evaluasi penyebab spesifik (kesulitan hafalan, kurang waktu muraja'ah, atau masalah motivasi), lalu buat rencana penyesuaian personal"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Stagnasi hafalan butuh diagnosa spesifik sebelum solusi ditentukan — setiap penyebab butuh pendekatan berbeda.",
+      "indikator_kompetensi": "Guru mampu mendiagnosis penyebab stagnasi hafalan dan menyusun rencana penyesuaian"
+    },
+    {
+      "id_soal": "MTH-021",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Motivasi & Psikologi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid mengalami penurunan semangat (futur) di pertengahan tahun ajaran setelah sebelumnya sangat bersemangat. Apa yang sebaiknya dilakukan guru?",
+      "pilihan": {
+        "A": "Anggap wajar dan biarkan saja sampai semangatnya kembali sendiri",
+        "B": "Ajak bicara secara personal untuk memahami penyebab penurunan semangat, berikan dukungan dan mungkin variasi kecil dalam metode belajar untuk menyegarkan suasana, tanpa menambah tekanan target",
+        "C": "Tambah target hafalan agar murid lebih terpacu",
+        "D": "Bandingkan semangatnya dengan periode sebelumnya di depan murid lain"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Futur adalah hal wajar terjadi, tapi tetap perlu direspons dengan perhatian personal dan dukungan, bukan dibiarkan atau malah ditambah tekanan.",
+      "indikator_kompetensi": "Guru mampu merespons penurunan semangat murid dengan pendekatan suportif"
+    },
+    {
+      "id_soal": "MTH-022",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Motivasi & Psikologi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Seorang murid pindahan bercerita bahwa dia sering dimarahi keras oleh guru tahfizh sebelumnya, dan sekarang dia terlihat sangat takut setiap kali diminta setoran. Bagaimana guru sebaiknya membangun kembali kepercayaan murid ini?",
+      "pilihan": {
+        "A": "Bebaskan murid dari kewajiban setoran untuk sementara waktu tanpa batas jelas",
+        "B": "Bangun kepercayaan secara bertahap dengan suasana setoran yang lebih rileks, berikan apresiasi pada usaha kecil, dan hindari nada menghakimi meski ada kesalahan, sampai murid merasa aman",
+        "C": "Diskusikan pengalaman buruk murid tersebut secara terbuka di depan kelas",
+        "D": "Anggap cerita tersebut berlebihan dan perlakukan murid seperti biasa tanpa penyesuaian"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Membangun kembali rasa aman butuh pendekatan bertahap dan konsisten, dengan suasana yang tidak menghakimi, agar murid perlahan berani setoran tanpa rasa takut berlebihan.",
+      "indikator_kompetensi": "Guru mampu membangun kembali kepercayaan diri murid yang memiliki pengalaman kurang menyenangkan sebelumnya"
+    },
+    {
+      "id_soal": "MTH-023",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Motivasi & Psikologi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid sering membandingkan hafalannya dengan teman-teman yang lebih maju, membuatnya merasa minder dan kurang percaya diri. Apa yang sebaiknya guru lakukan?",
+      "pilihan": {
+        "A": "Bantu murid fokus pada perkembangan dirinya sendiri dari waktu ke waktu (bukan dibanding murid lain), tunjukkan progres nyata yang sudah dicapainya, dan bangun rasa percaya diri lewat pencapaian pribadinya",
+        "B": "Pindahkan murid ke kelompok yang levelnya jauh lebih rendah agar tidak minder",
+        "C": "Abaikan perasaan murid karena dianggap tidak relevan dengan hafalan",
+        "D": "Bandingkan lagi dengan murid lain agar dia lebih terpacu untuk mengejar"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Fokus pada perkembangan pribadi dibanding perbandingan sosial membantu murid membangun kepercayaan diri berbasis pencapaian nyata, bukan posisi relatif terhadap orang lain.",
+      "indikator_kompetensi": "Guru mampu membantu murid yang minder akibat membandingkan diri dengan teman"
+    },
+    {
+      "id_soal": "MTH-024",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Motivasi & Psikologi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid merasa sangat percaya diri dengan kemampuannya sehingga jadi malas melakukan muraja'ah, menganggap hafalannya sudah pasti kuat. Bagaimana guru sebaiknya menyikapi?",
+      "pilihan": {
+        "A": "Berikan tes muraja'ah acak sesekali untuk menunjukkan secara konkret bagian mana yang ternyata mulai melemah, sehingga murid menyadari sendiri pentingnya muraja'ah tanpa perlu dipaksa dengan ceramah",
+        "B": "Tegur keras agar murid tidak sombong",
+        "C": "Biarkan karena rasa percaya diri itu bagus untuk motivasi",
+        "D": "Turunkan hafalan barunya sebagai konsekuensi"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Menunjukkan bukti konkret lewat tes acak lebih efektif menyadarkan murid dibanding hanya menasihati secara lisan, karena murid melihat sendiri dampak nyata dari kurangnya muraja'ah.",
+      "indikator_kompetensi": "Guru mampu menangani murid yang overconfident dan mengabaikan pentingnya muraja'ah"
+    },
+    {
+      "id_soal": "MTH-025",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Motivasi & Psikologi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid menangis saat kesulitan menghafal bagian tertentu yang menurutnya sangat sulit. Bagaimana respons guru yang paling tepat?",
+      "pilihan": {
+        "A": "Kurangi target hafalan murid secara permanen karena dianggap tidak mampu",
+        "B": "Beri waktu murid menenangkan diri terlebih dahulu, validasi bahwa bagian tersebut memang sulit, lalu bantu memecah bagian itu menjadi potongan lebih kecil agar terasa lebih mudah dikuasai",
+        "C": "Suruh murid berhenti menangis dan segera melanjutkan hafalan",
+        "D": "Abaikan tangisan dan anggap itu bukan urusan guru"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Validasi perasaan murid disertai bantuan teknis (memecah materi jadi lebih kecil) membantu murid mengatasi kesulitan tanpa merasa diremehkan atau ditekan.",
+      "indikator_kompetensi": "Guru mampu merespons murid yang menangis karena kesulitan hafalan dengan cara yang suportif"
+    },
+    {
+      "id_soal": "MTH-026",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Motivasi & Psikologi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid sangat pemalu dan jarang bicara, termasuk saat mengalami kesulitan hafalan dia lebih memilih diam daripada bertanya ke guru. Bagaimana guru membangun kepercayaan dirinya?",
+      "pilihan": {
+        "A": "Anggap murid tersebut bermasalah dan perlu penanganan khusus dari luar",
+        "B": "Biarkan karena itu adalah karakter murid yang tidak perlu diubah",
+        "C": "Paksa murid untuk lebih banyak bicara di depan kelas",
+        "D": "Bangun kedekatan secara bertahap lewat interaksi personal yang ringan, beri ruang murid mengekspresikan kesulitan dengan cara yang nyaman baginya (misalnya lewat tulisan singkat), dan apresiasi setiap usaha komunikasinya"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Membangun kepercayaan diri murid pemalu perlu pendekatan bertahap dan personal, memberi ruang sesuai kenyamanannya tanpa memaksa perubahan karakter secara instan.",
+      "indikator_kompetensi": "Guru mampu membangun kepercayaan diri murid pemalu dalam mengekspresikan kesulitan belajarnya"
+    },
+    {
+      "id_soal": "MTH-027",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Motivasi & Psikologi",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid mulai jarang hadir dan terlihat kehilangan minat pada program tahfizh, berisiko berhenti di tengah jalan. Apa langkah pencegahan yang tepat bagi guru?",
+      "pilihan": {
+        "A": "Keluarkan murid dari program karena dianggap tidak serius",
+        "B": "Tambah tekanan dengan target lebih tinggi agar murid lebih bersemangat",
+        "C": "Biarkan saja dan tunggu murid tersebut kembali dengan sendirinya",
+        "D": "Ajak bicara secara personal untuk memahami penyebab kehilangan minat, libatkan orang tua dalam komunikasi yang suportif (bukan menyalahkan), dan cari cara untuk menghidupkan kembali motivasinya"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Pencegahan dropout membutuhkan pendekatan personal dan kolaboratif dengan orang tua untuk memahami akar masalah, bukan dibiarkan atau malah menambah tekanan.",
+      "indikator_kompetensi": "Guru mampu mengidentifikasi dan mencegah risiko murid berhenti dari program tahfizh"
+    },
+    {
+      "id_soal": "MTH-028",
+      "kategori": "Metodologi Tahfizh",
+      "sub_aspek": "Motivasi & Psikologi",
+      "tipe_soal": "Reflektif/Open-Ended",
+      "level_kognitif": "C6",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Ceritakan sebuah pengalaman (nyata atau perkiraan) di mana Anda berhasil memotivasi seorang murid yang hampir menyerah dalam menghafal. Apa pendekatan yang Anda gunakan, dan mengapa Anda memilih pendekatan tersebut?",
+      "pilihan": null,
+      "kunci_jawaban": "(Dinilai dengan rubrik)",
+      "pembahasan": "Panduan Penilaian (Rubrik):\n- Baik (3 poin): Menjelaskan pendekatan personal yang konkret, menunjukkan pemahaman terhadap kondisi psikologis murid, ada hasil atau refleksi yang jelas\n- Cukup (2 poin): Pendekatan yang disebutkan masih umum/generik, kurang menunjukkan pemahaman mendalam terhadap kondisi murid\n- Kurang (1 poin): Jawaban tidak menunjukkan pendekatan yang jelas atau cenderung mengandalkan tekanan/paksaan",
+      "indikator_kompetensi": "Guru mampu merefleksikan dan mengartikulasikan strategi motivasi yang pernah/akan diterapkan"
+    },
+    {
+      "id_soal": "PRF-001",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Integritas & Etika",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Orang tua murid mengeluh via WhatsApp dengan nada kesal bahwa anaknya 'tidak diperhatikan' gurunya. Bagaimana respons pertama yang paling tepat?",
+      "pilihan": {
+        "A": "Minta orang tua bicara ke kepala sekolah saja",
+        "B": "Balas dengan defensif menjelaskan bahwa itu tidak benar",
+        "C": "Abaikan pesan tersebut sampai orang tua tenang sendiri",
+        "D": "Tanggapi dengan tenang, dengarkan keluhannya dulu tanpa menyela, lalu ajak diskusi langsung (bukan lewat chat) untuk klarifikasi"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Prinsip tabayyun dan komunikasi non-defensif penting di sini — dengarkan dulu, lalu selesaikan lewat percakapan langsung yang lebih personal.",
+      "indikator_kompetensi": "Guru mampu merespons keluhan orang tua secara tenang dan konstruktif"
+    },
+    {
+      "id_soal": "PRF-002",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Integritas & Etika",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Anda melihat rekan guru menandai murid 'hadir' padahal murid tersebut tidak masuk kelas. Apa tindakan yang paling tepat?",
+      "pilihan": {
+        "A": "Sebarkan ke rekan guru lain sebagai bahan diskusi",
+        "B": "Diamkan saja karena itu bukan urusan Anda",
+        "C": "Langsung laporkan ke kepala sekolah tanpa bicara ke rekan tersebut dulu",
+        "D": "Bicarakan langsung secara personal ke rekan tersebut dengan cara baik, tanyakan alasannya, sebelum melibatkan pihak lain"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Prinsip menegur dengan cara yang baik (bukan menggunjing atau langsung melapor) mencerminkan integritas dan menjaga hubungan profesional yang sehat.",
+      "indikator_kompetensi": "Guru menunjukkan integritas dalam menyikapi pelanggaran etik yang dilihatnya"
+    },
+    {
+      "id_soal": "PRF-003",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Integritas & Etika",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang orang tua meminta secara halus agar guru menaikkan jenjang hafalan anaknya lebih cepat dari kemampuan sebenarnya, dengan alasan ingin anaknya ikut acara khataman tahun ini. Bagaimana guru sebaiknya bersikap?",
+      "pilihan": {
+        "A": "Turuti permintaan tersebut demi menjaga hubungan baik dengan orang tua",
+        "B": "Jelaskan dengan sopan namun tegas bahwa kenaikan jenjang harus berdasarkan kemampuan aktual murid, tawarkan solusi alternatif (misalnya persiapan intensif jika memang realistis) tanpa mengorbankan standar",
+        "C": "Tolak permintaan tanpa memberikan penjelasan apa pun",
+        "D": "Laporkan orang tua tersebut ke kepala sekolah karena dianggap tidak sopan"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Menjaga standar penilaian yang objektif adalah bentuk integritas, namun tetap perlu disampaikan dengan cara yang menghargai perasaan orang tua dan menawarkan solusi yang realistis.",
+      "indikator_kompetensi": "Guru mampu mempertahankan standar penilaian objektif meski ada tekanan dari orang tua"
+    },
+    {
+      "id_soal": "PRF-004",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Integritas & Etika",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Saat mengajar, guru menyadari dirinya salah menjelaskan satu hukum tajwid kepada murid di pertemuan sebelumnya. Apa yang sebaiknya dilakukan?",
+      "pilihan": {
+        "A": "Diamkan saja agar tidak terlihat tidak kompeten di depan murid",
+        "B": "Ganti topik pembicaraan agar kesalahan tersebut terlupakan",
+        "C": "Salahkan murid karena dianggap salah paham dari penjelasan sebelumnya",
+        "D": "Akui kesalahan secara terbuka di pertemuan berikutnya, luruskan penjelasan yang benar, dan jadikan momen ini sebagai contoh bahwa belajar adalah proses berkelanjutan bagi semua orang"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Mengakui kesalahan secara terbuka menunjukkan integritas dan justru menjadi teladan yang baik bagi murid tentang sikap rendah hati dalam belajar.",
+      "indikator_kompetensi": "Guru menunjukkan integritas dan kerendahan hati saat menyadari kesalahan dalam mengajar"
+    },
+    {
+      "id_soal": "PRF-005",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Integritas & Etika",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru mengetahui informasi pribadi tentang kondisi keluarga seorang murid (misalnya masalah rumah tangga orang tuanya) yang disampaikan secara rahasia. Bagaimana guru sebaiknya menjaga informasi ini?",
+      "pilihan": {
+        "A": "Diskusikan secara terbuka di forum guru sebagai bahan evaluasi umum",
+        "B": "Jaga kerahasiaan informasi tersebut, hanya gunakan untuk memahami kondisi murid demi pendekatan mengajar yang lebih baik, dan sampaikan ke pihak lain hanya jika benar-benar diperlukan serta dengan izin yang sesuai",
+        "C": "Abaikan informasi tersebut sepenuhnya karena dianggap tidak relevan",
+        "D": "Bagikan ke rekan guru lain agar mereka juga memahami kondisi murid tersebut"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Menjaga kerahasiaan data pribadi murid adalah bagian penting dari integritas dan etika profesional guru.",
+      "indikator_kompetensi": "Guru mampu menjaga kerahasiaan informasi pribadi murid dengan bijaksana"
+    },
+    {
+      "id_soal": "PRF-006",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Integritas & Etika",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menyadari dirinya cenderung lebih perhatian pada satu murid yang menurutnya lebih menyenangkan sikapnya, dibanding murid lain di kelas yang sama. Bagaimana guru sebaiknya menyikapi kesadaran ini?",
+      "pilihan": {
+        "A": "Biarkan karena wajar guru punya murid favorit",
+        "B": "Kurangi interaksi dengan murid yang disukai agar terlihat adil",
+        "C": "Sadari kecenderungan ini sebagai bias personal, dan secara sadar berusaha memberi perhatian dan kesempatan yang setara ke semua murid terlepas dari kedekatan personal",
+        "D": "Diskusikan secara terbuka ke murid lain bahwa guru punya murid favorit"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Kesadaran akan bias personal dan usaha aktif untuk berlaku adil ke semua murid adalah bagian penting dari integritas profesional guru.",
+      "indikator_kompetensi": "Guru menyadari dan mengelola bias personal demi keadilan terhadap semua murid"
+    },
+    {
+      "id_soal": "PRF-007",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Integritas & Etika",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang wali murid memberikan hadiah cukup mahal kepada guru menjelang pembagian rapor, dengan harapan implisit agar anaknya dinilai lebih baik. Bagaimana sikap guru yang tepat?",
+      "pilihan": {
+        "A": "Terima dengan sopan sebagai bentuk terima kasih jika memang wajar, namun tegaskan (secara halus jika perlu) bahwa penilaian tetap akan dilakukan secara objektif terlepas dari pemberian tersebut",
+        "B": "Terima hadiah tersebut karena menolak dianggap tidak sopan",
+        "C": "Laporkan wali murid tersebut karena dianggap melakukan penyuapan",
+        "D": "Tolak hadiah dengan kasar di depan wali murid"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Guru perlu menjaga objektivitas penilaian terlepas dari hadiah yang diterima, sambil tetap menjaga hubungan baik dan sopan santun dengan wali murid.",
+      "indikator_kompetensi": "Guru mampu menjaga objektivitas penilaian meski menerima pemberian dari wali murid"
+    },
+    {
+      "id_soal": "PRF-008",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Integritas & Etika",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru terburu-buru saat menilai hasil setoran hafalan murid karena banyak murid yang harus dites dalam waktu terbatas, sehingga khawatir penilaiannya kurang akurat. Apa yang sebaiknya dilakukan?",
+      "pilihan": {
+        "A": "Berikan nilai rata-rata untuk semua murid yang terburu-buru dinilai",
+        "B": "Jika ada keraguan pada penilaian tertentu, jadwalkan sesi ulang singkat untuk murid tersebut di lain waktu agar penilaian lebih akurat dan adil, daripada memberi nilai yang diragukan sendiri",
+        "C": "Tetap berikan nilai apa adanya meski merasa kurang yakin, yang penting semua murid sudah dinilai",
+        "D": "Minta murid lain menilai temannya sebagai gantinya"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Kejujuran mengakui keterbatasan penilaian dan mengambil langkah perbaikan (sesi ulang) lebih baik daripada memberi nilai yang diragukan validitasnya sendiri oleh guru.",
+      "indikator_kompetensi": "Guru menunjukkan integritas dengan memperbaiki penilaian yang dirasa kurang akurat"
+    },
+    {
+      "id_soal": "PRF-009",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Integritas & Etika",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru mendengar gosip dari rekan guru lain tentang seorang murid yang diduga berbuat tidak jujur saat ujian, namun belum ada bukti jelas. Bagaimana sikap guru yang tepat?",
+      "pilihan": {
+        "A": "Sebarkan informasi tersebut ke guru-guru lain agar semua waspada",
+        "B": "Lakukan tabayyun (klarifikasi) terlebih dahulu dengan mencari fakta langsung atau berdiskusi dengan pihak terkait sebelum mengambil kesimpulan atau tindakan apa pun terhadap murid",
+        "C": "Percaya sepenuhnya pada gosip tersebut dan langsung menegur murid di depan umum",
+        "D": "Abaikan sepenuhnya tanpa mengecek kebenarannya sama sekali"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Tabayyun (klarifikasi sebelum menuduh) adalah prinsip penting dalam etika, terutama saat informasi belum jelas kebenarannya.",
+      "indikator_kompetensi": "Guru menerapkan prinsip tabayyun sebelum bertindak atas informasi yang belum jelas kebenarannya"
+    },
+    {
+      "id_soal": "PRF-010",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Integritas & Etika",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru diminta oleh pihak sekolah untuk tidak menyampaikan ke wali murid tentang sebuah kesalahan administratif yang cukup berdampak pada anak mereka. Bagaimana sikap guru yang tepat?",
+      "pilihan": {
+        "A": "Beritahu wali murid secara diam-diam tanpa sepengetahuan sekolah",
+        "B": "Ikuti instruksi sekolah tanpa mempertanyakan apa pun demi menjaga hubungan kerja",
+        "C": "Abaikan permintaan sekolah dan bertindak sesuka hati sendiri",
+        "D": "Sampaikan keberatan secara profesional kepada pihak sekolah bahwa transparansi ke wali murid penting, dan cari jalan tengah yang tetap menjaga kejujuran tanpa merugikan pihak manapun"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Guru perlu menjunjung transparansi dan kejujuran sambil tetap menempuh jalur profesional untuk menyelesaikan potensi konflik kepentingan dengan pihak sekolah.",
+      "indikator_kompetensi": "Guru mampu menyeimbangkan integritas pribadi dengan arahan institusi secara profesional"
+    },
+    {
+      "id_soal": "PRF-011",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Integritas & Etika",
+      "tipe_soal": "Reflektif/Open-Ended",
+      "level_kognitif": "C6",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Ceritakan sebuah situasi (nyata atau perkiraan) di mana Anda memilih untuk berlaku jujur meskipun kejujuran itu berpotensi merugikan diri Anda sendiri (misalnya mengakui kesalahan, menolak keuntungan yang tidak semestinya). Apa yang mendasari keputusan Anda?",
+      "pilihan": null,
+      "kunci_jawaban": "(Dinilai dengan rubrik)",
+      "pembahasan": "Panduan Penilaian (Rubrik):\n- Baik (3 poin): Menceritakan situasi konkret dengan dilema jelas, menunjukkan alasan nilai/prinsip yang mendasari keputusan\n- Cukup (2 poin): Situasi disebutkan namun kurang spesifik, alasan masih umum\n- Kurang (1 poin): Tidak menunjukkan pemahaman tentang trade-off kejujuran, atau jawaban tidak relevan",
+      "indikator_kompetensi": "Guru mampu merefleksikan komitmen integritas dalam situasi yang mengandung dilema pribadi"
+    },
+    {
+      "id_soal": "PRF-012",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Kemampuan Interpersonal",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang orang tua murid bersikap defensif dan tidak mau mendengarkan setiap kali guru mencoba menjelaskan perkembangan hafalan anaknya yang kurang memuaskan. Bagaimana guru sebaiknya berkomunikasi?",
+      "pilihan": {
+        "A": "Kurangi frekuensi komunikasi dengan orang tua tersebut agar tidak terjadi konflik",
+        "B": "Mulai percakapan dengan mengapresiasi hal positif dari anak terlebih dahulu, gunakan bahasa yang tidak menghakimi, dan fokus pada solusi bersama daripada menyalahkan",
+        "C": "Hentikan komunikasi dan serahkan sepenuhnya ke wali kelas atau kepala sekolah",
+        "D": "Bersikap tegas dan menyampaikan fakta apa adanya tanpa mempertimbangkan perasaan orang tua"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Pendekatan yang dimulai dengan hal positif dan fokus pada solusi bersama membantu meredakan sikap defensif dan membangun komunikasi yang lebih produktif.",
+      "indikator_kompetensi": "Guru mampu berkomunikasi secara efektif dengan orang tua yang bersikap defensif"
+    },
+    {
+      "id_soal": "PRF-013",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Kemampuan Interpersonal",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid mengeluh kepada guru bahwa dia merasa diperlakukan tidak adil dibanding teman lainnya. Bagaimana guru sebaiknya menanggapi keluhan ini?",
+      "pilihan": {
+        "A": "Abaikan keluhan tersebut karena dianggap murid terlalu sensitif",
+        "B": "Langsung membantah bahwa perlakuan guru sudah adil tanpa mendengarkan lebih lanjut",
+        "C": "Dengarkan keluhan murid secara penuh tanpa menyela atau menghakimi, tanyakan contoh konkret, lalu refleksikan apakah ada dasar kebenarannya sebelum memberikan penjelasan atau perbaikan",
+        "D": "Bandingkan langsung dengan murid lain di depan murid yang mengeluh"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Mendengarkan secara penuh dan merefleksikan keluhan sebelum merespons menunjukkan penghargaan terhadap perasaan murid dan membuka ruang perbaikan jika memang diperlukan.",
+      "indikator_kompetensi": "Guru mampu mendengarkan dan merespons keluhan murid tentang keadilan perlakuan"
+    },
+    {
+      "id_soal": "PRF-014",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Kemampuan Interpersonal",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid sering menantang otoritas guru di kelas, misalnya membantah instruksi atau menyela penjelasan. Bagaimana guru sebaiknya menyikapi perilaku ini?",
+      "pilihan": {
+        "A": "Abaikan perilaku tersebut sepenuhnya agar tidak memperkeruh suasana",
+        "B": "Laporkan langsung ke orang tua tanpa mencoba menyelesaikan di level guru-murid dulu",
+        "C": "Bicarakan secara personal di luar kelas untuk memahami alasan di balik perilakunya, tetapkan batasan yang jelas dengan cara yang tetap menghargai murid, dan cari kesepakatan bersama tentang cara berkomunikasi di kelas",
+        "D": "Hukum murid tersebut di depan kelas agar murid lain tidak menirunya"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Memahami akar perilaku secara personal dan menetapkan batasan yang saling dihormati lebih efektif dibanding hukuman publik atau langsung eskalasi ke orang tua.",
+      "indikator_kompetensi": "Guru mampu menangani perilaku menantang otoritas dengan pendekatan yang membangun"
+    },
+    {
+      "id_soal": "PRF-015",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Kemampuan Interpersonal",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru harus menyampaikan kabar kurang menyenangkan ke orang tua bahwa anaknya belum bisa naik jenjang tahfizh tahun ini. Bagaimana cara penyampaian yang tepat?",
+      "pilihan": {
+        "A": "Tunda penyampaian kabar ini selama mungkin",
+        "B": "Minta murid sendiri yang menyampaikan kabar tersebut ke orang tuanya",
+        "C": "Sampaikan secara langsung (tatap muka atau telepon), mulai dengan apresiasi progres yang sudah dicapai anak, jelaskan alasan konkret, dan tawarkan rencana konkret untuk tahun depan",
+        "D": "Sampaikan lewat pesan singkat tanpa penjelasan detail agar tidak berlarut-larut"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Penyampaian langsung dengan apresiasi, alasan konkret, dan rencana ke depan membantu orang tua menerima kabar kurang menyenangkan dengan lebih baik.",
+      "indikator_kompetensi": "Guru mampu menyampaikan kabar kurang menyenangkan dengan cara yang membangun"
+    },
+    {
+      "id_soal": "PRF-016",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Kemampuan Interpersonal",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru baru bergabung di sekolah dan menemukan gaya mengajar rekan sesama guru tahfizh cukup berbeda dengan gayanya sendiri, sehingga murid kadang bingung mengikuti dua pendekatan berbeda. Bagaimana sebaiknya guru menyikapi ini?",
+      "pilihan": {
+        "A": "Ikuti saja gaya rekan tersebut meski bertentangan dengan keyakinan mengajarnya sendiri",
+        "B": "Kritik gaya mengajar rekan tersebut secara terbuka di depan murid",
+        "C": "Abaikan perbedaan tersebut dan biarkan murid yang menyesuaikan sendiri",
+        "D": "Diskusikan secara personal dan terbuka dengan rekan tersebut untuk mencari titik temu atau setidaknya kesepahaman bersama, demi konsistensi pengalaman belajar murid"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Komunikasi terbuka dan kolaboratif antar-guru penting untuk menjaga konsistensi pengalaman belajar murid, tanpa perlu konflik terbuka atau mengalah tanpa diskusi.",
+      "indikator_kompetensi": "Guru mampu berkolaborasi dengan rekan sejawat yang memiliki gaya mengajar berbeda"
+    },
+    {
+      "id_soal": "PRF-017",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Kemampuan Interpersonal",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menerima kritik yang cukup pedas dari kepala sekolah di depan rekan-rekan guru lain terkait suatu kesalahan kecil dalam pengajaran. Bagaimana sikap yang paling tepat bagi guru?",
+      "pilihan": {
+        "A": "Diam saja dan menyimpan kekecewaan tanpa pernah membicarakannya",
+        "B": "Terima kritik dengan tenang di forum tersebut, lalu jika merasa perlu klarifikasi atau merasa cara penyampaiannya kurang tepat, bicarakan secara personal dengan kepala sekolah di waktu yang lebih privat",
+        "C": "Membalas kritik tersebut secara terbuka untuk membela diri di forum yang sama",
+        "D": "Mengundurkan diri karena merasa dipermalukan"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Menerima kritik dengan tenang di forum publik namun tetap mengomunikasikan perasaan atau klarifikasi secara personal menunjukkan kematangan profesional.",
+      "indikator_kompetensi": "Guru menunjukkan kematangan profesional dalam menerima kritik di forum publik"
+    },
+    {
+      "id_soal": "PRF-018",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Kemampuan Interpersonal",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Dua murid di kelas tahfizh sering berselisih kecil, saling mengejek soal kemampuan hafalan masing-masing. Bagaimana guru sebaiknya menangani konflik ini?",
+      "pilihan": {
+        "A": "Biarkan saja karena dianggap hal biasa antar anak-anak",
+        "B": "Pisahkan kedua murid secara permanen ke kelompok berbeda tanpa penyelesaian konflik",
+        "C": "Panggil kedua murid secara terpisah untuk memahami sudut pandang masing-masing, lalu fasilitasi mereka bicara bersama untuk saling memahami dan menyepakati cara berinteraksi yang lebih baik",
+        "D": "Hukum kedua murid tanpa mendengarkan penjelasan mereka"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Memahami sudut pandang masing-masing pihak dan memfasilitasi penyelesaian bersama lebih efektif membangun keterampilan sosial murid dibanding dibiarkan atau dihukum langsung.",
+      "indikator_kompetensi": "Guru mampu memfasilitasi penyelesaian konflik antar murid secara konstruktif"
+    },
+    {
+      "id_soal": "PRF-019",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Kemampuan Interpersonal",
+      "tipe_soal": "Reflektif/Open-Ended",
+      "level_kognitif": "C6",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Ceritakan sebuah pengalaman (nyata atau perkiraan) di mana Anda berhasil menjembatani kesalahpahaman dengan orang tua murid atau rekan kerja. Bagaimana Anda memulai percakapan, dan apa yang membuat pendekatan tersebut berhasil?",
+      "pilihan": null,
+      "kunci_jawaban": "(Dinilai dengan rubrik)",
+      "pembahasan": "Panduan Penilaian (Rubrik):\n- Baik (3 poin): Menjelaskan langkah komunikasi yang konkret, menunjukkan empati dan strategi resolusi yang jelas\n- Cukup (2 poin): Menyebutkan hasil positif namun proses yang dijelaskan masih umum\n- Kurang (1 poin): Tidak menunjukkan keterampilan komunikasi yang jelas, atau cenderung menyalahkan pihak lain",
+      "indikator_kompetensi": "Guru mampu merefleksikan keterampilan interpersonal dalam menyelesaikan kesalahpahaman"
+    },
+    {
+      "id_soal": "PRF-020",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Kemampuan Interpersonal",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang orang tua membandingkan cara mengajar Anda dengan guru tahfizh anaknya sebelumnya, dengan nada yang terkesan meremehkan pendekatan Anda. Bagaimana sikap yang tepat?",
+      "pilihan": {
+        "A": "Abaikan sepenuhnya komentar tersebut tanpa merespons",
+        "B": "Minta orang tua untuk pindah ke guru yang lebih disukainya",
+        "C": "Dengarkan tanpa bersikap defensif, ambil bagian yang membangun dari perbandingan tersebut jika ada, dan jelaskan pendekatan Anda dengan tenang tanpa merendahkan guru sebelumnya",
+        "D": "Membalas dengan membandingkan kekurangan guru sebelumnya"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Merespons perbandingan dengan tenang dan terbuka terhadap masukan, tanpa defensif atau merendahkan pihak lain, mencerminkan profesionalisme yang matang.",
+      "indikator_kompetensi": "Guru mampu merespons perbandingan dari orang tua secara profesional dan tidak defensif"
+    },
+    {
+      "id_soal": "PRF-021",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Kemampuan Interpersonal",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru dibantu oleh seorang asisten pengajar (guru pendamping) yang masih baru dan belum berpengalaman. Bagaimana cara terbaik mendelegasikan tugas kepadanya?",
+      "pilihan": {
+        "A": "Lakukan semua pekerjaan sendiri tanpa melibatkan asisten sama sekali",
+        "B": "Berikan tugas bertahap sesuai kesiapan asisten, disertai arahan yang jelas dan kesempatan bertanya, serta pantau dan beri umpan balik membangun secara berkala",
+        "C": "Kritik setiap kesalahan kecil asisten di depan murid agar cepat belajar",
+        "D": "Serahkan seluruh tanggung jawab kelas begitu saja tanpa pengarahan"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Delegasi bertahap dengan arahan jelas dan umpan balik membangun membantu asisten berkembang tanpa membebani atau mengecilkan kepercayaan dirinya.",
+      "indikator_kompetensi": "Guru mampu mendelegasikan tugas secara efektif kepada asisten pengajar yang baru"
+    },
+    {
+      "id_soal": "PRF-022",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Pengembangan Diri",
+      "tipe_soal": "Reflektif",
+      "level_kognitif": "C6",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Ceritakan sebuah situasi (nyata atau perkiraan) di mana Anda menerima kritik atau masukan dari atasan/rekan tentang cara mengajar Anda. Bagaimana Anda meresponnya, dan apa yang Anda pelajari dari situasi tersebut?",
+      "pilihan": {
+        "A": null,
+        "B": null,
+        "C": null,
+        "D": null
+      },
+      "kunci_jawaban": "(Dinilai dengan rubrik)",
+      "pembahasan": "Panduan Penilaian (Rubrik):\n- Baik (3 poin): Menunjukkan penerimaan kritik tanpa defensif, ada refleksi konkret, ada perubahan nyata yang dilakukan\n- Cukup (2 poin): Menerima kritik tapi refleksi masih umum/kurang spesifik\n- Kurang (1 poin): Cenderung defensif atau menyalahkan pihak lain",
+      "indikator_kompetensi": "Guru mampu menerima dan merefleksikan kritik terhadap cara mengajarnya"
+    },
+    {
+      "id_soal": "PRF-023",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Pengembangan Diri",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang guru merasa metode mengajarnya yang selama ini dipakai mulai kurang efektif untuk murid generasi sekarang, namun dia sudah nyaman dengan metode lama. Bagaimana sikap yang tepat?",
+      "pilihan": {
+        "A": "Terbuka untuk mengevaluasi dan mencoba menyesuaikan sebagian metode dengan kebutuhan murid saat ini, sambil tetap mempertahankan prinsip dasar yang masih relevan",
+        "B": "Salahkan murid generasi sekarang karena dianggap kurang bisa diatur",
+        "C": "Tetap pertahankan metode lama karena sudah terbukti nyaman dipakai",
+        "D": "Ganti total metode mengajar tanpa evaluasi terlebih dahulu"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Keterbukaan untuk mengevaluasi dan menyesuaikan metode, tanpa harus mengganti total atau bertahan kaku pada cara lama, menunjukkan sikap berkembang yang sehat.",
+      "indikator_kompetensi": "Guru menunjukkan keterbukaan untuk mengevaluasi dan menyesuaikan metode mengajarnya"
+    },
+    {
+      "id_soal": "PRF-024",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Pengembangan Diri",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru mengikuti pelatihan metode mengajar baru dari sekolah, namun merasa ragu untuk langsung menerapkannya karena khawatir mengganggu rutinitas kelas yang sudah berjalan. Bagaimana sikap yang tepat?",
+      "pilihan": {
+        "A": "Coba terapkan metode baru secara bertahap pada bagian kecil pembelajaran terlebih dahulu, evaluasi hasilnya, baru perluas penerapannya jika terbukti efektif",
+        "B": "Tunggu rekan guru lain mencoba terlebih dahulu sebelum dirinya sendiri mencoba",
+        "C": "Terapkan metode baru secara total dan mendadak tanpa evaluasi bertahap",
+        "D": "Abaikan pelatihan tersebut dan tetap gunakan metode lama sepenuhnya"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Penerapan bertahap dengan evaluasi memungkinkan guru menilai efektivitas metode baru sambil meminimalkan risiko gangguan pada rutinitas kelas yang sudah berjalan baik.",
+      "indikator_kompetensi": "Guru mampu menerapkan hasil pelatihan secara bijaksana dan bertahap"
+    },
+    {
+      "id_soal": "PRF-025",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Pengembangan Diri",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Supervisor memberi masukan bahwa manajemen waktu guru di kelas kurang efisien, banyak waktu terbuang di awal sesi. Bagaimana sikap guru yang tepat dalam menerima masukan ini?",
+      "pilihan": {
+        "A": "Terima masukan tapi tidak melakukan perubahan apa pun",
+        "B": "Membantah masukan tersebut karena merasa sudah mengajar dengan baik selama ini",
+        "C": "Merasa minder dan kehilangan motivasi mengajar karena kritik tersebut",
+        "D": "Terima masukan dengan terbuka, minta contoh konkret bagian mana yang dimaksud, lalu evaluasi dan coba perbaiki manajemen waktu secara bertahap di sesi-sesi berikutnya"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Menerima masukan secara terbuka disertai permintaan contoh konkret dan tindak lanjut nyata menunjukkan sikap profesional yang berorientasi pada perbaikan.",
+      "indikator_kompetensi": "Guru mampu menindaklanjuti masukan supervisor terkait manajemen kelas secara konstruktif"
+    },
+    {
+      "id_soal": "PRF-026",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Pengembangan Diri",
+      "tipe_soal": "Reflektif/Open-Ended",
+      "level_kognitif": "C6",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Ceritakan sebuah pengalaman (nyata atau perkiraan) ketika sebuah sesi mengajar Anda tidak berjalan sesuai rencana atau dianggap kurang berhasil. Apa yang Anda pelajari dari pengalaman tersebut, dan bagaimana hal itu mengubah cara Anda mengajar selanjutnya?",
+      "pilihan": null,
+      "kunci_jawaban": "(Dinilai dengan rubrik)",
+      "pembahasan": "Panduan Penilaian (Rubrik):\n- Baik (3 poin): Menjelaskan kegagalan secara jujur, ada analisis penyebab yang jelas, ada perubahan konkret pada praktik mengajar selanjutnya\n- Cukup (2 poin): Kegagalan disebutkan namun analisis dan perubahan yang dijelaskan masih umum\n- Kurang (1 poin): Enggan mengakui kegagalan atau tidak menunjukkan pembelajaran yang jelas",
+      "indikator_kompetensi": "Guru mampu belajar dan berkembang dari pengalaman mengajar yang kurang berhasil"
+    },
+    {
+      "id_soal": "PRF-027",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Pengembangan Diri",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang guru baru merasa minder karena rekan guru seniornya jauh lebih berpengalaman dan lebih disukai murid. Bagaimana sikap yang paling sehat bagi guru baru ini?",
+      "pilihan": {
+        "A": "Menjadikan guru senior sebagai sumber belajar dengan aktif bertanya dan mengamati cara mengajarnya, sambil tetap mengembangkan gaya mengajarnya sendiri seiring waktu dan pengalaman",
+        "B": "Mengeluh ke murid tentang perbedaan pengalaman antara dirinya dan guru senior",
+        "C": "Bersaing secara terbuka dengan guru senior untuk membuktikan diri lebih baik",
+        "D": "Menghindari interaksi dengan guru senior karena merasa tidak sebanding"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Menjadikan rekan yang lebih berpengalaman sebagai sumber belajar, bukan sumber minder atau kompetisi, adalah sikap sehat untuk perkembangan diri guru baru.",
+      "indikator_kompetensi": "Guru baru mampu menyikapi perbedaan pengalaman dengan rekan senior secara sehat dan konstruktif"
+    },
+    {
+      "id_soal": "PRF-028",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Pengembangan Diri",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Hasil evaluasi hafalan murid secara keseluruhan di kelas Anda tahun ini ternyata lebih rendah dibanding tahun sebelumnya. Bagaimana sikap yang tepat bagi guru dalam menyikapi hasil ini?",
+      "pilihan": {
+        "A": "Menyalahkan kurikulum atau kebijakan sekolah sepenuhnya tanpa refleksi diri",
+        "B": "Melakukan evaluasi diri secara jujur terhadap metode dan pendekatan yang digunakan tahun ini, membandingkan dengan tahun sebelumnya, dan mencari faktor yang bisa diperbaiki untuk tahun berikutnya",
+        "C": "Menyalahkan murid-murid karena dianggap kurang serius belajar tahun ini",
+        "D": "Menganggap hasil tersebut wajar tanpa perlu dievaluasi lebih lanjut"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Evaluasi diri yang jujur terhadap kemungkinan penyebab dari sisi metode mengajar sendiri adalah bagian penting dari sikap profesional yang berorientasi pada perbaikan berkelanjutan.",
+      "indikator_kompetensi": "Guru mampu melakukan evaluasi diri secara jujur atas hasil belajar murid yang menurun"
+    },
+    {
+      "id_soal": "PRF-029",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Pengembangan Diri",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang guru ingin meningkatkan kemampuannya namun sekolah tidak selalu menyediakan pelatihan formal secara rutin. Apa langkah yang bisa diambil guru untuk terus mengembangkan diri?",
+      "pilihan": {
+        "A": "Menunggu sepenuhnya sampai sekolah menyediakan pelatihan",
+        "B": "Berhenti mengembangkan diri karena dianggap tanggung jawab sekolah sepenuhnya",
+        "C": "Menuntut sekolah menyediakan pelatihan tanpa mencoba usaha mandiri",
+        "D": "Cari sumber belajar mandiri seperti buku, video, atau diskusi dengan rekan guru dan komunitas pengajar tahfizh di luar sekolah, serta mempraktikkan hal baru secara bertahap di kelas"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Inisiatif mencari sumber belajar mandiri menunjukkan tanggung jawab pribadi terhadap pengembangan diri, tidak semata bergantung pada fasilitas dari institusi.",
+      "indikator_kompetensi": "Guru menunjukkan inisiatif dalam pengembangan diri secara mandiri"
+    },
+    {
+      "id_soal": "PRF-030",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Pengembangan Diri",
+      "tipe_soal": "Reflektif/Open-Ended",
+      "level_kognitif": "C6",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Tuliskan secara singkat rencana pengembangan diri Anda sebagai guru tahsin/tahfizh untuk satu tahun ke depan. Apa yang ingin Anda tingkatkan, dan bagaimana cara Anda mencapainya?",
+      "pilihan": null,
+      "kunci_jawaban": "(Dinilai dengan rubrik)",
+      "pembahasan": "Panduan Penilaian (Rubrik):\n- Baik (3 poin): Rencana spesifik dan realistis, ada target yang jelas dan cara pencapaian yang konkret\n- Cukup (2 poin): Rencana disebutkan namun masih umum atau kurang spesifik targetnya\n- Kurang (1 poin): Tidak ada rencana yang jelas atau jawaban tidak relevan",
+      "indikator_kompetensi": "Guru mampu menyusun rencana pengembangan diri yang konkret dan realistis"
+    },
+    {
+      "id_soal": "PRF-031",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Pengembangan Diri",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru dirotasi mengajar kelompok murid baru dengan karakter yang cukup berbeda dari kelompok sebelumnya (misalnya dari kelompok remaja ke kelompok anak-anak). Bagaimana sikap adaptif yang tepat?",
+      "pilihan": {
+        "A": "Menerapkan persis metode dan gaya yang sama seperti mengajar kelompok sebelumnya",
+        "B": "Mengeluh kepada murid baru tentang perbedaan dengan kelompok sebelumnya",
+        "C": "Pelajari karakteristik kelompok baru terlebih dahulu, sesuaikan pendekatan dan bahasa yang dipakai, serta terbuka untuk mencoba cara baru sesuai kebutuhan kelompok tersebut",
+        "D": "Menolak rotasi tersebut karena merasa tidak nyaman dengan perubahan"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Sikap adaptif yang mempelajari karakteristik kelompok baru dan menyesuaikan pendekatan menunjukkan fleksibilitas profesional yang penting bagi guru.",
+      "indikator_kompetensi": "Guru menunjukkan sikap adaptif saat menghadapi rotasi tugas mengajar kelompok baru"
+    },
+    {
+      "id_soal": "PRF-032",
+      "kategori": "Profesionalisme Guru",
+      "sub_aspek": "Pengembangan Diri",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Setelah mengajar tahfizh selama bertahun-tahun dengan rutinitas yang hampir sama, seorang guru mulai merasa jenuh dan semangat mengajarnya menurun. Bagaimana cara guru menjaga semangatnya dalam jangka panjang?",
+      "pilihan": {
+        "A": "Berhenti mengajar karena dianggap sudah tidak cocok lagi",
+        "B": "Bertahan saja menjalani rutinitas tanpa mencari perubahan apa pun",
+        "C": "Cari makna baru dalam pekerjaan (misalnya mengingat dampak jangka panjang bagi murid), coba variasi kecil dalam metode mengajar, dan sesekali berbagi pengalaman dengan sesama guru untuk saling menguatkan",
+        "D": "Kurangi usaha mengajar secara bertahap tanpa mengomunikasikannya ke siapa pun"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Menjaga semangat jangka panjang membutuhkan pencarian makna, variasi kecil dalam rutinitas, dan dukungan sosial dari sesama guru, bukan sekadar bertahan pasif atau menyerah.",
+      "indikator_kompetensi": "Guru mampu menjaga semangat dan motivasi mengajar dalam jangka panjang"
+    },
+    {
+      "id_soal": "TLE-001",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Kalimat Gharib - Isymam",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Saat menyimak murid tingkat lanjut membaca surat Yusuf ayat 11, pada kata 'لَا تَأْمَنَّا', guru mendengar murid membaca nun bertasydid secara datar seperti bacaan biasa tanpa ada isyarat bibir khusus. Apa yang seharusnya guru perhatikan di sini?",
+      "pilihan": {
+        "A": "Ini bacaan biasa, tidak ada yang perlu dikoreksi",
+        "B": "Murid seharusnya membaca nun tersebut dengan dengung yang lebih panjang dari biasanya",
+        "C": "Kata ini termasuk bacaan isymam — saat mengucapkan nun bertasydid, bibir sedikit dimonyongkan seperti isyarat dhommah tanpa mengeluarkan suara tambahan, sebagai tanda ada huruf yang 'disembunyikan' maknanya",
+        "D": "Kata ini seharusnya dibaca terpisah menjadi dua kata"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Isymam adalah bacaan gharib berupa isyarat bibir (mirip mengucap dhommah) tanpa suara tambahan, muncul pada kata tertentu seperti 'لَا تَأْمَنَّا'. Ini bukan pola umum sehingga harus dihafal sebagai pengecualian khusus.",
+      "indikator_kompetensi": "Guru mampu mengenali dan mencontohkan bacaan isymam pada kalimat gharib"
+    },
+    {
+      "id_soal": "TLE-002",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Kalimat Gharib - Imalah",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Pada surat Hud ayat 41, kata 'مَجْرَاهَا' oleh sebagian qira'ah dibaca dengan fathah yang dicondongkan mendekati bunyi kasrah (bukan fathah biasa yang tegas). Bagaimana guru sebaiknya menjelaskan fenomena ini ke murid?",
+      "pilihan": {
+        "A": "Jelaskan bahwa semua fathah sebelum huruf ra harus dibaca miring seperti ini",
+        "B": "Jelaskan bahwa ini kesalahan umum yang harus dikoreksi menjadi fathah biasa",
+        "C": "Jelaskan bahwa ini disebut imalah — pengecualian khusus di satu kata ini saja, di mana bunyi fathah dimiringkan sedikit ke arah kasrah, bukan pola umum yang berlaku di kata lain",
+        "D": "Jelaskan bahwa murid boleh memilih membaca fathah biasa atau dimiringkan sesuka hati"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Imalah adalah bacaan gharib yang hanya berlaku pada kata tertentu seperti 'مَجْرَاهَا', bukan aturan umum. Guru perlu menegaskan bahwa ini pengecualian spesifik, bukan pola yang bisa diterapkan ke kata lain.",
+      "indikator_kompetensi": "Guru mampu menjelaskan bacaan imalah sebagai pengecualian khusus pada kalimat gharib"
+    },
+    {
+      "id_soal": "TLE-003",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Kalimat Gharib - Tashil",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Pada surat Fushshilat ayat 44, kata 'أَأَعْجَمِيٌّ' mengandung dua hamzah berurutan. Murid membaca keduanya dengan tegas dan jelas seperti hamzah biasa. Apa yang perlu dikoreksi?",
+      "pilihan": {
+        "A": "Jelaskan bahwa ini kalimat gharib dengan bacaan tashil — hamzah kedua dilunakkan/diringankan bunyinya (tidak setegas hamzah biasa), bukan dibaca dua hamzah yang sama jelasnya",
+        "B": "Kedua hamzah harus digabung menjadi bunyi mad panjang",
+        "C": "Biarkan karena membaca kedua hamzah dengan jelas sudah benar",
+        "D": "Salah satu hamzah harus dihilangkan sepenuhnya dari bacaan"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Tashil adalah teknik meringankan bunyi hamzah kedua saat dua hamzah bertemu berurutan dalam satu kata, khusus pada kata-kata gharib tertentu seperti 'أَأَعْجَمِيٌّ'.",
+      "indikator_kompetensi": "Guru mampu mengenali dan mencontohkan bacaan tashil pada kalimat gharib"
+    },
+    {
+      "id_soal": "TLE-004",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Kalimat Gharib - Naql",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Pada surat Al-Hujurat ayat 11, kata 'بِئْسَ الِاسْمُ' saat disambung, murid membaca hamzah pada 'الاسم' dengan jelas dan terpisah sebagai suku kata tersendiri. Apa koreksi yang tepat?",
+      "pilihan": {
+        "A": "Hamzah tersebut seharusnya dihilangkan sepenuhnya tanpa memindahkan harakatnya",
+        "B": "Jelaskan bahwa ini bacaan naql — harakat hamzah dipindahkan ke huruf sebelumnya (huruf sin pada 'بئس'), sehingga hamzahnya sendiri tidak lagi dibaca terpisah, dan kedua kata terdengar menyambung mulus",
+        "C": "Biarkan karena membaca hamzah secara terpisah menunjukkan ketelitian",
+        "D": "Kata tersebut seharusnya dibaca dengan waqaf di tengah"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Naql adalah pemindahan harakat hamzah ke huruf sebelumnya saat washal (sambung), khusus pada kata gharib seperti 'بِئْسَ الِاسْمُ', sehingga bacaan menjadi lebih mulus tanpa hamzah terpisah.",
+      "indikator_kompetensi": "Guru mampu mengenali dan mencontohkan bacaan naql pada kalimat gharib"
+    },
+    {
+      "id_soal": "TLE-005",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Kalimat Gharib - Saktah",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Pada surat Yasin ayat 52, terdapat tanda saktah pada kata 'مَرْقَدِنَا هَـٰذَا'. Murid membaca lanjut tanpa jeda sama sekali, seolah tidak ada tanda apa pun di situ. Apa yang perlu dikoreksi?",
+      "pilihan": {
+        "A": "Biarkan karena membaca lanjut tanpa jeda menunjukkan kelancaran yang baik",
+        "B": "Bagian tersebut seharusnya diulang dari awal ayat",
+        "C": "Murid harus berhenti dan mengambil napas panjang seperti waqaf pada umumnya",
+        "D": "Jelaskan bahwa ini salah satu dari 4 tempat saktah dalam Al-Qur'an — murid perlu berhenti sejenak tanpa mengambil napas dan tanpa memutus bacaan (berbeda dari waqaf biasa yang boleh bernapas), lalu lanjutkan"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Saktah adalah berhenti sejenak tanpa bernapas dan tanpa memutus bacaan, hanya ada di 4 tempat dalam Al-Qur'an (termasuk di surat Yasin ini), berbeda dari waqaf biasa yang boleh mengambil napas.",
+      "indikator_kompetensi": "Guru mampu mengenali dan mencontohkan bacaan saktah pada tempat yang telah ditentukan"
+    },
+    {
+      "id_soal": "TLE-006",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Hukum Ra' Detail",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4/C5",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Murid membaca kata 'فِرْقٍ' (dalam surat Asy-Syu'ara) dengan tarqiq (tipis) karena melihat ra' berharakat sukun didahului kasrah, sesuai kaidah umum ra'. Namun ada pendapat lain membacanya tebal. Bagaimana guru sebaiknya menyikapi ini?",
+      "pilihan": {
+        "A": "Anggap perbedaan ini sebagai kesalahan tajwid yang harus diseragamkan",
+        "B": "Salahkan murid karena kaidah ra' sukun setelah kasrah selalu harus tipis tanpa pengecualian",
+        "C": "Larang murid membaca kata tersebut dengan versi tafkhim dalam kondisi apa pun",
+        "D": "Jelaskan bahwa kata ini termasuk pengecualian khusus yang boleh dibaca dua wajah (tafkhim atau tarqiq), tergantung riwayat qira'ah yang diikuti, sehingga murid tidak keliru jika membacanya dengan salah satu dari keduanya"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Beberapa kata seperti 'فِرْقٍ' termasuk pengecualian dari kaidah umum ra' yang boleh dibaca dua wajah tergantung riwayat qira'ah, sehingga guru perlu memahami ini bukan sekadar hitam-putih.",
+      "indikator_kompetensi": "Guru memahami pengecualian dua wajah bacaan pada hukum ra' tertentu"
+    },
+    {
+      "id_soal": "TLE-007",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Hukum Ra' Detail",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Murid membaca kata 'قِرْطَاسٍ' (ra' sukun didahului kasrah, tapi diikuti huruf tha yang termasuk huruf isti'la/tebal) dengan tarqiq (tipis), mengikuti kaidah umum ra' sukun setelah kasrah. Apa yang perlu dikoreksi?",
+      "pilihan": {
+        "A": "Jelaskan bahwa ada pengecualian: jika ra' sukun setelah kasrah diikuti huruf isti'la (huruf tebal) dalam satu kata, ra' tetap dibaca tebal (tafkhim), bukan tipis seperti kaidah umum",
+        "B": "Ganti huruf isti'la tersebut dengan huruf lain saat berlatih",
+        "C": "Biarkan karena kaidah umum ra' setelah kasrah memang harus tipis",
+        "D": "Kata tersebut seharusnya tidak diajarkan karena terlalu rumit"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Ra' sukun setelah kasrah yang diikuti huruf isti'la dalam satu kata (seperti pada 'قِرْطَاسٍ') menjadi pengecualian dan tetap dibaca tebal, berbeda dari kaidah umum ra' setelah kasrah.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan penerapan kaidah ra' saat bertemu huruf isti'la"
+    },
+    {
+      "id_soal": "TLE-008",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Hukum Ra' Detail",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Saat waqaf (berhenti) pada kata yang berakhiran ra' didahului harakat kasrah (misalnya 'الْقَمَرْ' dibaca waqaf setelah kasrah pada huruf sebelumnya), murid membacanya tebal karena terbiasa ra' selalu tebal. Apa koreksinya?",
+      "pilihan": {
+        "A": "Hindari berhenti pada kata yang berakhiran ra' sama sekali",
+        "B": "Biarkan karena ra' memang cenderung dibaca tebal secara umum",
+        "C": "Ra' saat waqaf selalu dibaca tebal tanpa terkecuali",
+        "D": "Jelaskan bahwa saat waqaf, bunyi ra' mengikuti harakat sebelum ra' tersebut — jika didahului kasrah, ra' dibaca tipis (tarqiq) saat berhenti, meski di posisi lain kata itu bisa berbeda"
+      },
+      "kunci_jawaban": "D",
+      "pembahasan": "Saat waqaf, tebal-tipisnya ra' bergantung pada harakat sebelum ra' tersebut; jika didahului kasrah maka dibaca tipis, berbeda dari asumsi umum bahwa ra' selalu tebal.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan pembacaan ra' saat waqaf berdasarkan harakat sebelumnya"
+    },
+    {
+      "id_soal": "TLE-009",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Hukum Lam Detail",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang guru baru bertanya-tanya apakah huruf lam pada kata selain lafaz Allah (misalnya lam pada kata kerja atau kata benda biasa) bisa dibaca tebal (tafkhim) dalam kondisi tertentu. Bagaimana penjelasan yang tepat?",
+      "pilihan": {
+        "A": "Tidak, huruf lam selalu dibaca tipis (tarqiq) di semua kata kecuali pada lafaz Allah (lafzul jalalah) yang didahului fathah atau dhommah — ini adalah satu-satunya pengecualian",
+        "B": "Tidak, lam justru harus selalu dibaca tebal di semua kondisi",
+        "C": "Ya, lam boleh dibaca tebal jika berada di awal kalimat",
+        "D": "Ya, lam pada kata apa pun boleh dibaca tebal jika didahului harakat fathah atau dhommah"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Lam hanya memiliki satu pengecualian tafkhim, yaitu pada lafzul jalalah yang didahului fathah/dhommah; di luar itu, lam selalu dibaca tipis tanpa terkecuali.",
+      "indikator_kompetensi": "Guru memahami bahwa tafkhim pada huruf lam hanya berlaku khusus pada lafzul jalalah"
+    },
+    {
+      "id_soal": "TLE-010",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Mad Far'i Jarang",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Murid membaca waqaf pada kata 'خَوْفٍ' (huruf wau sukun didahului fathah, lalu berhenti), tapi dibaca pendek seperti tidak ada mad sama sekali. Apa yang perlu dikoreksi?",
+      "pilihan": {
+        "A": "Jelaskan bahwa ini termasuk mad lin — wau atau ya sukun yang didahului fathah dan berada di akhir kata saat waqaf, dibaca dengan sedikit panjang dan lunak, tidak dibaca pendek datar",
+        "B": "Kata tersebut seharusnya dibaca tanpa waqaf sama sekali",
+        "C": "Wau sukun tersebut seharusnya dihilangkan saat membaca",
+        "D": "Biarkan karena wau sukun setelah fathah tidak selalu perlu dipanjangkan"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Mad lin muncul saat wau/ya sukun didahului fathah di akhir kata ketika waqaf, dibaca dengan panjang dan kelunakan tertentu, bukan dibaca pendek seperti huruf mati biasa.",
+      "indikator_kompetensi": "Guru mampu mengoreksi ketiadaan mad lin saat waqaf pada huruf wau/ya sukun"
+    },
+    {
+      "id_soal": "TLE-011",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Mad Far'i Jarang",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Saat murid berhenti (waqaf) pada kata yang berakhiran tanwin fathah (misalnya 'عَلِيمًا' dibaca waqaf), dia membacanya dengan bunyi 'an' pendek tanpa dipanjangkan. Apa koreksi yang tepat?",
+      "pilihan": {
+        "A": "Biarkan karena tanwin memang selalu dibaca pendek",
+        "B": "Tanwin tersebut seharusnya dihilangkan sepenuhnya saat waqaf",
+        "C": "Jelaskan bahwa ini termasuk mad 'iwadh — saat waqaf pada tanwin fathah di akhir kata, bunyi dibaca menjadi mad (panjang, dua harakat) menggantikan bunyi tanwinnya, bukan dibaca pendek",
+        "D": "Murid harus melanjutkan ke ayat berikutnya tanpa berhenti di kata tersebut"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Mad 'iwadh terjadi saat waqaf pada tanwin fathah di akhir kata, di mana bunyi tanwin diganti dengan mad dua harakat, bukan dibaca pendek seperti tanwin biasa.",
+      "indikator_kompetensi": "Guru mampu mengoreksi ketiadaan mad 'iwadh saat waqaf pada tanwin fathah"
+    },
+    {
+      "id_soal": "TLE-012",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Mad Far'i Jarang",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Murid membaca kata 'آمَنُوا' dengan mad yang sangat pendek, hampir seperti tidak ada mad, padahal ada tanda alif kecil di atas hamzah. Apa yang perlu dikoreksi?",
+      "pilihan": {
+        "A": "Hamzah tersebut seharusnya dihilangkan dari bacaan",
+        "B": "Jelaskan bahwa ini termasuk mad badal — hamzah bertemu huruf mad dalam satu kata, dibaca panjang 2 harakat (setara mad thabi'i), tidak boleh dibaca pendek seperti harakat biasa",
+        "C": "Mad tersebut seharusnya dibaca sangat panjang seperti mad wajib muttasil (4-5 harakat)",
+        "D": "Biarkan karena panjang mad tidak terlalu penting selama hurufnya benar"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Mad badal terjadi saat hamzah bertemu huruf mad dalam satu kata (seperti 'آمَنُوا'), dibaca panjang 2 harakat setara mad thabi'i, tidak boleh dibaca pendek maupun terlalu panjang.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan panjang bacaan pada mad badal"
+    },
+    {
+      "id_soal": "TLE-013",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Mad Far'i Jarang",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Murid membaca kata 'حُيِّيتُم' (ya bertasydid bertemu ya sukun) dengan bunyi datar, tidak ada penekanan panjang khusus di bagian tersebut. Apa yang perlu dikoreksi?",
+      "pilihan": {
+        "A": "Jelaskan bahwa ini termasuk mad tamkin — ya bertasydid bertemu ya sukun (atau wau bertasydid bertemu wau sukun) dibaca dengan penekanan dan sedikit pemanjangan agar kedua huruf yang mirip tetap jelas terdengar terpisah",
+        "B": "Kata tersebut harus dipenggal menjadi dua kata terpisah saat dibaca",
+        "C": "Salah satu huruf ya tersebut seharusnya dihilangkan agar lebih mudah dibaca",
+        "D": "Biarkan karena bunyi datar sudah cukup untuk kata ini"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Mad tamkin muncul saat huruf bertasydid bertemu huruf sejenis yang sukun (ya-ya atau wau-wau), memerlukan penekanan agar kedua huruf tetap terdengar jelas dan tidak melebur menjadi satu bunyi pendek.",
+      "indikator_kompetensi": "Guru mampu mengoreksi ketiadaan penekanan pada mad tamkin"
+    },
+    {
+      "id_soal": "TLE-014",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Idgham Detail",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Murid membaca 'اضْرِب بِّعَصَاكَ' (huruf ba mati bertemu ba berikutnya) dengan membaca kedua huruf ba secara terpisah dan jelas, tidak dilebur. Apa yang perlu dikoreksi?",
+      "pilihan": {
+        "A": "Salah satu huruf ba tersebut seharusnya dihilangkan dari bacaan",
+        "B": "Kedua huruf ba tersebut harus dibaca dengan jeda waqaf di antaranya",
+        "C": "Jelaskan bahwa ini termasuk idgham mutamatsilain — dua huruf yang sama persis bertemu (ba mati bertemu ba) harus dilebur menjadi satu huruf yang ditekan, bukan dibaca dua kali terpisah",
+        "D": "Biarkan karena membaca kedua huruf secara terpisah menunjukkan ketelitian"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Idgham mutamatsilain terjadi saat dua huruf yang persis sama bertemu (seperti ba mati bertemu ba), keduanya harus dilebur menjadi satu bunyi yang ditekan, bukan dibaca terpisah dua kali.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan tidak melebur pada idgham mutamatsilain"
+    },
+    {
+      "id_soal": "TLE-015",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Idgham Detail",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Murid membaca 'قَالَت طَّائِفَةٌ' (huruf ta mati bertemu tha) dengan bunyi ta yang tetap terdengar jelas terpisah dari tha. Apa koreksi yang tepat?",
+      "pilihan": {
+        "A": "Jelaskan bahwa ini termasuk idgham mutajanisain — ta dan tha memiliki makhraj yang sama meski sifatnya sedikit berbeda, sehingga ta mati harus dilebur ke dalam tha, bukan dibaca terpisah",
+        "B": "Biarkan karena ta dan tha adalah huruf yang berbeda sehingga wajar dibaca terpisah",
+        "C": "Kata tersebut harus dipenggal menjadi dua kalimat terpisah",
+        "D": "Huruf tha tersebut yang seharusnya dihilangkan, bukan ta"
+      },
+      "kunci_jawaban": "A",
+      "pembahasan": "Idgham mutajanisain terjadi saat dua huruf memiliki makhraj sama namun sifat berbeda (seperti ta dan tha), huruf pertama dilebur ke huruf kedua, bukan dibaca terpisah dengan jelas.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan tidak melebur pada idgham mutajanisain"
+    },
+    {
+      "id_soal": "TLE-016",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Idgham Detail",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Murid membaca 'قُل رَّبِّ' (lam mati bertemu ra) dengan bunyi lam yang masih terdengar jelas sebelum ra, tidak melebur. Apa yang perlu dikoreksi?",
+      "pilihan": {
+        "A": "Huruf ra tersebut yang seharusnya dihilangkan, bukan lam",
+        "B": "Jelaskan bahwa ini termasuk idgham mutaqaribain — lam dan ra memiliki makhraj yang berdekatan, sehingga lam mati harus dilebur masuk ke bunyi ra yang bertasydid, bukan dibaca terpisah",
+        "C": "Kedua huruf tersebut harus diberi jeda waqaf di antaranya",
+        "D": "Biarkan karena lam dan ra adalah huruf berbeda sehingga tidak perlu dilebur"
+      },
+      "kunci_jawaban": "B",
+      "pembahasan": "Idgham mutaqaribain terjadi saat dua huruf memiliki makhraj berdekatan (seperti lam dan ra), huruf pertama dilebur ke huruf kedua yang menjadi bertasydid, bukan dibaca terpisah jelas.",
+      "indikator_kompetensi": "Guru mampu mengoreksi kesalahan tidak melebur pada idgham mutaqaribain"
+    },
+    {
+      "id_soal": "TLE-017",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Waqaf Mu'anaqah",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4/C5",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Dalam mushaf, guru menemukan dua tanda waqaf yang berdekatan (mu'anaqah) pada satu bagian ayat surat Al-Baqarah, dan murid berhenti di kedua tempat tersebut secara berurutan. Apa yang perlu dikoreksi?",
+      "pilihan": {
+        "A": "Kedua tanda waqaf tersebut sebenarnya adalah kesalahan cetak dan bisa diabaikan",
+        "B": "Murid harus selalu memilih tempat berhenti yang kedua, bukan yang pertama",
+        "C": "Jelaskan bahwa waqaf mu'anaqah berarti pembaca hanya boleh memilih SATU dari dua tempat berhenti tersebut, tidak keduanya sekaligus — jika sudah berhenti di tempat pertama, tidak perlu berhenti lagi di tempat kedua yang berdekatan",
+        "D": "Biarkan karena berhenti di kedua tempat menunjukkan kehati-hatian membaca"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Waqaf mu'anaqah adalah dua tempat berhenti yang saling terkait, di mana pembaca hanya memilih salah satu, bukan berhenti di kedua tempat sekaligus, karena keduanya merepresentasikan pilihan makna yang berbeda.",
+      "indikator_kompetensi": "Guru mampu menjelaskan konsep waqaf mu'anaqah dan cara membacanya yang tepat"
+    },
+    {
+      "id_soal": "TLE-018",
+      "kategori": "Tahsin Lanjutan (Expert)",
+      "sub_aspek": "Musykilat Rasm",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sulit",
+      "soal": "Seorang murid melihat huruf alif tertulis pada kata 'أُو۟لَـٰٓئِكَ' namun bingung karena huruf tersebut tidak dibaca sebagai bunyi tambahan. Bagaimana guru sebaiknya menjelaskan hal ini?",
+      "pilihan": {
+        "A": "Jelaskan bahwa itu adalah kesalahan cetak pada mushaf yang harus diabaikan",
+        "B": "Murid harus tetap membaca huruf tersebut sebagai bunyi tambahan meski terdengar aneh",
+        "C": "Jelaskan bahwa ini termasuk musykilat rasm — kejanggalan penulisan mushaf Utsmani, di mana ada huruf yang tertulis namun tidak ikut dibaca sebagai bunyi tambahan, sehingga murid perlu mengenali pola penulisan ini agar tidak salah baca",
+        "D": "Kata tersebut seharusnya ditulis ulang dengan ejaan yang lebih umum"
+      },
+      "kunci_jawaban": "C",
+      "pembahasan": "Musykilat rasm adalah kejanggalan penulisan mushaf Utsmani yang berbeda dari kaidah tulisan biasa, seperti huruf yang tertulis namun tidak dibaca; guru perlu mengenalkan pola ini agar murid tidak bingung atau salah baca.",
+      "indikator_kompetensi": "Guru mampu mengenalkan kejanggalan penulisan mushaf (musykilat rasm) kepada murid tingkat lanjut"
+    }
+  ]
+}

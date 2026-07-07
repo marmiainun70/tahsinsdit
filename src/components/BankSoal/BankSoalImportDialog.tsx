@@ -155,7 +155,7 @@ export function BankSoalImportDialog({ open, onOpenChange }: Props) {
                   <div className="rounded-xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center hover:bg-muted/40 transition-colors">
                     <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
                     <p className="mt-3 text-sm font-medium">Pilih file JSON</p>
-                    <p className="text-xs text-muted-foreground">bank_soal_pg_v2.json atau bank_soal_reflektif_v1.json</p>
+                    <p className="text-xs text-muted-foreground">bank_soal_v3.json atau bank_soal_reflektif_v1.json</p>
                   </div>
                   <Input
                     type="file"
