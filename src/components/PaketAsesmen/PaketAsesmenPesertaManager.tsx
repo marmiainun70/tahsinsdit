@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { usePesertaAsesmen, useAddPeserta, useDeletePeserta, useActiveTeachersForPeserta } from "@/hooks/usePesertaAsesmen";
+import { useState, useEffect } from "react";
+import { usePesertaAsesmen, useAddPeserta, useDeletePeserta, useActiveTeachersForPeserta, useDetailHasilAsesmen, useUpdateNilaiAkhir } from "@/hooks/usePesertaAsesmen";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ArrowLeft, Users, Trash2, Search, UserPlus } from "lucide-react";
+import { Loader2, ArrowLeft, Users, Trash2, Search, UserPlus, FileText, CheckCircle2, XCircle } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -90,7 +90,15 @@ export function PaketAsesmenPesertaManager({ paket, onBack }: PaketAsesmenPesert
                     <TableCell>
                       {item.nilai_akhir !== null ? <span className="font-semibold text-primary">{item.nilai_akhir}</span> : '-'}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right flex items-center justify-end gap-2">
+                      {item.status === 'Selesai' && (
+                        <ResultViewerDialog 
+                          pesertaId={item.id} 
+                          namaGuru={item.nama_guru} 
+                          paketId={paket.id} 
+                          nilaiAkhir={item.nilai_akhir} 
+                        />
+                      )}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="outline" size="icon" className="text-red-500 hover:text-red-600 hover:bg-red-50">
@@ -251,6 +259,108 @@ function AddPesertaDialog({ paketId, existingPesertaIds }: { paketId: string, ex
             </Button>
           </div>
         </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ResultViewerDialog({ pesertaId, namaGuru, paketId, nilaiAkhir }: { pesertaId: string, namaGuru: string, paketId: string, nilaiAkhir: number | null }) {
+  const [open, setOpen] = useState(false);
+  const { data, isLoading } = useDetailHasilAsesmen(open ? pesertaId : null);
+  const updateNilai = useUpdateNilaiAkhir();
+
+  useEffect(() => {
+    // Jika data hasil asesmen sudah termuat dan nilai akhir belum ada, hitung otomatis dan simpan
+    if (open && data && data.jawaban && nilaiAkhir === null) {
+      let totalBobot = 0;
+      let totalScore = 0;
+      
+      data.jawaban.forEach((ans: { jawaban: string; bank_soal?: { bobot: number; jawaban_benar: string; } }) => {
+        const bobot = ans.bank_soal?.bobot || 1;
+        totalBobot += bobot;
+        // Hitung benar atau salah
+        const isBenar = ans.jawaban === ans.bank_soal?.jawaban_benar;
+        if (isBenar) totalScore += bobot;
+      });
+
+      if (totalBobot > 0) {
+        const calculatedNilai = Number(((totalScore / totalBobot) * 100).toFixed(2));
+        updateNilai.mutate({ id: pesertaId, nilaiAkhir: calculatedNilai, paketId });
+      } else {
+        updateNilai.mutate({ id: pesertaId, nilaiAkhir: 0, paketId });
+      }
+    }
+  }, [open, data, nilaiAkhir, pesertaId, paketId]);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="icon" className="text-blue-500 hover:text-blue-600 hover:bg-blue-50" title="Lihat Hasil Detail">
+          <FileText className="w-4 h-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Riwayat Ujian CBT: {namaGuru}</DialogTitle>
+          <DialogDescription>
+            Detail jawaban peserta dan rekapan skor ujian
+          </DialogDescription>
+        </DialogHeader>
+        
+        {isLoading ? (
+          <div className="flex-1 flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : !data ? (
+          <div className="py-12 text-center text-muted-foreground">
+            Data riwayat tidak ditemukan.
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto mt-4 pr-2">
+            <div className="bg-muted/50 p-4 rounded-lg flex items-center justify-between mb-6">
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <p className="font-medium text-emerald-600">Selesai</p>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Nilai Akhir</p>
+                <p className="text-2xl font-bold text-primary">{nilaiAkhir !== null ? nilaiAkhir : (updateNilai.isPending ? 'Menghitung...' : '-')}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg border-b pb-2">Rincian Jawaban</h3>
+              {data.jawaban.map((ans: { id: string; jawaban: string; bank_soal?: { soal: string; jawaban_benar: string; } }, index: number) => {
+                const soal = ans.bank_soal;
+                const isBenar = ans.jawaban === soal?.jawaban_benar;
+                return (
+                  <div key={ans.id} className="p-4 border rounded-lg bg-card">
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="font-medium text-muted-foreground">Soal {index + 1}</span>
+                      {isBenar ? (
+                        <Badge variant="default" className="bg-emerald-500 gap-1"><CheckCircle2 className="w-3 h-3"/> Benar</Badge>
+                      ) : (
+                        <Badge variant="destructive" className="gap-1"><XCircle className="w-3 h-3"/> Salah</Badge>
+                      )}
+                    </div>
+                    <div className="mb-4" dangerouslySetInnerHTML={{ __html: soal?.soal || '' }} />
+                    
+                    <div className="grid md:grid-cols-2 gap-4 text-sm mt-4">
+                      <div className="p-3 bg-muted/40 rounded border">
+                        <span className="text-muted-foreground block mb-1 text-xs uppercase tracking-wider">Jawaban Peserta</span>
+                        <div className={`font-medium ${isBenar ? 'text-emerald-600' : 'text-red-600'}`} dangerouslySetInnerHTML={{ __html: ans.jawaban || '-' }} />
+                      </div>
+                      <div className="p-3 bg-emerald-50 rounded border border-emerald-100">
+                        <span className="text-emerald-800/70 block mb-1 text-xs uppercase tracking-wider">Kunci Jawaban</span>
+                        <div className="font-medium text-emerald-700" dangerouslySetInnerHTML={{ __html: soal?.jawaban_benar || '-' }} />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -113,3 +113,57 @@ export const useActiveTeachersForPeserta = () => {
     },
   });
 };
+
+// Hook to fetch detailed results for a specific test participant
+export const useDetailHasilAsesmen = (pesertaAsesmenId: string | null) => {
+  return useQuery({
+    queryKey: ['detail-hasil-asesmen', pesertaAsesmenId],
+    enabled: !!pesertaAsesmenId,
+    queryFn: async () => {
+      if (!pesertaAsesmenId) return null;
+
+      // 1. Get session
+      const { data: session, error: sessionErr } = await supabase
+        .from('asesmen_session')
+        .select('*')
+        .eq('peserta_asesmen_id', pesertaAsesmenId)
+        .maybeSingle();
+
+      if (sessionErr) throw new Error(sessionErr.message);
+      if (!session) return null;
+
+      // 2. Get answers with related questions
+      const { data: answers, error: answersErr } = await supabase
+        .from('asesmen_jawaban')
+        .select('id, jawaban, benar, skor, soal_id, bank_soal:soal_id(soal, jawaban_benar, tipe_soal, bobot)')
+        .eq('session_id', session.id);
+
+      if (answersErr) throw new Error(answersErr.message);
+
+      return {
+        session,
+        jawaban: answers
+      };
+    },
+  });
+};
+
+export const useUpdateNilaiAkhir = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, nilaiAkhir, paketId }: { id: string, nilaiAkhir: number, paketId: string }) => {
+      const { data, error } = await supabase
+        .from('peserta_asesmen')
+        .update({ nilai_akhir: nilaiAkhir })
+        .eq('id', id)
+        .select();
+
+      if (error) throw new Error(error.message);
+      return { data, paketId };
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['peserta-asesmen', result.paketId] });
+    },
+  });
+};
