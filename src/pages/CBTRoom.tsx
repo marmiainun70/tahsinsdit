@@ -46,6 +46,12 @@ export default function CBTRoom() {
         return;
       }
 
+      if (!data.peserta?.paket_id) {
+        toast({ title: "Error", description: "Relasi paket asesmen tidak ditemukan.", variant: "destructive" });
+        navigate('/cbt-dashboard');
+        return;
+      }
+
       setSessionData(data);
       setPaketId(data.peserta.paket_id);
       setCurrentIndex(data.last_question || 0);

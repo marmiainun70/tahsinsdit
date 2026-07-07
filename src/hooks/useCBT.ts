@@ -12,12 +12,14 @@ export const useCBTDashboard = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error("Tidak ada user login");
 
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('teacher_profiles')
         .select('id')
         .eq('user_id', user.user.id)
-        .single();
-      
+        .maybeSingle();
+
+      if (profileError) throw new Error(profileError.message);
+
       if (!profile) return [];
 
       // Join peserta_asesmen dan paket_asesmen
