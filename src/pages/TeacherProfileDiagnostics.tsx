@@ -289,7 +289,7 @@ function TeacherProfileDiagnostics() {
       });
   }, [categoryFilter, classLabelsByTeacher, latestDiagnosticByProfileId, listData?.profiles, search, teacherProfilesByUserId]);
 
-  if (!isDiagnosticAdmin) {
+  if (!isDiagnosticAdmin && !profileId) {
     return (
       <Card className="mx-auto max-w-3xl">
         <CardHeader>
