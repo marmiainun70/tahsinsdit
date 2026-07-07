@@ -289,35 +289,7 @@ function TeacherProfileDiagnostics() {
       });
   }, [categoryFilter, classLabelsByTeacher, latestDiagnosticByProfileId, listData?.profiles, search, teacherProfilesByUserId]);
 
-  if (!isDiagnosticAdmin && !profileId) {
-    return (
-      <Card className="mx-auto max-w-3xl">
-        <CardHeader>
-          <CardTitle>Menu Guru disederhanakan</CardTitle>
-          <CardDescription>
-            Untuk akun guru, pengelolaan paket asesmen dan peserta diurus admin. Anda cukup membuka CBT Dashboard, mengerjakan soal pilihan ganda, lalu submit.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="rounded-2xl border border-dashed border-border bg-muted/20 p-5">
-            <p className="text-sm font-medium text-foreground">Alur singkat</p>
-            <ol className="mt-2 space-y-2 text-sm text-muted-foreground">
-              <li>1. Admin menyiapkan bank soal dan paket asesmen.</li>
-              <li>2. Admin menambahkan peserta ke paket.</li>
-              <li>3. Guru buka CBT Dashboard.</li>
-              <li>4. Guru kerjakan soal pilihan ganda dan submit.</li>
-            </ol>
-          </div>
-          <Button asChild className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
-            <Link to="/cbt-dashboard">
-              <MonitorPlay className="h-4 w-4" />
-              Buka CBT Dashboard
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
+
 
   if (!profileId) {
     if (!isDiagnosticAdmin) {
