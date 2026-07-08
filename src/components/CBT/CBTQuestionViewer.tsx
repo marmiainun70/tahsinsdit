@@ -54,7 +54,7 @@ export function CBTQuestionViewer({
                 opsi.label && (
                   <div
                     key={opsi.value}
-                    className="flex items-start space-x-3 space-y-0 rounded-lg border p-4 hover:bg-slate-50 transition-colors cursor-pointer"
+                    className="flex items-start space-x-3 space-y-0 rounded-lg border dark:border-slate-800 p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                     onClick={() => onAnswerChange(opsi.value)}
                   >
                     <RadioGroupItem value={opsi.value} id={`opsi-${opsi.value}`} className="mt-1" />
