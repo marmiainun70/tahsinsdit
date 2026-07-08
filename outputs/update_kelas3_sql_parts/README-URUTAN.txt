@@ -1,0 +1,1 @@
+1. Jalankan 01_update_kelas3.sql di Supabase SQL Editor.
