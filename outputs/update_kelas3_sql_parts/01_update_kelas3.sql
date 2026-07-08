@@ -101,8 +101,8 @@ BEGIN
         END IF;
     END LOOP;
 
-    -- Delete existing students in class 3 that are NOT in the list above
-    DELETE FROM students WHERE kelas = 3 AND nama NOT IN (
+    -- Pindahkan sisa siswa kelas 3 yang tidak ada di daftar MD ke Kelas 0 (Arsip) agar NIS dan NISN mereka tidak hilang
+    UPDATE students SET kelas = 0 WHERE kelas = 3 AND nama NOT IN (
         'Abdul Hanif',
         'Abdurrahman Hanif Ash-Shiddiq',
         'Abdullah Abrar Taqiy Al Sudar',
