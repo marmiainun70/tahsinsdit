@@ -97,7 +97,7 @@ BEGIN
         IF v_id IS NOT NULL THEN
             UPDATE students SET kelas = r.kelas, rombel = r.rombel WHERE id = v_id;
         ELSE
-            INSERT INTO students (nama, kelas, rombel, level, status_bacaan) VALUES (r.nama, r.kelas, r.rombel, 'Jilid 1', 'Membaca');
+            INSERT INTO students (nama, kelas, rombel, level, status_bacaan) VALUES (r.nama, r.kelas, r.rombel, 'Iqro 1', 'Lancar');
         END IF;
     END LOOP;
 END $$;
