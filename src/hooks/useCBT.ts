@@ -108,7 +108,10 @@ export const useCBTData = (sessionId: string, paketId: string) => {
       if (relasiError) throw new Error(relasiError.message);
 
       const soalList = (relasi.map(r => r.soal) as unknown as SoalCBT[])
-        .filter((soal) => soal.tipe_soal?.toLowerCase().includes("pilihan ganda"));
+        .filter((soal) => {
+          const tipe = soal.tipe_soal?.toLowerCase() || "";
+          return !tipe.includes("reflektif");
+        });
 
       // Ambil jawaban tersimpan
       const { data: jawaban, error: jawabanError } = await supabase
