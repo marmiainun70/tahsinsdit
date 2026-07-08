@@ -107,11 +107,34 @@ export const useCBTData = (sessionId: string, paketId: string) => {
 
       if (relasiError) throw new Error(relasiError.message);
 
-      const soalList = (relasi.map(r => r.soal) as unknown as SoalCBT[])
+      const { data: paketData } = await supabase
+        .from('paket_asesmen')
+        .select('acak_soal, acak_opsi')
+        .eq('id', paketId)
+        .maybeSingle();
+
+      let soalList = (relasi.map(r => r.soal) as unknown as SoalCBT[])
         .filter((soal) => {
           const tipe = soal.tipe_soal?.toLowerCase() || "";
           return !tipe.includes("reflektif");
         });
+
+      if (paketData?.acak_soal) {
+        // Seeded shuffle based on sessionId to keep order consistent per session
+        let seed = 0;
+        for (let i = 0; i < sessionId.length; i++) seed += sessionId.charCodeAt(i);
+        const seededRandom = () => {
+          const x = Math.sin(seed++) * 10000;
+          return x - Math.floor(x);
+        };
+        
+        let currentIndex = soalList.length;
+        while (currentIndex !== 0) {
+          const randomIndex = Math.floor(seededRandom() * currentIndex);
+          currentIndex--;
+          [soalList[currentIndex], soalList[randomIndex]] = [soalList[randomIndex], soalList[currentIndex]];
+        }
+      }
 
       // Ambil jawaban tersimpan
       const { data: jawaban, error: jawabanError } = await supabase

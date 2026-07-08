@@ -64,11 +64,11 @@ export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel
           tanggal_selesai: new Date(Date.now() + 86400000).toISOString().slice(0, 16),
           durasi_menit: 60,
           nilai_minimum: 70,
-          status: "Draft",
-          jumlah_soal: 10,
-          acak_soal: false,
+          status: "Aktif",
+          jumlah_soal: 50,
+          acak_soal: true,
           acak_opsi: false,
-          kategori_kompetensi: [],
+          kategori_kompetensi: kompetensiOptions,
         },
   });
 
