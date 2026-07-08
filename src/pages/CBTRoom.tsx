@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useCBTData, useAutoSaveJawaban, useSubmitAsesmen } from "@/hooks/useCBT";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,13 +14,16 @@ import type { AsesmenSession } from "@/types/cbt";
 export default function CBTRoom() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
-  
+
   const [sessionData, setSessionData] = useState<AsesmenSession | null>(null);
   const [paketId, setPaketId] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isNavOpen, setIsNavOpen] = useState(true);
   const [timeLeft, setTimeLeft] = useState(0);
   const [visitedQuestions, setVisitedQuestions] = useState<Set<number>>(new Set());
+
+  const pendingSaveRef = useRef<{soalId: string, jawaban: string} | null>(null);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   // 1. Fetch Session Info
   useEffect(() => {
@@ -30,17 +33,17 @@ export default function CBTRoom() {
         .from('asesmen_session')
         .select(`
           *,
-          peserta:peserta_asesmen_id (paket_id)
+          peserta:peserta_asesmen (paket_id)
         `)
         .eq('id', sessionId)
         .single();
-      
+
       if (error) {
         toast({ title: "Error", description: "Sesi tidak ditemukan", variant: "destructive" });
         navigate('/cbt-dashboard');
         return;
       }
-      
+
       if (data.status === 'Selesai') {
         setSessionData(data);
         setPaketId(data.peserta.paket_id);
@@ -55,11 +58,19 @@ export default function CBTRoom() {
 
       setSessionData(data);
       setPaketId(data.peserta.paket_id);
-      setCurrentIndex(data.last_question || 0);
+      const savedIndex = localStorage.getItem('cbt_last_question_' + sessionId);
+      setCurrentIndex(savedIndex ? parseInt(savedIndex, 10) : (data.last_question || 0));
       setTimeLeft(data.remaining_time || 0);
     }
     fetchSession();
   }, [sessionId, navigate]);
+
+  // Save current index to local storage
+  useEffect(() => {
+    if (sessionId) {
+      localStorage.setItem('cbt_last_question_' + sessionId, currentIndex.toString());
+    }
+  }, [currentIndex, sessionId]);
 
   // Track visited questions
   useEffect(() => {
@@ -84,9 +95,20 @@ export default function CBTRoom() {
       cbtData.jawaban.forEach(j => {
         if (j.jawaban) initialAnswers[j.soal_id] = j.jawaban;
       });
+
+      // Override with localStorage for offline resilience
+      if (cbtData.soal && sessionId) {
+        cbtData.soal.forEach(s => {
+          const localAns = localStorage.getItem('cbt_ans_' + sessionId + '_' + s.id);
+          if (localAns) {
+            initialAnswers[s.id] = localAns;
+          }
+        });
+      }
+
       setLocalAnswers(initialAnswers);
     }
-  }, [cbtData?.jawaban]);
+  }, [cbtData?.jawaban, cbtData?.soal, sessionId]);
 
   if (isLoading || !sessionData || !cbtData) {
     return (
@@ -102,7 +124,7 @@ export default function CBTRoom() {
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-6">
         <div className="max-w-md w-full bg-white rounded-xl shadow-lg border p-8 text-center">
           <h2 className="text-2xl font-bold text-slate-800 mb-6">HASIL ASESMEN</h2>
-          
+
           <div className="space-y-4 mb-8 text-left text-lg">
             <div className="flex justify-between border-b pb-2">
               <span className="text-slate-600">Jumlah Soal</span>
@@ -121,7 +143,7 @@ export default function CBTRoom() {
               <span className="font-bold text-primary">{Number(sessionData.nilai || 0).toFixed(2)}</span>
             </div>
           </div>
-          
+
           <Button size="lg" onClick={() => navigate('/cbt-dashboard')} className="w-full">
             Kembali ke Beranda
           </Button>
@@ -143,33 +165,58 @@ export default function CBTRoom() {
     return ans ? ans.jawaban : null;
   };
 
-  // Debounced Auto Save for Textarea, immediate for Radio
+  const flushPendingSave = () => {
+    if (debounceTimer.current && pendingSaveRef.current) {
+      clearTimeout(debounceTimer.current);
+      autoSave.mutate({
+        sessionId: sessionId!,
+        soalId: pendingSaveRef.current.soalId,
+        jawaban: pendingSaveRef.current.jawaban,
+        lastQuestion: currentIndex
+      });
+      debounceTimer.current = null;
+      pendingSaveRef.current = null;
+    }
+  };
+
   const handleLocalAnswerChange = (jawaban: string) => {
     setLocalAnswers(prev => ({ ...prev, [currentSoal.id]: jawaban }));
-    
-    // Auto save to DB
-    autoSave.mutate({
-      sessionId: sessionId!,
-      soalId: currentSoal.id,
-      jawaban,
-      lastQuestion: currentIndex
-    });
+    if (sessionId) {
+      localStorage.setItem('cbt_ans_' + sessionId + '_' + currentSoal.id, jawaban);
+    }
+
+    const isPilihanGanda = !currentSoal.tipe_soal.toLowerCase().includes("reflektif");
+
+    if (isPilihanGanda) {
+      flushPendingSave();
+      autoSave.mutate({
+        sessionId: sessionId!,
+        soalId: currentSoal.id,
+        jawaban,
+        lastQuestion: currentIndex
+      });
+    } else {
+      pendingSaveRef.current = { soalId: currentSoal.id, jawaban };
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      debounceTimer.current = setTimeout(() => {
+        flushPendingSave();
+      }, 20000);
+    }
   };
 
   const handleNext = () => {
     if (currentIndex < soalList.length - 1) {
+      flushPendingSave();
       const nextIndex = currentIndex + 1;
       setCurrentIndex(nextIndex);
-      // Update last_question gently
-      supabase.from('asesmen_session').update({ last_question: nextIndex }).eq('id', sessionId!);
     }
   };
 
   const handlePrev = () => {
     if (currentIndex > 0) {
+      flushPendingSave();
       const prevIndex = currentIndex - 1;
       setCurrentIndex(prevIndex);
-      supabase.from('asesmen_session').update({ last_question: prevIndex }).eq('id', sessionId!);
     }
   };
 
@@ -179,8 +226,21 @@ export default function CBTRoom() {
 
   const handleSubmit = async () => {
     try {
-      const result = await submitMutation.mutateAsync({ sessionId: sessionId!, remainingTime: timeLeft, paketId: paketId! });
+      flushPendingSave();
+      const result = await submitMutation.mutateAsync({
+        sessionId: sessionId!,
+        remainingTime: timeLeft,
+        paketId: paketId!,
+        finalAnswers: localAnswers
+      });
       setSessionData(result as AsesmenSession);
+
+      // Clear local storage for this session
+      Object.keys(localAnswers).forEach(soalId => {
+        localStorage.removeItem('cbt_ans_' + sessionId + '_' + soalId);
+      });
+      localStorage.removeItem('cbt_last_question_' + sessionId);
+
     } catch (e) {
       // error handled by hook
     }
@@ -207,7 +267,7 @@ export default function CBTRoom() {
             <p className="text-xs text-muted-foreground">Sesi Ujian Berlangsung</p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-6">
           <div className="hidden md:flex flex-col items-end">
             <span className="text-sm font-medium">Terjawab: {answeredCount} / {soalList.length}</span>
@@ -229,11 +289,11 @@ export default function CBTRoom() {
         {/* Question Area */}
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-sm border p-6 md:p-10 mb-20">
-            <CBTQuestionViewer 
-              soal={currentSoal} 
-              index={currentIndex} 
-              currentAnswer={localAnswers[currentSoal.id] || null} 
-              onAnswerChange={handleLocalAnswerChange} 
+            <CBTQuestionViewer
+              soal={currentSoal}
+              index={currentIndex}
+              currentAnswer={localAnswers[currentSoal.id] || null}
+              onAnswerChange={handleLocalAnswerChange}
             />
           </div>
         </div>
@@ -250,20 +310,20 @@ export default function CBTRoom() {
           </div>
           <div className="p-6 flex-1 overflow-y-auto">
             <h3 className="font-medium mb-4 text-slate-800">Daftar Soal</h3>
-            <CBTQuestionNav 
+            <CBTQuestionNav
               totalQuestions={soalList.length}
               currentQuestionIndex={currentIndex}
               answers={soalList.map(s => ({ id: '', session_id: sessionId!, soal_id: s.id, jawaban: localAnswers[s.id] || null, benar: null, skor: null, answered_at: '' }))}
               visitedQuestions={Array.from(visitedQuestions)}
               onSelectQuestion={(idx) => {
+                flushPendingSave();
                 setCurrentIndex(idx);
-                supabase.from('asesmen_session').update({ last_question: idx }).eq('id', sessionId!);
                 if (window.innerWidth < 768) setIsNavOpen(false);
               }}
               soalIds={soalList.map(s => s.id)}
             />
           </div>
-          
+
           <div className="p-6 border-t bg-slate-50">
             <AlertDialog>
               <AlertDialogTrigger asChild>

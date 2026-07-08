@@ -31,7 +31,7 @@ export const useCBTDashboard = () => {
           waktu_mulai,
           waktu_selesai,
           nilai_akhir,
-          paket:paket_id (
+          paket:paket_asesmen (
             id,
             nama_paket,
             kode_paket,
@@ -142,12 +142,6 @@ export const useAutoSaveJawaban = () => {
 
       if (ansError) throw new Error(ansError.message);
 
-      // Update state session (last question)
-      await supabase
-        .from('asesmen_session')
-        .update({ last_question: lastQuestion })
-        .eq('id', sessionId);
-
       return { soalId, jawaban };
     },
     onSuccess: (data, variables) => {
@@ -162,7 +156,7 @@ export const useSubmitAsesmen = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ sessionId, remainingTime, paketId }: { sessionId: string, remainingTime: number, paketId: string }) => {
+    mutationFn: async ({ sessionId, remainingTime, paketId, finalAnswers }: { sessionId: string, remainingTime: number, paketId: string, finalAnswers: Record<string, string> }) => {
       // 1. Fetch Soal
       const { data: relasi, error: relasiError } = await supabase
         .from('paket_asesmen_soal')
@@ -177,17 +171,7 @@ export const useSubmitAsesmen = () => {
           return !tipe.includes("reflektif");
         });
 
-      // 2. Fetch Jawaban
-      const { data: jawabanData, error: jawabanError } = await supabase
-        .from('asesmen_jawaban')
-        .select('*')
-        .eq('session_id', sessionId);
-
-      if (jawabanError) throw new Error(jawabanError.message);
-
-      const jawabanList = jawabanData as AsesmenJawaban[];
-
-      // 3. Hitung Nilai
+      // 2. Hitung Nilai berdasarkan finalAnswers dari frontend
       let jumlahBenar = 0;
       let jumlahSalah = 0;
       const totalSoal = soalList.length;
@@ -195,8 +179,7 @@ export const useSubmitAsesmen = () => {
       const updates = [];
 
       for (const soal of soalList) {
-        const j = jawabanList.find(ans => ans.soal_id === soal.id);
-        const jawabanUser = j?.jawaban?.trim() || "";
+        const jawabanUser = (finalAnswers[soal.id] || "").trim();
         const jawabanBenar = soal.jawaban_benar?.trim() || "";
 
         let isBenar = false;
@@ -218,6 +201,19 @@ export const useSubmitAsesmen = () => {
           skor: skor
         });
       }
+
+      // Pastikan soal esai juga ikut di-upsert (tidak ikut dinilai di sini)
+      Object.keys(finalAnswers).forEach(soalId => {
+        if (!updates.find(u => u.soal_id === soalId)) {
+          updates.push({
+            session_id: sessionId,
+            soal_id: soalId,
+            jawaban: finalAnswers[soalId] || null,
+            benar: null,
+            skor: null
+          });
+        }
+      });
 
       const nilai = totalSoal > 0 ? (jumlahBenar / totalSoal) * 100 : 0;
 
