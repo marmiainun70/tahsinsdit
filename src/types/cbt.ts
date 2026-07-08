@@ -7,6 +7,10 @@ export type AsesmenSession = {
   last_question: number;
   status: 'Aktif' | 'Selesai';
   created_at: string;
+  total_soal?: number;
+  jumlah_benar?: number;
+  jumlah_salah?: number;
+  nilai?: number;
 };
 
 export type AsesmenJawaban = {

@@ -162,13 +162,84 @@ export const useSubmitAsesmen = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ sessionId, remainingTime }: { sessionId: string, remainingTime: number }) => {
+    mutationFn: async ({ sessionId, remainingTime, paketId }: { sessionId: string, remainingTime: number, paketId: string }) => {
+      // 1. Fetch Soal
+      const { data: relasi, error: relasiError } = await supabase
+        .from('paket_asesmen_soal')
+        .select('soal:soal_id (id, tipe_soal, jawaban_benar)')
+        .eq('paket_id', paketId);
+
+      if (relasiError) throw new Error(relasiError.message);
+
+      const soalList = (relasi.map(r => r.soal) as unknown as SoalCBT[])
+        .filter((soal) => {
+          const tipe = soal.tipe_soal?.toLowerCase() || "";
+          return !tipe.includes("reflektif");
+        });
+
+      // 2. Fetch Jawaban
+      const { data: jawabanData, error: jawabanError } = await supabase
+        .from('asesmen_jawaban')
+        .select('*')
+        .eq('session_id', sessionId);
+
+      if (jawabanError) throw new Error(jawabanError.message);
+
+      const jawabanList = jawabanData as AsesmenJawaban[];
+
+      // 3. Hitung Nilai
+      let jumlahBenar = 0;
+      let jumlahSalah = 0;
+      const totalSoal = soalList.length;
+
+      const updates = [];
+
+      for (const soal of soalList) {
+        const j = jawabanList.find(ans => ans.soal_id === soal.id);
+        const jawabanUser = j?.jawaban?.trim() || "";
+        const jawabanBenar = soal.jawaban_benar?.trim() || "";
+
+        let isBenar = false;
+        let skor = 0;
+
+        if (jawabanUser && jawabanBenar && jawabanUser.toLowerCase() === jawabanBenar.toLowerCase()) {
+          isBenar = true;
+          skor = 1;
+          jumlahBenar++;
+        } else {
+          jumlahSalah++;
+        }
+
+        updates.push({
+          session_id: sessionId,
+          soal_id: soal.id,
+          jawaban: jawabanUser || null, // null if empty string
+          benar: isBenar,
+          skor: skor
+        });
+      }
+
+      const nilai = totalSoal > 0 ? (jumlahBenar / totalSoal) * 100 : 0;
+
+      // 4. Update jawaban di DB secara bulk (menggunakan upsert)
+      if (updates.length > 0) {
+         const { error: upsertError } = await supabase
+           .from('asesmen_jawaban')
+           .upsert(updates, { onConflict: 'session_id, soal_id' });
+         if (upsertError) throw new Error(upsertError.message);
+      }
+
+      // 5. Update asesmen_session
       const { data, error } = await supabase
         .from('asesmen_session')
         .update({ 
           status: 'Selesai', 
           finished_at: new Date().toISOString(),
-          remaining_time: remainingTime 
+          remaining_time: remainingTime,
+          total_soal: totalSoal,
+          jumlah_benar: jumlahBenar,
+          jumlah_salah: jumlahSalah,
+          nilai: nilai
         })
         .eq('id', sessionId)
         .select()
@@ -177,7 +248,7 @@ export const useSubmitAsesmen = () => {
       if (error) throw new Error(error.message);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['cbt-dashboard'] });
       toast({ title: "Ujian Selesai", description: "Terima kasih, jawaban Anda telah tersimpan." });
     },

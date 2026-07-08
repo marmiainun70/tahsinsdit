@@ -42,8 +42,8 @@ export default function CBTRoom() {
       }
       
       if (data.status === 'Selesai') {
-        toast({ title: "Informasi", description: "Ujian ini sudah selesai." });
-        navigate('/cbt-dashboard');
+        setSessionData(data);
+        setPaketId(data.peserta.paket_id);
         return;
       }
 
@@ -97,6 +97,39 @@ export default function CBTRoom() {
     );
   }
 
+  if (sessionData.status === 'Selesai') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-6">
+        <div className="max-w-md w-full bg-white rounded-xl shadow-lg border p-8 text-center">
+          <h2 className="text-2xl font-bold text-slate-800 mb-6">HASIL ASESMEN</h2>
+          
+          <div className="space-y-4 mb-8 text-left text-lg">
+            <div className="flex justify-between border-b pb-2">
+              <span className="text-slate-600">Jumlah Soal</span>
+              <span className="font-semibold">{sessionData.total_soal || 0}</span>
+            </div>
+            <div className="flex justify-between border-b pb-2">
+              <span className="text-slate-600">Jawaban Benar</span>
+              <span className="font-semibold text-emerald-600">{sessionData.jumlah_benar || 0}</span>
+            </div>
+            <div className="flex justify-between border-b pb-2">
+              <span className="text-slate-600">Jawaban Salah</span>
+              <span className="font-semibold text-red-600">{sessionData.jumlah_salah || 0}</span>
+            </div>
+            <div className="flex justify-between pt-2">
+              <span className="font-bold text-slate-800">Nilai Sementara</span>
+              <span className="font-bold text-primary">{Number(sessionData.nilai || 0).toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <Button size="lg" onClick={() => navigate('/cbt-dashboard')} className="w-full">
+            Kembali ke Beranda
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const soalList = cbtData.soal;
   const jawabanList = cbtData.jawaban;
   const currentSoal = soalList[currentIndex];
@@ -146,8 +179,8 @@ export default function CBTRoom() {
 
   const handleSubmit = async () => {
     try {
-      await submitMutation.mutateAsync({ sessionId: sessionId!, remainingTime: timeLeft });
-      navigate('/cbt-dashboard');
+      const result = await submitMutation.mutateAsync({ sessionId: sessionId!, remainingTime: timeLeft, paketId: paketId! });
+      setSessionData(result as AsesmenSession);
     } catch (e) {
       // error handled by hook
     }
