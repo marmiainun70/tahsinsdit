@@ -6,6 +6,7 @@ interface CBTQuestionNavProps {
   totalQuestions: number;
   currentQuestionIndex: number;
   answers: AsesmenJawaban[];
+  visitedQuestions: number[];
   onSelectQuestion: (index: number) => void;
   soalIds: string[];
 }
@@ -14,6 +15,7 @@ export function CBTQuestionNav({
   totalQuestions,
   currentQuestionIndex,
   answers,
+  visitedQuestions,
   onSelectQuestion,
   soalIds,
 }: CBTQuestionNavProps) {
@@ -29,16 +31,20 @@ export function CBTQuestionNav({
       {Array.from({ length: totalQuestions }).map((_, index) => {
         const active = currentQuestionIndex === index;
         const answered = isAnswered(index);
+        const visited = visitedQuestions.includes(index);
 
         return (
           <Button
             key={index}
-            variant={active ? "default" : answered ? "outline" : "secondary"}
+            variant="outline"
             className={cn(
-              "w-full h-10 p-0 font-medium",
+              "w-full h-10 p-0 font-medium border",
               active && "ring-2 ring-primary ring-offset-2",
-              !active && answered && "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100",
-              !active && !answered && "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              answered 
+                ? "bg-emerald-500 text-white border-emerald-600 hover:bg-emerald-600 hover:text-white"
+                : visited 
+                  ? "bg-red-500 text-white border-red-600 hover:bg-red-600 hover:text-white"
+                  : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
             )}
             onClick={() => onSelectQuestion(index)}
           >

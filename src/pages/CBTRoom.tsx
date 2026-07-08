@@ -20,6 +20,7 @@ export default function CBTRoom() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isNavOpen, setIsNavOpen] = useState(true);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [visitedQuestions, setVisitedQuestions] = useState<Set<number>>(new Set());
 
   // 1. Fetch Session Info
   useEffect(() => {
@@ -59,6 +60,15 @@ export default function CBTRoom() {
     }
     fetchSession();
   }, [sessionId, navigate]);
+
+  // Track visited questions
+  useEffect(() => {
+    setVisitedQuestions(prev => {
+      const newSet = new Set(prev);
+      newSet.add(currentIndex);
+      return newSet;
+    });
+  }, [currentIndex]);
 
   // 2. Fetch Soal & Jawaban
   const { data: cbtData, isLoading } = useCBTData(sessionId!, paketId!);
@@ -152,7 +162,7 @@ export default function CBTRoom() {
   const answeredCount = Object.keys(localAnswers).filter(k => localAnswers[k] && localAnswers[k].trim() !== '').length;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col md:[zoom:80%]">
       {/* Header */}
       <header className="bg-white border-b px-6 py-3 flex items-center justify-between sticky top-0 z-10 shadow-sm">
         <div className="flex items-center gap-4">
@@ -211,6 +221,7 @@ export default function CBTRoom() {
               totalQuestions={soalList.length}
               currentQuestionIndex={currentIndex}
               answers={soalList.map(s => ({ id: '', session_id: sessionId!, soal_id: s.id, jawaban: localAnswers[s.id] || null, benar: null, skor: null, answered_at: '' }))}
+              visitedQuestions={Array.from(visitedQuestions)}
               onSelectQuestion={(idx) => {
                 setCurrentIndex(idx);
                 supabase.from('asesmen_session').update({ last_question: idx }).eq('id', sessionId!);
