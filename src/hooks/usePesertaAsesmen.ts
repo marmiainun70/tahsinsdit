@@ -74,16 +74,19 @@ export const useActiveTeachersForPeserta = () => {
   return useQuery({
     queryKey: ['active-teachers-for-peserta'],
     queryFn: async () => {
-      // 1. Dapatkan daftar user_id yang statusnya approved dan role guru/admin
-      const { data: activeProfiles, error: profileErr } = await supabase
+      // 1. Dapatkan daftar user_id yang statusnya approved (bukan parent)
+      const { data: allActiveProfiles, error: profileErr } = await supabase
         .from('profiles')
-        .select('user_id, full_name')
-        .eq('status', 'approved')
-        .in('role', ['teacher', 'admin']);
+        .select('user_id, full_name, role')
+        .eq('status', 'approved');
 
       if (profileErr) throw new Error(profileErr.message);
 
-      if (!activeProfiles || activeProfiles.length === 0) return [];
+      if (!allActiveProfiles || allActiveProfiles.length === 0) return [];
+
+      const activeProfiles = allActiveProfiles.filter(p => p.role !== 'parent');
+      
+      if (activeProfiles.length === 0) return [];
 
       // 2. Pastikan mereka memiliki entri di teacher_profiles
       // (Bypass masalah foreign key jika admin belum membuat profil gurunya)
