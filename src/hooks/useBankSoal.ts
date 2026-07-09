@@ -143,3 +143,26 @@ export const useDeleteBankSoal = () => {
     },
   });
 };
+
+export const useDeleteAllBankSoal = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from('bank_soal')
+        .delete()
+        .not('id', 'is', null);
+
+      if (error) throw new Error(error.message);
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bank-soal'] });
+      toast({ title: "Berhasil", description: "Semua soal berhasil dihapus." });
+    },
+    onError: (error) => {
+      toast({ title: "Gagal", description: error.message, variant: "destructive" });
+    },
+  });
+};

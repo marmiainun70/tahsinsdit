@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useBankSoal, useDeleteBankSoal } from "@/hooks/useBankSoal";
+import { useBankSoal, useDeleteBankSoal, useDeleteAllBankSoal } from "@/hooks/useBankSoal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,6 +23,7 @@ export function BankSoalList({ onEdit, onCreate, onImport }: BankSoalListProps) 
 
   const { data, isLoading, isError, error } = useBankSoal(filters, page, pageSize);
   const deleteMutation = useDeleteBankSoal();
+  const deleteAllMutation = useDeleteAllBankSoal();
 
   const handleSearch = () => {
     setFilters({ ...filters, search: searchInput });
@@ -93,6 +94,34 @@ export function BankSoalList({ onEdit, onCreate, onImport }: BankSoalListProps) 
           <Button variant="outline" onClick={onImport} className="gap-2">
             <Upload className="w-4 h-4" /> Import JSON
           </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="gap-2">
+                <Trash2 className="w-4 h-4" /> Hapus Semua
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Hapus Seluruh Bank Soal?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Apakah Anda sangat yakin ingin menghapus <strong>seluruh soal</strong> di bank soal ini?
+                  Tindakan ini tidak dapat dibatalkan dan akan mempengaruhi paket asesmen yang terkait.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Batal</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => deleteAllMutation.mutate()}
+                  className="bg-red-500 hover:bg-red-600"
+                  disabled={deleteAllMutation.isPending}
+                >
+                  {deleteAllMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Ya, Hapus Semua
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           <Button onClick={onCreate} className="gap-2">
             <Plus className="w-4 h-4" /> Tambah Soal
@@ -176,7 +205,7 @@ export function BankSoalList({ onEdit, onCreate, onImport }: BankSoalListProps) 
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Batal</AlertDialogCancel>
-                              <AlertDialogAction 
+                              <AlertDialogAction
                                 onClick={() => deleteMutation.mutate(item.id)}
                                 className="bg-red-500 hover:bg-red-600"
                               >
@@ -194,7 +223,7 @@ export function BankSoalList({ onEdit, onCreate, onImport }: BankSoalListProps) 
             </TableBody>
           </Table>
         </div>
-        
+
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between p-4 border-t bg-muted/20">
@@ -202,9 +231,9 @@ export function BankSoalList({ onEdit, onCreate, onImport }: BankSoalListProps) 
               Menampilkan {((page - 1) * pageSize) + 1} - {Math.min(page * pageSize, data?.count || 0)} dari {data?.count} soal
             </p>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1 || isLoading}
               >
@@ -213,9 +242,9 @@ export function BankSoalList({ onEdit, onCreate, onImport }: BankSoalListProps) 
               <div className="flex items-center justify-center px-3 text-sm font-medium">
                 Halaman {page} / {totalPages}
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages || isLoading}
               >
