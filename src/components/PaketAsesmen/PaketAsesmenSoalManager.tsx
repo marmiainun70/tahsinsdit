@@ -90,12 +90,9 @@ export function PaketAsesmenSoalManager({ paket, onBack }: PaketAsesmenSoalManag
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua Kategori</SelectItem>
-                <SelectItem value="Tahsin Dasar">Tahsin Dasar</SelectItem>
-                <SelectItem value="Tahsin Lanjutan">Tahsin Lanjutan</SelectItem>
+                <SelectItem value="Tahsin">Tahsin</SelectItem>
                 <SelectItem value="Tahfizh">Tahfizh</SelectItem>
-                <SelectItem value="Profesionalisme Guru">Profesionalisme Guru</SelectItem>
-                <SelectItem value="Pedagogik">Pedagogik</SelectItem>
-                <SelectItem value="Sosial & Kepribadian">Sosial & Kepribadian</SelectItem>
+                <SelectItem value="Profesionalitas">Profesionalitas</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -41,6 +41,15 @@ const kompetensiOptions = [
   "Profesionalitas"
 ];
 
+const subAspekOptions = [
+  "Iqra & Dasar Membaca",
+  "Metodologi Tahfizh",
+  "Komunikasi & Kerja Sama Orang Tua",
+  "Etika & Integritas",
+  "Pengembangan Diri",
+  "Tajwid"
+];
+
 export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel }: PaketAsesmenFormProps) {
   const form = useForm<PaketAsesmenFormValues>({
     resolver: zodResolver(formSchema),
@@ -63,7 +72,7 @@ export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel
           jumlah_soal: 50,
           acak_soal: true,
           acak_opsi: false,
-          kategori_kompetensi: kompetensiOptions,
+          kategori_kompetensi: [...kompetensiOptions, ...subAspekOptions],
         },
   });
 
@@ -290,6 +299,30 @@ export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel
             })}
           </div>
           <p className="text-xs text-muted-foreground">Klik untuk memilih atau menghapus kategori.</p>
+        </div>
+
+        <div className="space-y-3">
+          <FormLabel>Sub Aspek Kompetensi</FormLabel>
+          <div className="flex flex-wrap gap-2">
+            {subAspekOptions.map((item) => {
+              const checked = form.watch("kategori_kompetensi").includes(item);
+              return (
+                <Badge
+                  key={item}
+                  variant={checked ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    const current = form.getValues("kategori_kompetensi");
+                    const next = checked ? current.filter((x) => x !== item) : [...current, item];
+                    form.setValue("kategori_kompetensi", next, { shouldValidate: true });
+                  }}
+                >
+                  {item}
+                </Badge>
+              );
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground">Klik untuk memilih atau menghapus sub aspek.</p>
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t">
