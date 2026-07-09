@@ -36,14 +36,9 @@ interface PaketAsesmenFormProps {
 }
 
 const kompetensiOptions = [
-  "Tahsin Dasar", 
-  "Tahsin Lanjutan", 
+  "Tahsin", 
   "Tahfizh", 
-  "Tajwid", 
-  "Makhraj",
-  "Profesionalisme Guru",
-  "Pedagogik",
-  "Sosial & Kepribadian"
+  "Profesionalitas"
 ];
 
 export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel }: PaketAsesmenFormProps) {

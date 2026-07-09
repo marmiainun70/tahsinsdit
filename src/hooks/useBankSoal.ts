@@ -12,15 +12,7 @@ export const useBankSoal = (filters: BankSoalFilter, page: number, pageSize: num
         .select('*', { count: 'exact' });
 
       if (filters.kategori) {
-        if (filters.kategori === 'Tahsin Dasar') {
-          query = query.in('kategori', ['Tahsin Dasar', 'Makhraj']);
-        } else if (filters.kategori === 'Tahsin Lanjutan') {
-          query = query.in('kategori', ['Tahsin Lanjutan', 'Tajwid', 'Tajwid Lanjutan']);
-        } else if (filters.kategori === 'Tahfizh') {
-          query = query.in('kategori', ['Tahfizh', 'Metodologi Tahfizh']);
-        } else {
-          query = query.eq('kategori', filters.kategori);
-        }
+        query = query.eq('kategori', filters.kategori);
       }
       if (filters.sub_aspek) {
         query = query.eq('sub_aspek', filters.sub_aspek);
