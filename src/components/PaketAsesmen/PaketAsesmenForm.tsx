@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,6 +65,12 @@ export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel
           kategori_kompetensi: [],
         },
   });
+
+  useEffect(() => {
+    if (!initialData && metadata && form.getValues("kategori_kompetensi").length === 0) {
+      form.setValue("kategori_kompetensi", [...(metadata.categories || []), ...(metadata.subAspeks || [])], { shouldValidate: true });
+    }
+  }, [initialData, metadata, form]);
 
   const handleSubmit = (values: PaketAsesmenFormValues) => {
     // Pastikan format ISO sebelum kirim ke DB
@@ -267,7 +274,27 @@ export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel
         </div>
 
         <div className="space-y-3">
-          <FormLabel>Kategori Kompetensi yang Diujikan</FormLabel>
+          <div className="flex items-center justify-between">
+            <FormLabel>Kategori Kompetensi yang Diujikan</FormLabel>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="select-all-kategori" 
+                checked={metadata?.categories?.length > 0 && metadata.categories.every(c => form.watch("kategori_kompetensi").includes(c))}
+                onCheckedChange={(checked) => {
+                  const current = form.getValues("kategori_kompetensi");
+                  const allCats = metadata?.categories || [];
+                  if (checked) {
+                    form.setValue("kategori_kompetensi", Array.from(new Set([...current, ...allCats])), { shouldValidate: true });
+                  } else {
+                    form.setValue("kategori_kompetensi", current.filter(c => !allCats.includes(c)), { shouldValidate: true });
+                  }
+                }}
+              />
+              <label htmlFor="select-all-kategori" className="text-xs font-medium leading-none cursor-pointer">
+                Pilih Semua
+              </label>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
             {(metadata?.categories || []).map((item) => {
               const checked = form.watch("kategori_kompetensi").includes(item);
@@ -291,7 +318,27 @@ export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel
         </div>
 
         <div className="space-y-3">
-          <FormLabel>Sub Aspek Kompetensi</FormLabel>
+          <div className="flex items-center justify-between">
+            <FormLabel>Sub Aspek Kompetensi</FormLabel>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="select-all-subaspek" 
+                checked={metadata?.subAspeks?.length > 0 && metadata.subAspeks.every(c => form.watch("kategori_kompetensi").includes(c))}
+                onCheckedChange={(checked) => {
+                  const current = form.getValues("kategori_kompetensi");
+                  const allSubs = metadata?.subAspeks || [];
+                  if (checked) {
+                    form.setValue("kategori_kompetensi", Array.from(new Set([...current, ...allSubs])), { shouldValidate: true });
+                  } else {
+                    form.setValue("kategori_kompetensi", current.filter(c => !allSubs.includes(c)), { shouldValidate: true });
+                  }
+                }}
+              />
+              <label htmlFor="select-all-subaspek" className="text-xs font-medium leading-none cursor-pointer">
+                Pilih Semua
+              </label>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
             {(metadata?.subAspeks || []).map((item) => {
               const checked = form.watch("kategori_kompetensi").includes(item);
