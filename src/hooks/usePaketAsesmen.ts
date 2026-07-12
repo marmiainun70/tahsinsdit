@@ -4,6 +4,23 @@ import type { PaketAsesmen, PaketAsesmenInput, PaketAsesmenFilter } from '@/type
 import { toast } from '@/hooks/use-toast';
 import { selectSoalForPaket } from '@/lib/paketAsesmenGeneration';
 
+const formatIndonesianError = (error: Error): string => {
+  const msg = (error?.message || String(error)).toLowerCase();
+  if (msg.includes("duplicate key") || msg.includes("unique constraint")) {
+    return "Data dengan kode atau informasi yang sama sudah ada di dalam sistem. Silakan gunakan kode atau informasi yang berbeda (misalnya Kode Paket Asesmen).";
+  }
+  if (msg.includes("not null")) {
+    return "Ada kolom isian wajib yang masih kosong atau tidak valid.";
+  }
+  if (msg.includes("network") || msg.includes("fetch")) {
+    return "Terjadi masalah jaringan. Silakan periksa koneksi internet Anda.";
+  }
+  if (msg.includes("foreign key")) {
+    return "Data terkait tidak ditemukan di dalam sistem (referensi tidak valid).";
+  }
+  return "Terjadi kesalahan: " + (error?.message || "Kesalahan sistem tidak diketahui.");
+};
+
 type GenerateSoalArgs = {
   paketId: string;
   kategori?: string;
@@ -70,8 +87,8 @@ export const useCreatePaketAsesmen = () => {
       queryClient.invalidateQueries({ queryKey: ['paket-asesmen'] });
       toast({ title: "Berhasil", description: "Paket asesmen baru berhasil ditambahkan." });
     },
-    onError: (error) => {
-      toast({ title: "Gagal", description: error.message, variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Gagal Menyimpan", description: formatIndonesianError(error), variant: "destructive" });
     },
   });
 };
@@ -95,8 +112,8 @@ export const useUpdatePaketAsesmen = () => {
       queryClient.invalidateQueries({ queryKey: ['paket-asesmen'] });
       toast({ title: "Berhasil", description: "Paket asesmen berhasil diperbarui." });
     },
-    onError: (error) => {
-      toast({ title: "Gagal", description: error.message, variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Gagal Memperbarui", description: formatIndonesianError(error), variant: "destructive" });
     },
   });
 };
@@ -118,8 +135,8 @@ export const useDeletePaketAsesmen = () => {
       queryClient.invalidateQueries({ queryKey: ['paket-asesmen'] });
       toast({ title: "Berhasil", description: "Paket asesmen berhasil dihapus." });
     },
-    onError: (error) => {
-      toast({ title: "Gagal", description: error.message, variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Gagal Menghapus", description: formatIndonesianError(error), variant: "destructive" });
     },
   });
 };
@@ -211,8 +228,8 @@ export const useGenerateSoalOtomatis = () => {
       queryClient.invalidateQueries({ queryKey: ['paket-asesmen-soal'] });
       toast({ title: "Berhasil", description: `${count} soal berhasil digenerate dan ditambahkan ke paket.` });
     },
-    onError: (error) => {
-      toast({ title: "Gagal", description: error.message, variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ title: "Gagal Menambah Soal", description: formatIndonesianError(error), variant: "destructive" });
     },
   });
 };
