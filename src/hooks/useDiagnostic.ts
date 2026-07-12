@@ -33,7 +33,7 @@ export const useDiagnosticStudents = ({
 
       let query = supabase
         .from("students")
-        .select("*", { count: "exact" });
+        .select("*, diagnostic_evaluations(status)", { count: "exact" });
 
       if (search.trim()) {
         const searchTerm = `%${search.trim()}%`;
@@ -73,14 +73,26 @@ export const useDiagnosticStudents = ({
   });
 };
 
+export type TajwidMateri = {
+  mad_thabii: boolean;
+  qalqalah: boolean;
+  nun_mati_tanwin: boolean;
+  mim_mati: boolean;
+  ghunnah: boolean;
+  lam_tarif: boolean;
+};
+
 export type DiagnosticEvaluationData = {
   student_id: string;
-  makhraj_score: number;
-  sifat_score: number;
-  tajwid_score: number;
-  fluency_score: number;
-  notes?: string;
-  recommended_level?: string;
+  academic_year_id: string;
+  level_awal: string;
+  kelancaran_membaca?: number;
+  makharijul_huruf?: number;
+  tajwid_dasar_materi?: TajwidMateri;
+  tajwid_dasar_skor?: string;
+  hasil_kemampuan?: string;
+  rekomendasi?: string;
+  catatan_penguji?: string;
 };
 
 export const useSubmitDiagnostic = () => {
@@ -91,18 +103,42 @@ export const useSubmitDiagnostic = () => {
     mutationFn: async (data: DiagnosticEvaluationData) => {
       if (!user?.id) throw new Error("Tidak ada user login");
 
+      // Calculate hasil_kemampuan automatically if not Tahfizh
+      let hasil_kemampuan = data.hasil_kemampuan;
+      if (data.level_awal !== "tahfizh" && data.level_awal !== "belum_bisa_baca") {
+        const k = data.kelancaran_membaca || 0;
+        const m = data.makharijul_huruf || 0;
+        const t = data.tajwid_dasar_skor || "belum";
+        
+        if (k < 3 || m < 3) {
+          hasil_kemampuan = "Kurang Lancar";
+        } else if (k >= 4 && m >= 4 && (t === "baik" || t === "menguasai")) {
+          hasil_kemampuan = "Sangat Lancar";
+        } else {
+          hasil_kemampuan = "Cukup Lancar";
+        }
+      }
+
+      // Upsert into diagnostic_evaluations
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: result, error } = await (supabase as any)
         .from("diagnostic_evaluations")
-        .insert({
+        .upsert({
           student_id: data.student_id,
+          academic_year_id: data.academic_year_id,
           evaluator_id: user.id,
-          makhraj_score: data.makhraj_score,
-          sifat_score: data.sifat_score,
-          tajwid_score: data.tajwid_score,
-          fluency_score: data.fluency_score,
-          notes: data.notes || null,
-          recommended_level: data.recommended_level || null,
+          evaluated_at: new Date().toISOString(),
+          status: "sudah_dievaluasi",
+          level_awal: data.level_awal,
+          kelancaran_membaca: data.kelancaran_membaca,
+          makharijul_huruf: data.makharijul_huruf,
+          tajwid_dasar_materi: data.tajwid_dasar_materi,
+          tajwid_dasar_skor: data.tajwid_dasar_skor,
+          hasil_kemampuan: hasil_kemampuan,
+          rekomendasi: data.rekomendasi,
+          catatan_penguji: data.catatan_penguji,
+        }, {
+          onConflict: 'student_id, academic_year_id'
         })
         .select()
         .single();
