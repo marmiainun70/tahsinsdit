@@ -33,7 +33,8 @@ export const useDiagnosticStudents = ({
 
       let query = supabase
         .from("students")
-        .select("*, diagnostic_evaluations(status)", { count: "exact" });
+        // @ts-expect-error evaluasi_awal_semester is dynamic in the DB now
+        .select("*, evaluasi_awal_semester(final_predicate)", { count: "exact" });
 
       if (search.trim()) {
         const searchTerm = `%${search.trim()}%`;
@@ -73,78 +74,95 @@ export const useDiagnosticStudents = ({
   });
 };
 
-export type TajwidMateri = {
-  mad_thabii: boolean;
-  qalqalah: boolean;
-  nun_mati_tanwin: boolean;
-  mim_mati: boolean;
-  ghunnah: boolean;
-  lam_tarif: boolean;
-};
-
-export type DiagnosticEvaluationData = {
+export type FullDiagnosticData = {
   student_id: string;
   academic_year_id: string;
-  level_awal: string;
-  kelancaran_membaca?: number;
-  makharijul_huruf?: number;
-  tajwid_dasar_materi?: TajwidMateri;
-  tajwid_dasar_skor?: string;
-  hasil_kemampuan?: string;
-  rekomendasi?: string;
-  catatan_penguji?: string;
+  final_score: number;
+  final_predicate: string;
+  selected_level_id?: string;
+  
+  // Profil Awal
+  jawaban_profil: Record<string, string | boolean>;
+  
+  // Core
+  fluency_score: number;
+  lahn_jali_count: number;
+  lahn_khofi_count: number;
+  checklist_makharij: Record<string, "Baik" | "Perlu Latihan">;
+  
+  // Advanced (Lanjutan)
+  checklist_tajwid: Record<string, "Baik" | "Perlu Latihan">;
+  waqaf_error_count: number;
+  
+  // Advanced (Tahfizh)
+  salah_sambung_ayat_count: number;
+  
+  // Recommendation
+  fokus_pembinaan: string[];
+  recommended_level_id?: string;
 };
 
-export const useSubmitDiagnostic = () => {
+export const useSubmitDiagnosticWizard = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (data: DiagnosticEvaluationData) => {
+    mutationFn: async (data: FullDiagnosticData) => {
       if (!user?.id) throw new Error("Tidak ada user login");
 
-      // Calculate hasil_kemampuan automatically if not Tahfizh
-      let hasil_kemampuan = data.hasil_kemampuan;
-      if (data.level_awal !== "tahfizh" && data.level_awal !== "belum_bisa_baca") {
-        const k = data.kelancaran_membaca || 0;
-        const m = data.makharijul_huruf || 0;
-        const t = data.tajwid_dasar_skor || "belum";
-        
-        if (k < 3 || m < 3) {
-          hasil_kemampuan = "Kurang Lancar";
-        } else if (k >= 4 && m >= 4 && (t === "baik" || t === "menguasai")) {
-          hasil_kemampuan = "Sangat Lancar";
-        } else {
-          hasil_kemampuan = "Cukup Lancar";
-        }
-      }
-
-      // Upsert into diagnostic_evaluations
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: result, error } = await (supabase as any)
-        .from("diagnostic_evaluations")
-        .upsert({
+      // We use a custom RPC or batch insert since Supabase JS Client does not support multi-statement transactions directly
+      // However, since we're using the standard JS client, we can insert into the parent table and then promise.all the child tables.
+      // 1. Insert Core evaluasi_awal_semester
+      // @ts-expect-error Types not fully regenerated
+      const { data: evalResult, error: evalError } = await supabase
+        .from("evaluasi_awal_semester")
+        .insert({
           student_id: data.student_id,
-          academic_year_id: data.academic_year_id,
           evaluator_id: user.id,
-          evaluated_at: new Date().toISOString(),
-          status: "sudah_dievaluasi",
-          level_awal: data.level_awal,
-          kelancaran_membaca: data.kelancaran_membaca,
-          makharijul_huruf: data.makharijul_huruf,
-          tajwid_dasar_materi: data.tajwid_dasar_materi,
-          tajwid_dasar_skor: data.tajwid_dasar_skor,
-          hasil_kemampuan: hasil_kemampuan,
-          rekomendasi: data.rekomendasi,
-          catatan_penguji: data.catatan_penguji,
-        }, {
-          onConflict: 'student_id, academic_year_id'
+          academic_year_id: data.academic_year_id,
+          final_score: data.final_score,
+          final_predicate: data.final_predicate,
+          selected_level_id: data.selected_level_id
         })
         .select()
         .single();
 
-      if (error) throw new Error(error.message);
-      return result;
+      if (evalError) throw evalError;
+      
+      const evaluasi_id = evalResult.id;
+
+      // 2. Batch insert children
+      const promises = [
+        // @ts-expect-error
+        supabase.from("evaluasi_profil_awal").insert({ evaluasi_id, jawaban: data.jawaban_profil }),
+        // @ts-expect-error
+        supabase.from("evaluasi_kelancaran").insert({ evaluasi_id, score: data.fluency_score }),
+        // @ts-expect-error
+        supabase.from("evaluasi_kesalahan_bacaan").insert({ evaluasi_id, lahn_jali_count: data.lahn_jali_count, lahn_khofi_count: data.lahn_khofi_count }),
+        // @ts-expect-error
+        supabase.from("evaluasi_makharij").insert({ evaluasi_id, checklist: data.checklist_makharij }),
+        // @ts-expect-error
+        supabase.from("evaluasi_tajwid").insert({ evaluasi_id, checklist: data.checklist_tajwid }),
+        // @ts-expect-error
+        supabase.from("evaluasi_waqaf").insert({ evaluasi_id, error_count: data.waqaf_error_count }),
+        // @ts-expect-error
+        supabase.from("evaluasi_tahfizh").insert({ evaluasi_id, salah_sambung_ayat_count: data.salah_sambung_ayat_count }),
+        // @ts-expect-error
+        supabase.from("evaluasi_rekomendasi").insert({ evaluasi_id, fokus_pembinaan: data.fokus_pembinaan, recommended_level_id: data.recommended_level_id })
+      ];
+
+      const results = await Promise.allSettled(promises);
+      
+      const errors = results.filter(r => r.status === "rejected" || (r.status === "fulfilled" && r.value.error));
+      if (errors.length > 0) {
+        // Since we lack a strict SQL transaction block from JS client without RPC,
+        // we might leave orphaned rows if something fails.
+        // As a safeguard, delete the parent if child insert fails
+        await supabase.from("evaluasi_awal_semester").delete().eq("id", evaluasi_id);
+        throw new Error("Gagal menyimpan detail evaluasi. Silakan coba lagi.");
+      }
+
+      return evalResult;
     },
     onSuccess: () => {
       toast({
