@@ -55,6 +55,45 @@ export const useCBTDashboard = () => {
 };
 
 // 2. Inisialisasi atau Lanjutkan Sesi
+export const formatIndonesianError = (error: Error): string => {
+  const msg = (error?.message || String(error)).toLowerCase();
+  if (msg.includes("duplicate key") || msg.includes("unique constraint")) {
+    return "Data dengan kode atau informasi yang sama sudah ada di dalam sistem. Silakan gunakan kode atau informasi yang berbeda.";
+  }
+  if (msg.includes("not null")) {
+    return "Ada kolom isian wajib yang masih kosong atau tidak valid.";
+  }
+  if (msg.includes("network") || msg.includes("fetch")) {
+    return "Terjadi masalah jaringan. Silakan periksa koneksi internet Anda.";
+  }
+  if (msg.includes("foreign key")) {
+    return "Data terkait tidak ditemukan di dalam sistem.";
+  }
+  return "Terjadi kesalahan: " + (error?.message || "Kesalahan sistem tidak diketahui.");
+};
+
+function xmur3(str: string) {
+    let h = 1779033703 ^ str.length;
+    for (let i = 0; i < str.length; i++) {
+        h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+        h = h << 13 | h >>> 19;
+    }
+    return function() {
+        h = Math.imul(h ^ (h >>> 16), 2246822507);
+        h = Math.imul(h ^ (h >>> 13), 3266489909);
+        return (h ^= h >>> 16) >>> 0;
+    }
+}
+
+function mulberry32(a: number) {
+    return function() {
+      let t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+}
+
 export const useInitSession = () => {
   const queryClient = useQueryClient();
 
@@ -120,20 +159,43 @@ export const useCBTData = (sessionId: string, paketId: string) => {
         });
 
       if (paketData?.acak_soal) {
-        // Seeded shuffle based on sessionId to keep order consistent per session
-        let seed = 0;
-        for (let i = 0; i < sessionId.length; i++) seed += sessionId.charCodeAt(i);
-        const seededRandom = () => {
-          const x = Math.sin(seed++) * 10000;
-          return x - Math.floor(x);
-        };
+        const seedGen = xmur3(sessionId);
+        const rand = mulberry32(seedGen());
         
         let currentIndex = soalList.length;
         while (currentIndex !== 0) {
-          const randomIndex = Math.floor(seededRandom() * currentIndex);
+          const randomIndex = Math.floor(rand() * currentIndex);
           currentIndex--;
           [soalList[currentIndex], soalList[randomIndex]] = [soalList[randomIndex], soalList[currentIndex]];
         }
+      }
+
+      if (paketData?.acak_opsi) {
+        soalList = soalList.map(soal => {
+           if (!soal.opsi_a && !soal.opsi_b) return soal;
+           
+           const seedGen = xmur3(sessionId + soal.id);
+           const rand = mulberry32(seedGen());
+           
+           const opts = [
+             { key: "A", val: soal.opsi_a },
+             { key: "B", val: soal.opsi_b },
+             { key: "C", val: soal.opsi_c },
+             { key: "D", val: soal.opsi_d },
+           ].filter(o => o.val !== null && o.val !== undefined && o.val !== "");
+           
+           for (let i = opts.length - 1; i > 0; i--) {
+               const j = Math.floor(rand() * (i + 1));
+               [opts[i], opts[j]] = [opts[j], opts[i]];
+           }
+           
+           const newSoal = { ...soal, opsi_a: null, opsi_b: null, opsi_c: null, opsi_d: null };
+           if (opts[0]) newSoal.opsi_a = opts[0].val;
+           if (opts[1]) newSoal.opsi_b = opts[1].val;
+           if (opts[2]) newSoal.opsi_c = opts[2].val;
+           if (opts[3]) newSoal.opsi_d = opts[3].val;
+           return newSoal as SoalCBT;
+        });
       }
 
       // Ambil jawaban tersimpan
@@ -183,10 +245,18 @@ export const useSubmitAsesmen = () => {
       // 1. Fetch Soal
       const { data: relasi, error: relasiError } = await supabase
         .from('paket_asesmen_soal')
-        .select('soal:soal_id (id, tipe_soal, jawaban_benar)')
+        .select('soal:soal_id (id, tipe_soal, jawaban_benar, opsi_a, opsi_b, opsi_c, opsi_d)')
         .eq('paket_id', paketId);
 
       if (relasiError) throw new Error(relasiError.message);
+
+      const { data: paketData } = await supabase
+        .from('paket_asesmen')
+        .select('acak_opsi')
+        .eq('id', paketId)
+        .single();
+      
+      const acakOpsi = paketData?.acak_opsi;
 
       const soalList = (relasi.map(r => r.soal) as unknown as SoalCBT[])
         .filter((soal) => {
@@ -203,7 +273,28 @@ export const useSubmitAsesmen = () => {
 
       for (const soal of soalList) {
         const jawabanUser = (finalAnswers[soal.id] || "").trim();
-        const jawabanBenar = soal.jawaban_benar?.trim() || "";
+        let jawabanBenar = soal.jawaban_benar?.trim() || "";
+
+        if (acakOpsi) {
+           const seedGen = xmur3(sessionId + soal.id);
+           const rand = mulberry32(seedGen());
+           const opts = [
+             { key: "A", val: soal.opsi_a },
+             { key: "B", val: soal.opsi_b },
+             { key: "C", val: soal.opsi_c },
+             { key: "D", val: soal.opsi_d },
+           ].filter(o => o.val !== null && o.val !== undefined && o.val !== "");
+           
+           for (let i = opts.length - 1; i > 0; i--) {
+               const j = Math.floor(rand() * (i + 1));
+               [opts[i], opts[j]] = [opts[j], opts[i]];
+           }
+           
+           const newCorrectIndex = opts.findIndex(o => o.key.toLowerCase() === jawabanBenar.toLowerCase());
+           if (newCorrectIndex !== -1) {
+              jawabanBenar = ["A", "B", "C", "D"][newCorrectIndex];
+           }
+        }
 
         let isBenar = false;
         let skor = 0;
