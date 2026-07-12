@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import type { PaketAsesmen, PaketAsesmenInput } from "@/types/paketAsesmen";
 import { Badge } from "@/components/ui/badge";
+import { useBankSoalMetadata } from "@/hooks/useBankSoal";
 
 const formSchema = z.object({
   nama_paket: z.string().min(1, "Nama Paket wajib diisi"),
@@ -35,22 +36,10 @@ interface PaketAsesmenFormProps {
   onCancel: () => void;
 }
 
-const kompetensiOptions = [
-  "Tahsin", 
-  "Tahfizh", 
-  "Profesionalitas"
-];
 
-const subAspekOptions = [
-  "Iqra & Dasar Membaca",
-  "Metodologi Tahfizh",
-  "Komunikasi & Kerja Sama Orang Tua",
-  "Etika & Integritas",
-  "Pengembangan Diri",
-  "Tajwid"
-];
 
 export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel }: PaketAsesmenFormProps) {
+  const { data: metadata } = useBankSoalMetadata();
   const form = useForm<PaketAsesmenFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData
@@ -72,7 +61,7 @@ export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel
           jumlah_soal: 50,
           acak_soal: true,
           acak_opsi: false,
-          kategori_kompetensi: [...kompetensiOptions, ...subAspekOptions],
+          kategori_kompetensi: [],
         },
   });
 
@@ -280,7 +269,7 @@ export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel
         <div className="space-y-3">
           <FormLabel>Kategori Kompetensi yang Diujikan</FormLabel>
           <div className="flex flex-wrap gap-2">
-            {kompetensiOptions.map((item) => {
+            {(metadata?.categories || []).map((item) => {
               const checked = form.watch("kategori_kompetensi").includes(item);
               return (
                 <Badge
@@ -304,7 +293,7 @@ export function PaketAsesmenForm({ initialData, onSubmit, isSubmitting, onCancel
         <div className="space-y-3">
           <FormLabel>Sub Aspek Kompetensi</FormLabel>
           <div className="flex flex-wrap gap-2">
-            {subAspekOptions.map((item) => {
+            {(metadata?.subAspeks || []).map((item) => {
               const checked = form.watch("kategori_kompetensi").includes(item);
               return (
                 <Badge

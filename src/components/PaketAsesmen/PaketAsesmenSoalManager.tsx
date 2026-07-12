@@ -9,6 +9,7 @@ import { useGenerateSoalOtomatis } from "@/hooks/usePaketAsesmen";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { PaketAsesmen } from "@/types/paketAsesmen";
+import { useBankSoalMetadata } from "@/hooks/useBankSoal";
 
 interface PaketAsesmenSoalManagerProps {
   paket: PaketAsesmen;
@@ -21,6 +22,7 @@ export function PaketAsesmenSoalManager({ paket, onBack }: PaketAsesmenSoalManag
   const [tipeSoal, setTipeSoal] = useState("all");
   const [jumlahSoal, setJumlahSoal] = useState(paket.jumlah_soal);
 
+  const { data: metadata } = useBankSoalMetadata();
   const generateMutation = useGenerateSoalOtomatis();
   const { data: bankSoalStats } = useQuery({
     queryKey: ['bank-soal-stats', paket.id],
@@ -90,9 +92,9 @@ export function PaketAsesmenSoalManager({ paket, onBack }: PaketAsesmenSoalManag
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua Kategori</SelectItem>
-                <SelectItem value="Tahsin">Tahsin</SelectItem>
-                <SelectItem value="Tahfizh">Tahfizh</SelectItem>
-                <SelectItem value="Profesionalitas">Profesionalitas</SelectItem>
+                {(metadata?.categories || []).map(c => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
