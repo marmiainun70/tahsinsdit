@@ -284,7 +284,7 @@ export default function ManageAccounts() {
   };
 
   if (!isAdmin) {
-    return <div className="rounded-2xl border border-border bg-card p-6">Halaman ini hanya dapat diakses koordinator.</div>;
+    return <div className="rounded-2xl border border-border bg-card p-6">Halaman ini hanya dapat diakses admin.</div>;
   }
 
   if (isLoading) {

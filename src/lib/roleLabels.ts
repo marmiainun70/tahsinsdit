@@ -1,7 +1,7 @@
 export const getRoleLabel = (role: string | null | undefined) => {
   if (!role) return "-";
   const normalizedRole = role.trim().toLowerCase();
-  if (normalizedRole === "admin") return "Koordinator";
+  if (normalizedRole === "admin") return "Admin";
   if (normalizedRole === "parent") return "Orang Tua";
   if (isTeacherRole(normalizedRole)) return "Guru Tahsin & Tahfizh";
   return role;
