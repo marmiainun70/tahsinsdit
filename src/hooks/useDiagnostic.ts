@@ -10,14 +10,12 @@ export const useDiagnosticStudents = ({
   search,
   kelas,
   rombel,
-  statusSiswa = "aktif",
 }: {
   page: number;
   pageSize: number;
   search: string;
   kelas: string;
   rombel: string;
-  statusSiswa?: string;
 }) => {
   const { user, profile } = useAuth();
   const { data: permissions } = useRolePermissions();
@@ -26,7 +24,7 @@ export const useDiagnosticStudents = ({
     permissions?.find(p => p.feature_key === "evaluasi_diagnostik")?.teacher_access === true;
 
   return useQuery({
-    queryKey: ["diagnostic-students", { page, pageSize, search, kelas, rombel, statusSiswa, userId: user?.id, isEvaluator }],
+    queryKey: ["diagnostic-students", { page, pageSize, search, kelas, rombel, userId: user?.id, isEvaluator }],
     queryFn: async () => {
       // If not evaluator, they shouldn't access this
       if (!isEvaluator) {
@@ -35,8 +33,7 @@ export const useDiagnosticStudents = ({
 
       let query = supabase
         .from("students")
-        .select("*", { count: "exact" })
-        .eq("status", statusSiswa);
+        .select("*", { count: "exact" });
 
       if (search.trim()) {
         const searchTerm = `%${search.trim()}%`;
