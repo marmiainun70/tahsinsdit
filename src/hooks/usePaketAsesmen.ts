@@ -52,9 +52,14 @@ export const useCreatePaketAsesmen = () => {
 
   return useMutation({
     mutationFn: async (input: PaketAsesmenInput) => {
+      const payload = {
+        ...input,
+        id: crypto.randomUUID(),
+      };
+      
       const { data, error } = await supabase
         .from('paket_asesmen')
-        .insert([input])
+        .insert([payload])
         .select()
         .single();
 
