@@ -170,8 +170,14 @@ export const useBankSoalMetadata = () => {
         throw new Error(error.message);
       }
 
-      const categories = Array.from(new Set(data.map(d => d.kategori))).filter(Boolean).sort();
-      const subAspeks = Array.from(new Set(data.map(d => d.sub_aspek))).filter(Boolean).sort();
+      const dbCategories = data.map(d => d.kategori).filter(Boolean);
+      const dbSubAspeks = data.map(d => d.sub_aspek).filter(Boolean);
+
+      const baseCategories = ["Tahsin Dasar", "Tahsin Lanjutan", "Tahfizh", "Profesionalisme Guru", "Pedagogik", "Sosial & Kepribadian", "Makharijul Huruf"];
+      const baseSubAspeks = ["Makhraj", "Sifat", "Tajwid"];
+
+      const categories = Array.from(new Set([...baseCategories, ...dbCategories])).sort();
+      const subAspeks = Array.from(new Set([...baseSubAspeks, ...dbSubAspeks])).sort();
 
       return {
         categories,
