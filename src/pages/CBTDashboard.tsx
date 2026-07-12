@@ -63,7 +63,7 @@ export default function CBTDashboard() {
                   <CardHeader>
                     <Badge variant="secondary" className="w-fit">Data tidak lengkap</Badge>
                     <CardTitle className="text-xl">Paket asesmen tidak ditemukan</CardTitle>
-                    <CardDescription>Silakan hubungi admin untuk memperbaiki relasi paket asesmen ini.</CardDescription>
+                    <CardDescription>Silakan hubungi koordinator untuk memperbaiki relasi paket asesmen ini.</CardDescription>
                   </CardHeader>
                 </Card>
               );
@@ -128,7 +128,7 @@ export default function CBTDashboard() {
                 </CardFooter>
                 {!isAktif && !isSelesai && (
                   <div className="px-6 pb-4 text-xs text-center text-amber-600">
-                    Paket asesmen belum diaktifkan oleh Admin.
+                    Paket asesmen belum diaktifkan oleh Koordinator.
                   </div>
                 )}
               </Card>

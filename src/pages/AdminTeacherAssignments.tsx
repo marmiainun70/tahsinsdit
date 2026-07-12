@@ -113,11 +113,11 @@ const getTeacherMeta = (teacher: Pick<TeacherAccount, "email" | "username" | "ro
 
 const getStudentClassLabel = (student: Pick<Student, "kelas" | "rombel">) => `Kelas ${student.kelas}${student.rombel}`;
 
-const getFriendlyError = (error: Error, fallback: string) => {
+const getFriendlyError = (error: Error, fallback = "Terjadi kesalahan saat memproses permintaan.") => {
   const message = error.message.toLowerCase();
   if (message.includes("sudah memiliki guru")) return "Siswa yang dipilih sudah dibina guru lain.";
   if (message.includes("guru tidak ditemukan")) return "Akun guru yang dipilih belum aktif atau belum disetujui.";
-  if (message.includes("hanya admin")) return "Aksi ini hanya dapat dilakukan oleh admin.";
+  if (message.includes("hanya admin") || message.includes("hanya koordinator")) return "Aksi ini hanya dapat dilakukan oleh koordinator.";
   if (message.includes("duplicate")) return "Sebagian data sudah lebih dulu diperbarui. Silakan muat ulang dan coba lagi.";
   return fallback;
 };
@@ -261,7 +261,7 @@ export default function AdminTeacherAssignments() {
     mutationFn: async (requestId: string) => {
       const { error } = await supabase.rpc("reject_teacher_student_request", {
         p_request_id: requestId,
-        p_note: "Ditolak admin.",
+        p_note: "Ditolak koordinator.",
       });
       if (error) throw error;
     },
@@ -527,7 +527,7 @@ export default function AdminTeacherAssignments() {
   }, [addDialogOpen]);
 
   if (!isAdmin) {
-    return <div className="rounded-2xl border border-border bg-card p-6">Halaman ini hanya dapat diakses admin.</div>;
+    return <div className="rounded-2xl border border-border bg-card p-6">Halaman ini hanya dapat diakses koordinator.</div>;
   }
 
   const totalTeachers = teacherSummaries.length;

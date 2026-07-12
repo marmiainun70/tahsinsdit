@@ -80,7 +80,7 @@ const InstitutionSettingsPage = () => {
     return (
       <Card>
         <CardContent className="p-8 text-center text-muted-foreground">
-          Halaman ini hanya bisa diakses oleh Admin.
+          Halaman ini hanya bisa diakses oleh Koordinator.
         </CardContent>
       </Card>
     );

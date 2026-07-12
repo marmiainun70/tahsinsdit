@@ -150,7 +150,7 @@ const KenaikanTahunAjaran = () => {
         <ArrowUpCircle className="w-12 h-12 text-muted-foreground/40" />
         <h2 className="text-lg font-semibold text-foreground">Akses Terbatas</h2>
         <p className="text-sm text-muted-foreground">
-          Halaman ini hanya dapat diakses oleh Administrator.
+          Halaman ini hanya dapat diakses oleh Koordinator.
         </p>
         <Button variant="outline" onClick={() => navigate("/")}>
           Kembali ke Dashboard

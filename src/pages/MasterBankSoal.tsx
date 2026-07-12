@@ -28,7 +28,7 @@ export default function MasterBankSoal() {
         <CardHeader>
           <CardTitle>Akses Terbatas</CardTitle>
           <CardDescription>
-            Pengelolaan bank soal hanya untuk admin dan koordinator. Guru cukup membuka CBT Dashboard untuk mengerjakan soal.
+            Pengelolaan bank soal hanya untuk koordinator. Guru cukup membuka CBT Dashboard untuk mengerjakan soal.
           </CardDescription>
         </CardHeader>
         <CardContent>

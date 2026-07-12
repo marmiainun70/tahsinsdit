@@ -54,12 +54,12 @@ const AuthContext = createContext<AuthContextType>({
 
 // ─── Pesan Status ─────────────────────────────────────────────────────────────
 const STATUS_MESSAGES: Record<Exclude<AccountStatus, "approved">, string> = {
-  pending: "Akun Anda sedang menunggu persetujuan admin.",
-  rejected: "Akun Anda telah ditolak. Hubungi admin.",
-  inactive: "Akun Anda dinonaktifkan. Hubungi admin.",
+  pending: "Akun Anda sedang menunggu persetujuan koordinator.",
+  rejected: "Akun Anda telah ditolak. Hubungi koordinator.",
+  inactive: "Akun Anda dinonaktifkan. Hubungi koordinator.",
 };
 
-const PROFILE_MISSING_MESSAGE = "Profil akun tidak ditemukan. Hubungi admin.";
+const PROFILE_MISSING_MESSAGE = "Profil akun tidak ditemukan. Hubungi koordinator.";
 
 // ─── Helper: ambil pesan dari status ──────────────────────────────────────────
 function getStatusMessage(status: AccountStatus | null): string {
