@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useBankSoal, useDeleteBankSoal, useDeleteAllBankSoal } from "@/hooks/useBankSoal";
+import { useBankSoal, useDeleteBankSoal, useDeleteAllBankSoal, useBankSoalMetadata } from "@/hooks/useBankSoal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -22,6 +22,7 @@ export function BankSoalList({ onEdit, onCreate, onImport }: BankSoalListProps) 
   const [searchInput, setSearchInput] = useState("");
 
   const { data, isLoading, isError, error } = useBankSoal(filters, page, pageSize);
+  const { data: metadata } = useBankSoalMetadata();
   const deleteMutation = useDeleteBankSoal();
   const deleteAllMutation = useDeleteAllBankSoal();
 
@@ -70,9 +71,21 @@ export function BankSoalList({ onEdit, onCreate, onImport }: BankSoalListProps) 
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Semua Kategori</SelectItem>
-              <SelectItem value="Tahsin">Tahsin</SelectItem>
-              <SelectItem value="Tahfizh">Tahfizh</SelectItem>
-              <SelectItem value="Profesionalitas">Profesionalitas</SelectItem>
+              {metadata?.categories?.map(c => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select onValueChange={(val) => handleFilterChange('sub_aspek', val)}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Sub Aspek" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Sub Aspek</SelectItem>
+              {metadata?.subAspeks?.map(s => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
 

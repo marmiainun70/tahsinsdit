@@ -158,3 +158,26 @@ export const useDeleteAllBankSoal = () => {
     },
   });
 };
+export const useBankSoalMetadata = () => {
+  return useQuery({
+    queryKey: ['bank-soal-metadata'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('bank_soal')
+        .select('kategori, sub_aspek');
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const categories = Array.from(new Set(data.map(d => d.kategori))).filter(Boolean).sort();
+      const subAspeks = Array.from(new Set(data.map(d => d.sub_aspek))).filter(Boolean).sort();
+
+      return {
+        categories,
+        subAspeks
+      };
+    },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+  });
+};

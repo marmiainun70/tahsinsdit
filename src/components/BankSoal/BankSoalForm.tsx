@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react";
 import type { BankSoal, BankSoalInput } from "@/types/bankSoal";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useBankSoalMetadata } from "@/hooks/useBankSoal";
 
 const formSchema = z.object({
   kategori: z.string().min(1, "Kategori wajib diisi"),
@@ -38,6 +39,7 @@ interface BankSoalFormProps {
 }
 
 export function BankSoalForm({ initialData, onSubmit, isSubmitting, onCancel }: BankSoalFormProps) {
+  const { data: metadata } = useBankSoalMetadata();
   const form = useForm<BankSoalFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: initialData
@@ -89,19 +91,14 @@ export function BankSoalForm({ initialData, onSubmit, isSubmitting, onCancel }: 
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Kategori</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Tahsin Dasar">Tahsin Dasar</SelectItem>
-                    <SelectItem value="Tahsin Lanjutan">Tahsin Lanjutan</SelectItem>
-                    <SelectItem value="Tahfizh">Tahfizh</SelectItem>
-                    <SelectItem value="Profesionalisme Guru">Profesionalisme Guru</SelectItem>
-                    <SelectItem value="Pedagogik">Pedagogik</SelectItem>
-                    <SelectItem value="Sosial & Kepribadian">Sosial & Kepribadian</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <div className="relative">
+                    <Input list="kategori-list" placeholder="Contoh: Tahsin, Tahfizh, Makharijul Huruf" {...field} />
+                    <datalist id="kategori-list">
+                      {metadata?.categories?.map(c => <option key={c} value={c} />)}
+                    </datalist>
+                  </div>
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -114,7 +111,12 @@ export function BankSoalForm({ initialData, onSubmit, isSubmitting, onCancel }: 
               <FormItem>
                 <FormLabel>Sub Aspek</FormLabel>
                 <FormControl>
-                  <Input placeholder="Contoh: Makhraj, Sifat, Tajwid" {...field} />
+                  <div className="relative">
+                    <Input list="sub-aspek-list" placeholder="Contoh: Makhraj, Sifat, Tajwid" {...field} />
+                    <datalist id="sub-aspek-list">
+                      {metadata?.subAspeks?.map(s => <option key={s} value={s} />)}
+                    </datalist>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
