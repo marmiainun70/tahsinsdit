@@ -38,6 +38,8 @@ import MasterBankSoal from "@/pages/MasterBankSoal";
 import MasterPaketAsesmen from "@/pages/MasterPaketAsesmen";
 import CBTDashboard from "@/pages/CBTDashboard";
 import CBTRoom from "@/pages/CBTRoom";
+import CBTResultDetails from "@/pages/CBTResultDetails";
+import DiagnosticEvaluation from "@/pages/DiagnosticEvaluation";
 
 import NotFound from "@/pages/NotFound";
 import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotification";
@@ -104,6 +106,7 @@ const AppRoutes = () => {
       <Route path="/student/:studentId" element={<ProtectedRoute><StudentProgress /></ProtectedRoute>} />
       <Route path="/monitoring" element={<ProtectedRoute><Monitoring /></ProtectedRoute>} />
       <Route path="/tahsin/:studentId" element={<ProtectedRoute><TahsinAssessment /></ProtectedRoute>} />
+      <Route path="/evaluasi-diagnostik" element={<ProtectedRoute><DiagnosticEvaluation /></ProtectedRoute>} />
       <Route path="/report/class" element={<ProtectedRoute><ClassReport /></ProtectedRoute>} />
       <Route path="/jadwal-ujian" element={<ProtectedRoute><ExamSchedule /></ProtectedRoute>} />
       <Route path="/jadwal-ujian/:scheduleId" element={<ProtectedRoute><ExamScheduleDetail /></ProtectedRoute>} />
@@ -123,6 +126,7 @@ const AppRoutes = () => {
       {/* Rute CBT */}
       <Route path="/cbt-dashboard" element={<ProtectedRoute><CBTDashboard /></ProtectedRoute>} />
       <Route path="/cbt/:sessionId" element={<ProtectedRoute><CBTRoom /></ProtectedRoute>} />
+      <Route path="/cbt/hasil/:pesertaId" element={<ProtectedRoute><CBTResultDetails /></ProtectedRoute>} />
 
       <Route path="/kalender-akademik" element={<ProtectedRoute><KalenderAkademik /></ProtectedRoute>} />
       <Route path="/kalender-akademik/menunggu-konfirmasi" element={<ProtectedRoute><KalenderMenungguKonfirmasi /></ProtectedRoute>} />

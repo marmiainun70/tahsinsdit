@@ -15,18 +15,20 @@ export default function MasterBankSoal() {
   const [view, setView] = useState<"list" | "create" | "edit">("list");
   const [selectedSoal, setSelectedSoal] = useState<BankSoal | null>(null);
   const [showImport, setShowImport] = useState(false);
-  const isAdmin = profile?.role?.trim().toLowerCase() === "admin";
+  const isDiagnosticAdmin = profile?.role?.trim().toLowerCase() === "admin" ||
+                            profile?.role?.trim().toLowerCase() === "koordinator" ||
+                            profile?.role?.trim().toLowerCase() === "coordinator";
 
   const createMutation = useCreateBankSoal();
   const updateMutation = useUpdateBankSoal();
 
-  if (!isAdmin) {
+  if (!isDiagnosticAdmin) {
     return (
       <Card className="mx-auto max-w-2xl">
         <CardHeader>
-          <CardTitle>Akses admin saja</CardTitle>
+          <CardTitle>Akses Terbatas</CardTitle>
           <CardDescription>
-            Pengelolaan bank soal hanya untuk admin. Guru cukup membuka CBT Dashboard untuk mengerjakan soal.
+            Pengelolaan bank soal hanya untuk admin dan koordinator. Guru cukup membuka CBT Dashboard untuk mengerjakan soal.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -2,7 +2,7 @@ import { useCBTDashboard, useInitSession } from "@/hooks/useCBT";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, MonitorPlay, CheckCircle2, Clock } from "lucide-react";
+import { Loader2, MonitorPlay, CheckCircle2, Clock, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
@@ -120,8 +120,9 @@ export default function CBTDashboard() {
                       {peserta.status === "Belum Mulai" ? "Mulai Asesmen" : "Lanjutkan Asesmen"}
                     </Button>
                   ) : (
-                    <Button variant="secondary" className="w-full" disabled>
-                      Selesai
+                    <Button variant="outline" className="w-full gap-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700" onClick={() => navigate(`/cbt/hasil/${peserta.id}`)}>
+                      <FileText className="w-4 h-4" />
+                      Lihat Rincian Hasil
                     </Button>
                   )}
                 </CardFooter>

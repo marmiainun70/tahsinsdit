@@ -15,18 +15,20 @@ export default function MasterPaketAsesmen() {
   const { profile } = useAuth();
   const [view, setView] = useState<"list" | "create" | "edit" | "manage-soal" | "manage-peserta">("list");
   const [selectedPaket, setSelectedPaket] = useState<PaketAsesmen | null>(null);
-  const isAdmin = profile?.role?.trim().toLowerCase() === "admin";
+  const isDiagnosticAdmin = profile?.role?.trim().toLowerCase() === "admin" ||
+                            profile?.role?.trim().toLowerCase() === "koordinator" ||
+                            profile?.role?.trim().toLowerCase() === "coordinator";
 
   const createMutation = useCreatePaketAsesmen();
   const updateMutation = useUpdatePaketAsesmen();
 
-  if (!isAdmin) {
+  if (!isDiagnosticAdmin) {
     return (
       <Card className="mx-auto max-w-2xl">
         <CardHeader>
-          <CardTitle>Akses admin saja</CardTitle>
+          <CardTitle>Akses Terbatas</CardTitle>
           <CardDescription>
-            Pengelolaan paket dan peserta asesmen hanya untuk admin. Guru cukup membuka CBT Dashboard untuk mengerjakan soal.
+            Pengelolaan paket dan peserta asesmen hanya untuk admin dan koordinator. Guru cukup membuka CBT Dashboard untuk mengerjakan soal.
           </CardDescription>
         </CardHeader>
         <CardContent>

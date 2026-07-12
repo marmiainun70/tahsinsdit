@@ -364,3 +364,135 @@ export const useSubmitAsesmen = () => {
     },
   });
 };
+
+export type CBTResultDetailData = {
+  soal: SoalCBT;
+  jawabanUserText: string | null;
+  jawabanBenarText: string | null;
+  isBenar: boolean;
+  skor: number;
+  jawabanUserKey: string | null;
+  jawabanBenarKey: string | null;
+};
+
+export const useCBTResultDetails = (pesertaId: string) => {
+  return useQuery({
+    queryKey: ['cbt-result-details', pesertaId],
+    queryFn: async () => {
+      const { data: peserta, error: pesertaError } = await supabase
+        .from('peserta_asesmen')
+        .select(`
+          id, paket_id, status,
+          paket:paket_asesmen(id, nama_paket, acak_opsi, acak_soal)
+        `)
+        .eq('id', pesertaId)
+        .single();
+        
+      if (pesertaError) throw new Error(pesertaError.message);
+      
+      const { data: session, error: sessionError } = await supabase
+        .from('asesmen_session')
+        .select('*')
+        .eq('peserta_id', pesertaId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+        
+      if (sessionError) throw new Error(sessionError.message);
+      if (!session) throw new Error("Sesi ujian tidak ditemukan.");
+      
+      const sessionId = session.id;
+      
+      const { data: relasi, error: relasiError } = await supabase
+        .from('paket_asesmen_soal')
+        .select('soal:soal_id (id, tipe_soal, soal, jawaban_benar, opsi_a, opsi_b, opsi_c, opsi_d)')
+        .eq('paket_id', peserta.paket_id);
+        
+      if (relasiError) throw new Error(relasiError.message);
+      
+      const soalList = (relasi.map(r => r.soal) as unknown as SoalCBT[])
+        .filter((soal) => {
+          const tipe = soal.tipe_soal?.toLowerCase() || "";
+          return !tipe.includes("reflektif");
+        });
+        
+      const { data: jawabanData, error: jawabanError } = await supabase
+        .from('asesmen_jawaban')
+        .select('*')
+        .eq('session_id', sessionId);
+        
+      if (jawabanError) throw new Error(jawabanError.message);
+      
+      const acakOpsi = peserta.paket?.acak_opsi;
+      const details: CBTResultDetailData[] = [];
+      
+      for (const soal of soalList) {
+        const jwb = jawabanData?.find(j => j.soal_id === soal.id);
+        const jawabanUser = jwb?.jawaban || null;
+        const jawabanBenarAsli = soal.jawaban_benar?.trim() || "";
+        
+        let jawabanUserText = null;
+        let jawabanBenarText = null;
+        let jawabanBenarKey = jawabanBenarAsli;
+        
+        if (acakOpsi) {
+           const seedGen = xmur3(sessionId + soal.id);
+           const rand = mulberry32(seedGen());
+           const opts = [
+             { key: "A", val: soal.opsi_a },
+             { key: "B", val: soal.opsi_b },
+             { key: "C", val: soal.opsi_c },
+             { key: "D", val: soal.opsi_d },
+           ].filter(o => o.val !== null && o.val !== undefined && o.val !== "");
+           
+           for (let i = opts.length - 1; i > 0; i--) {
+               const j = Math.floor(rand() * (i + 1));
+               [opts[i], opts[j]] = [opts[j], opts[i]];
+           }
+           
+           if (jawabanUser) {
+             const userOptIndex = ["A", "B", "C", "D"].indexOf(jawabanUser.toUpperCase());
+             if (userOptIndex !== -1 && opts[userOptIndex]) {
+               jawabanUserText = opts[userOptIndex].val;
+             }
+           }
+           
+           const newCorrectIndex = opts.findIndex(o => o.key.toLowerCase() === jawabanBenarAsli.toLowerCase());
+           if (newCorrectIndex !== -1) {
+              jawabanBenarKey = ["A", "B", "C", "D"][newCorrectIndex];
+              jawabanBenarText = opts[newCorrectIndex].val;
+           }
+        } else {
+           if (jawabanUser) {
+             if (jawabanUser.toUpperCase() === "A") jawabanUserText = soal.opsi_a;
+             if (jawabanUser.toUpperCase() === "B") jawabanUserText = soal.opsi_b;
+             if (jawabanUser.toUpperCase() === "C") jawabanUserText = soal.opsi_c;
+             if (jawabanUser.toUpperCase() === "D") jawabanUserText = soal.opsi_d;
+           }
+           if (jawabanBenarAsli.toUpperCase() === "A") jawabanBenarText = soal.opsi_a;
+           if (jawabanBenarAsli.toUpperCase() === "B") jawabanBenarText = soal.opsi_b;
+           if (jawabanBenarAsli.toUpperCase() === "C") jawabanBenarText = soal.opsi_c;
+           if (jawabanBenarAsli.toUpperCase() === "D") jawabanBenarText = soal.opsi_d;
+        }
+        
+        details.push({
+          soal,
+          jawabanUserText,
+          jawabanBenarText,
+          isBenar: jwb?.benar || false,
+          skor: jwb?.skor || 0,
+          jawabanUserKey: jawabanUser,
+          jawabanBenarKey: jawabanBenarKey
+        });
+      }
+      
+      return {
+        session,
+        details,
+        paket: peserta.paket
+      };
+    },
+    enabled: !!pesertaId
+  });
+};
+

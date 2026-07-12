@@ -24,6 +24,7 @@ const navItems = [
   { featureKey: "dashboard", to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { featureKey: "kelola_siswa", to: "/kelola-siswa", icon: Users, label: "Kelola Siswa" },
   { featureKey: "murid_binaan", to: "/murid-binaan", icon: UserCheck, label: "Murid Binaan" },
+  { featureKey: "evaluasi_diagnostik", to: "/evaluasi-diagnostik", icon: ClipboardList, label: "Evaluasi Diagnostik" },
   { featureKey: "penugasan_guru", to: "/penugasan-guru", icon: UserCog, label: "Penugasan Guru" },
   { featureKey: "profil_kompetensi_guru", to: "/profil-diagnostik-guru", icon: BookOpen, label: "Profil Kompetensi Guru" },
   { featureKey: "kalender_akademik", to: "/kalender-akademik", icon: CalendarDays, label: "Kalender Akademik" },
@@ -210,6 +211,7 @@ const Breadcrumb = ({ pathname }: { pathname: string }) => {
   }
   if (pathname.startsWith("/student/")) return <h2 className="font-semibold text-foreground text-base">Progres Siswa</h2>;
   if (pathname.startsWith("/tahsin/")) return <h2 className="font-semibold text-foreground text-base">Penilaian Tahsin</h2>;
+  if (pathname === "/evaluasi-diagnostik") return <h2 className="font-semibold text-foreground text-base">Evaluasi Diagnostik</h2>;
   return <h2 className="font-semibold text-foreground text-base">Sistem Monitoring</h2>;
 };
 

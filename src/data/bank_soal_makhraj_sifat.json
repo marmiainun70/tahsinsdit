@@ -1,0 +1,1117 @@
+{
+  "metadata": {
+    "nama_bank_soal": "Bank Soal Makhraj & Sifat Huruf (Alif - Ya)",
+    "total_soal": 58,
+    "cakupan": "29 huruf hijaiyah, masing-masing 1 soal makhraj + 1 soal sifat",
+    "distribusi_kunci_jawaban": {
+      "A": 15,
+      "B": 15,
+      "C": 14,
+      "D": 14
+    }
+  },
+  "soal": [
+    {
+      "uuid": "8173cabd-50a9-4e00-9727-35288e41f0e8",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Alif (ا)",
+      "id_soal": "MSH-001",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca huruf alif yang berharakat sukun di tengah kata seolah ada hentakan/penekanan tertentu, padahal alif seharusnya mengalir tanpa titik tekan di mulut atau tenggorokan mana pun. Bagaimana guru menjelaskan hal ini?",
+      "pilihan": {
+        "A": "Minta murid mengucapkan alif dengan menutup sedikit rongga tenggorokan agar bunyinya lebih tegas dan mudah dibedakan dari hamzah",
+        "B": "Jelaskan bahwa alif sukun harus selalu diberi tekanan ringan di ujung lidah agar terdengar jelas dan tidak tertukar huruf lain",
+        "C": "Jelaskan bahwa alif sukun sebenarnya keluar dari pangkal tenggorokan seperti hamzah, sehingga hentakan tersebut sudah benar dan tidak perlu dikoreksi",
+        "D": "Alif termasuk huruf mad yang tidak memiliki titik keluar tertentu di rongga mulut/tenggorokan, bunyinya mengalir bebas lewat rongga, tidak boleh dihentak seperti huruf konsonan lain"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Alif (ا)"
+    },
+    {
+      "uuid": "ba8f2cac-cd3e-463a-a497-6d16da7742ae",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Alif vs Hamzah",
+      "id_soal": "MSH-002",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Seorang murid selalu memperlakukan alif seperti hamzah — setiap ada alif, ia mengucapkannya dengan hentakan glotal tegas. Apa penjelasan paling tepat untuk meluruskannya?",
+      "pilihan": {
+        "A": "Jelaskan bahwa perbedaan alif-hamzah hanya berlaku dalam penulisan, bukan pengucapan, sehingga keduanya boleh dibaca sama",
+        "B": "Jelaskan bahwa alif dan hamzah adalah huruf yang sama persis, sehingga cara membaca murid tersebut sudah benar",
+        "C": "Alif dan hamzah memang berbeda huruf, hamzah punya makhraj tegas di pangkal tenggorokan dengan hentakan, sedangkan alif murni huruf mad yang mengalir tanpa hentakan sama sekali",
+        "D": "Minta murid berhenti membedakan alif dan hamzah karena topik ini terlalu rumit untuk tahap belajar saat ini, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Alif vs Hamzah"
+    },
+    {
+      "uuid": "26f2b237-0628-4430-ab0b-5eb18a02cfda",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Ba (ب)",
+      "id_soal": "MSH-003",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan ba dengan menyentuhkan bibir bawah ke gigi atas (posisi fa), bukan mempertemukan dua bibir. Bunyinya jadi samar antara ba dan fa. Koreksinya?",
+      "pilihan": {
+        "A": "Contohkan posisi benar: pertemukan kedua bibir hingga rapat, lepas dengan hentakan untuk bunyi ba, bandingkan dengan posisi fa yang pakai gigi",
+        "B": "Biarkan saja, selama bunyi akhirnya masih terdengar mirip ba, posisi bibir tidak terlalu berpengaruh pada makna",
+        "C": "Suruh murid mengucapkan ba lebih keras tanpa mengoreksi posisi bibirnya, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "D": "Ganti huruf ba dengan mim untuk sementara karena keduanya dari bibir dan dianggap lebih mudah dibedakan dari fa"
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ba (ب)"
+    },
+    {
+      "uuid": "01e0cf11-9e2c-410d-a042-f4fa48ed331d",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Ba (ب) - Qalqalah",
+      "id_soal": "MSH-004",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca kata berakhiran ba mati saat waqaf, tapi dibaca datar tanpa pantulan sama sekali. Koreksinya?",
+      "pilihan": {
+        "A": "Minta murid mengulang dengan suara lebih keras agar pantulannya muncul otomatis, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Biarkan saja, pantulan hanya berlaku untuk qaf dan tha, bukan ba yang tergolong huruf bibir, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "C": "Ba termasuk salah satu dari lima huruf qalqalah (bersama qaf, tha, jim, dal), sehingga saat mati harus dibaca dengan pantulan ringan",
+        "D": "Jelaskan bahwa pantulan pada ba hanya berlaku di awal kata, bukan saat di akhir kata ketika waqaf, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ba (ب) - Qalqalah"
+    },
+    {
+      "uuid": "bed52f39-4446-4300-971e-5b4a0504bbf4",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Ta (ت)",
+      "id_soal": "MSH-005",
+      "aspek": "Makhraj/Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan ta dengan bunyi sangat tertahan dan berat, mendekati tha, padahal ta seharusnya berhembus ringan. Koreksinya?",
+      "pilihan": {
+        "A": "Suruh murid menahan napas sepenuhnya saat mengucapkan ta agar terdengar lebih tegas, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Biarkan saja, ta dan tha sama persis dalam ketebalan bunyi, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "C": "Ta termasuk huruf hams, hembusan napas ikut keluar, tidak boleh ditekan berat seperti tha yang tebal. contohkan bunyi ta yang ringan berhembus",
+        "D": "Ganti huruf ta dengan dal karena makhrajnya sama dan dianggap lebih mudah, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ta (ت)"
+    },
+    {
+      "uuid": "1b0dae0d-bcb7-41d8-b3b5-12573d08f246",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Ta (ت) bukan Qalqalah",
+      "id_soal": "MSH-006",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru baru menduga ta termasuk huruf qalqalah karena sering dengar muridnya memantulkan ta mati. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Ta termasuk qalqalah hanya jika di akhir kata, tidak jika di tengah, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Benar, ta termasuk qalqalah karena posisinya berdekatan dengan dal dan tha, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "C": "Ta bukan huruf qalqalah. hanya lima huruf tertentu (ba-jim-dal-tha-qaf) yang dipantulkan, sehingga kebiasaan memantulkan ta mati perlu dikoreksi jadi bacaan datar",
+        "D": "Semua huruf dari ujung lidah termasuk qalqalah, termasuk ta, dal, dan tha, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ta (ت) bukan Qalqalah"
+    },
+    {
+      "uuid": "c7f3c9a2-857c-4192-9359-7da517cbdcfb",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Tsa (ث)",
+      "id_soal": "MSH-007",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid menempelkan ujung lidah rapat ke gigi seri (bukan menyentuh ringan) saat mengucapkan tsa, sehingga bunyinya tertahan seperti ta. Koreksinya?",
+      "pilihan": {
+        "A": "Ganti huruf tsa dengan sin karena bunyi desisnya mirip dan dianggap lebih mudah, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "B": "Tsa termasuk huruf rakhawah (mengalir, tidak tertahan) sehingga ujung lidah cukup disentuhkan ringan ke gigi seri atas, membiarkan udara tetap mengalir",
+        "C": "Biarkan saja, tsa dan ta boleh dibaca sama selama maknanya masih bisa dipahami, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Minta murid menekan lidahnya lebih kuat lagi ke gigi seri agar bunyi tsa lebih jelas, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Tsa (ث)"
+    },
+    {
+      "uuid": "3b3fbcf2-7298-4bc8-8b09-f0cbef7ea1c8",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Tsa (ث)",
+      "id_soal": "MSH-008",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru ingin menjelaskan mengapa tsa terdengar berhembus khas dibanding huruf berdekatan seperti dal/ta. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Karena tsa punya tanda baca khusus di mushaf yang mewajibkan hembusan tambahan sebagai simbol kehati-hatian, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "Karena tsa adalah huruf tersulit di antara semua huruf hijaiyah sehingga otomatis berhembus, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "C": "Karena tsa berasal dari makhraj yang sama dengan kha yang juga berhembus akibat posisi di tenggorokan, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "Karena tsa termasuk huruf hams, sehingga pita suara tidak tertahan penuh dan udara ikut keluar bersama bunyinya"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Tsa (ث)"
+    },
+    {
+      "uuid": "4e8b3f9c-c895-4162-9720-882da401cd75",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Jim (ج)",
+      "id_soal": "MSH-009",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan jim dengan posisi lidah terlalu maju ke depan, mendekati dal, sehingga bunyinya kurang jelas sebagai jim. Koreksinya?",
+      "pilihan": {
+        "A": "Biarkan saja, jim dan dal cukup mirip dan tidak terlalu berpengaruh pada makna, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "Ganti huruf jim dengan ya karena sama-sama dari tengah lidah dan dianggap lebih mudah dibedakan dari dal, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Jim keluar dari tengah lidah menyentuh langit-langit tengah (bukan ujung lidah ke gigi seperti dal), contohkan posisi mengangkat bagian tengah lidah",
+        "D": "Minta murid mengucapkan jim lebih keras tanpa mengubah posisi lidahnya, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Jim (ج)"
+    },
+    {
+      "uuid": "a71807bd-7235-45ee-868f-9fbb9f9aa33f",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Jim (ج) Syiddah+Qalqalah",
+      "id_soal": "MSH-010",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid membaca kata berakhiran jim mati saat waqaf dengan bunyi sangat datar dan lembek, tanpa ketegasan maupun pantulan. Koreksinya, mengingat jim punya dua sifat sekaligus?",
+      "pilihan": {
+        "A": "Biarkan saja, jim yang dibaca lembek dan datar masih bisa diterima selama murid tahu artinya, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "Ganti bacaan jim mati tersebut dengan bunyi ya agar lebih mudah diucapkan, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Jim adalah huruf syiddah (tertahan penuh) sekaligus huruf qalqalah, sehingga saat mati harus dibaca dengan ketegasan tertahan disertai pantulan ringan",
+        "D": "Jelaskan bahwa jim hanya perlu dibaca tegas tanpa pantulan, karena sifat qalqalah tidak berlaku untuk huruf tengah lidah"
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Jim (ج) Syiddah+Qalqalah"
+    },
+    {
+      "uuid": "573f3e91-729b-4b46-b2b9-27c6db19c1cc",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Ha kecil (ح)",
+      "id_soal": "MSH-011",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan ha (ح) dengan posisi terlalu dalam di tenggorokan, mendekati kha, sehingga terdengar lebih kasar. Koreksinya?",
+      "pilihan": {
+        "A": "Minta murid menekan tenggorokannya lebih dalam lagi agar bunyi ha lebih tegas, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Biarkan saja, ha dan kha boleh dibaca sama selama maknanya masih bisa dipahami, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "C": "Ganti huruf ha dengan hamzah karena sama-sama dari tenggorokan dan dianggap lebih mudah dibedakan dari kha, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "Ha (ح) keluar dari tengah tenggorokan dengan hembusan halus dan lembut, beda dari kha yang lebih dekat ke mulut dengan bunyi berdesir kasar"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ha kecil (ح)"
+    },
+    {
+      "uuid": "31babc95-0bfb-44fa-a8e4-42d49a2b2edd",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Ha kecil (ح)",
+      "id_soal": "MSH-012",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru ingin menjelaskan mengapa ha (ح) tidak boleh dibaca tertahan penuh seperti jim, meski posisinya berdekatan. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Karena ha (ح) sebenarnya termasuk huruf syiddah sama seperti jim, sehingga seharusnya juga dibaca tertahan penuh",
+        "B": "Karena ha (ح) termasuk huruf hams dan rakhawah, bunyinya mengalir disertai hembusan napas, tidak tertahan penuh seperti jim yang syiddah",
+        "C": "Karena ha (ح) tidak memiliki sifat khusus apa pun, boleh dibaca dengan cara apa saja, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "D": "Karena ha (ح) hanya digunakan pada kata-kata jarang muncul, sifatnya tak perlu terlalu diperhatikan, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ha kecil (ح)"
+    },
+    {
+      "uuid": "e36862a7-ea45-496f-b8d6-ecabef742ade",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Kha (خ)",
+      "id_soal": "MSH-013",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan kha dengan posisi terlalu maju ke arah ha (ح), sehingga bunyi hembusan kasarnya hilang. Koreksinya?",
+      "pilihan": {
+        "A": "Biarkan saja, kha dan ha (ح) boleh dibaca sama karena sama-sama dari tenggorokan, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "Minta murid mengucapkan kha lebih pelan tanpa mengubah posisi lidah, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "C": "Ganti kha dengan ghain karena keduanya dianggap sama persis dari segi makhraj dan sifat, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "Kha keluar dari pangkal lidah bagian belakang mendekati anak tekak, berbeda dari ha (ح) yang lebih dalam dan halus. contohkan hembusan kasar berdesir"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Kha (خ)"
+    },
+    {
+      "uuid": "02692ae2-6380-4a32-9d20-0c8bab62c8f6",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Kha (خ)",
+      "id_soal": "MSH-014",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan mengapa kha selalu terdengar 'berdesir' dibanding huruf tenggorokan lain. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Karena kha adalah huruf paling berat dalam bahasa Arab sehingga otomatis berdesir, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Karena kha termasuk huruf hams dan rakhawah, sehingga udara ikut mengalir keluar bersama bunyinya, menghasilkan desiran khas. beda dari huruf syiddah yang tertahan",
+        "C": "Karena kha memiliki tanda baca khusus yang mewajibkan desiran tambahan, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "Karena kha termasuk huruf qalqalah yang selalu dipantulkan, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Kha (خ)"
+    },
+    {
+      "uuid": "e1c10a38-c123-45d6-b83a-54daf4841f88",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Dal (د)",
+      "id_soal": "MSH-015",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan dal dengan lidah terlalu ke belakang, mendekati posisi ta/tha. Koreksinya?",
+      "pilihan": {
+        "A": "Dal keluar dari ujung lidah menyentuh pangkal gigi seri atas (sama seperti ta/tho tapi beda sifat), harus ditekan tegas lalu dilepas",
+        "B": "Ganti dal dengan tha karena keduanya dianggap sama persis, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "C": "Biarkan saja, dal boleh dibaca dari posisi mana saja selama bunyi akhirnya mirip, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Minta murid membaca dal lebih pelan tanpa mengoreksi posisi lidah, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Dal (د)"
+    },
+    {
+      "uuid": "4409803f-1617-4be2-b477-e00451d96c72",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Dal (د)",
+      "id_soal": "MSH-016",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan sifat jahr pada dal dibanding ta yang hams. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Dal bersifat qalqalah sekaligus hams, sehingga harus dipantulkan dengan hembusan, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Dal bersifat jahr, pita suara bergetar penuh saat diucapkan, beda dari ta yang hams (berhembus, pita suara tidak bergetar penuh)",
+        "C": "Perbedaan dal dan ta hanya soal ketebalan tafkhim-tarqiq, bukan getaran pita suara, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "Dal dan ta sama-sama hams sehingga tidak ada perbedaan getaran pita suara, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Dal (د)"
+    },
+    {
+      "uuid": "9c079ba5-0c21-4b87-b9e5-dd4f5c64299e",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Dzal (ذ)",
+      "id_soal": "MSH-017",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan dzal tanpa menjulurkan ujung lidah ke gigi, hanya dari dalam mulut. Koreksinya?",
+      "pilihan": {
+        "A": "Ganti dzal dengan za karena keduanya dianggap sama, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "B": "Dzal (bersama tsa dan zho) mengharuskan ujung lidah keluar sedikit menyentuh ujung gigi seri atas. jika lidah tidak keluar, bunyi dzal berubah mendekati za/da",
+        "C": "Minta murid mengucapkan dzal lebih keras tanpa mengubah posisi lidah, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "D": "Biarkan saja, dzal boleh diucapkan tanpa menjulurkan lidah selama bunyi akhirnya masih mirip, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Dzal (ذ)"
+    },
+    {
+      "uuid": "bbdb3d5c-892b-4984-b4f8-2c4e590fbccd",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Dzal (ذ)",
+      "id_soal": "MSH-018",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan kenapa dzal ringan dibanding zho yang tebal, meski posisi mirip. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Karena dzal hanya muncul di kata-kata pendek sehingga terdengar ringan, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "B": "Karena dzal dan zho sebenarnya sama tebalnya, hanya beda penulisan, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "C": "Karena dzal termasuk huruf qalqalah sehingga otomatis ringan, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "D": "Dzal bersifat istifal (tipis) karena lidah belakang tetap datar, beda dari zho yang lidah belakangnya terangkat membentuk gelombang sehingga tebal (isti'la)"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Dzal (ذ)"
+    },
+    {
+      "uuid": "57f68601-9a37-48a5-be98-99881fdb7f04",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Ra (ر)",
+      "id_soal": "MSH-019",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan ra tanpa getaran sama sekali, terdengar seperti lam. Koreksinya?",
+      "pilihan": {
+        "A": "Minta murid mengucapkan ra lebih pelan tanpa menambahkan getaran, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Ra keluar dari ujung lidah dekat gusi atas dengan getaran ringan satu-dua kali. kalau getaran hilang sama sekali, bunyinya berubah mendekati lam yang jernih tanpa getar",
+        "C": "Biarkan saja, ra dan lam memang boleh dibaca sama dalam kondisi tertentu, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Ganti ra dengan lam karena keduanya dianggap memiliki makhraj yang identik, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ra (ر)"
+    },
+    {
+      "uuid": "785d3660-68c9-4e53-ab80-692585798d6c",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Ra (ر) - Takrir",
+      "id_soal": "MSH-020",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan sifat takrir (getaran/pengulangan) pada ra yang unik dibanding huruf lain. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Sifat takrir berarti ra harus diulang pengucapannya dua kali secara terpisah, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "Sifat takrir sama dengan sifat qalqalah yang dimiliki huruf ba dan qaf, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Sifat takrir hanya berlaku jika ra berada di awal kata, bukan di tengah atau akhir, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "D": "Ra memiliki sifat takrir, yaitu getaran ringan pada ujung lidah. namun getaran ini tidak boleh berlebihan (digulung panjang) karena akan terdengar dibuat-buat"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ra (ر) - Takrir"
+    },
+    {
+      "uuid": "2e78dee0-21ef-4b10-96e7-6e06ab7c42b9",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Zai (ز)",
+      "id_soal": "MSH-021",
+      "aspek": "Makhraj/Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan zai tanpa getaran pita suara, terdengar seperti sin. Koreksinya?",
+      "pilihan": {
+        "A": "Biarkan saja, zai dan sin boleh dibaca sama karena posisi keluarnya identik, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "Minta murid mengucapkan zai lebih keras tanpa mengoreksi getaran pita suara, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "C": "Zai keluar dari posisi yang sama dengan sin (ujung lidah dekat gigi bawah), tapi zai bersifat jahr (bergetar) sedangkan sin hams (berhembus tanpa getar). pastikan pita suara ikut bergetar",
+        "D": "Ganti zai dengan shad karena dianggap lebih mudah dibedakan dari sin, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Zai (ز)"
+    },
+    {
+      "uuid": "5c0ec8b3-2059-4d43-a765-b07779b8391a",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Zai (ز)",
+      "id_soal": "MSH-022",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan ketebalan relatif zai dibanding shad. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Zai dan shad sama-sama tebal karena keduanya bersifat shafir, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "Zai lebih tebal dari shad karena posisinya lebih dekat ke gigi bawah, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "C": "Zai termasuk huruf istifal (tipis/ringan), berbeda dari shad yang isti'la (tebal), meski keduanya sama-sama huruf desis (shafir)",
+        "D": "Ketebalan zai bergantung pada harakat sebelumnya, sama seperti ra, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Zai (ز)"
+    },
+    {
+      "uuid": "f4527b74-c34e-49a9-b7a0-f26ada7c3d56",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Sin (س)",
+      "id_soal": "MSH-023",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan sin dengan ujung lidah menyentuh gigi (bukan mendekat saja), sehingga bunyi desisnya hilang. Koreksinya?",
+      "pilihan": {
+        "A": "Sin keluar dari ujung lidah yang didekatkan (bukan ditempelkan penuh) ke gigi seri bawah, menghasilkan celah kecil untuk desisan. jika ditempel penuh, desisan hilang dan berubah mendekati ta/tsa",
+        "B": "Ganti sin dengan tsa karena keduanya dianggap sama posisi keluarnya, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Biarkan saja, sin boleh diucapkan dengan lidah menempel penuh selama bunyi akhirnya masih terdengar mirip, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Minta murid mengucapkan sin lebih keras tanpa mengubah jarak lidah dan gigi, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Sin (س)"
+    },
+    {
+      "uuid": "7f9ffedb-d9eb-441f-b965-067e67cf5bd8",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Sin (س) - Shafir",
+      "id_soal": "MSH-024",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan sifat shafir (desis) pada sin dibanding huruf lain yang mirip posisi. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Sin memiliki sifat shafir (bunyi desis tajam seperti siulan kecil) bersama zai dan shad. desis ini muncul karena celah sempit antara lidah dan gigi yang dilewati udara",
+        "B": "Sifat shafir sama dengan sifat qalqalah yang menghasilkan pantulan, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "C": "Sifat shafir hanya dimiliki sin seorang diri di antara semua huruf hijaiyah, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Sifat shafir muncul karena sin selalu berharakat kasrah dalam Al-Qur'an, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Sin (س) - Shafir"
+    },
+    {
+      "uuid": "c060e5b5-2795-4d40-a75f-30dafed20d38",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Syin (ش)",
+      "id_soal": "MSH-025",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan syin dengan desis sempit seperti sin, bukan desis lebar. Koreksinya?",
+      "pilihan": {
+        "A": "Minta murid mengucapkan syin lebih pelan tanpa mengubah posisi lidah, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Syin keluar dari tengah lidah menyentuh langit-langit tengah dengan desis yang menyebar lebar (tafasysyi), beda dari sin yang desisnya sempit dan tajam dari ujung lidah",
+        "C": "Biarkan saja, syin dan sin boleh dibaca sama karena sama-sama huruf desis, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Ganti syin dengan jim karena keduanya dari tengah lidah dan dianggap sama, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Syin (ش)"
+    },
+    {
+      "uuid": "94148184-c73e-409e-b362-e344c3e27083",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Syin (ش) - Tafasysyi",
+      "id_soal": "MSH-026",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan sifat tafasysyi (menyebar) yang khas dimiliki syin. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Syin memiliki sifat tafasysyi, yaitu udara menyebar luas di rongga mulut saat diucapkan, menghasilkan desis yang lebih lebar dibanding huruf desis lainnya seperti sin dan shad",
+        "B": "Sifat tafasysyi sama dengan sifat ghunnah yang dimiliki nun dan mim, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Sifat tafasysyi berarti syin harus diucapkan dua kali berturut-turut, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Sifat tafasysyi hanya muncul jika syin berada di akhir kata, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Syin (ش) - Tafasysyi"
+    },
+    {
+      "uuid": "868f192a-6a14-4eb7-8bdc-e075eece550f",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Shad (ص)",
+      "id_soal": "MSH-027",
+      "aspek": "Makhraj/Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan shad dengan bunyi tipis seperti sin, tidak menggembung. Koreksinya?",
+      "pilihan": {
+        "A": "Shad dari posisi yang sama dengan sin (ujung lidah dekat gigi bawah), tapi shad bersifat isti'la (tebal) sehingga lidah belakang terangkat dan rongga mulut terasa menggembung, beda dari sin yang tipis",
+        "B": "Biarkan saja, shad dan sin boleh dibaca sama karena posisi keluarnya identik, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "C": "Ganti shad dengan dhad karena keduanya dianggap sama-sama huruf tebal, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "Minta murid mengucapkan shad lebih keras tanpa mengangkat lidah belakang, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Shad (ص)"
+    },
+    {
+      "uuid": "a3abb53c-b686-44d1-8b44-b64d9a3ba953",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Shad (ص) - Ithbaq",
+      "id_soal": "MSH-028",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan mengapa shad memiliki sifat ithbaq selain isti'la. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Sifat ithbaq berarti shad harus diucapkan dengan mulut tertutup rapat sepenuhnya, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "Sifat ithbaq hanya berlaku untuk shad seorang diri di antara semua huruf isti'la, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Shad memiliki sifat ithbaq, yaitu bagian tengah lidah menempel rapat ke langit-langit atas (bersama dhad, tho, zho), menghasilkan bunyi yang lebih tebal dan penuh dibanding huruf isti'la lain yang tidak ithbaq seperti qaf, kha, ghain",
+        "D": "Sifat ithbaq sama dengan sifat qalqalah pada huruf ba dan qaf, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Shad (ص) - Ithbaq"
+    },
+    {
+      "uuid": "36588865-fd05-42d4-b423-fa9ee958aa10",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Dhad (ض)",
+      "id_soal": "MSH-029",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan dhad dari ujung lidah, bukan tepi lidah. Koreksinya?",
+      "pilihan": {
+        "A": "Minta murid mengucapkan dhad lebih keras tanpa mengoreksi posisi tepi lidah, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Ganti dhad dengan dal karena keduanya dianggap dari posisi yang sama, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Biarkan saja, dhad boleh diucapkan dari ujung lidah selama terdengar berat, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Dhad keluar dari salah satu atau kedua tepi lidah yang menyentuh gigi geraham atas, posisi paling unik di antara semua huruf, contohkan langsung sambil murid merasakan tepi lidahnya sendiri"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Dhad (ض)"
+    },
+    {
+      "uuid": "be16453f-a4c8-4b2a-804f-f32484cd0e6b",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Dhad (ض) - Kombinasi Sifat",
+      "id_soal": "MSH-030",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan mengapa dhad dianggap huruf tersulit sifatnya di antara huruf hijaiyah. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Dhad sulit karena termasuk huruf hams yang jarang dilatih, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Dhad menggabungkan banyak sifat sekaligus (isti'la, ithbaq, jahr, dan istithalah/memanjang di tepi lidah), sehingga kombinasi sifat inilah yang membuatnya sulit dan unik",
+        "C": "Dhad sulit karena hanya muncul satu kali dalam seluruh Al-Qur'an, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Dhad sulit hanya karena bentuk tulisannya rumit, bukan karena sifat pengucapannya, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Dhad (ض) - Kombinasi Sifat"
+    },
+    {
+      "uuid": "f84ad254-d543-43e1-914c-d6488c532533",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Tho (ط)",
+      "id_soal": "MSH-031",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan tho tanpa penekanan, terdengar seperti ta. Koreksinya?",
+      "pilihan": {
+        "A": "Ganti tho dengan dal karena keduanya dianggap sama-sama jahr, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "B": "Minta murid mengucapkan tho lebih cepat tanpa menambah tekanan lidah, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "C": "Biarkan saja, tho dan ta boleh dibaca sama selama maknanya dipahami, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Tho dari posisi sama dengan ta (ujung lidah ke pangkal gigi seri atas), tapi tho bersifat isti'la dan ithbaq sehingga ditekan lebih kuat dan rongga mulut terasa membulat"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Tho (ط)"
+    },
+    {
+      "uuid": "9e13154c-9fc3-49a5-ac59-a5d70011be9c",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Tho (ط) - Empat Sifat",
+      "id_soal": "MSH-032",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan kombinasi sifat pada tho (isti'la + ithbaq + jahr + qalqalah). Penjelasan tepat?",
+      "pilihan": {
+        "A": "Tho hanya memiliki sifat isti'la saja, sifat lain miliknya sama seperti ta biasa, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "Tho adalah satu-satunya huruf yang punya empat sifat sekaligus (isti'la, ithbaq, jahr, dan qalqalah), sehingga bunyinya tebal, menggembung, bergetar, dan memantul saat mati",
+        "C": "Tho bersifat hams seperti ta, sehingga tidak ada getaran pita suara, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "Tho tidak termasuk huruf qalqalah karena posisi keluarnya sama dengan ta, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Tho (ط) - Empat Sifat"
+    },
+    {
+      "uuid": "d56d5e5d-1cfe-4c64-8fdd-3e096f95f076",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Zho (ظ)",
+      "id_soal": "MSH-033",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan zho tanpa mengangkat lidah belakang, terdengar seperti dza. Koreksinya?",
+      "pilihan": {
+        "A": "Zho dari posisi sama dengan dza (ujung lidah digigit ringan di gigi depan), tapi lidah belakang harus naik membentuk gelombang agar bunyi tebal, beda dari dza yang lidah belakangnya tetap datar",
+        "B": "Ganti zho dengan tho karena keduanya dianggap sama-sama tebal, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Minta murid menggigit lidahnya lebih keras tanpa mengangkat lidah belakang, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "D": "Biarkan saja, zho dan dza boleh dibaca sama karena posisi gigitannya identik, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Zho (ظ)"
+    },
+    {
+      "uuid": "45509415-36d6-40fb-a699-bda556cb1407",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Zho (ظ)",
+      "id_soal": "MSH-034",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan kombinasi sifat zho (isti'la + ithbaq + jahr) dibanding dza. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Zho bersifat hams seperti tsa, sehingga tidak ada getaran pita suara, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Zho termasuk huruf qalqalah bersama dza dan tsa, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Zho memiliki sifat isti'la dan ithbaq (tebal dan menggembung) serta jahr (bergetar), sedangkan dza hanya istifal (tipis) meski keduanya sama-sama jahr dan posisi gigitannya sama",
+        "D": "Zho dan dza memiliki sifat yang identik, hanya beda pada penulisan hurufnya, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka."
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Zho (ظ)"
+    },
+    {
+      "uuid": "99fd7c36-5e7a-47dd-83de-ca5e602e49aa",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "'Ain (ع)",
+      "id_soal": "MSH-035",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan 'ain seperti hamzah, tanpa tekanan di tengah tenggorokan. Koreksinya?",
+      "pilihan": {
+        "A": "Minta murid mengucapkan 'ain lebih pelan tanpa menambah tekanan di tengah leher, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Biarkan saja, 'ain dan hamzah boleh dibaca sama karena sama-sama dari tenggorokan, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "C": "'ain keluar dari tengah tenggorokan dengan tekanan yang khas (seperti menahan sesuatu di leher lalu melepaskannya), beda dari hamzah yang dari pangkal tenggorokan dengan hentakan singkat",
+        "D": "Ganti 'ain dengan ha (ح) karena keduanya dianggap sama posisi keluarnya, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf 'Ain (ع)"
+    },
+    {
+      "uuid": "6acb0278-8e80-4af7-817a-d405ed1ee076",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "'Ain (ع) - Tawassuth",
+      "id_soal": "MSH-036",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan sifat jahr dan tawassuth pada 'ain. Penjelasan tepat?",
+      "pilihan": {
+        "A": "'Ain bersifat hams seperti ha (ح), sehingga tidak ada getaran pita suara, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "'Ain bersifat jahr (bergetar) dan tawassuth (pertengahan antara tertahan penuh dan mengalir bebas), sehingga bunyinya tidak sekasar kha/ghain maupun sehalus ha/hamzah",
+        "C": "Sifat tawassuth pada 'ain berarti huruf ini boleh dibaca dengan cara apa saja, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "'Ain termasuk huruf qalqalah karena posisinya di tenggorokan, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf 'Ain (ع) - Tawassuth"
+    },
+    {
+      "uuid": "6dda69d6-5e5b-4b15-b59c-ed1ff693f923",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Ghain (غ)",
+      "id_soal": "MSH-037",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan ghain tanpa getaran, terdengar seperti kha. Koreksinya?",
+      "pilihan": {
+        "A": "Biarkan saja, ghain dan kha boleh dibaca sama karena posisi keluarnya identik, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "Minta murid mengucapkan ghain lebih keras tanpa menambah getaran pita suara, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "C": "Ganti ghain dengan qaf karena keduanya dianggap sama-sama tebal, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "Ghain dari posisi sama dengan kha (pangkal lidah dekat tenggorokan atas), tapi ghain bersifat jahr (bergetar, mirip berkumur ringan) sedangkan kha hams (berhembus tanpa getar)"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ghain (غ)"
+    },
+    {
+      "uuid": "2dd61cbd-583b-414f-8025-c66c16cf1204",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Ghain (غ) - Isti'la",
+      "id_soal": "MSH-038",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan sifat isti'la pada ghain meski posisinya di tenggorokan (bukan lidah seperti huruf tebal lain). Penjelasan tepat?",
+      "pilihan": {
+        "A": "Sifat tebal pada ghain hanya muncul jika didahului harakat fathah, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Ghain termasuk huruf isti'la (tebal) meski keluar dari tenggorokan, karena pangkal lidah tetap terangkat tinggi saat mengucapkannya, mirip mekanisme huruf tebal lain seperti qaf",
+        "C": "Ghain bersifat istifal (tipis) karena letaknya di tenggorokan, bukan di lidah, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Ghain tidak memiliki sifat isti'la maupun istifal karena posisinya unik di tenggorokan, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ghain (غ) - Isti'la"
+    },
+    {
+      "uuid": "e3d3c7ff-12f6-4a58-a4f9-d586625b2d89",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Fa (ف)",
+      "id_soal": "MSH-039",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan fa dengan dua bibir rapat (posisi ba), bukan bibir bawah ke gigi atas. Koreksinya?",
+      "pilihan": {
+        "A": "Fa keluar dari bibir bawah bagian dalam yang menyentuh ujung gigi seri atas, bukan dari pertemuan dua bibir seperti ba. contohkan dan membandingkan langsung posisi keduanya",
+        "B": "Biarkan saja, fa boleh diucapkan dari dua bibir rapat selama bunyi akhirnya masih terdengar mirip, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "C": "Minta murid mengucapkan fa lebih keras tanpa mengoreksi posisi bibir dan gigi, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "D": "Ganti fa dengan wau karena keduanya dianggap dari posisi bibir yang sama, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Fa (ف)"
+    },
+    {
+      "uuid": "0029ca9c-b378-443a-af82-2f31367ce499",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Fa (ف) - Hams Rakhawah",
+      "id_soal": "MSH-040",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan sifat hams dan rakhawah pada fa. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Sifat hams pada fa hanya berlaku jika berharakat sukun, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "B": "Fa bersifat hams (berhembus) dan rakhawah (mengalir), sehingga bunyinya lembut berhembus, tidak tertahan penuh seperti huruf syiddah",
+        "C": "Fa bersifat jahr dan syiddah, sehingga bunyinya harus tertahan penuh dan bergetar, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Fa termasuk huruf qalqalah bersama ba karena sama-sama dari area bibir, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Fa (ف) - Hams Rakhawah"
+    },
+    {
+      "uuid": "aa1bfe9f-e529-431e-bae2-df6e816ff6f5",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Qaf (ق)",
+      "id_soal": "MSH-041",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan qaf seperti kaf, kurang mundur ke belakang. Koreksinya?",
+      "pilihan": {
+        "A": "Minta murid mengucapkan qaf lebih pelan tanpa mendorong lidah lebih mundur, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Biarkan saja, qaf dan kaf boleh dibaca sama karena sama-sama dari pangkal lidah, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "C": "Ganti qaf dengan ghain karena keduanya dianggap sama-sama tebal dan berat, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "Qaf dari pangkal lidah paling belakang menempel langit-langit lunak paling dalam, lebih mundur dari kaf. latih dengan mendorong bunyi 'ka' semakin ke belakang sampai terasa lebih berat"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Qaf (ق)"
+    },
+    {
+      "uuid": "fba2f82e-bf59-4b4c-be6c-d7d65536643f",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Qaf (ق) - Isti'la+Qalqalah",
+      "id_soal": "MSH-042",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan sifat isti'la dan qalqalah pada qaf. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Qaf memiliki sifat isti'la (tebal) sekaligus qalqalah (memantul saat mati), sehingga saat berharakat sukun harus dibaca tebal dan disertai pantulan ringan",
+        "B": "Qaf hanya bersifat isti'la, tidak termasuk salah satu huruf qalqalah, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "C": "Sifat qalqalah pada qaf hanya berlaku jika berada di awal kata, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "Qaf bersifat istifal (tipis) karena posisinya paling belakang di antara huruf lidah, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Qaf (ق) - Isti'la+Qalqalah"
+    },
+    {
+      "uuid": "746f3e25-9ebe-4511-acdc-19c46d8bd961",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Kaf (ك)",
+      "id_soal": "MSH-043",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan kaf terlalu mundur ke belakang, mendekati qaf. Koreksinya?",
+      "pilihan": {
+        "A": "Biarkan saja, kaf boleh diucapkan semundur qaf selama masih bisa dibedakan dari huruf lain, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "Kaf dari pangkal lidah yang sedikit lebih maju dibanding qaf, sehingga bunyinya lebih ringan. jika terlalu mundur, bunyi kaf berubah menjadi berat seperti qaf",
+        "C": "Ganti kaf dengan ghain karena keduanya dianggap dari posisi yang sama, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "Minta murid mengucapkan kaf lebih keras tanpa mengoreksi posisi lidahnya, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Kaf (ك)"
+    },
+    {
+      "uuid": "371e5de9-8d84-48cb-8487-70e6c7b72317",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Kaf (ك) vs Qaf",
+      "id_soal": "MSH-044",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan sifat hams dan istifal pada kaf dibanding qaf yang jahr dan isti'la. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Kaf termasuk huruf qalqalah bersama qaf karena posisinya berdekatan, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "B": "Kaf bersifat hams (berhembus, tidak bergetar) dan istifal (tipis), berbeda dari qaf yang jahr (bergetar) dan isti'la (tebal), meski posisi keduanya berdekatan",
+        "C": "Kaf dan qaf memiliki sifat yang identik, hanya beda posisi keluarnya sedikit, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Kaf bersifat jahr seperti qaf, sehingga pita suara ikut bergetar penuh, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Kaf (ك) vs Qaf"
+    },
+    {
+      "uuid": "7a7e3454-bfaa-465c-8fed-eba96453fcfc",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Lam (ل)",
+      "id_soal": "MSH-045",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan lam dengan getaran seperti ra. Koreksinya?",
+      "pilihan": {
+        "A": "Minta murid mengucapkan lam lebih pelan tanpa menghilangkan getarannya, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Ganti lam dengan nun karena keduanya dianggap sama-sama dari ujung lidah, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Biarkan saja, lam dan ra boleh dibaca sama karena posisinya berdekatan, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Lam keluar dari tepi lidah bagian depan menyentuh langit-langit dekat gigi atas, bunyinya harus jernih tanpa getaran, beda dari ra yang dari ujung lidah dengan getaran ringan"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Lam (ل)"
+    },
+    {
+      "uuid": "dbef808c-b366-4abc-b60c-ff0151624bbd",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Lam (ل) - Lafzul Jalalah",
+      "id_soal": "MSH-046",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan mengapa lam pada lafzul jalalah bisa berubah tebal, padahal lam umumnya istifal. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Lam pada dasarnya bersifat istifal (tipis) di semua kata, kecuali pengecualian khusus pada lafzul jalalah (lafaz Allah) yang didahului fathah atau dhommah, di mana ia dibaca tafkhim (tebal)",
+        "B": "Lam selalu bersifat isti'la (tebal) di semua kata tanpa terkecuali, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "C": "Sifat tafkhim pada lam hanya berlaku untuk huruf lam yang bertasydid, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "Lam berubah tebal jika berada di akhir ayat, bukan karena lafzul jalalah, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Lam (ل) - Lafzul Jalalah"
+    },
+    {
+      "uuid": "5268472f-c151-4c48-8180-972dac96c593",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Mim (م)",
+      "id_soal": "MSH-047",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan mim seperti ba, tanpa dengung dari hidung. Koreksinya?",
+      "pilihan": {
+        "A": "Minta murid mengucapkan mim lebih keras tanpa menambahkan dengung hidung, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Ganti mim dengan wau karena keduanya dianggap dari posisi bibir yang sama, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Biarkan saja, mim dan ba boleh dibaca sama karena posisi bibirnya identik, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Mim keluar dari pertemuan dua bibir sama seperti ba, tapi bunyinya harus keluar dengan dengung melalui rongga hidung, beda dari ba yang bunyinya lepas dari mulut dengan hentakan"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Mim (م)"
+    },
+    {
+      "uuid": "a3a03445-5c9c-4d62-bbca-96819d7cbd10",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Mim (م) - Ghunnah",
+      "id_soal": "MSH-048",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan sifat ghunnah yang menyertai mim dalam berbagai kondisi. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Sifat ghunnah pada mim sama dengan sifat qalqalah pada huruf ba dan qaf, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "B": "Sifat ghunnah pada mim hanya muncul jika mim berada di awal kata, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "C": "Mim tidak memiliki sifat ghunnah, hanya nun yang memilikinya, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "D": "Mim memiliki sifat ghunnah (dengung asli) yang selalu menyertainya, terutama menguat saat bertasydid atau bertemu huruf tertentu (seperti ikhfa syafawi dan idgham mimi)"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Mim (م) - Ghunnah"
+    },
+    {
+      "uuid": "acda6db1-cba6-419f-92c2-276acee6e2f9",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Nun (ن)",
+      "id_soal": "MSH-049",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan nun tanpa dengung, terdengar seperti lam. Koreksinya?",
+      "pilihan": {
+        "A": "Nun keluar dari ujung lidah menyentuh langit-langit dekat gigi atas (posisi mirip lam), tapi nun harus disertai dengung khas dari hidung, beda dari lam yang jernih tanpa dengung",
+        "B": "Ganti nun dengan ra karena keduanya dianggap sama-sama dari ujung lidah, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Minta murid mengucapkan nun lebih keras tanpa menambahkan dengung, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "D": "Biarkan saja, nun dan lam boleh dibaca sama karena posisinya berdekatan, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Nun (ن)"
+    },
+    {
+      "uuid": "e1ce63ee-0f2c-4500-8d46-98aea34b8b1d",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Nun (ن) - Ghunnah Bervariasi",
+      "id_soal": "MSH-050",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan sifat ghunnah pada nun yang berubah-ubah kadarnya tergantung hukum bacaan. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Ghunnah pada nun kadarnya berbeda-beda tergantung hukum yang menyertainya, paling kuat saat idgham bighunnah dan ikhfa, sedang saat izhar hampir tidak ada dengung sama sekali karena dibaca jelas",
+        "B": "Ghunnah pada nun selalu sama kadarnya di semua kondisi tanpa terkecuali, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "C": "Ghunnah pada nun hanya muncul jika nun berharakat sukun di akhir kata, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "D": "Nun tidak memiliki sifat ghunnah sama sekali, hanya mim yang memilikinya, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Nun (ن) - Ghunnah Bervariasi"
+    },
+    {
+      "uuid": "b7473d8a-d444-4d48-8ae9-f1917ec0dce6",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Wau (و)",
+      "id_soal": "MSH-051",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan wau konsonan (berharakat) seperti fa, menyentuhkan bibir ke gigi. Koreksinya?",
+      "pilihan": {
+        "A": "Minta murid mengucapkan wau lebih keras tanpa mengoreksi posisi bibirnya, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Ganti wau dengan mim karena keduanya dianggap sama-sama dari dua bibir, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Wau konsonan keluar dari dua bibir yang dibulatkan/dimonyongkan (bukan bibir ke gigi seperti fa). guru perlu membedakan wau konsonan (berharakat) dari wau sukun (huruf mad)",
+        "D": "Biarkan saja, wau boleh diucapkan dengan bibir ke gigi seperti fa selama maknanya dipahami, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka."
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Wau (و)"
+    },
+    {
+      "uuid": "4f21fb85-564d-4168-91cd-37691d4acf96",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Wau (و) - Dua Peran",
+      "id_soal": "MSH-052",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan dua peran wau: sebagai huruf mad dan sebagai huruf konsonan (syafawi). Penjelasan tepat?",
+      "pilihan": {
+        "A": "Wau hanya berperan sebagai huruf konsonan, tidak pernah menjadi huruf mad, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Peran wau sebagai mad atau konsonan ditentukan oleh letaknya dalam kalimat, bukan oleh harakat atau sukunnya, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Wau punya dua peran berbeda, sebagai huruf mad ketika sukun didahului dhommah (mengalir tanpa titik tekan), dan sebagai huruf konsonan (syafawi) ketika berharakat dengan posisi bibir dibulatkan",
+        "D": "Wau hanya berperan sebagai huruf mad dalam segala kondisi, tidak pernah menjadi konsonan, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka."
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Wau (و) - Dua Peran"
+    },
+    {
+      "uuid": "47238254-7618-4866-a914-28a75e49ad10",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Ha besar (ه)",
+      "id_soal": "MSH-053",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan ha di akhir kata dengan sangat lemah, hampir tak terdengar. Koreksinya?",
+      "pilihan": {
+        "A": "Ha keluar dari pangkal tenggorokan paling dalam dengan hembusan napas yang jelas. meski berada di akhir kata, hembusannya tetap harus terdengar tegas, tidak boleh dilemahkan",
+        "B": "Ganti ha dengan hamzah karena keduanya dianggap dari posisi yang sama, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Biarkan saja, ha di akhir kata memang boleh sangat lemah hampir tak terdengar, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Minta murid mengucapkan ha lebih cepat tanpa menambah hembusan napas, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ha besar (ه)"
+    },
+    {
+      "uuid": "725dace2-bcc1-4de0-910e-37393894c2e2",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Ha besar (ه) - Hams Rakhawah",
+      "id_soal": "MSH-054",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan sifat hams dan rakhawah pada ha yang membuatnya mudah lemah jika tak dilatih. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Ha bersifat jahr dan syiddah, sehingga seharusnya mudah terdengar tegas tanpa perlu dilatih, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "Ha termasuk huruf qalqalah sehingga otomatis memantul saat berada di akhir kata, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "C": "Sifat lemahnya ha hanya terjadi jika didahului harakat dhommah, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "D": "Ha bersifat hams (berhembus, tidak bergetar) dan rakhawah (mengalir), sehingga tanpa penekanan yang cukup, bunyinya sangat mudah melemah dan nyaris hilang terutama di akhir kata"
+      },
+      "kunci_jawaban": "D",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ha besar (ه) - Hams Rakhawah"
+    },
+    {
+      "uuid": "a43ca627-f87f-4eb2-9d17-a03ef39e1063",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Hamzah (ء)",
+      "id_soal": "MSH-055",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan hamzah dengan sangat halus, tanpa hentakan. Koreksinya?",
+      "pilihan": {
+        "A": "Minta murid mengucapkan hamzah lebih panjang tanpa menambah hentakan, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "B": "Ganti hamzah dengan alif karena keduanya dianggap huruf yang sama persis, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Hamzah keluar dari pangkal tenggorokan paling dalam dengan hentakan tegas (seperti bunyi 'terkejut'), berbeda dari alif yang mengalir tanpa hentakan sama sekali",
+        "D": "Biarkan saja, hamzah boleh diucapkan halus tanpa hentakan selama maknanya dipahami, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka."
+      },
+      "kunci_jawaban": "C",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Hamzah (ء)"
+    },
+    {
+      "uuid": "d3f1a53b-9018-4cd4-baf7-d8819ec58ccb",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Hamzah (ء) - Syiddah Jahr",
+      "id_soal": "MSH-056",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan sifat syiddah dan jahr pada hamzah. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Hamzah bersifat syiddah (tertahan penuh sesaat sebelum dilepas) dan jahr (bergetar), menghasilkan hentakan tegas yang khas di pangkal tenggorokan",
+        "B": "Hamzah bersifat hams (berhembus tanpa getar), sehingga bunyinya seharusnya lembut, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "C": "Hamzah bersifat rakhawah (mengalir) sama seperti alif, sehingga tidak perlu hentakan, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "D": "Sifat syiddah pada hamzah hanya berlaku jika berharakat kasrah, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Hamzah (ء) - Syiddah Jahr"
+    },
+    {
+      "uuid": "234e2827-3c7e-49e4-9461-2e6e9c78b09b",
+      "kategori": "Makharijul Huruf",
+      "sub_aspek": "Ya (ي)",
+      "id_soal": "MSH-057",
+      "aspek": "Makhraj",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Murid mengucapkan ya konsonan (berharakat) seperti jim, ditekan di tengah lidah. Koreksinya?",
+      "pilihan": {
+        "A": "Biarkan saja, ya konsonan boleh diucapkan seperti jim selama maknanya dipahami, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka.",
+        "B": "Ya konsonan keluar dari tengah lidah menyentuh langit-langit tengah (posisi mirip jim), tapi ya harus ringan mengalir, tidak ditekan tertahan seperti jim yang bersifat syiddah",
+        "C": "Minta murid mengucapkan ya lebih keras tanpa mengoreksi tekanan lidahnya, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "D": "Ganti ya dengan syin karena keduanya dianggap sama-sama dari tengah lidah, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti."
+      },
+      "kunci_jawaban": "B",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ya (ي)"
+    },
+    {
+      "uuid": "8be3be85-2784-4225-ac55-c6e05ecdfc33",
+      "kategori": "Sifatul Huruf",
+      "sub_aspek": "Ya (ي) - Dua Peran",
+      "id_soal": "MSH-058",
+      "aspek": "Sifat",
+      "tipe_soal": "Kasus",
+      "level_kognitif": "C4",
+      "tingkat_kesulitan": "Sedang",
+      "soal": "Guru menjelaskan dua peran ya: sebagai huruf mad dan sebagai huruf konsonan. Penjelasan tepat?",
+      "pilihan": {
+        "A": "Ya punya dua peran berbeda, sebagai huruf mad ketika sukun didahului kasrah (mengalir tanpa tekanan), dan sebagai huruf konsonan ketika berharakat dengan tekanan ringan di tengah lidah",
+        "B": "Peran ya sebagai mad atau konsonan ditentukan oleh urutannya dalam kata, bukan oleh harakat atau sukunnya, sebagai metode alternatif sementara demi menjaga kelancaran setoran hafalan harian tanpa hambatan berarti.",
+        "C": "Ya hanya berperan sebagai huruf konsonan, tidak pernah menjadi huruf mad, dengan harapan seiring berjalannya waktu pengucapannya akan membaik secara alamiah melalui pembiasaan.",
+        "D": "Ya hanya berperan sebagai huruf mad dalam segala kondisi, tidak pernah menjadi konsonan, karena pendekatan ini dianggap lebih mudah diterima oleh murid pemula tanpa membebani mereka."
+      },
+      "kunci_jawaban": "A",
+      "indikator_kompetensi": "Guru mampu mendeteksi dan mengoreksi makhraj/sifat huruf Ya (ي) - Dua Peran"
+    }
+  ]
+}

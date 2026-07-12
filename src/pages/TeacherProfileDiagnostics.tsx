@@ -348,7 +348,7 @@ function TeacherProfileDiagnostics() {
               </SelectContent>
             </Select>
             <div className="flex flex-wrap gap-2">
-              {isAdmin && (
+              {isDiagnosticAdmin && (
                 <>
                   <Button asChild variant="outline" className="gap-2">
                     <Link to="/profil-diagnostik-guru/bank-soal">
