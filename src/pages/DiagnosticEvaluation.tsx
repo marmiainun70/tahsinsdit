@@ -106,6 +106,89 @@ const initialWizardState: WizardState = {
     murojaah: "Sangat Kuat",
   }
 };
+const renderEvaluationMetrics = (
+  fluencyScore: number,
+  lahnJaliDetail: { huruf: number; harakat: number; tasydid: number },
+  lahnKhofiDetail: { mad: number; qalqalah: number; tajwid: number },
+  setFluencyScore: (val: number) => void,
+  setLahnJaliField: (field: "huruf" | "harakat" | "tasydid", val: number) => void,
+  setLahnKhofiField: (field: "mad" | "qalqalah" | "tajwid", val: number) => void
+) => {
+  return (
+    <div className="space-y-4">
+      {/* Kelancaran Bacaan */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 gap-3 bg-white dark:bg-slate-950 border rounded-lg">
+        <Label className="font-medium">Kelancaran Bacaan</Label>
+        <div className="flex items-center gap-2">
+          <Select 
+            value={fluencyScore.toString()}
+            onValueChange={(v) => setFluencyScore(parseInt(v) || 0)}
+          >
+            <SelectTrigger className="w-[100px]">
+              <SelectValue placeholder="Pilih" />
+            </SelectTrigger>
+            <SelectContent>
+              {[100, 90, 80, 70, 60].map((score) => (
+                <SelectItem key={score} value={score.toString()}>{score}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span className="text-muted-foreground text-sm">atau</span>
+          <Input 
+            type="number" 
+            className="w-20" 
+            value={fluencyScore}
+            onChange={(e) => setFluencyScore(parseInt(e.target.value) || 0)}
+          />
+        </div>
+      </div>
+
+      {/* Lahn Jali */}
+      <div className="flex flex-col sm:flex-row justify-between p-3 gap-3 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900 rounded-lg">
+        <div className="flex flex-col gap-1 w-full sm:w-48">
+          <Label className="font-medium text-red-700 dark:text-red-400">Lahn Jali (Kesalahan Besar)</Label>
+          <span className="text-xs text-red-600/70">Penalti x2</span>
+        </div>
+        <div className="flex-1 flex flex-wrap gap-3 items-center sm:justify-end">
+          <div className="flex flex-col gap-1 items-center">
+            <span className="text-xs">Salah Huruf</span>
+            <Input type="number" min="0" className="w-16 h-8 text-center" value={lahnJaliDetail.huruf} onChange={(e) => setLahnJaliField("huruf", parseInt(e.target.value) || 0)} />
+          </div>
+          <div className="flex flex-col gap-1 items-center">
+            <span className="text-xs">Salah Harakat</span>
+            <Input type="number" min="0" className="w-16 h-8 text-center" value={lahnJaliDetail.harakat} onChange={(e) => setLahnJaliField("harakat", parseInt(e.target.value) || 0)} />
+          </div>
+          <div className="flex flex-col gap-1 items-center">
+            <span className="text-xs">Salah Tasydid</span>
+            <Input type="number" min="0" className="w-16 h-8 text-center" value={lahnJaliDetail.tasydid} onChange={(e) => setLahnJaliField("tasydid", parseInt(e.target.value) || 0)} />
+          </div>
+        </div>
+      </div>
+
+      {/* Lahn Khofi */}
+      <div className="flex flex-col sm:flex-row justify-between p-3 gap-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900 rounded-lg">
+        <div className="flex flex-col gap-1 w-full sm:w-48">
+          <Label className="font-medium text-amber-700 dark:text-amber-400">Lahn Khofi (Kesalahan Kecil)</Label>
+          <span className="text-xs text-amber-600/70">Penalti x1</span>
+        </div>
+        <div className="flex-1 flex flex-wrap gap-3 items-center sm:justify-end">
+          <div className="flex flex-col gap-1 items-center">
+            <span className="text-xs">Mad</span>
+            <Input type="number" min="0" className="w-16 h-8 text-center" value={lahnKhofiDetail.mad} onChange={(e) => setLahnKhofiField("mad", parseInt(e.target.value) || 0)} />
+          </div>
+          <div className="flex flex-col gap-1 items-center">
+            <span className="text-xs">Qalqalah</span>
+            <Input type="number" min="0" className="w-16 h-8 text-center" value={lahnKhofiDetail.qalqalah} onChange={(e) => setLahnKhofiField("qalqalah", parseInt(e.target.value) || 0)} />
+          </div>
+          <div className="flex flex-col gap-1 items-center">
+            <span className="text-xs">Tajwid Lain</span>
+            <Input type="number" min="0" className="w-16 h-8 text-center" value={lahnKhofiDetail.tajwid} onChange={(e) => setLahnKhofiField("tajwid", parseInt(e.target.value) || 0)} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function DiagnosticEvaluation() {
   const [page, setPage] = useState(1);
