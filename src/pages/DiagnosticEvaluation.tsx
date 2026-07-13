@@ -24,7 +24,7 @@ interface WizardState {
   targetProgram: ProgramType;
   profil: {
     rutinitas_mengaji: string;
-    pendamping_belajar: string;
+    pendamping_belajar: string[];
     motivasi: string;
   };
   core: {
@@ -34,32 +34,43 @@ interface WizardState {
     checklist_makharij: Record<string, "Baik" | "Perlu Latihan">;
   };
   advanced: {
-    checklist_tajwid: Record<string, "Baik" | "Perlu Latihan">;
-    waqaf_error_count: number;
-    salah_sambung_ayat_count: number;
+    checklist_tajwid: Record<string, "Baik" | "Cukup" | "Perlu">;
+    waqaf_ibtida: string;
+    // Level 3 specific
+    hafalan_juz: string;
+    hafalan_surat: string;
+    hafalan_ayat: string;
+    sambung_ayat_respon: string;
+    sambung_ayat_ketepatan: string;
+    murojaah: string;
   };
 }
 
 const MAKHARIJ_LIST = ["Rongga Mulut (Al-Jauf)", "Tenggorokan (Al-Halq)", "Lidah (Al-Lisan)", "Bibir (Asy-Syafatain)", "Rongga Hidung (Al-Khaisyum)"];
-const TAJWID_LIST = ["Hukum Nun Mati & Tanwin", "Hukum Mim Mati", "Hukum Mad", "Qalqalah", "Ghunnah"];
+const TAJWID_LIST = ["Nun Mati/Tanwin", "Mim Mati", "Hukum Mad", "Qalqalah", "Ghunnah"];
 
 const initialWizardState: WizardState = {
   targetProgram: "Tahsin Dasar",
   profil: {
-    rutinitas_mengaji: "Setiap Hari",
-    pendamping_belajar: "Orang Tua",
+    rutinitas_mengaji: "Setiap hari",
+    pendamping_belajar: ["Orang tua aktif"],
     motivasi: "",
   },
   core: {
-    fluency_score: 80,
+    fluency_score: 90,
     lahn_jali_count: 0,
     lahn_khofi_count: 0,
     checklist_makharij: Object.fromEntries(MAKHARIJ_LIST.map(k => [k, "Baik"])),
   },
   advanced: {
     checklist_tajwid: Object.fromEntries(TAJWID_LIST.map(k => [k, "Baik"])),
-    waqaf_error_count: 0,
-    salah_sambung_ayat_count: 0,
+    waqaf_ibtida: "Sangat Baik",
+    hafalan_juz: "",
+    hafalan_surat: "",
+    hafalan_ayat: "",
+    sambung_ayat_respon: "Cepat",
+    sambung_ayat_ketepatan: "Tepat",
+    murojaah: "Sangat Kuat",
   }
 };
 
@@ -68,6 +79,7 @@ export default function DiagnosticEvaluation() {
   const [search, setSearch] = useState("");
   const [kelas, setKelas] = useState("all");
   const [rombel, setRombel] = useState("all");
+  const [customPendamping, setCustomPendamping] = useState("");
 
   const { data: years = [] } = useAcademicYears();
   const activeYear = years.find((y) => y.status === "aktif") || years[0];
@@ -131,12 +143,22 @@ export default function DiagnosticEvaluation() {
 
   const engineOutput: EvaluationOutput | null = useMemo(() => {
     if (step < 4) return null;
+    
+    // Map categorical values to error counts for the engine
+    let waqafError = 0;
+    if (wizard.advanced.waqaf_ibtida === "Cukup") waqafError = 1;
+    if (wizard.advanced.waqaf_ibtida === "Perlu") waqafError = 2;
+
+    let sambungAyatError = 0;
+    if (wizard.advanced.sambung_ayat_ketepatan === "Koreksi") sambungAyatError = 1;
+    if (wizard.advanced.sambung_ayat_ketepatan === "Tertukar") sambungAyatError = 2;
+
     const input: EvaluationInput = {
       fluencyScore: wizard.core.fluency_score,
       lahnJaliCount: wizard.core.lahn_jali_count,
       lahnKhofiCount: wizard.core.lahn_khofi_count,
-      waqafErrorCount: wizard.advanced.waqaf_error_count,
-      salahSambungAyatCount: wizard.advanced.salah_sambung_ayat_count,
+      waqafErrorCount: waqafError,
+      salahSambungAyatCount: sambungAyatError,
       targetProgram: wizard.targetProgram
     };
     return evaluateStudent(input);
@@ -145,20 +167,37 @@ export default function DiagnosticEvaluation() {
   const handleSubmit = () => {
     if (!selectedStudent || !activeYear || !engineOutput) return;
 
+    // Calculate error counts again for payload
+    let waqafError = 0;
+    if (wizard.advanced.waqaf_ibtida === "Cukup") waqafError = 1;
+    if (wizard.advanced.waqaf_ibtida === "Perlu") waqafError = 2;
+
+    let sambungAyatError = 0;
+    if (wizard.advanced.sambung_ayat_ketepatan === "Koreksi") sambungAyatError = 1;
+    if (wizard.advanced.sambung_ayat_ketepatan === "Tertukar") sambungAyatError = 2;
+
     const payload: FullDiagnosticData = {
       student_id: selectedStudent.id,
       academic_year_id: activeYear.id,
       final_score: engineOutput.finalScore,
       final_predicate: engineOutput.finalPredicate,
       selected_level_id: undefined, // Let the backend default or we can map recommendedKodeLevel if we fetch the master table
-      jawaban_profil: wizard.profil,
+      jawaban_profil: {
+        ...wizard.profil,
+        hafalan_juz: wizard.advanced.hafalan_juz,
+        hafalan_surat: wizard.advanced.hafalan_surat,
+        hafalan_ayat: wizard.advanced.hafalan_ayat,
+        sambung_ayat_respon: wizard.advanced.sambung_ayat_respon,
+        murojaah: wizard.advanced.murojaah,
+        waqaf_ibtida: wizard.advanced.waqaf_ibtida
+      },
       fluency_score: wizard.core.fluency_score,
       lahn_jali_count: wizard.core.lahn_jali_count,
       lahn_khofi_count: wizard.core.lahn_khofi_count,
       checklist_makharij: wizard.core.checklist_makharij,
-      checklist_tajwid: wizard.advanced.checklist_tajwid,
-      waqaf_error_count: wizard.advanced.waqaf_error_count,
-      salah_sambung_ayat_count: wizard.advanced.salah_sambung_ayat_count,
+      checklist_tajwid: wizard.advanced.checklist_tajwid as any,
+      waqaf_error_count: waqafError,
+      salah_sambung_ayat_count: sambungAyatError,
       fokus_pembinaan: engineOutput.fokusPembinaan,
     };
 
@@ -402,9 +441,9 @@ export default function DiagnosticEvaluation() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Tahsin Dasar">Tahsin Dasar (Fokus Iqro/Kelancaran)</SelectItem>
-                      <SelectItem value="Tahsin Lanjutan">Tahsin Lanjutan (Fokus Tajwid & Waqaf)</SelectItem>
-                      <SelectItem value="Tahfizh">Tahfizh (Fokus Hafalan & Sambung Ayat)</SelectItem>
+                      <SelectItem value="Tahsin Dasar">Level 1 - Pemula (Tahsin Dasar)</SelectItem>
+                      <SelectItem value="Tahsin Lanjutan">Level 2 - Menengah (Tahsin Lanjutan)</SelectItem>
+                      <SelectItem value="Tahfizh">Level 3 - Unggul (Tahfizh)</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs md:text-sm text-muted-foreground">Pilih program untuk menentukan instrumen soal di langkah selanjutnya.</p>
@@ -415,33 +454,98 @@ export default function DiagnosticEvaluation() {
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <Label className="text-sm md:text-base font-medium">Rutinitas Mengaji di Rumah</Label>
+                      <Label className="text-sm md:text-base font-medium">Kebiasaan Membaca di Rumah</Label>
                       <Select 
                         value={wizard.profil.rutinitas_mengaji}
                         onValueChange={(v) => setWizard({...wizard, profil: {...wizard.profil, rutinitas_mengaji: v}})}
                       >
                         <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Setiap Hari">Setiap Hari</SelectItem>
-                          <SelectItem value="Jarang">Jarang (1-2x Seminggu)</SelectItem>
-                          <SelectItem value="Tidak Pernah">Tidak Pernah</SelectItem>
+                          <SelectItem value="Setiap hari">Setiap hari</SelectItem>
+                          <SelectItem value="4-6 kali/minggu">4-6 kali/minggu</SelectItem>
+                          <SelectItem value="2-3 kali/minggu">2-3 kali/minggu</SelectItem>
+                          <SelectItem value="Jarang">Jarang</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-3">
-                      <Label className="text-sm md:text-base font-medium">Pendamping Belajar</Label>
-                      <Select 
-                        value={wizard.profil.pendamping_belajar}
-                        onValueChange={(v) => setWizard({...wizard, profil: {...wizard.profil, pendamping_belajar: v}})}
-                      >
-                        <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Orang Tua">Orang Tua</SelectItem>
-                          <SelectItem value="Guru Ngaji">Guru Ngaji / Privat</SelectItem>
-                          <SelectItem value="Sendiri">Sendiri</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label className="text-sm md:text-base font-medium">Pendampingan Rumah</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {["Orang tua aktif", "Guru ngaji/privat", "Mandiri", "Belum rutin"].map(opt => {
+                          const isSelected = wizard.profil.pendamping_belajar.includes(opt);
+                          return (
+                            <Badge 
+                              key={opt}
+                              variant={isSelected ? "default" : "outline"}
+                              className="cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => {
+                                let newPendamping = [...wizard.profil.pendamping_belajar];
+                                if (isSelected) {
+                                  newPendamping = newPendamping.filter(p => p !== opt);
+                                } else {
+                                  newPendamping.push(opt);
+                                }
+                                setWizard({...wizard, profil: {...wizard.profil, pendamping_belajar: newPendamping}});
+                              }}
+                            >
+                              {opt}
+                            </Badge>
+                          );
+                        })}
+                        {wizard.profil.pendamping_belajar
+                          .filter(opt => !["Orang tua aktif", "Guru ngaji/privat", "Mandiri", "Belum rutin"].includes(opt))
+                          .map(opt => (
+                            <Badge 
+                              key={opt}
+                              variant="default"
+                              className="cursor-pointer hover:opacity-80 transition-opacity pr-2"
+                              onClick={() => {
+                                setWizard({
+                                  ...wizard, 
+                                  profil: {
+                                    ...wizard.profil, 
+                                    pendamping_belajar: wizard.profil.pendamping_belajar.filter(p => p !== opt)
+                                  }
+                                });
+                              }}
+                            >
+                              {opt} &times;
+                            </Badge>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 pt-1">
+                        <Input 
+                          placeholder="Tambah opsi lain (tekan Enter)" 
+                          value={customPendamping}
+                          onChange={(e) => setCustomPendamping(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const val = customPendamping.trim();
+                              if (val && !wizard.profil.pendamping_belajar.includes(val)) {
+                                setWizard({...wizard, profil: {...wizard.profil, pendamping_belajar: [...wizard.profil.pendamping_belajar, val]}});
+                              }
+                              setCustomPendamping("");
+                            }
+                          }}
+                          className="h-9"
+                        />
+                        <Button 
+                          type="button" 
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => {
+                            const val = customPendamping.trim();
+                            if (val && !wizard.profil.pendamping_belajar.includes(val)) {
+                              setWizard({...wizard, profil: {...wizard.profil, pendamping_belajar: [...wizard.profil.pendamping_belajar, val]}});
+                            }
+                            setCustomPendamping("");
+                          }}
+                        >
+                          Tambah
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
@@ -480,7 +584,7 @@ export default function DiagnosticEvaluation() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4 p-5 md:p-6 bg-rose-50 dark:bg-rose-950/20 rounded-xl border border-rose-100 shadow-sm transition-shadow hover:shadow-md">
                     <Label className="text-base md:text-lg text-rose-700 dark:text-rose-400 font-semibold">Lahn Jali (Kesalahan Fatal)</Label>
-                    <p className="text-xs md:text-sm text-rose-600/70 mb-4">Mengubah makna (misal salah huruf/harakat). Penalti -2 per kesalahan.</p>
+                    <p className="text-xs md:text-sm text-rose-600/70 mb-4">Kesalahan yang terlihat jelas (Salah Huruf, Salah Harakat, Salah Tasydid). Penalti -2 per kesalahan.</p>
                     <Input 
                       className="text-lg h-12"
                       type="number" min={0} 
@@ -490,7 +594,7 @@ export default function DiagnosticEvaluation() {
                   </div>
                   <div className="space-y-4 p-5 md:p-6 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-100 shadow-sm transition-shadow hover:shadow-md">
                     <Label className="text-base md:text-lg text-amber-700 dark:text-amber-400 font-semibold">Lahn Khofi (Kesalahan Ringan)</Label>
-                    <p className="text-xs md:text-sm text-amber-600/70 mb-4">Tidak mengubah makna (salah dengung/mad). Penalti -1 per kesalahan.</p>
+                    <p className="text-xs md:text-sm text-amber-600/70 mb-4">Kesalahan yang lebih halus (Mad, Qalqalah, Tajwid). Penalti -1 per kesalahan.</p>
                     <Input 
                       className="text-lg h-12"
                       type="number" min={0} 
@@ -549,7 +653,7 @@ export default function DiagnosticEvaluation() {
                             <span className="font-medium text-sm md:text-base">{tajwid}</span>
                             <Select 
                               value={wizard.advanced.checklist_tajwid[tajwid]}
-                              onValueChange={(v: "Baik" | "Perlu Latihan") => setWizard({
+                              onValueChange={(v: "Baik" | "Cukup" | "Perlu") => setWizard({
                                 ...wizard, advanced: {...wizard.advanced, checklist_tajwid: {...wizard.advanced.checklist_tajwid, [tajwid]: v}}
                               })}
                             >
@@ -558,7 +662,8 @@ export default function DiagnosticEvaluation() {
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="Baik">Baik</SelectItem>
-                                <SelectItem value="Perlu Latihan">Perlu Latihan</SelectItem>
+                                <SelectItem value="Cukup">Cukup</SelectItem>
+                                <SelectItem value="Perlu">Perlu</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -566,14 +671,19 @@ export default function DiagnosticEvaluation() {
                       </div>
 
                       <div className="space-y-4 p-5 md:p-6 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-100 shadow-sm max-w-2xl">
-                        <Label className="text-base md:text-lg text-amber-700 dark:text-amber-400 font-semibold">Kesalahan Waqaf Ibtida'</Label>
-                        <p className="text-xs md:text-sm text-amber-600/70 mb-4">Salah memotong/memulai ayat. Penalti -2 per kesalahan.</p>
-                        <Input 
-                          className="text-lg h-12 md:max-w-[200px]"
-                          type="number" min={0} 
-                          value={wizard.advanced.waqaf_error_count} 
-                          onChange={(e) => setWizard({...wizard, advanced: {...wizard.advanced, waqaf_error_count: parseInt(e.target.value) || 0}})} 
-                        />
+                        <Label className="text-base md:text-lg text-amber-700 dark:text-amber-400 font-semibold">Waqaf Ibtida'</Label>
+                        <p className="text-xs md:text-sm text-amber-600/70 mb-4">Menilai kemampuan memotong dan memulai bacaan.</p>
+                        <Select 
+                          value={wizard.advanced.waqaf_ibtida}
+                          onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, waqaf_ibtida: v}})}
+                        >
+                          <SelectTrigger className="w-[200px] h-11"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Sangat Baik">Sangat Baik</SelectItem>
+                            <SelectItem value="Cukup">Cukup</SelectItem>
+                            <SelectItem value="Perlu">Perlu</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
@@ -582,15 +692,71 @@ export default function DiagnosticEvaluation() {
                         <h3 className="font-semibold text-lg md:text-xl pb-2 flex items-center gap-3">
                           <Badge className="bg-violet-500 hover:bg-violet-600 text-sm py-1 px-3">Instrumen Tahfizh</Badge>
                         </h3>
-                        <div className="space-y-4 p-5 md:p-6 bg-violet-50 dark:bg-violet-950/20 rounded-xl border border-violet-100 shadow-sm max-w-2xl">
-                          <Label className="text-base md:text-lg text-violet-700 dark:text-violet-400 font-semibold">Salah Sambung Ayat</Label>
-                          <p className="text-xs md:text-sm text-violet-600/70 mb-4">Terputus atau salah melompat ayat saat tes hafalan. Penalti -2 per kesalahan.</p>
-                          <Input 
-                            className="text-lg h-12 md:max-w-[200px]"
-                            type="number" min={0} 
-                            value={wizard.advanced.salah_sambung_ayat_count} 
-                            onChange={(e) => setWizard({...wizard, advanced: {...wizard.advanced, salah_sambung_ayat_count: parseInt(e.target.value) || 0}})} 
-                          />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                          <div className="space-y-2">
+                            <Label>Hafalan Juz</Label>
+                            <Input placeholder="Contoh: 30" value={wizard.advanced.hafalan_juz} onChange={(e) => setWizard({...wizard, advanced: {...wizard.advanced, hafalan_juz: e.target.value}})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Surat</Label>
+                            <Input placeholder="Contoh: An-Naba" value={wizard.advanced.hafalan_surat} onChange={(e) => setWizard({...wizard, advanced: {...wizard.advanced, hafalan_surat: e.target.value}})} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Ayat</Label>
+                            <Input placeholder="Contoh: 1-10" value={wizard.advanced.hafalan_ayat} onChange={(e) => setWizard({...wizard, advanced: {...wizard.advanced, hafalan_ayat: e.target.value}})} />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4 p-5 md:p-6 bg-violet-50 dark:bg-violet-950/20 rounded-xl border border-violet-100 shadow-sm">
+                            <Label className="text-base md:text-lg text-violet-700 dark:text-violet-400 font-semibold">Sambung Ayat</Label>
+                            <div className="space-y-4">
+                              <div>
+                                <Label className="text-xs text-violet-600 mb-2 block">Respon</Label>
+                                <Select 
+                                  value={wizard.advanced.sambung_ayat_respon}
+                                  onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, sambung_ayat_respon: v}})}
+                                >
+                                  <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Cepat">Cepat</SelectItem>
+                                    <SelectItem value="Cukup">Cukup</SelectItem>
+                                    <SelectItem value="Lambat">Lambat</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-violet-600 mb-2 block">Ketepatan</Label>
+                                <Select 
+                                  value={wizard.advanced.sambung_ayat_ketepatan}
+                                  onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, sambung_ayat_ketepatan: v}})}
+                                >
+                                  <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Tepat">Tepat</SelectItem>
+                                    <SelectItem value="Koreksi">Koreksi</SelectItem>
+                                    <SelectItem value="Tertukar">Tertukar</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-4 p-5 md:p-6 bg-violet-50 dark:bg-violet-950/20 rounded-xl border border-violet-100 shadow-sm">
+                            <Label className="text-base md:text-lg text-violet-700 dark:text-violet-400 font-semibold">Murojaah</Label>
+                            <p className="text-xs md:text-sm text-violet-600/70 mb-4">Kekuatan hafalan siswa secara umum.</p>
+                            <Select 
+                              value={wizard.advanced.murojaah}
+                              onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, murojaah: v}})}
+                            >
+                              <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Sangat Kuat">Sangat Kuat</SelectItem>
+                                <SelectItem value="Cukup Kuat">Cukup Kuat</SelectItem>
+                                <SelectItem value="Perlu Penguatan">Perlu Penguatan</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
                       </div>
                     )}

@@ -81,7 +81,7 @@ export type FullDiagnosticData = {
   selected_level_id?: string;
   
   // Profil Awal
-  jawaban_profil: Record<string, string | boolean>;
+  jawaban_profil: Record<string, any>;
   
   // Core
   fluency_score: number;
