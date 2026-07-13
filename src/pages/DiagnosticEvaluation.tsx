@@ -519,6 +519,7 @@ export default function DiagnosticEvaluation() {
                           <SelectItem value="4-6 kali/minggu">4-6 kali/minggu</SelectItem>
                           <SelectItem value="2-3 kali/minggu">2-3 kali/minggu</SelectItem>
                           <SelectItem value="Jarang">Jarang</SelectItem>
+                          <SelectItem value="Tidak pernah">Tidak pernah</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
