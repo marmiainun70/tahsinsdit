@@ -1062,51 +1062,56 @@ export default function DiagnosticEvaluation() {
                               <span className="text-xs text-amber-600/70">Tanda Waqaf</span>
                             </div>
                             <div className="flex-1"></div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              {WAQAF_SIGNS.map(waqaf => {
-                                const state = wizard.advanced.waqaf_ibtida[waqaf] || "-";
-                                const isBenar = state === "BENAR";
-                                const isSalah = state === "SALAH";
-                                
-                                return (
-                                  <Button
-                                    key={waqaf}
-                                    variant={isBenar ? "default" : isSalah ? "destructive" : "outline"}
-                                    size="sm"
-                                    className={`w-12 h-10 font-arabic text-lg ${
-                                      isBenar ? "bg-emerald-500 hover:bg-emerald-600" : 
-                                      isSalah ? "bg-rose-500 hover:bg-rose-600" : 
-                                      "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400"
-                                    }`}
-                                    onClick={() => {
-                                      let nextState: "-" | "BENAR" | "SALAH" = "-";
-                                      if (state === "-") nextState = "BENAR";
-                                      else if (state === "BENAR") nextState = "SALAH";
-                                      else nextState = "-";
-                                      
-                                      setWizard({
-                                        ...wizard,
-                                        advanced: {
-                                          ...wizard.advanced,
-                                          waqaf_ibtida: {
-                                            ...wizard.advanced.waqaf_ibtida,
-                                            [waqaf]: nextState
+                            <div className="flex flex-col gap-2 items-end sm:items-start">
+                              <div className="flex flex-wrap items-center gap-2">
+                                {WAQAF_SIGNS.map(waqaf => {
+                                  const state = wizard.advanced.waqaf_ibtida[waqaf] || "-";
+                                  const isBenar = state === "BENAR";
+                                  const isSalah = state === "SALAH";
+                                  
+                                  return (
+                                    <Button
+                                      key={waqaf}
+                                      variant={isBenar ? "default" : isSalah ? "destructive" : "outline"}
+                                      size="sm"
+                                      className={`w-12 h-10 font-arabic text-lg ${
+                                        isBenar ? "bg-emerald-500 hover:bg-emerald-600" : 
+                                        isSalah ? "bg-rose-500 hover:bg-rose-600" : 
+                                        "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400"
+                                      }`}
+                                      onClick={() => {
+                                        let nextState: "-" | "BENAR" | "SALAH" = "-";
+                                        if (state === "-") nextState = "BENAR";
+                                        else if (state === "BENAR") nextState = "SALAH";
+                                        else nextState = "-";
+                                        
+                                        setWizard({
+                                          ...wizard,
+                                          advanced: {
+                                            ...wizard.advanced,
+                                            waqaf_ibtida: {
+                                              ...wizard.advanced.waqaf_ibtida,
+                                              [waqaf]: nextState
+                                            }
                                           }
-                                        }
-                                      });
-                                    }}
-                                  >
-                                    {waqaf}
-                                  </Button>
-                                );
-                              })}
-                              <div className="w-16 text-right ml-2">
-                                {Object.values(wizard.advanced.waqaf_ibtida).filter(v => v === "SALAH").length > 0 && (
-                                  <Badge variant="destructive" className="bg-amber-100 text-amber-700">
-                                    - {Object.values(wizard.advanced.waqaf_ibtida).filter(v => v === "SALAH").length}
-                                  </Badge>
-                                )}
+                                        });
+                                      }}
+                                    >
+                                      {waqaf}
+                                    </Button>
+                                  );
+                                })}
+                                <div className="w-16 text-right ml-2">
+                                  {Object.values(wizard.advanced.waqaf_ibtida).filter(v => v === "SALAH").length > 0 && (
+                                    <Badge variant="destructive" className="bg-amber-100 text-amber-700">
+                                      - {Object.values(wizard.advanced.waqaf_ibtida).filter(v => v === "SALAH").length}
+                                    </Badge>
+                                  )}
+                                </div>
                               </div>
+                              <span className="text-[10px] sm:text-xs text-amber-700/60 dark:text-amber-400/60 mt-1">
+                                *Hijau = Benar (aman), Merah = Salah (penalti x1)
+                              </span>
                             </div>
                           </div>
                         )}
