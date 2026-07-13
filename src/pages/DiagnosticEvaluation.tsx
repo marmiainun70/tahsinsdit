@@ -23,6 +23,8 @@ interface WizardState {
     rutinitas_mengaji: string;
     pendamping_belajar: string[];
     motivasi: string;
+    jumlah_hafalan?: string;
+    hafalan_terakhir?: string;
   };
   core: {
     bahan_bacaan_iqra: string;
@@ -58,6 +60,8 @@ const initialWizardState: WizardState = {
     rutinitas_mengaji: "Setiap hari",
     pendamping_belajar: ["Orang tua aktif"],
     motivasi: "",
+    jumlah_hafalan: "",
+    hafalan_terakhir: "",
   },
   core: {
     bahan_bacaan_iqra: "EBTA 1",
@@ -469,6 +473,29 @@ export default function DiagnosticEvaluation() {
                   </Select>
                   <p className="text-xs md:text-sm text-muted-foreground">Pilih level spesifik untuk menentukan instrumen soal di langkah selanjutnya.</p>
                 </div>
+                
+                {wizard.targetLevel.includes("Tahfizh") && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-emerald-50 dark:bg-emerald-900/20 p-4 md:p-5 rounded-xl border border-emerald-100 dark:border-emerald-800">
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">Jumlah Hafalan saat ini</Label>
+                      <Input 
+                        placeholder="E.g., 2 Juz, 5 Lembar"
+                        value={wizard.profil.jumlah_hafalan}
+                        onChange={(e) => setWizard({...wizard, profil: {...wizard.profil, jumlah_hafalan: e.target.value}})}
+                        className="bg-white dark:bg-slate-950"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold mb-2 block">Hafalan Terakhir</Label>
+                      <Input 
+                        placeholder="E.g., An-Naba' ayat 20"
+                        value={wizard.profil.hafalan_terakhir}
+                        onChange={(e) => setWizard({...wizard, profil: {...wizard.profil, hafalan_terakhir: e.target.value}})}
+                        className="bg-white dark:bg-slate-950"
+                      />
+                    </div>
+                  </div>
+                )}
                 
                 <div className="space-y-6">
                   <h3 className="font-semibold text-lg md:text-xl border-b pb-3">Profil Awal (Kebiasaan)</h3>
