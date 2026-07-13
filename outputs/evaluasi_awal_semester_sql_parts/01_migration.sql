@@ -1,9 +1,10 @@
 -- 1. Drop old tables if exist
 DROP TABLE IF EXISTS public.teacher_profiles_diagnostics CASCADE;
 DROP TABLE IF EXISTS public.diagnostic_evaluations CASCADE;
+DROP TABLE IF EXISTS public.master_level_kemampuan CASCADE;
 
 -- 2. Master Table: master_level_kemampuan
-CREATE TABLE IF NOT EXISTS public.master_level_kemampuan (
+CREATE TABLE public.master_level_kemampuan (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     kode_level VARCHAR(50) UNIQUE NOT NULL,
     nama_level VARCHAR(100) NOT NULL,

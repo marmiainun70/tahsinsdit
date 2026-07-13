@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useDiagnosticStudents, useSubmitDiagnosticWizard, FullDiagnosticData } from "@/hooks/useDiagnostic";
 import { useAddStudent } from "@/hooks/useSupabaseData";
 import { useAcademicYears } from "@/hooks/useAcademicCalendar";
-import { evaluateStudent, EvaluationInput, EvaluationOutput } from "@/services/diagnosticEngine";
+import { evaluateStudent, EvaluationInput, EvaluationOutput, LEVEL_ORDER, LevelType } from "@/services/diagnosticEngine";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import type { Rombel } from "@/integrations/supabase/types";
 
-// Setup Types for Form State
-type ProgramType = "Tahsin Dasar" | "Tahsin Lanjutan" | "Tahfizh";
-
 interface WizardState {
-  targetProgram: ProgramType;
+  targetLevel: LevelType;
   profil: {
     rutinitas_mengaji: string;
     pendamping_belajar: string[];
@@ -50,7 +47,7 @@ const MAKHARIJ_LIST = ["Rongga Mulut (Al-Jauf)", "Tenggorokan (Al-Halq)", "Lidah
 const TAJWID_LIST = ["Nun Mati/Tanwin", "Mim Mati", "Hukum Mad", "Qalqalah", "Ghunnah"];
 
 const initialWizardState: WizardState = {
-  targetProgram: "Tahsin Dasar",
+  targetLevel: "Iqra 1",
   profil: {
     rutinitas_mengaji: "Setiap hari",
     pendamping_belajar: ["Orang tua aktif"],
@@ -128,12 +125,14 @@ export default function DiagnosticEvaluation() {
 
   // Wizard State
   const [evalOpen, setEvalOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [step, setStep] = useState(1);
   const [wizard, setWizard] = useState<WizardState>(initialWizardState);
 
   const submitMutation = useSubmitDiagnosticWizard();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOpenWizard = (student: any) => {
     setSelectedStudent(student);
     setWizard(initialWizardState);
@@ -159,7 +158,7 @@ export default function DiagnosticEvaluation() {
       lahnKhofiCount: wizard.core.lahn_khofi_count,
       waqafErrorCount: waqafError,
       salahSambungAyatCount: sambungAyatError,
-      targetProgram: wizard.targetProgram
+      targetLevel: wizard.targetLevel
     };
     return evaluateStudent(input);
   }, [wizard, step]);
@@ -195,6 +194,7 @@ export default function DiagnosticEvaluation() {
       lahn_jali_count: wizard.core.lahn_jali_count,
       lahn_khofi_count: wizard.core.lahn_khofi_count,
       checklist_makharij: wizard.core.checklist_makharij,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       checklist_tajwid: wizard.advanced.checklist_tajwid as any,
       waqaf_error_count: waqafError,
       salah_sambung_ayat_count: sambungAyatError,
@@ -210,9 +210,9 @@ export default function DiagnosticEvaluation() {
     });
   };
 
-  const isTahsinLanjutan = wizard.targetProgram === "Tahsin Lanjutan";
-  const isTahfizh = wizard.targetProgram === "Tahfizh";
-  const showAdvanced = isTahsinLanjutan || isTahfizh;
+  const showAdvanced = !wizard.targetLevel.startsWith("Iqra");
+  const isTahfizh = wizard.targetLevel.startsWith("Tahfizh");
+  const isLanjutan2Or3 = wizard.targetLevel === "Tahsin Lanjutan 2" || wizard.targetLevel === "Tahsin Lanjutan 3";
 
   return (
     <div className="space-y-6">
@@ -432,21 +432,21 @@ export default function DiagnosticEvaluation() {
             {step === 1 && (
               <div className="space-y-8">
                 <div className="space-y-4">
-                  <Label className="text-base md:text-lg font-semibold">Target Program Evaluasi</Label>
+                  <Label className="text-base md:text-lg font-semibold">Target Level Evaluasi</Label>
                   <Select 
-                    value={wizard.targetProgram} 
-                    onValueChange={(v: ProgramType) => setWizard({...wizard, targetProgram: v})}
+                    value={wizard.targetLevel} 
+                    onValueChange={(v: LevelType) => setWizard({...wizard, targetLevel: v})}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Tahsin Dasar">Level 1 - Pemula (Tahsin Dasar)</SelectItem>
-                      <SelectItem value="Tahsin Lanjutan">Level 2 - Menengah (Tahsin Lanjutan)</SelectItem>
-                      <SelectItem value="Tahfizh">Level 3 - Unggul (Tahfizh)</SelectItem>
+                      {LEVEL_ORDER.map(level => (
+                        <SelectItem key={level} value={level}>{level}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs md:text-sm text-muted-foreground">Pilih program untuk menentukan instrumen soal di langkah selanjutnya.</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Pilih level spesifik untuk menentukan instrumen soal di langkah selanjutnya.</p>
                 </div>
                 
                 <div className="space-y-6">
@@ -638,7 +638,7 @@ export default function DiagnosticEvaluation() {
                     <CheckCircle2 className="mx-auto h-12 w-12 md:h-16 md:w-16 text-emerald-500 mb-4 md:mb-6" />
                     <h3 className="font-semibold text-lg md:text-xl">Instrumen Selesai</h3>
                     <p className="text-muted-foreground text-sm md:text-base max-w-md mx-auto mt-2">
-                      Untuk target program <strong>Tahsin Dasar</strong>, Anda tidak perlu mengisi tes lanjutan. Silakan klik Lanjut untuk melihat hasil review.
+                      Untuk target level <strong>{wizard.targetLevel}</strong>, Anda tidak perlu mengisi tes lanjutan. Silakan klik Lanjut untuk melihat hasil review.
                     </p>
                   </div>
                 ) : (
@@ -670,21 +670,23 @@ export default function DiagnosticEvaluation() {
                         ))}
                       </div>
 
-                      <div className="space-y-4 p-5 md:p-6 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-100 shadow-sm max-w-2xl">
-                        <Label className="text-base md:text-lg text-amber-700 dark:text-amber-400 font-semibold">Waqaf Ibtida'</Label>
-                        <p className="text-xs md:text-sm text-amber-600/70 mb-4">Menilai kemampuan memotong dan memulai bacaan.</p>
-                        <Select 
-                          value={wizard.advanced.waqaf_ibtida}
-                          onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, waqaf_ibtida: v}})}
-                        >
-                          <SelectTrigger className="w-[200px] h-11"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Sangat Baik">Sangat Baik</SelectItem>
-                            <SelectItem value="Cukup">Cukup</SelectItem>
-                            <SelectItem value="Perlu">Perlu</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      {isLanjutan2Or3 && (
+                        <div className="space-y-4 p-5 md:p-6 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-100 shadow-sm max-w-2xl">
+                          <Label className="text-base md:text-lg text-amber-700 dark:text-amber-400 font-semibold">Waqaf Ibtida'</Label>
+                          <p className="text-xs md:text-sm text-amber-600/70 mb-4">Menilai kemampuan memotong dan memulai bacaan.</p>
+                          <Select 
+                            value={wizard.advanced.waqaf_ibtida}
+                            onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, waqaf_ibtida: v}})}
+                          >
+                            <SelectTrigger className="w-[200px] h-11"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Sangat Baik">Sangat Baik</SelectItem>
+                              <SelectItem value="Cukup">Cukup</SelectItem>
+                              <SelectItem value="Perlu">Perlu</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
 
                     {isTahfizh && (

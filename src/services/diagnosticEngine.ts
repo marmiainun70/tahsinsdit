@@ -4,36 +4,44 @@
  * for the Sistem Evaluasi Awal Semester.
  */
 
+export const LEVEL_ORDER = [
+  "Iqra 1", "Iqra 2", "Iqra 3", "Iqra 4", "Iqra 5", "Iqra 6",
+  "Tahsin Lanjutan 1", "Tahsin Lanjutan 2", "Tahsin Lanjutan 3",
+  "Tahfizh Juz 30", "Tahfizh Juz 29", "Tahfizh Juz 28"
+] as const;
+
+export type LevelType = typeof LEVEL_ORDER[number];
+
 export interface EvaluationInput {
   fluencyScore: number;
   lahnJaliCount: number;
   lahnKhofiCount: number;
   waqafErrorCount: number;
   salahSambungAyatCount: number;
-  targetProgram: "Tahsin Dasar" | "Tahsin Lanjutan" | "Tahfizh";
+  targetLevel: LevelType;
 }
 
 export interface EvaluationOutput {
   finalScore: number;
   finalPredicate: string;
-  recommendedProgram: "Tahsin Dasar" | "Tahsin Lanjutan" | "Tahfizh";
+  recommendedProgram: string;
   recommendedKodeLevel: string;
   fokusPembinaan: string[];
 }
 
 /**
- * Calculates the score based on the target program's specific reduction rules.
+ * Calculates the score based on the target level's specific reduction rules.
  */
 export function calculateDiagnosticScore(input: EvaluationInput): number {
-  const { fluencyScore, lahnJaliCount, lahnKhofiCount, waqafErrorCount, salahSambungAyatCount, targetProgram } = input;
+  const { fluencyScore, lahnJaliCount, lahnKhofiCount, waqafErrorCount, salahSambungAyatCount, targetLevel } = input;
   
-  let score = fluencyScore - (2 * lahnJaliCount) - lahnKhofiCount;
+  let score = fluencyScore - (2 * lahnJaliCount) - (1 * lahnKhofiCount);
 
-  if (targetProgram === "Tahsin Lanjutan" || targetProgram === "Tahfizh") {
-    score -= (2 * waqafErrorCount);
+  if (targetLevel === "Tahsin Lanjutan 2" || targetLevel === "Tahsin Lanjutan 3") {
+    score -= (1 * waqafErrorCount);
   }
 
-  if (targetProgram === "Tahfizh") {
+  if (targetLevel.startsWith("Tahfizh")) {
     score -= (2 * salahSambungAyatCount);
   }
 
@@ -53,20 +61,30 @@ export function getPredicate(score: number): string {
 
 /**
  * Determines the recommended program and baseline level based on the final score.
- * Rules:
- * >= 85: LEVEL_3 (Tahfizh)
- * 70 - 84: LEVEL_2 (Tahsin Lanjutan)
- * < 70: LEVEL_1 (Tahsin Dasar)
  */
-export function getRecommendation(score: number): { program: "Tahsin Dasar" | "Tahsin Lanjutan" | "Tahfizh", kodeLevel: string } {
-  if (score >= 85) {
-    return { program: "Tahfizh", kodeLevel: "LEVEL_3" };
-  } else if (score >= 70) {
-    return { program: "Tahsin Lanjutan", kodeLevel: "LEVEL_2" };
+export function getRecommendation(score: number, currentLevel: LevelType): { program: string, kodeLevel: string } {
+  const currentIndex = LEVEL_ORDER.indexOf(currentLevel);
+  if (currentIndex === -1) return { program: "Tahsin Dasar", kodeLevel: "Iqra 1" };
+  
+  let isPassed = false;
+  
+  if (currentLevel === "Iqra 6") {
+    isPassed = score >= 85;
   } else {
-    // For Tahsin Dasar, we can recommend LEVEL_1_1 as a baseline, or the system can refine it later.
-    return { program: "Tahsin Dasar", kodeLevel: "LEVEL_1_1" };
+    isPassed = score >= 80;
   }
+  
+  let nextLevel = currentLevel;
+  if (isPassed && currentIndex < LEVEL_ORDER.length - 1) {
+    nextLevel = LEVEL_ORDER[currentIndex + 1];
+  }
+  
+  // determine program from nextLevel
+  let program = "Tahsin Dasar";
+  if (nextLevel.startsWith("Tahsin Lanjutan")) program = "Tahsin Lanjutan";
+  if (nextLevel.startsWith("Tahfizh")) program = "Tahfizh";
+  
+  return { program, kodeLevel: nextLevel };
 }
 
 /**
@@ -81,10 +99,10 @@ export function generateFokusPembinaan(input: EvaluationInput): string[] {
   if (input.lahnKhofiCount > 0) {
     fokus.push(`Perbaikan Lahn Khofi (${input.lahnKhofiCount} kesalahan)`);
   }
-  if (input.waqafErrorCount > 0 && (input.targetProgram === "Tahsin Lanjutan" || input.targetProgram === "Tahfizh")) {
+  if (input.waqafErrorCount > 0 && (input.targetLevel === "Tahsin Lanjutan 2" || input.targetLevel === "Tahsin Lanjutan 3")) {
     fokus.push(`Perbaikan Tajwid & Waqaf (${input.waqafErrorCount} kesalahan)`);
   }
-  if (input.salahSambungAyatCount > 0 && input.targetProgram === "Tahfizh") {
+  if (input.salahSambungAyatCount > 0 && input.targetLevel.startsWith("Tahfizh")) {
     fokus.push(`Murojaah Hafalan & Kelancaran Sambung Ayat (${input.salahSambungAyatCount} kesalahan)`);
   }
   
@@ -101,7 +119,7 @@ export function generateFokusPembinaan(input: EvaluationInput): string[] {
 export function evaluateStudent(input: EvaluationInput): EvaluationOutput {
   const finalScore = calculateDiagnosticScore(input);
   const finalPredicate = getPredicate(finalScore);
-  const recommendation = getRecommendation(finalScore);
+  const recommendation = getRecommendation(finalScore, input.targetLevel);
   const fokusPembinaan = generateFokusPembinaan(input);
 
   return {
