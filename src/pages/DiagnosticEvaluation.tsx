@@ -1287,10 +1287,10 @@ export default function DiagnosticEvaluation() {
                         engineOutput.recommendedProgram === "Tahsin Lanjutan" ? "bg-amber-500 hover:bg-amber-600" :
                         "bg-emerald-500 hover:bg-emerald-600"
                       }`}>
-                        {engineOutput.recommendedProgram}
+                        {engineOutput.recommendedProgram} - {engineOutput.recommendedKodeLevel}
                       </Badge>
                       <p className="text-sm md:text-base text-muted-foreground mt-4 leading-relaxed">
-                        Berdasarkan kalkulasi otomatis dari profil, kelancaran, dan tajwid, siswa ini sangat direkomendasikan untuk masuk ke program <strong>{engineOutput.recommendedProgram}</strong>.
+                        Berdasarkan kalkulasi otomatis dari profil, kelancaran, dan tajwid, siswa ini sangat direkomendasikan untuk masuk ke program <strong>{engineOutput.recommendedProgram}</strong> pada level <strong>{engineOutput.recommendedKodeLevel}</strong>.
                       </p>
                     </CardContent>
                   </Card>
