@@ -46,7 +46,7 @@ interface WizardState {
   };
   advanced: {
     checklist_tajwid: Record<string, "Baik" | "Cukup" | "Perlu">;
-    waqaf_ibtida: string;
+    waqaf_ibtida: Record<string, "-" | "BENAR" | "SALAH">;
     // Level 3 specific
     hafalan_juz: string;
     hafalan_surat: string;
@@ -66,6 +66,7 @@ const MAKHARIJ_DATA = [
 ];
 const CONFUSED_LETTERS = ["ت / ط", "ث / س / ص", "ح / هـ", "خ / غ", "ذ / ز / ظ", "ق / ك", "ء / ع"];
 const TAJWID_LIST = ["Nun Mati/Tanwin", "Mim Mati", "Hukum Mad", "Qalqalah", "Ghunnah"];
+const WAQAF_SIGNS = ["م", "ط", "ج", "صلى", "قلى", "لا"];
 
 const initialWizardState: WizardState = {
   targetLevel: "Iqra 1",
@@ -96,7 +97,7 @@ const initialWizardState: WizardState = {
   },
   advanced: {
     checklist_tajwid: Object.fromEntries(TAJWID_LIST.map(k => [k, "Baik"])),
-    waqaf_ibtida: "Sangat Baik",
+    waqaf_ibtida: Object.fromEntries(WAQAF_SIGNS.map(k => [k, "-"])),
     hafalan_juz: "",
     hafalan_surat: "",
     hafalan_ayat: "",
@@ -179,9 +180,7 @@ export default function DiagnosticEvaluation() {
     if (step < 4) return null;
     
     // Map categorical values to error counts for the engine
-    let waqafError = 0;
-    if (wizard.advanced.waqaf_ibtida === "Cukup") waqafError = 1;
-    if (wizard.advanced.waqaf_ibtida === "Perlu") waqafError = 2;
+    const waqafError = Object.values(wizard.advanced.waqaf_ibtida).filter(v => v === "SALAH").length;
 
     let sambungAyatError = 0;
     if (wizard.advanced.sambung_ayat_ketepatan === "Koreksi") sambungAyatError = 1;
@@ -234,9 +233,7 @@ export default function DiagnosticEvaluation() {
     if (!selectedStudent || !activeYear || !engineOutput) return;
 
     // Calculate error counts again for payload
-    let waqafError = 0;
-    if (wizard.advanced.waqaf_ibtida === "Cukup") waqafError = 1;
-    if (wizard.advanced.waqaf_ibtida === "Perlu") waqafError = 2;
+    const waqafError = Object.values(wizard.advanced.waqaf_ibtida).filter(v => v === "SALAH").length;
 
     let sambungAyatError = 0;
     if (wizard.advanced.sambung_ayat_ketepatan === "Koreksi") sambungAyatError = 1;
@@ -795,9 +792,9 @@ export default function DiagnosticEvaluation() {
                           <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
                             <Label className="text-sm font-semibold mb-3 block text-emerald-700 dark:text-emerald-400">Penilaian Khusus Soal Ini</Label>
                             {renderEvaluationMetrics(
-                              soal.fluency_score,
-                              soal.lahn_jali_detail,
-                              soal.lahn_khofi_detail,
+                              soal.fluency_score ?? 90,
+                              soal.lahn_jali_detail || { huruf: 0, harakat: 0, tasydid: 0 },
+                              soal.lahn_khofi_detail || { mad: 0, qalqalah: 0, tajwid: 0 },
                               (val) => {
                                 const newSoal = [...wizard.core.bahan_bacaan_tahfizh_soal];
                                 newSoal[index].fluency_score = val;
@@ -805,12 +802,12 @@ export default function DiagnosticEvaluation() {
                               },
                               (field, val) => {
                                 const newSoal = [...wizard.core.bahan_bacaan_tahfizh_soal];
-                                newSoal[index].lahn_jali_detail = { ...newSoal[index].lahn_jali_detail, [field]: val };
+                                newSoal[index].lahn_jali_detail = { ...(newSoal[index].lahn_jali_detail || {huruf:0, harakat:0, tasydid:0}), [field]: val };
                                 setWizard({...wizard, core: {...wizard.core, bahan_bacaan_tahfizh_soal: newSoal}});
                               },
                               (field, val) => {
                                 const newSoal = [...wizard.core.bahan_bacaan_tahfizh_soal];
-                                newSoal[index].lahn_khofi_detail = { ...newSoal[index].lahn_khofi_detail, [field]: val };
+                                newSoal[index].lahn_khofi_detail = { ...(newSoal[index].lahn_khofi_detail || {mad:0, qalqalah:0, tajwid:0}), [field]: val };
                                 setWizard({...wizard, core: {...wizard.core, bahan_bacaan_tahfizh_soal: newSoal}});
                               }
                             )}
@@ -979,25 +976,51 @@ export default function DiagnosticEvaluation() {
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 bg-amber-50/30 dark:bg-amber-950/10 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors">
                             <div className="flex flex-col w-48">
                               <span className="font-medium text-sm text-amber-800 dark:text-amber-400">Waqaf Ibtida'</span>
-                              <span className="text-xs text-amber-600/70">Memotong & memulai bacaan</span>
+                              <span className="text-xs text-amber-600/70">Tanda Waqaf</span>
                             </div>
                             <div className="flex-1"></div>
-                            <div className="flex items-center gap-4">
-                              <Select 
-                                value={wizard.advanced.waqaf_ibtida}
-                                onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, waqaf_ibtida: v}})}
-                              >
-                                <SelectTrigger className="w-[140px] h-9 text-sm"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Sangat Baik">Sangat Baik</SelectItem>
-                                  <SelectItem value="Cukup">Cukup</SelectItem>
-                                  <SelectItem value="Perlu">Perlu</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              <div className="w-20 text-right">
-                                {(wizard.advanced.waqaf_ibtida === "Cukup" || wizard.advanced.waqaf_ibtida === "Perlu") && (
+                            <div className="flex flex-wrap items-center gap-2">
+                              {WAQAF_SIGNS.map(waqaf => {
+                                const state = wizard.advanced.waqaf_ibtida[waqaf] || "-";
+                                const isBenar = state === "BENAR";
+                                const isSalah = state === "SALAH";
+                                
+                                return (
+                                  <Button
+                                    key={waqaf}
+                                    variant={isBenar ? "default" : isSalah ? "destructive" : "outline"}
+                                    size="sm"
+                                    className={`w-12 h-10 font-arabic text-lg ${
+                                      isBenar ? "bg-emerald-500 hover:bg-emerald-600" : 
+                                      isSalah ? "bg-rose-500 hover:bg-rose-600" : 
+                                      "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400"
+                                    }`}
+                                    onClick={() => {
+                                      let nextState: "-" | "BENAR" | "SALAH" = "-";
+                                      if (state === "-") nextState = "BENAR";
+                                      else if (state === "BENAR") nextState = "SALAH";
+                                      else nextState = "-";
+                                      
+                                      setWizard({
+                                        ...wizard,
+                                        advanced: {
+                                          ...wizard.advanced,
+                                          waqaf_ibtida: {
+                                            ...wizard.advanced.waqaf_ibtida,
+                                            [waqaf]: nextState
+                                          }
+                                        }
+                                      });
+                                    }}
+                                  >
+                                    {waqaf}
+                                  </Button>
+                                );
+                              })}
+                              <div className="w-16 text-right ml-2">
+                                {Object.values(wizard.advanced.waqaf_ibtida).filter(v => v === "SALAH").length > 0 && (
                                   <Badge variant="destructive" className="bg-amber-100 text-amber-700">
-                                    - {wizard.advanced.waqaf_ibtida === "Cukup" ? 1 : 2}
+                                    - {Object.values(wizard.advanced.waqaf_ibtida).filter(v => v === "SALAH").length}
                                   </Badge>
                                 )}
                               </div>
