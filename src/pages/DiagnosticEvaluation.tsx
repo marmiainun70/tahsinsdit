@@ -58,7 +58,7 @@ const initialWizardState: WizardState = {
   targetLevel: "Iqra 1",
   profil: {
     rutinitas_mengaji: "Setiap hari",
-    pendamping_belajar: ["Orang tua aktif"],
+    pendamping_belajar: ["Orang Tua"],
     motivasi: "",
     jumlah_hafalan: "",
     hafalan_terakhir: "",
@@ -520,7 +520,7 @@ export default function DiagnosticEvaluation() {
                     <div className="space-y-3">
                       <Label className="text-sm md:text-base font-medium">Pendampingan Rumah</Label>
                       <div className="flex flex-wrap gap-2">
-                        {["Orang tua aktif", "Guru ngaji/privat", "Mandiri", "Belum rutin"].map(opt => {
+                        {["Orang Tua", "Guru ngaji/privat", "Mandiri", "Belum rutin"].map(opt => {
                           const isSelected = wizard.profil.pendamping_belajar.includes(opt);
                           return (
                             <Badge 
