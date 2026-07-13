@@ -283,21 +283,21 @@ export default function DiagnosticEvaluation() {
             </Select>
           </div>
 
-          <div className="rounded-md border">
-            <Table>
+          <div className="rounded-md border overflow-x-auto">
+            <Table className="min-w-[600px] w-full">
               <TableHeader className="bg-slate-50 dark:bg-slate-900/40">
                 <TableRow>
-                  <TableHead>Nama Siswa</TableHead>
-                  <TableHead>Kelas</TableHead>
-                  <TableHead>Status Evaluasi</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
+                  <TableHead className="whitespace-nowrap px-6 py-4">Nama Siswa</TableHead>
+                  <TableHead className="whitespace-nowrap px-6 py-4">Kelas</TableHead>
+                  <TableHead className="whitespace-nowrap px-6 py-4">Status Evaluasi</TableHead>
+                  <TableHead className="whitespace-nowrap px-6 py-4 text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-32 text-center">
-                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+                    <TableCell colSpan={4} className="h-40 text-center">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
                     </TableCell>
                   </TableRow>
                 ) : students.length === 0 ? (
@@ -314,10 +314,10 @@ export default function DiagnosticEvaluation() {
                     const isEvaluated = !!evaluation;
                     
                     return (
-                      <TableRow key={student.id}>
-                        <TableCell className="font-medium">{student.nama}</TableCell>
-                        <TableCell>Kelas {student.kelas}{student.rombel}</TableCell>
-                        <TableCell>
+                      <TableRow key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <TableCell className="font-medium px-6 py-4">{student.nama}</TableCell>
+                        <TableCell className="px-6 py-4 whitespace-nowrap">Kelas {student.kelas}{student.rombel}</TableCell>
+                        <TableCell className="px-6 py-4 whitespace-nowrap">
                           {isEvaluated ? (
                             <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
                               Sudah Dievaluasi ({evaluation.final_predicate})
@@ -328,7 +328,7 @@ export default function DiagnosticEvaluation() {
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right px-6 py-4 whitespace-nowrap">
                           <Button 
                             variant={isEvaluated ? "outline" : "default"}
                             size="sm"
