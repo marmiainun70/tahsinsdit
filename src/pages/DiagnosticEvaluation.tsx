@@ -25,7 +25,10 @@ interface WizardState {
     motivasi: string;
   };
   core: {
-    bahan_bacaan: string;
+    bahan_bacaan_iqra: string;
+    bahan_bacaan_tahsin_surat: string;
+    bahan_bacaan_tahsin_ayat: string;
+    bahan_bacaan_tahfizh_soal: Array<{ id: string, juz: string, surat_ayat: string }>;
     fluency_score: number;
     lahn_jali_detail: { huruf: number; harakat: number; tasydid: number };
     lahn_khofi_detail: { mad: number; qalqalah: number; tajwid: number };
@@ -57,7 +60,10 @@ const initialWizardState: WizardState = {
     motivasi: "",
   },
   core: {
-    bahan_bacaan: "",
+    bahan_bacaan_iqra: "EBTA 1",
+    bahan_bacaan_tahsin_surat: "",
+    bahan_bacaan_tahsin_ayat: "",
+    bahan_bacaan_tahfizh_soal: [{ id: "1", juz: "30", surat_ayat: "" }],
     fluency_score: 90,
     lahn_jali_detail: { huruf: 0, harakat: 0, tasydid: 0 },
     lahn_khofi_detail: { mad: 0, qalqalah: 0, tajwid: 0 },
@@ -198,7 +204,10 @@ export default function DiagnosticEvaluation() {
         murojaah: wizard.advanced.murojaah,
         waqaf_ibtida: wizard.advanced.waqaf_ibtida,
         huruf_tertukar: wizard.core.huruf_tertukar,
-        bahan_bacaan: wizard.core.bahan_bacaan,
+        bahan_bacaan_iqra: wizard.core.bahan_bacaan_iqra,
+        bahan_bacaan_tahsin_surat: wizard.core.bahan_bacaan_tahsin_surat,
+        bahan_bacaan_tahsin_ayat: wizard.core.bahan_bacaan_tahsin_ayat,
+        bahan_bacaan_tahfizh_soal: wizard.core.bahan_bacaan_tahfizh_soal,
         lahn_jali_detail: wizard.core.lahn_jali_detail,
         lahn_khofi_detail: wizard.core.lahn_khofi_detail
       },
@@ -577,14 +586,120 @@ export default function DiagnosticEvaluation() {
             {step === 2 && (
               <div className="space-y-8">
                 {/* 1. Bahan Bacaan / Soal */}
-                <div className="space-y-3">
-                  <Label className="text-base md:text-lg font-semibold">Bahan Bacaan / Soal Ujian</Label>
-                  <Textarea 
-                    value={wizard.core.bahan_bacaan}
-                    onChange={(e) => setWizard({...wizard, core: {...wizard.core, bahan_bacaan: e.target.value}})}
-                    placeholder="Ketik atau paste teks ujian di sini..."
-                    className="min-h-[100px] resize-y"
-                  />
+                <div className="space-y-4 bg-slate-50 dark:bg-slate-900/50 p-4 md:p-6 rounded-xl border">
+                  <Label className="text-base md:text-lg font-semibold flex items-center gap-2">
+                    Bahan Bacaan / Soal Ujian
+                    <Badge variant="outline" className="bg-white dark:bg-slate-950 font-normal">{wizard.targetLevel}</Badge>
+                  </Label>
+                  
+                  {wizard.targetLevel.includes("Iqra") && (
+                    <div className="max-w-xs">
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Paket Soal EBTA</Label>
+                      <Select 
+                        value={wizard.core.bahan_bacaan_iqra}
+                        onValueChange={(v) => setWizard({...wizard, core: {...wizard.core, bahan_bacaan_iqra: v}})}
+                      >
+                        <SelectTrigger className="bg-white dark:bg-slate-950"><SelectValue placeholder="Pilih Paket" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="EBTA 1">EBTA 1</SelectItem>
+                          <SelectItem value="EBTA 2">EBTA 2</SelectItem>
+                          <SelectItem value="EBTA 3">EBTA 3</SelectItem>
+                          <SelectItem value="EBTA 4">EBTA 4</SelectItem>
+                          <SelectItem value="EBTA 5">EBTA 5</SelectItem>
+                          <SelectItem value="EBTA 6">EBTA 6</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  {wizard.targetLevel.includes("Tahsin") && (
+                    <div className="grid grid-cols-2 gap-4 max-w-lg">
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 block">Nama Surat</Label>
+                        <Input 
+                          placeholder="Misal: Al-Baqarah" 
+                          className="bg-white dark:bg-slate-950"
+                          value={wizard.core.bahan_bacaan_tahsin_surat}
+                          onChange={(e) => setWizard({...wizard, core: {...wizard.core, bahan_bacaan_tahsin_surat: e.target.value}})}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1.5 block">Ayat</Label>
+                        <Input 
+                          placeholder="Misal: 1-5" 
+                          className="bg-white dark:bg-slate-950"
+                          value={wizard.core.bahan_bacaan_tahsin_ayat}
+                          onChange={(e) => setWizard({...wizard, core: {...wizard.core, bahan_bacaan_tahsin_ayat: e.target.value}})}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {wizard.targetLevel.includes("Tahfizh") && (
+                    <div className="space-y-4">
+                      {wizard.core.bahan_bacaan_tahfizh_soal.map((soal, index) => (
+                        <div key={soal.id} className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+                          <div className="w-full sm:w-32">
+                            <Label className="text-xs text-muted-foreground mb-1.5 block">Juz</Label>
+                            <Select 
+                              value={soal.juz}
+                              onValueChange={(v) => {
+                                const newSoal = [...wizard.core.bahan_bacaan_tahfizh_soal];
+                                newSoal[index].juz = v;
+                                setWizard({...wizard, core: {...wizard.core, bahan_bacaan_tahfizh_soal: newSoal}});
+                              }}
+                            >
+                              <SelectTrigger className="bg-white dark:bg-slate-950"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {Array.from({length: 30}, (_, i) => 30 - i).map(juz => (
+                                  <SelectItem key={juz} value={juz.toString()}>Juz {juz}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex-1 w-full">
+                            <Label className="text-xs text-muted-foreground mb-1.5 block">Nama Surat & Ayat</Label>
+                            <Input 
+                              placeholder="Misal: An-Naba 1-10" 
+                              className="bg-white dark:bg-slate-950"
+                              value={soal.surat_ayat}
+                              onChange={(e) => {
+                                const newSoal = [...wizard.core.bahan_bacaan_tahfizh_soal];
+                                newSoal[index].surat_ayat = e.target.value;
+                                setWizard({...wizard, core: {...wizard.core, bahan_bacaan_tahfizh_soal: newSoal}});
+                              }}
+                            />
+                          </div>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            className="text-rose-500 hover:text-rose-600 hover:bg-rose-50 shrink-0"
+                            onClick={() => {
+                              if (wizard.core.bahan_bacaan_tahfizh_soal.length > 1) {
+                                const newSoal = wizard.core.bahan_bacaan_tahfizh_soal.filter((_, i) => i !== index);
+                                setWizard({...wizard, core: {...wizard.core, bahan_bacaan_tahfizh_soal: newSoal}});
+                              }
+                            }}
+                            disabled={wizard.core.bahan_bacaan_tahfizh_soal.length === 1}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="mt-2"
+                        onClick={() => {
+                          const newSoal = [...wizard.core.bahan_bacaan_tahfizh_soal, { id: Math.random().toString(), juz: "30", surat_ayat: "" }];
+                          setWizard({...wizard, core: {...wizard.core, bahan_bacaan_tahfizh_soal: newSoal}});
+                        }}
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Tambah Soal
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-4">
