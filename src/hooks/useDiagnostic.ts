@@ -4,6 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { useRolePermissions } from "@/hooks/useSupabaseData";
 
+import { fetchApprovedManagedStudentIds } from "@/hooks/useSupabaseData";
+
 export const useDiagnosticStudents = ({
   page,
   pageSize,
@@ -20,17 +22,9 @@ export const useDiagnosticStudents = ({
   const { user, profile } = useAuth();
   const { data: permissions } = useRolePermissions();
 
-  const isEvaluator = profile?.role === "admin" || 
-    permissions?.find(p => p.feature_key === "evaluasi_diagnostik")?.teacher_access === true;
-
   return useQuery({
-    queryKey: ["diagnostic-students", { page, pageSize, search, kelas, rombel, userId: user?.id, isEvaluator }],
+    queryKey: ["diagnostic-students", { page, pageSize, search, kelas, rombel, userId: user?.id, role: profile?.role }],
     queryFn: async () => {
-      // If not evaluator, they shouldn't access this
-      if (!isEvaluator) {
-        return { students: [], totalCount: 0 };
-      }
-
       let query = supabase
         .from("students")
         // @ts-expect-error evaluasi_awal_semester is dynamic in the DB now
@@ -62,6 +56,11 @@ export const useDiagnosticStudents = ({
 
       if (error) {
         console.error("Error fetching diagnostic students:", error);
+        toast({
+          title: "Error fetching data",
+          description: error.message,
+          variant: "destructive"
+        });
         throw error;
       }
 
@@ -70,7 +69,7 @@ export const useDiagnosticStudents = ({
         totalCount: count || 0,
       };
     },
-    enabled: !!user?.id && isEvaluator !== undefined,
+    enabled: !!user?.id,
   });
 };
 

@@ -60,6 +60,8 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
     const perm = permissions.find(p => p.feature_key === featureKey);
     if (!perm) return false;
 
+    if (featureKey === "evaluasi_diagnostik" && isTeacherRole(profile.role)) return true;
+
     if (isTeacherRole(profile.role)) return perm.teacher_access;
     if (profile.role === "parent") return perm.parent_access;
 
