@@ -364,36 +364,36 @@ export default function DiagnosticEvaluation() {
 
       {/* 4-STEP WIZARD DIALOG */}
       <Dialog open={evalOpen} onOpenChange={setEvalOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] sm:max-w-2xl md:max-w-4xl lg:max-w-5xl max-h-[95vh] overflow-y-auto p-4 md:p-8">
           <DialogHeader>
-            <DialogTitle>Evaluasi Diagnostik - {selectedStudent?.nama}</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-xl md:text-2xl">Evaluasi Diagnostik - {selectedStudent?.nama}</DialogTitle>
+            <DialogDescription className="text-sm md:text-base">
               Ikuti langkah-langkah di bawah untuk menilai kemampuan siswa dan merekomendasikan program.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="flex items-center justify-between mb-6 border-b pb-4">
+          <div className="flex items-center justify-between mb-8 border-b pb-6 mt-4">
             {[1, 2, 3, 4].map(s => (
               <div key={s} className="flex items-center gap-2">
-                <div className={`h-8 w-8 rounded-full flex items-center justify-center font-medium ${
-                  step === s ? 'bg-primary text-primary-foreground' : 
-                  step > s ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'
+                <div className={`h-8 w-8 md:h-10 md:w-10 rounded-full flex items-center justify-center font-medium transition-colors ${
+                  step === s ? 'bg-primary text-primary-foreground shadow-md' : 
+                  step > s ? 'bg-emerald-500 text-white shadow' : 'bg-muted text-muted-foreground'
                 }`}>
-                  {step > s ? <CheckCircle2 className="h-4 w-4" /> : s}
+                  {step > s ? <CheckCircle2 className="h-4 w-4 md:h-5 md:w-5" /> : s}
                 </div>
-                <span className={`text-xs hidden md:block ${step >= s ? 'font-medium' : 'text-muted-foreground'}`}>
+                <span className={`text-xs md:text-sm hidden sm:block ${step >= s ? 'font-medium' : 'text-muted-foreground'}`}>
                   {s === 1 ? 'Profil' : s === 2 ? 'Core Test' : s === 3 ? 'Advanced Tracks' : 'Review'}
                 </span>
-                {s < 4 && <div className="h-px w-8 md:w-12 bg-border mx-2" />}
+                {s < 4 && <div className="h-px w-6 md:w-12 bg-border mx-1 md:mx-2" />}
               </div>
             ))}
           </div>
 
-          <div className="py-4">
+          <div className="py-2">
             {step === 1 && (
-              <div className="space-y-6">
-                <div className="space-y-3">
-                  <Label className="text-base">Target Program Evaluasi</Label>
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <Label className="text-base md:text-lg font-semibold">Target Program Evaluasi</Label>
                   <Select 
                     value={wizard.targetProgram} 
                     onValueChange={(v: ProgramType) => setWizard({...wizard, targetProgram: v})}
@@ -407,48 +407,51 @@ export default function DiagnosticEvaluation() {
                       <SelectItem value="Tahfizh">Tahfizh (Fokus Hafalan & Sambung Ayat)</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">Pilih program untuk menentukan instrumen soal di langkah selanjutnya.</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Pilih program untuk menentukan instrumen soal di langkah selanjutnya.</p>
                 </div>
                 
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-lg border-b pb-2">Profil Awal (Kebiasaan)</h3>
+                <div className="space-y-6">
+                  <h3 className="font-semibold text-lg md:text-xl border-b pb-3">Profil Awal (Kebiasaan)</h3>
                   
-                  <div className="space-y-2">
-                    <Label>Rutinitas Mengaji di Rumah</Label>
-                    <Select 
-                      value={wizard.profil.rutinitas_mengaji}
-                      onValueChange={(v) => setWizard({...wizard, profil: {...wizard.profil, rutinitas_mengaji: v}})}
-                    >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Setiap Hari">Setiap Hari</SelectItem>
-                        <SelectItem value="Jarang">Jarang (1-2x Seminggu)</SelectItem>
-                        <SelectItem value="Tidak Pernah">Tidak Pernah</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label className="text-sm md:text-base font-medium">Rutinitas Mengaji di Rumah</Label>
+                      <Select 
+                        value={wizard.profil.rutinitas_mengaji}
+                        onValueChange={(v) => setWizard({...wizard, profil: {...wizard.profil, rutinitas_mengaji: v}})}
+                      >
+                        <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Setiap Hari">Setiap Hari</SelectItem>
+                          <SelectItem value="Jarang">Jarang (1-2x Seminggu)</SelectItem>
+                          <SelectItem value="Tidak Pernah">Tidak Pernah</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="text-sm md:text-base font-medium">Pendamping Belajar</Label>
+                      <Select 
+                        value={wizard.profil.pendamping_belajar}
+                        onValueChange={(v) => setWizard({...wizard, profil: {...wizard.profil, pendamping_belajar: v}})}
+                      >
+                        <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Orang Tua">Orang Tua</SelectItem>
+                          <SelectItem value="Guru Ngaji">Guru Ngaji / Privat</SelectItem>
+                          <SelectItem value="Sendiri">Sendiri</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Pendamping Belajar</Label>
-                    <Select 
-                      value={wizard.profil.pendamping_belajar}
-                      onValueChange={(v) => setWizard({...wizard, profil: {...wizard.profil, pendamping_belajar: v}})}
-                    >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Orang Tua">Orang Tua</SelectItem>
-                        <SelectItem value="Guru Ngaji">Guru Ngaji / Privat</SelectItem>
-                        <SelectItem value="Sendiri">Sendiri</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Motivasi & Catatan Tambahan (Opsional)</Label>
+                  <div className="space-y-3 pt-2">
+                    <Label className="text-sm md:text-base font-medium">Motivasi & Catatan Tambahan (Opsional)</Label>
                     <Textarea 
                       value={wizard.profil.motivasi}
                       onChange={(e) => setWizard({...wizard, profil: {...wizard.profil, motivasi: e.target.value}})}
                       placeholder="Misal: Siswa bersemangat namun butuh dorongan..."
+                      className="min-h-[120px] resize-none"
                     />
                   </div>
                 </div>
@@ -456,37 +459,40 @@ export default function DiagnosticEvaluation() {
             )}
 
             {step === 2 && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="font-semibold text-lg mb-4 flex items-center justify-between">
+              <div className="space-y-10">
+                <div className="p-4 md:p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border">
+                  <h3 className="font-semibold text-lg md:text-xl mb-6 flex items-center justify-between">
                     Kelancaran Membaca
-                    <Badge variant="outline" className="text-lg px-3 py-1">{wizard.core.fluency_score}</Badge>
+                    <Badge variant="outline" className="text-xl md:text-2xl px-4 py-1.5">{wizard.core.fluency_score}</Badge>
                   </h3>
                   <Slider 
+                    className="py-4 cursor-pointer"
                     value={[wizard.core.fluency_score]} 
                     min={0} max={100} step={1}
                     onValueChange={(v) => setWizard({...wizard, core: {...wizard.core, fluency_score: v[0]}})}
                   />
-                  <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                  <div className="flex justify-between text-xs md:text-sm text-muted-foreground mt-4 font-medium">
                     <span>Sangat Terbata-bata (0)</span>
                     <span>Sangat Lancar (100)</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2 p-4 bg-rose-50 dark:bg-rose-950/20 rounded-lg border border-rose-100">
-                    <Label className="text-rose-700 dark:text-rose-400">Lahn Jali (Kesalahan Fatal)</Label>
-                    <p className="text-xs text-rose-600/70 mb-2">Mengubah makna (misal salah huruf/harakat). Penalti -2 per kesalahan.</p>
+                  <div className="space-y-4 p-5 md:p-6 bg-rose-50 dark:bg-rose-950/20 rounded-xl border border-rose-100 shadow-sm transition-shadow hover:shadow-md">
+                    <Label className="text-base md:text-lg text-rose-700 dark:text-rose-400 font-semibold">Lahn Jali (Kesalahan Fatal)</Label>
+                    <p className="text-xs md:text-sm text-rose-600/70 mb-4">Mengubah makna (misal salah huruf/harakat). Penalti -2 per kesalahan.</p>
                     <Input 
+                      className="text-lg h-12"
                       type="number" min={0} 
                       value={wizard.core.lahn_jali_count} 
                       onChange={(e) => setWizard({...wizard, core: {...wizard.core, lahn_jali_count: parseInt(e.target.value) || 0}})} 
                     />
                   </div>
-                  <div className="space-y-2 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-100">
-                    <Label className="text-amber-700 dark:text-amber-400">Lahn Khofi (Kesalahan Ringan)</Label>
-                    <p className="text-xs text-amber-600/70 mb-2">Tidak mengubah makna (salah dengung/mad). Penalti -1 per kesalahan.</p>
+                  <div className="space-y-4 p-5 md:p-6 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-100 shadow-sm transition-shadow hover:shadow-md">
+                    <Label className="text-base md:text-lg text-amber-700 dark:text-amber-400 font-semibold">Lahn Khofi (Kesalahan Ringan)</Label>
+                    <p className="text-xs md:text-sm text-amber-600/70 mb-4">Tidak mengubah makna (salah dengung/mad). Penalti -1 per kesalahan.</p>
                     <Input 
+                      className="text-lg h-12"
                       type="number" min={0} 
                       value={wizard.core.lahn_khofi_count} 
                       onChange={(e) => setWizard({...wizard, core: {...wizard.core, lahn_khofi_count: parseInt(e.target.value) || 0}})} 
@@ -494,19 +500,19 @@ export default function DiagnosticEvaluation() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-lg border-b pb-2">Makharijul Huruf</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-6">
+                  <h3 className="font-semibold text-lg md:text-xl border-b pb-3">Makharijul Huruf</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {MAKHARIJ_LIST.map(makhraj => (
-                      <div key={makhraj} className="flex items-center justify-between p-2 border rounded text-sm">
-                        <span>{makhraj}</span>
+                      <div key={makhraj} className="flex items-center justify-between p-3 md:p-4 bg-white dark:bg-slate-950 border rounded-lg shadow-sm hover:border-primary/50 transition-colors">
+                        <span className="font-medium text-sm md:text-base">{makhraj}</span>
                         <Select 
                           value={wizard.core.checklist_makharij[makhraj]}
                           onValueChange={(v: "Baik" | "Perlu Latihan") => setWizard({
                             ...wizard, core: {...wizard.core, checklist_makharij: {...wizard.core.checklist_makharij, [makhraj]: v}}
                           })}
                         >
-                          <SelectTrigger className="w-[130px] h-8 text-xs">
+                          <SelectTrigger className="w-[120px] md:w-[140px] h-9 text-xs md:text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -522,32 +528,32 @@ export default function DiagnosticEvaluation() {
             )}
 
             {step === 3 && (
-              <div className="space-y-8">
+              <div className="space-y-10">
                 {!showAdvanced ? (
-                  <div className="text-center p-8 bg-slate-50 rounded-lg">
-                    <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500 mb-4" />
-                    <h3 className="font-semibold text-lg">Instrumen Selesai</h3>
-                    <p className="text-muted-foreground text-sm max-w-md mx-auto">
+                  <div className="text-center p-8 md:p-12 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-emerald-200">
+                    <CheckCircle2 className="mx-auto h-12 w-12 md:h-16 md:w-16 text-emerald-500 mb-4 md:mb-6" />
+                    <h3 className="font-semibold text-lg md:text-xl">Instrumen Selesai</h3>
+                    <p className="text-muted-foreground text-sm md:text-base max-w-md mx-auto mt-2">
                       Untuk target program <strong>Tahsin Dasar</strong>, Anda tidak perlu mengisi tes lanjutan. Silakan klik Lanjut untuk melihat hasil review.
                     </p>
                   </div>
                 ) : (
                   <>
-                    <div className="space-y-4">
-                      <h3 className="font-semibold text-lg border-b pb-2 flex items-center gap-2">
-                        <Badge className="bg-amber-500 hover:bg-amber-600">Tajwid & Waqaf</Badge>
+                    <div className="space-y-6">
+                      <h3 className="font-semibold text-lg md:text-xl border-b pb-3 flex items-center gap-3">
+                        <Badge className="bg-amber-500 hover:bg-amber-600 text-sm py-1 px-3">Tajwid & Waqaf</Badge>
                       </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                         {TAJWID_LIST.map(tajwid => (
-                          <div key={tajwid} className="flex items-center justify-between p-2 border rounded text-sm">
-                            <span>{tajwid}</span>
+                          <div key={tajwid} className="flex items-center justify-between p-3 md:p-4 bg-white dark:bg-slate-950 border rounded-lg shadow-sm hover:border-amber-500/50 transition-colors">
+                            <span className="font-medium text-sm md:text-base">{tajwid}</span>
                             <Select 
                               value={wizard.advanced.checklist_tajwid[tajwid]}
                               onValueChange={(v: "Baik" | "Perlu Latihan") => setWizard({
                                 ...wizard, advanced: {...wizard.advanced, checklist_tajwid: {...wizard.advanced.checklist_tajwid, [tajwid]: v}}
                               })}
                             >
-                              <SelectTrigger className="w-[130px] h-8 text-xs">
+                              <SelectTrigger className="w-[120px] md:w-[140px] h-9 text-xs md:text-sm">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -559,10 +565,11 @@ export default function DiagnosticEvaluation() {
                         ))}
                       </div>
 
-                      <div className="space-y-2 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-100 max-w-md">
-                        <Label className="text-amber-700 dark:text-amber-400">Kesalahan Waqaf Ibtida'</Label>
-                        <p className="text-xs text-amber-600/70 mb-2">Salah memotong/memulai ayat. Penalti -2 per kesalahan.</p>
+                      <div className="space-y-4 p-5 md:p-6 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-100 shadow-sm max-w-2xl">
+                        <Label className="text-base md:text-lg text-amber-700 dark:text-amber-400 font-semibold">Kesalahan Waqaf Ibtida'</Label>
+                        <p className="text-xs md:text-sm text-amber-600/70 mb-4">Salah memotong/memulai ayat. Penalti -2 per kesalahan.</p>
                         <Input 
+                          className="text-lg h-12 md:max-w-[200px]"
                           type="number" min={0} 
                           value={wizard.advanced.waqaf_error_count} 
                           onChange={(e) => setWizard({...wizard, advanced: {...wizard.advanced, waqaf_error_count: parseInt(e.target.value) || 0}})} 
@@ -571,14 +578,15 @@ export default function DiagnosticEvaluation() {
                     </div>
 
                     {isTahfizh && (
-                      <div className="space-y-4 pt-4 border-t">
-                        <h3 className="font-semibold text-lg pb-2 flex items-center gap-2">
-                          <Badge className="bg-violet-500 hover:bg-violet-600">Instrumen Tahfizh</Badge>
+                      <div className="space-y-6 pt-6 border-t">
+                        <h3 className="font-semibold text-lg md:text-xl pb-2 flex items-center gap-3">
+                          <Badge className="bg-violet-500 hover:bg-violet-600 text-sm py-1 px-3">Instrumen Tahfizh</Badge>
                         </h3>
-                        <div className="space-y-2 p-4 bg-violet-50 dark:bg-violet-950/20 rounded-lg border border-violet-100 max-w-md">
-                          <Label className="text-violet-700 dark:text-violet-400">Salah Sambung Ayat</Label>
-                          <p className="text-xs text-violet-600/70 mb-2">Terputus atau salah melompat ayat saat tes hafalan. Penalti -2 per kesalahan.</p>
+                        <div className="space-y-4 p-5 md:p-6 bg-violet-50 dark:bg-violet-950/20 rounded-xl border border-violet-100 shadow-sm max-w-2xl">
+                          <Label className="text-base md:text-lg text-violet-700 dark:text-violet-400 font-semibold">Salah Sambung Ayat</Label>
+                          <p className="text-xs md:text-sm text-violet-600/70 mb-4">Terputus atau salah melompat ayat saat tes hafalan. Penalti -2 per kesalahan.</p>
                           <Input 
+                            className="text-lg h-12 md:max-w-[200px]"
                             type="number" min={0} 
                             value={wizard.advanced.salah_sambung_ayat_count} 
                             onChange={(e) => setWizard({...wizard, advanced: {...wizard.advanced, salah_sambung_ayat_count: parseInt(e.target.value) || 0}})} 
@@ -592,47 +600,47 @@ export default function DiagnosticEvaluation() {
             )}
 
             {step === 4 && engineOutput && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card className="border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-emerald-800 dark:text-emerald-400">Skor Akhir</CardTitle>
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                  <Card className="border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 shadow-sm">
+                    <CardHeader className="pb-2 md:pb-4">
+                      <CardTitle className="text-emerald-800 dark:text-emerald-400 text-lg md:text-xl">Skor Akhir</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-5xl font-black text-emerald-600">{engineOutput.finalScore}</div>
-                      <div className="text-lg font-medium text-emerald-700 mt-1">{engineOutput.finalPredicate}</div>
+                      <div className="text-6xl md:text-7xl font-black text-emerald-600 mb-2">{engineOutput.finalScore}</div>
+                      <div className="text-xl md:text-2xl font-bold text-emerald-700">{engineOutput.finalPredicate}</div>
                     </CardContent>
                   </Card>
 
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle>Rekomendasi Program</CardTitle>
+                  <Card className="shadow-sm">
+                    <CardHeader className="pb-2 md:pb-4">
+                      <CardTitle className="text-lg md:text-xl">Rekomendasi Program</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <Badge className={`text-lg px-4 py-2 ${
+                      <Badge className={`text-xl md:text-2xl px-6 py-3 shadow-sm ${
                         engineOutput.recommendedProgram === "Tahfizh" ? "bg-violet-500 hover:bg-violet-600" :
                         engineOutput.recommendedProgram === "Tahsin Lanjutan" ? "bg-amber-500 hover:bg-amber-600" :
                         "bg-emerald-500 hover:bg-emerald-600"
                       }`}>
                         {engineOutput.recommendedProgram}
                       </Badge>
-                      <p className="text-sm text-muted-foreground mt-3">
-                        Berdasarkan engine kalkulasi otomatis, siswa ini direkomendasikan masuk ke {engineOutput.recommendedProgram}.
+                      <p className="text-sm md:text-base text-muted-foreground mt-4 leading-relaxed">
+                        Berdasarkan kalkulasi otomatis dari profil, kelancaran, dan tajwid, siswa ini sangat direkomendasikan untuk masuk ke program <strong>{engineOutput.recommendedProgram}</strong>.
                       </p>
                     </CardContent>
                   </Card>
                 </div>
 
-                <div className="space-y-3 border rounded-lg p-4 bg-slate-50 dark:bg-slate-900/40">
-                  <h3 className="font-medium flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-amber-500" />
+                <div className="space-y-4 border rounded-xl p-5 md:p-8 bg-slate-50 dark:bg-slate-900/40">
+                  <h3 className="font-semibold text-lg md:text-xl flex items-center gap-3">
+                    <AlertCircle className="h-5 w-5 md:h-6 md:w-6 text-amber-500" />
                     Fokus Pembinaan yang Disarankan
                   </h3>
                   {engineOutput.fokusPembinaan.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Tidak ada isu signifikan. Kemampuan sangat baik.</p>
+                    <p className="text-sm md:text-base text-muted-foreground p-4 bg-white dark:bg-slate-950 rounded-lg border">Tidak ada isu signifikan yang perlu menjadi fokus khusus. Kemampuan bacaan secara umum sudah sangat baik.</p>
                   ) : (
-                    <ul className="list-disc list-inside space-y-1 text-sm">
-                      {engineOutput.fokusPembinaan.map((f, i) => <li key={i}>{f}</li>)}
+                    <ul className="list-disc list-inside space-y-2 text-sm md:text-base p-4 bg-white dark:bg-slate-950 rounded-lg border">
+                      {engineOutput.fokusPembinaan.map((f, i) => <li key={i} className="text-slate-700 dark:text-slate-300">{f}</li>)}
                     </ul>
                   )}
                 </div>
