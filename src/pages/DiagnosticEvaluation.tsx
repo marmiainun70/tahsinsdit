@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useDiagnosticStudents, useSubmitDiagnosticWizard, FullDiagnosticData } from "@/hooks/useDiagnostic";
+import { useAuth } from "@/contexts/AuthContext";
 import { useAddStudent } from "@/hooks/useSupabaseData";
 import { useAcademicYears } from "@/hooks/useAcademicCalendar";
 import { useProfileMap } from "@/hooks/useProfiles";
@@ -192,12 +193,14 @@ const renderEvaluationMetrics = (
 };
 
 export default function DiagnosticEvaluation() {
+  const { user } = useAuth();
   const profileMap = useProfileMap();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [kelas, setKelas] = useState("all");
   const [rombel, setRombel] = useState("all");
   const [customPendamping, setCustomPendamping] = useState("");
+  const [localMotivasi, setLocalMotivasi] = useState("");
 
   const { data: years = [] } = useAcademicYears();
   const activeYear = years.find((y) => y.status === "aktif") || years[0];
@@ -251,18 +254,45 @@ export default function DiagnosticEvaluation() {
   const [step, setStep] = useState(1);
   const [wizard, setWizard] = useState<WizardState>(initialWizardState);
 
+  useEffect(() => {
+    setLocalMotivasi(wizard.profil.motivasi || "");
+  }, [wizard.profil.motivasi]);
+
   const submitMutation = useSubmitDiagnosticWizard();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOpenWizard = (student: any) => {
     setSelectedStudent(student);
-    setWizard(initialWizardState);
-    setStep(1);
+    const key = `diagnostic_wizard_draft_${user?.id || "anonymous"}_${student.id}`;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setWizard(parsed.wizard);
+        setStep(parsed.step || 1);
+        setLocalMotivasi(parsed.wizard?.profil?.motivasi || "");
+      } catch (e) {
+        setWizard(initialWizardState);
+        setStep(1);
+        setLocalMotivasi("");
+      }
+    } else {
+      setWizard(initialWizardState);
+      setStep(1);
+      setLocalMotivasi("");
+    }
     setEvalOpen(true);
   };
 
+  useEffect(() => {
+    if (selectedStudent && evalOpen) {
+      const key = `diagnostic_wizard_draft_${user?.id || "anonymous"}_${selectedStudent.id}`;
+      localStorage.setItem(key, JSON.stringify({ wizard, step }));
+    }
+  }, [wizard, step, selectedStudent, evalOpen, user?.id]);
+
   const engineOutput: EvaluationOutput | null = useMemo(() => {
-    if (step < 4) return null;
+    if (!selectedStudent) return null;
     
     // Map categorical values to error counts for the engine
     const waqafError = Object.values(wizard.advanced.waqaf_ibtida).filter(v => v === "SALAH").length;
@@ -312,7 +342,7 @@ export default function DiagnosticEvaluation() {
       targetLevel: wizard.targetLevel
     };
     return evaluateStudent(input);
-  }, [wizard, step]);
+  }, [wizard, selectedStudent]);
 
   const handleSubmit = () => {
     if (!selectedStudent || !activeYear || !engineOutput) return;
@@ -391,7 +421,11 @@ export default function DiagnosticEvaluation() {
     // or just leave it NULL and let the report rely on final_score.
     
     submitMutation.mutate(payload, {
-      onSuccess: () => setEvalOpen(false)
+      onSuccess: () => {
+        setEvalOpen(false);
+        const key = `diagnostic_wizard_draft_${user?.id || "anonymous"}_${selectedStudent.id}`;
+        localStorage.removeItem(key);
+      }
     });
   };
 
@@ -597,7 +631,14 @@ export default function DiagnosticEvaluation() {
       <Dialog open={evalOpen} onOpenChange={setEvalOpen}>
         <DialogContent className="w-[95vw] sm:max-w-2xl md:max-w-4xl lg:max-w-5xl max-h-[95vh] overflow-y-auto p-4 md:p-8">
           <DialogHeader>
-            <DialogTitle className="text-xl md:text-2xl">Evaluasi Diagnostik - {selectedStudent?.nama}</DialogTitle>
+            <DialogTitle className="text-xl md:text-2xl flex flex-wrap items-center justify-between gap-2">
+              <span>Evaluasi Diagnostik - {selectedStudent?.nama}</span>
+              {engineOutput && (
+                <Badge className="bg-emerald-600 dark:bg-emerald-700 font-bold text-sm text-white">
+                  Skor Sementara: {engineOutput.finalScore} ({engineOutput.finalPredicate})
+                </Badge>
+              )}
+            </DialogTitle>
             <DialogDescription className="text-sm md:text-base">
               Ikuti langkah-langkah di bawah untuk menilai kemampuan siswa dan merekomendasikan program.
             </DialogDescription>
@@ -768,8 +809,9 @@ export default function DiagnosticEvaluation() {
                   <div className="space-y-3 pt-2">
                     <Label className="text-sm md:text-base font-medium">Motivasi & Catatan Tambahan (Opsional)</Label>
                     <Textarea 
-                      value={wizard.profil.motivasi}
-                      onChange={(e) => setWizard({...wizard, profil: {...wizard.profil, motivasi: e.target.value}})}
+                      value={localMotivasi}
+                      onChange={(e) => setLocalMotivasi(e.target.value)}
+                      onBlur={() => setWizard(prev => ({ ...prev, profil: { ...prev.profil, motivasi: localMotivasi } }))}
                       placeholder="Misal: Siswa bersemangat namun butuh dorongan..."
                       className="min-h-[120px] resize-none"
                     />

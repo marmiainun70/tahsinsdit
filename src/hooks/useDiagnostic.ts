@@ -30,6 +30,8 @@ export const useDiagnosticStudents = ({
         // @ts-expect-error evaluasi_awal_semester is dynamic in the DB now
         .select("*, evaluasi_awal_semester(final_predicate, evaluator_id)", { count: "exact" });
 
+
+
       if (search.trim()) {
         const searchTerm = `%${search.trim()}%`;
         query = query.or(`nama.ilike.${searchTerm},nis.ilike.${searchTerm},nisn.ilike.${searchTerm}`);
@@ -103,11 +105,13 @@ export type FullDiagnosticData = {
 
 export const useSubmitDiagnosticWizard = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   return useMutation({
     mutationFn: async (data: FullDiagnosticData) => {
       if (!user?.id) throw new Error("Tidak ada user login");
+
+
 
       // We use a custom RPC or batch insert since Supabase JS Client does not support multi-statement transactions directly
       // However, since we're using the standard JS client, we can insert into the parent table and then promise.all the child tables.
