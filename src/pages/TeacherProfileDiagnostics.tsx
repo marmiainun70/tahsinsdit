@@ -464,15 +464,20 @@ function TeacherDetail({
     queryFn: async () => {
       let teacherProfile: TeacherProfile | null = null;
       if (targetUserId) {
-        const accountResult = await db.from("profiles").select("user_id,full_name,role,status").eq("user_id", targetUserId).maybeSingle();
-        if (accountResult.error) throw accountResult.error;
-        teacherProfile = {
-          ...defaultProfileForm(accountResult.data?.full_name ?? ""),
-          id: "",
-          user_id: targetUserId,
-          full_name: accountResult.data?.full_name ?? "",
-          specialization: [],
-        } as TeacherProfile;
+        const existingProfile = await db.from("teacher_profiles").select("*").eq("user_id", targetUserId).maybeSingle();
+        if (existingProfile.data) {
+          teacherProfile = existingProfile.data as TeacherProfile;
+        } else {
+          const accountResult = await db.from("profiles").select("user_id,full_name,role,status").eq("user_id", targetUserId).maybeSingle();
+          if (accountResult.error) throw accountResult.error;
+          teacherProfile = {
+            ...defaultProfileForm(accountResult.data?.full_name ?? ""),
+            id: "",
+            user_id: targetUserId,
+            full_name: accountResult.data?.full_name ?? "",
+            specialization: [],
+          } as TeacherProfile;
+        }
       } else {
         const profileResult = await db.from("teacher_profiles").select("*").eq("id", profileId).maybeSingle();
         if (profileResult.error) throw profileResult.error;
@@ -537,7 +542,7 @@ function TeacherDetail({
       };
       const query = teacherProfile?.id
         ? db.from("teacher_profiles").update(payload).eq("id", teacherProfile.id).select("*").single()
-        : db.from("teacher_profiles").insert(payload).select("*").single();
+        : db.from("teacher_profiles").upsert(payload, { onConflict: "user_id" }).select("*").single();
       const { data, error } = await query;
       if (error) throw error;
       return data as TeacherProfile;
