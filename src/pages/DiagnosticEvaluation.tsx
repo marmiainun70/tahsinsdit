@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, FileSignature, Loader2, UserPlus, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle } from "lucide-react";
+import { Search, FileSignature, Loader2, UserPlus, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Minus, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +29,7 @@ interface WizardState {
     lahn_jali_count: number;
     lahn_khofi_count: number;
     checklist_makharij: Record<string, "Baik" | "Perlu Latihan">;
+    huruf_tertukar: string[];
   };
   advanced: {
     checklist_tajwid: Record<string, "Baik" | "Cukup" | "Perlu">;
@@ -44,6 +45,7 @@ interface WizardState {
 }
 
 const MAKHARIJ_LIST = ["Rongga Mulut (Al-Jauf)", "Tenggorokan (Al-Halq)", "Lidah (Al-Lisan)", "Bibir (Asy-Syafatain)", "Rongga Hidung (Al-Khaisyum)"];
+const CONFUSED_LETTERS = ["ت / ط", "ث / س / ص", "ح / هـ", "خ / غ", "ذ / ز / ظ", "ق / ك", "ء / ع"];
 const TAJWID_LIST = ["Nun Mati/Tanwin", "Mim Mati", "Hukum Mad", "Qalqalah", "Ghunnah"];
 
 const initialWizardState: WizardState = {
@@ -58,6 +60,7 @@ const initialWizardState: WizardState = {
     lahn_jali_count: 0,
     lahn_khofi_count: 0,
     checklist_makharij: Object.fromEntries(MAKHARIJ_LIST.map(k => [k, "Baik"])),
+    huruf_tertukar: [],
   },
   advanced: {
     checklist_tajwid: Object.fromEntries(TAJWID_LIST.map(k => [k, "Baik"])),
@@ -188,7 +191,8 @@ export default function DiagnosticEvaluation() {
         hafalan_ayat: wizard.advanced.hafalan_ayat,
         sambung_ayat_respon: wizard.advanced.sambung_ayat_respon,
         murojaah: wizard.advanced.murojaah,
-        waqaf_ibtida: wizard.advanced.waqaf_ibtida
+        waqaf_ibtida: wizard.advanced.waqaf_ibtida,
+        huruf_tertukar: wizard.core.huruf_tertukar
       },
       fluency_score: wizard.core.fluency_score,
       lahn_jali_count: wizard.core.lahn_jali_count,
@@ -581,42 +585,80 @@ export default function DiagnosticEvaluation() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4 p-5 md:p-6 bg-rose-50 dark:bg-rose-950/20 rounded-xl border border-rose-100 shadow-sm transition-shadow hover:shadow-md">
-                    <Label className="text-base md:text-lg text-rose-700 dark:text-rose-400 font-semibold">Lahn Jali (Kesalahan Fatal)</Label>
-                    <p className="text-xs md:text-sm text-rose-600/70 mb-4">Kesalahan yang terlihat jelas (Salah Huruf, Salah Harakat, Salah Tasydid). Penalti -2 per kesalahan.</p>
-                    <Input 
-                      className="text-lg h-12"
-                      type="number" min={0} 
-                      value={wizard.core.lahn_jali_count} 
-                      onChange={(e) => setWizard({...wizard, core: {...wizard.core, lahn_jali_count: parseInt(e.target.value) || 0}})} 
-                    />
-                  </div>
-                  <div className="space-y-4 p-5 md:p-6 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-100 shadow-sm transition-shadow hover:shadow-md">
-                    <Label className="text-base md:text-lg text-amber-700 dark:text-amber-400 font-semibold">Lahn Khofi (Kesalahan Ringan)</Label>
-                    <p className="text-xs md:text-sm text-amber-600/70 mb-4">Kesalahan yang lebih halus (Mad, Qalqalah, Tajwid). Penalti -1 per kesalahan.</p>
-                    <Input 
-                      className="text-lg h-12"
-                      type="number" min={0} 
-                      value={wizard.core.lahn_khofi_count} 
-                      onChange={(e) => setWizard({...wizard, core: {...wizard.core, lahn_khofi_count: parseInt(e.target.value) || 0}})} 
-                    />
+                <div className="space-y-4">
+                  <div className="border rounded-xl bg-white dark:bg-slate-950 shadow-sm divide-y">
+                    {/* Lahn Jali */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-sm">Lahn Jali (Kesalahan Fatal)</span>
+                        <span className="text-xs text-muted-foreground">Salah huruf, harakat, tasydid.</span>
+                      </div>
+                      <div className="flex items-center gap-4 self-end sm:self-auto">
+                        <div className="flex items-center border rounded-md">
+                          <Button 
+                            variant="ghost" size="icon" className="h-8 w-8 rounded-none border-r"
+                            onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_jali_count: Math.max(0, wizard.core.lahn_jali_count - 1)}})}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <div className="w-12 text-center text-sm font-medium">{wizard.core.lahn_jali_count}</div>
+                          <Button 
+                            variant="ghost" size="icon" className="h-8 w-8 rounded-none border-l"
+                            onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_jali_count: wizard.core.lahn_jali_count + 1}})}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="w-20 text-right">
+                          <Badge variant="destructive" className="bg-rose-100 text-rose-700">- {wizard.core.lahn_jali_count * 2}</Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Lahn Khofi */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-sm">Lahn Khofi (Kesalahan Ringan)</span>
+                        <span className="text-xs text-muted-foreground">Mad, Qalqalah, Tajwid dasar.</span>
+                      </div>
+                      <div className="flex items-center gap-4 self-end sm:self-auto">
+                        <div className="flex items-center border rounded-md">
+                          <Button 
+                            variant="ghost" size="icon" className="h-8 w-8 rounded-none border-r"
+                            onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_khofi_count: Math.max(0, wizard.core.lahn_khofi_count - 1)}})}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <div className="w-12 text-center text-sm font-medium">{wizard.core.lahn_khofi_count}</div>
+                          <Button 
+                            variant="ghost" size="icon" className="h-8 w-8 rounded-none border-l"
+                            onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_khofi_count: wizard.core.lahn_khofi_count + 1}})}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="w-20 text-right">
+                          <Badge variant="destructive" className="bg-amber-100 text-amber-700">- {wizard.core.lahn_khofi_count * 1}</Badge>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  <h3 className="font-semibold text-lg md:text-xl border-b pb-3">Makharijul Huruf</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg md:text-xl pb-2">Makharijul Huruf</h3>
+                  <div className="border rounded-xl bg-white dark:bg-slate-950 shadow-sm divide-y">
                     {MAKHARIJ_LIST.map(makhraj => (
-                      <div key={makhraj} className="flex items-center justify-between p-3 md:p-4 bg-white dark:bg-slate-950 border rounded-lg shadow-sm hover:border-primary/50 transition-colors">
-                        <span className="font-medium text-sm md:text-base">{makhraj}</span>
+                      <div key={makhraj} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                        <span className="font-medium text-sm w-48">{makhraj}</span>
+                        <div className="flex-1"></div>
                         <Select 
                           value={wizard.core.checklist_makharij[makhraj]}
                           onValueChange={(v: "Baik" | "Perlu Latihan") => setWizard({
                             ...wizard, core: {...wizard.core, checklist_makharij: {...wizard.core.checklist_makharij, [makhraj]: v}}
                           })}
                         >
-                          <SelectTrigger className="w-[120px] md:w-[140px] h-9 text-xs md:text-sm">
+                          <SelectTrigger className="w-[140px] h-9 text-sm">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -626,6 +668,34 @@ export default function DiagnosticEvaluation() {
                         </Select>
                       </div>
                     ))}
+                    
+                    <div className="p-4 bg-slate-50/50 dark:bg-slate-900/20">
+                      <Label className="text-xs font-semibold text-muted-foreground mb-3 block uppercase tracking-wider">Tandai Huruf Mirip (Sering Tertukar)</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {CONFUSED_LETTERS.map(pair => {
+                          const isSelected = wizard.core.huruf_tertukar.includes(pair);
+                          return (
+                            <Badge 
+                              key={pair}
+                              variant={isSelected ? "default" : "outline"}
+                              className={`cursor-pointer px-3 py-1.5 text-sm ${isSelected ? 'bg-rose-500 hover:bg-rose-600' : 'hover:bg-slate-200 dark:hover:bg-slate-800'}`}
+                              onClick={() => {
+                                const arr = wizard.core.huruf_tertukar;
+                                setWizard({
+                                  ...wizard, 
+                                  core: {
+                                    ...wizard.core, 
+                                    huruf_tertukar: isSelected ? arr.filter(x => x !== pair) : [...arr, pair]
+                                  }
+                                })
+                              }}
+                            >
+                              {pair}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -647,17 +717,18 @@ export default function DiagnosticEvaluation() {
                       <h3 className="font-semibold text-lg md:text-xl border-b pb-3 flex items-center gap-3">
                         <Badge className="bg-amber-500 hover:bg-amber-600 text-sm py-1 px-3">Tajwid & Waqaf</Badge>
                       </h3>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                      <div className="border rounded-xl bg-white dark:bg-slate-950 shadow-sm divide-y mb-6">
                         {TAJWID_LIST.map(tajwid => (
-                          <div key={tajwid} className="flex items-center justify-between p-3 md:p-4 bg-white dark:bg-slate-950 border rounded-lg shadow-sm hover:border-amber-500/50 transition-colors">
-                            <span className="font-medium text-sm md:text-base">{tajwid}</span>
+                          <div key={tajwid} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                            <span className="font-medium text-sm w-48">{tajwid}</span>
+                            <div className="flex-1"></div>
                             <Select 
                               value={wizard.advanced.checklist_tajwid[tajwid]}
                               onValueChange={(v: "Baik" | "Cukup" | "Perlu") => setWizard({
                                 ...wizard, advanced: {...wizard.advanced, checklist_tajwid: {...wizard.advanced.checklist_tajwid, [tajwid]: v}}
                               })}
                             >
-                              <SelectTrigger className="w-[120px] md:w-[140px] h-9 text-xs md:text-sm">
+                              <SelectTrigger className="w-[140px] h-9 text-sm">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -668,25 +739,37 @@ export default function DiagnosticEvaluation() {
                             </Select>
                           </div>
                         ))}
+                        
+                        {showWaqaf && (
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 bg-amber-50/30 dark:bg-amber-950/10 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors">
+                            <div className="flex flex-col w-48">
+                              <span className="font-medium text-sm text-amber-800 dark:text-amber-400">Waqaf Ibtida'</span>
+                              <span className="text-xs text-amber-600/70">Memotong & memulai bacaan</span>
+                            </div>
+                            <div className="flex-1"></div>
+                            <div className="flex items-center gap-4">
+                              <Select 
+                                value={wizard.advanced.waqaf_ibtida}
+                                onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, waqaf_ibtida: v}})}
+                              >
+                                <SelectTrigger className="w-[140px] h-9 text-sm"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Sangat Baik">Sangat Baik</SelectItem>
+                                  <SelectItem value="Cukup">Cukup</SelectItem>
+                                  <SelectItem value="Perlu">Perlu</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <div className="w-20 text-right">
+                                {(wizard.advanced.waqaf_ibtida === "Cukup" || wizard.advanced.waqaf_ibtida === "Perlu") && (
+                                  <Badge variant="destructive" className="bg-amber-100 text-amber-700">
+                                    - {wizard.advanced.waqaf_ibtida === "Cukup" ? 1 : 2}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
-
-                      {showWaqaf && (
-                        <div className="space-y-4 p-5 md:p-6 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-100 shadow-sm max-w-2xl">
-                          <Label className="text-base md:text-lg text-amber-700 dark:text-amber-400 font-semibold">Waqaf Ibtida'</Label>
-                          <p className="text-xs md:text-sm text-amber-600/70 mb-4">Menilai kemampuan memotong dan memulai bacaan.</p>
-                          <Select 
-                            value={wizard.advanced.waqaf_ibtida}
-                            onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, waqaf_ibtida: v}})}
-                          >
-                            <SelectTrigger className="w-[200px] h-11"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Sangat Baik">Sangat Baik</SelectItem>
-                              <SelectItem value="Cukup">Cukup</SelectItem>
-                              <SelectItem value="Perlu">Perlu</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
                     </div>
 
                     {isTahfizh && (
@@ -710,48 +793,65 @@ export default function DiagnosticEvaluation() {
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-4 p-5 md:p-6 bg-violet-50 dark:bg-violet-950/20 rounded-xl border border-violet-100 shadow-sm">
-                            <Label className="text-base md:text-lg text-violet-700 dark:text-violet-400 font-semibold">Sambung Ayat</Label>
-                            <div className="space-y-4">
-                              <div>
-                                <Label className="text-xs text-violet-600 mb-2 block">Respon</Label>
-                                <Select 
-                                  value={wizard.advanced.sambung_ayat_respon}
-                                  onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, sambung_ayat_respon: v}})}
-                                >
-                                  <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Cepat">Cepat</SelectItem>
-                                    <SelectItem value="Cukup">Cukup</SelectItem>
-                                    <SelectItem value="Lambat">Lambat</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div>
-                                <Label className="text-xs text-violet-600 mb-2 block">Ketepatan</Label>
-                                <Select 
-                                  value={wizard.advanced.sambung_ayat_ketepatan}
-                                  onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, sambung_ayat_ketepatan: v}})}
-                                >
-                                  <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Tepat">Tepat</SelectItem>
-                                    <SelectItem value="Koreksi">Koreksi</SelectItem>
-                                    <SelectItem value="Tertukar">Tertukar</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                        <div className="border rounded-xl bg-white dark:bg-slate-950 shadow-sm divide-y border-violet-100 dark:border-violet-900/50">
+                          {/* Sambung Ayat Respon */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-violet-50/50 transition-colors">
+                            <div className="flex flex-col w-48">
+                              <span className="font-medium text-sm text-violet-800 dark:text-violet-400">Sambung Ayat (Respon)</span>
+                            </div>
+                            <div className="flex-1"></div>
+                            <Select 
+                              value={wizard.advanced.sambung_ayat_respon}
+                              onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, sambung_ayat_respon: v}})}
+                            >
+                              <SelectTrigger className="w-[140px] h-9 text-sm"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Cepat">Cepat</SelectItem>
+                                <SelectItem value="Cukup">Cukup</SelectItem>
+                                <SelectItem value="Lambat">Lambat</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          {/* Sambung Ayat Ketepatan */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-violet-50/50 transition-colors">
+                            <div className="flex flex-col w-48">
+                              <span className="font-medium text-sm text-violet-800 dark:text-violet-400">Sambung Ayat (Ketepatan)</span>
+                            </div>
+                            <div className="flex-1"></div>
+                            <div className="flex items-center gap-4">
+                              <Select 
+                                value={wizard.advanced.sambung_ayat_ketepatan}
+                                onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, sambung_ayat_ketepatan: v}})}
+                              >
+                                <SelectTrigger className="w-[140px] h-9 text-sm"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Tepat">Tepat</SelectItem>
+                                  <SelectItem value="Koreksi">Koreksi</SelectItem>
+                                  <SelectItem value="Tertukar">Tertukar</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <div className="w-20 text-right">
+                                {(wizard.advanced.sambung_ayat_ketepatan === "Koreksi" || wizard.advanced.sambung_ayat_ketepatan === "Tertukar") && (
+                                  <Badge variant="destructive" className="bg-violet-100 text-violet-700">
+                                    - {wizard.advanced.sambung_ayat_ketepatan === "Koreksi" ? 2 : 4}
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                           </div>
-                          <div className="space-y-4 p-5 md:p-6 bg-violet-50 dark:bg-violet-950/20 rounded-xl border border-violet-100 shadow-sm">
-                            <Label className="text-base md:text-lg text-violet-700 dark:text-violet-400 font-semibold">Murojaah</Label>
-                            <p className="text-xs md:text-sm text-violet-600/70 mb-4">Kekuatan hafalan siswa secara umum.</p>
+
+                          {/* Murojaah */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-violet-50/50 transition-colors">
+                            <div className="flex flex-col w-48">
+                              <span className="font-medium text-sm text-violet-800 dark:text-violet-400">Murojaah</span>
+                            </div>
+                            <div className="flex-1"></div>
                             <Select 
                               value={wizard.advanced.murojaah}
                               onValueChange={(v) => setWizard({...wizard, advanced: {...wizard.advanced, murojaah: v}})}
                             >
-                              <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
+                              <SelectTrigger className="w-[140px] h-9 text-sm"><SelectValue /></SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="Sangat Kuat">Sangat Kuat</SelectItem>
                                 <SelectItem value="Cukup Kuat">Cukup Kuat</SelectItem>
