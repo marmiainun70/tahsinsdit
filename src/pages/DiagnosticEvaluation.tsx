@@ -211,8 +211,8 @@ export default function DiagnosticEvaluation() {
   };
 
   const showAdvanced = !wizard.targetLevel.startsWith("Iqra");
-  const isTahfizh = wizard.targetLevel.startsWith("Tahfizh");
-  const isLanjutan2Or3 = wizard.targetLevel === "Tahsin Lanjutan 2" || wizard.targetLevel === "Tahsin Lanjutan 3";
+  const isTahfizh = wizard.targetLevel === "Tahfizh";
+  const showWaqaf = wizard.targetLevel === "Tahsin Lanjutan";
 
   return (
     <div className="space-y-6">
@@ -670,7 +670,7 @@ export default function DiagnosticEvaluation() {
                         ))}
                       </div>
 
-                      {isLanjutan2Or3 && (
+                      {showWaqaf && (
                         <div className="space-y-4 p-5 md:p-6 bg-amber-50 dark:bg-amber-950/20 rounded-xl border border-amber-100 shadow-sm max-w-2xl">
                           <Label className="text-base md:text-lg text-amber-700 dark:text-amber-400 font-semibold">Waqaf Ibtida'</Label>
                           <p className="text-xs md:text-sm text-amber-600/70 mb-4">Menilai kemampuan memotong dan memulai bacaan.</p>

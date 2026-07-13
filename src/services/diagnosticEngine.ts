@@ -6,8 +6,7 @@
 
 export const LEVEL_ORDER = [
   "Iqra 1", "Iqra 2", "Iqra 3", "Iqra 4", "Iqra 5", "Iqra 6",
-  "Tahsin Lanjutan 1", "Tahsin Lanjutan 2", "Tahsin Lanjutan 3",
-  "Tahfizh Juz 30", "Tahfizh Juz 29", "Tahfizh Juz 28"
+  "Tahsin Lanjutan", "Tahfizh"
 ] as const;
 
 export type LevelType = typeof LEVEL_ORDER[number];
@@ -37,11 +36,11 @@ export function calculateDiagnosticScore(input: EvaluationInput): number {
   
   let score = fluencyScore - (2 * lahnJaliCount) - (1 * lahnKhofiCount);
 
-  if (targetLevel === "Tahsin Lanjutan 2" || targetLevel === "Tahsin Lanjutan 3") {
+  if (targetLevel === "Tahsin Lanjutan") {
     score -= (1 * waqafErrorCount);
   }
 
-  if (targetLevel.startsWith("Tahfizh")) {
+  if (targetLevel === "Tahfizh") {
     score -= (2 * salahSambungAyatCount);
   }
 
@@ -99,10 +98,10 @@ export function generateFokusPembinaan(input: EvaluationInput): string[] {
   if (input.lahnKhofiCount > 0) {
     fokus.push(`Perbaikan Lahn Khofi (${input.lahnKhofiCount} kesalahan)`);
   }
-  if (input.waqafErrorCount > 0 && (input.targetLevel === "Tahsin Lanjutan 2" || input.targetLevel === "Tahsin Lanjutan 3")) {
+  if (input.waqafErrorCount > 0 && input.targetLevel === "Tahsin Lanjutan") {
     fokus.push(`Perbaikan Tajwid & Waqaf (${input.waqafErrorCount} kesalahan)`);
   }
-  if (input.salahSambungAyatCount > 0 && input.targetLevel.startsWith("Tahfizh")) {
+  if (input.salahSambungAyatCount > 0 && input.targetLevel === "Tahfizh") {
     fokus.push(`Murojaah Hafalan & Kelancaran Sambung Ayat (${input.salahSambungAyatCount} kesalahan)`);
   }
   
