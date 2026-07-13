@@ -34,7 +34,7 @@ interface WizardState {
     fluency_score: number;
     lahn_jali_detail: { huruf: number; harakat: number; tasydid: number };
     lahn_khofi_detail: { mad: number; qalqalah: number; tajwid: number };
-    checklist_makharij: Record<string, "Baik" | "Perlu Latihan">;
+    checklist_makharij: Record<string, { status: "-" | "Sangat Baik" | "Baik" | "Cukup" | "Perlu Latihan"; lahn_count: number }>;
     huruf_tertukar: string[];
   };
   advanced: {
@@ -50,7 +50,13 @@ interface WizardState {
   };
 }
 
-const MAKHARIJ_LIST = ["Rongga Mulut (Al-Jauf)", "Tenggorokan (Al-Halq)", "Lidah (Al-Lisan)", "Bibir (Asy-Syafatain)", "Rongga Hidung (Al-Khaisyum)"];
+const MAKHARIJ_DATA = [
+  { name: "Rongga Mulut (Al-Jauf)", letters: "ا , و , ي" },
+  { name: "Tenggorokan (Al-Halq)", letters: "ء , هـ , ع , ح , غ , خ" },
+  { name: "Lidah (Al-Lisan)", letters: "ق, ك, ج, ش, ي, ض, ل, ن, ر, ط, د, ت, ص, ز, س, ظ, ذ, ث" },
+  { name: "Bibir (Asy-Syafatain)", letters: "ف , و , ب , م" },
+  { name: "Rongga Hidung (Al-Khaisyum)", letters: "Ghunnah (ن/م tasydid)" }
+];
 const CONFUSED_LETTERS = ["ت / ط", "ث / س / ص", "ح / هـ", "خ / غ", "ذ / ز / ظ", "ق / ك", "ء / ع"];
 const TAJWID_LIST = ["Nun Mati/Tanwin", "Mim Mati", "Hukum Mad", "Qalqalah", "Ghunnah"];
 
@@ -71,7 +77,7 @@ const initialWizardState: WizardState = {
     fluency_score: 90,
     lahn_jali_detail: { huruf: 0, harakat: 0, tasydid: 0 },
     lahn_khofi_detail: { mad: 0, qalqalah: 0, tajwid: 0 },
-    checklist_makharij: Object.fromEntries(MAKHARIJ_LIST.map(k => [k, "Baik"])),
+    checklist_makharij: Object.fromEntries(MAKHARIJ_DATA.map(m => [m.name, { status: "-", lahn_count: 0 }])),
     huruf_tertukar: [],
   },
   advanced: {
@@ -843,24 +849,50 @@ export default function DiagnosticEvaluation() {
                 <div className="space-y-4">
                   <h3 className="font-semibold text-lg md:text-xl pb-2">Makharijul Huruf</h3>
                   <div className="border rounded-xl bg-white dark:bg-slate-950 shadow-sm divide-y">
-                    {MAKHARIJ_LIST.map(makhraj => (
-                      <div key={makhraj} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
-                        <span className="font-medium text-sm w-48">{makhraj}</span>
-                        <div className="flex-1"></div>
-                        <Select 
-                          value={wizard.core.checklist_makharij[makhraj]}
-                          onValueChange={(v: "Baik" | "Perlu Latihan") => setWizard({
-                            ...wizard, core: {...wizard.core, checklist_makharij: {...wizard.core.checklist_makharij, [makhraj]: v}}
-                          })}
-                        >
-                          <SelectTrigger className="w-[140px] h-9 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Baik">Baik</SelectItem>
-                            <SelectItem value="Perlu Latihan">Perlu Latihan</SelectItem>
-                          </SelectContent>
-                        </Select>
+                    {MAKHARIJ_DATA.map(makhraj => (
+                      <div key={makhraj.name} className="flex flex-col md:flex-row md:items-center justify-between p-4 gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                        <div className="flex flex-col md:w-1/3">
+                          <span className="font-semibold text-sm">{makhraj.name}</span>
+                          <span className="text-xs text-muted-foreground mt-1 font-mono tracking-widest leading-relaxed max-w-[280px]">
+                            {makhraj.letters}
+                          </span>
+                        </div>
+                        
+                        <div className="flex flex-1 items-center gap-4 md:justify-end">
+                          <div className="w-full sm:w-40">
+                            <Label className="text-[10px] text-muted-foreground mb-1 block uppercase tracking-wider">Status</Label>
+                            <Select 
+                              value={wizard.core.checklist_makharij[makhraj.name]?.status || "-"}
+                              onValueChange={(v: "-" | "Sangat Baik" | "Baik" | "Cukup" | "Perlu Latihan") => setWizard({
+                                ...wizard, core: {...wizard.core, checklist_makharij: {...wizard.core.checklist_makharij, [makhraj.name]: { ...wizard.core.checklist_makharij[makhraj.name], status: v }}}
+                              })}
+                            >
+                              <SelectTrigger className="h-9 text-sm bg-white dark:bg-slate-950">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="-">-</SelectItem>
+                                <SelectItem value="Sangat Baik">Sangat Baik</SelectItem>
+                                <SelectItem value="Baik">Baik</SelectItem>
+                                <SelectItem value="Cukup">Cukup</SelectItem>
+                                <SelectItem value="Perlu Latihan">Perlu Latihan</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="w-20 shrink-0">
+                            <Label className="text-[10px] text-muted-foreground mb-1 block uppercase tracking-wider text-center">Lahn</Label>
+                            <Input 
+                              type="number" 
+                              min={0}
+                              className="h-9 text-center bg-white dark:bg-slate-950"
+                              value={wizard.core.checklist_makharij[makhraj.name]?.lahn_count || 0}
+                              onChange={(e) => setWizard({
+                                ...wizard, core: {...wizard.core, checklist_makharij: {...wizard.core.checklist_makharij, [makhraj.name]: { ...wizard.core.checklist_makharij[makhraj.name], lahn_count: parseInt(e.target.value) || 0 }}}
+                              })}
+                            />
+                          </div>
+                        </div>
                       </div>
                     ))}
                     
