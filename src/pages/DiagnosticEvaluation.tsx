@@ -25,9 +25,10 @@ interface WizardState {
     motivasi: string;
   };
   core: {
+    bahan_bacaan: string;
     fluency_score: number;
-    lahn_jali_count: number;
-    lahn_khofi_count: number;
+    lahn_jali_detail: { huruf: number; harakat: number; tasydid: number };
+    lahn_khofi_detail: { mad: number; qalqalah: number; tajwid: number };
     checklist_makharij: Record<string, "Baik" | "Perlu Latihan">;
     huruf_tertukar: string[];
   };
@@ -56,9 +57,10 @@ const initialWizardState: WizardState = {
     motivasi: "",
   },
   core: {
+    bahan_bacaan: "",
     fluency_score: 90,
-    lahn_jali_count: 0,
-    lahn_khofi_count: 0,
+    lahn_jali_detail: { huruf: 0, harakat: 0, tasydid: 0 },
+    lahn_khofi_detail: { mad: 0, qalqalah: 0, tajwid: 0 },
     checklist_makharij: Object.fromEntries(MAKHARIJ_LIST.map(k => [k, "Baik"])),
     huruf_tertukar: [],
   },
@@ -155,10 +157,13 @@ export default function DiagnosticEvaluation() {
     if (wizard.advanced.sambung_ayat_ketepatan === "Koreksi") sambungAyatError = 1;
     if (wizard.advanced.sambung_ayat_ketepatan === "Tertukar") sambungAyatError = 2;
 
+    const totalJali = wizard.core.lahn_jali_detail.huruf + wizard.core.lahn_jali_detail.harakat + wizard.core.lahn_jali_detail.tasydid;
+    const totalKhofi = wizard.core.lahn_khofi_detail.mad + wizard.core.lahn_khofi_detail.qalqalah + wizard.core.lahn_khofi_detail.tajwid;
+
     const input: EvaluationInput = {
       fluencyScore: wizard.core.fluency_score,
-      lahnJaliCount: wizard.core.lahn_jali_count,
-      lahnKhofiCount: wizard.core.lahn_khofi_count,
+      lahnJaliCount: totalJali,
+      lahnKhofiCount: totalKhofi,
       waqafErrorCount: waqafError,
       salahSambungAyatCount: sambungAyatError,
       targetLevel: wizard.targetLevel
@@ -192,11 +197,14 @@ export default function DiagnosticEvaluation() {
         sambung_ayat_respon: wizard.advanced.sambung_ayat_respon,
         murojaah: wizard.advanced.murojaah,
         waqaf_ibtida: wizard.advanced.waqaf_ibtida,
-        huruf_tertukar: wizard.core.huruf_tertukar
+        huruf_tertukar: wizard.core.huruf_tertukar,
+        bahan_bacaan: wizard.core.bahan_bacaan,
+        lahn_jali_detail: wizard.core.lahn_jali_detail,
+        lahn_khofi_detail: wizard.core.lahn_khofi_detail
       },
       fluency_score: wizard.core.fluency_score,
-      lahn_jali_count: wizard.core.lahn_jali_count,
-      lahn_khofi_count: wizard.core.lahn_khofi_count,
+      lahn_jali_count: wizard.core.lahn_jali_detail.huruf + wizard.core.lahn_jali_detail.harakat + wizard.core.lahn_jali_detail.tasydid,
+      lahn_khofi_count: wizard.core.lahn_khofi_detail.mad + wizard.core.lahn_khofi_detail.qalqalah + wizard.core.lahn_khofi_detail.tajwid,
       checklist_makharij: wizard.core.checklist_makharij,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       checklist_tajwid: wizard.advanced.checklist_tajwid as any,
@@ -567,79 +575,124 @@ export default function DiagnosticEvaluation() {
             )}
 
             {step === 2 && (
-              <div className="space-y-10">
-                <div className="p-4 md:p-6 bg-slate-50 dark:bg-slate-900/50 rounded-xl border">
-                  <h3 className="font-semibold text-lg md:text-xl mb-6 flex items-center justify-between">
-                    Kelancaran Membaca
-                    <Badge variant="outline" className="text-xl md:text-2xl px-4 py-1.5">{wizard.core.fluency_score}</Badge>
-                  </h3>
-                  <Slider 
-                    className="py-4 cursor-pointer"
-                    value={[wizard.core.fluency_score]} 
-                    min={0} max={100} step={1}
-                    onValueChange={(v) => setWizard({...wizard, core: {...wizard.core, fluency_score: v[0]}})}
+              <div className="space-y-8">
+                {/* 1. Bahan Bacaan / Soal */}
+                <div className="space-y-3">
+                  <Label className="text-base md:text-lg font-semibold">Bahan Bacaan / Soal Ujian</Label>
+                  <Textarea 
+                    value={wizard.core.bahan_bacaan}
+                    onChange={(e) => setWizard({...wizard, core: {...wizard.core, bahan_bacaan: e.target.value}})}
+                    placeholder="Ketik atau paste teks ujian di sini..."
+                    className="min-h-[100px] resize-y"
                   />
-                  <div className="flex justify-between text-xs md:text-sm text-muted-foreground mt-4 font-medium">
-                    <span>Sangat Terbata-bata (0)</span>
-                    <span>Sangat Lancar (100)</span>
-                  </div>
                 </div>
 
                 <div className="space-y-4">
                   <div className="border rounded-xl bg-white dark:bg-slate-950 shadow-sm divide-y">
-                    {/* Lahn Jali */}
+                    
+                    {/* Kelancaran Membaca */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
                       <div className="flex flex-col">
-                        <span className="font-semibold text-sm">Lahn Jali (Kesalahan Fatal)</span>
-                        <span className="text-xs text-muted-foreground">Salah huruf, harakat, tasydid.</span>
+                        <span className="font-semibold text-sm">Kelancaran Bacaan</span>
+                        <span className="text-xs text-muted-foreground">Nilai dasar sebelum penalti</span>
                       </div>
-                      <div className="flex items-center gap-4 self-end sm:self-auto">
-                        <div className="flex items-center border rounded-md">
-                          <Button 
-                            variant="ghost" size="icon" className="h-8 w-8 rounded-none border-r"
-                            onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_jali_count: Math.max(0, wizard.core.lahn_jali_count - 1)}})}
-                          >
-                            <Minus className="h-4 w-4" />
-                          </Button>
-                          <div className="w-12 text-center text-sm font-medium">{wizard.core.lahn_jali_count}</div>
-                          <Button 
-                            variant="ghost" size="icon" className="h-8 w-8 rounded-none border-l"
-                            onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_jali_count: wizard.core.lahn_jali_count + 1}})}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
+                      <div className="flex items-center gap-3 self-end sm:self-auto">
+                        <Select 
+                          value={wizard.core.fluency_score.toString()}
+                          onValueChange={(v) => setWizard({...wizard, core: {...wizard.core, fluency_score: parseInt(v)}})}
+                        >
+                          <SelectTrigger className="w-[80px] h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="100">100</SelectItem>
+                            <SelectItem value="90">90</SelectItem>
+                            <SelectItem value="80">80</SelectItem>
+                            <SelectItem value="70">70</SelectItem>
+                            <SelectItem value="60">60</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input 
+                          type="number" 
+                          min={0} max={100}
+                          className="w-16 h-9 text-center font-medium"
+                          value={wizard.core.fluency_score}
+                          onChange={(e) => setWizard({...wizard, core: {...wizard.core, fluency_score: parseInt(e.target.value) || 0}})}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Lahn Jali */}
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between p-4 gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                      <div className="flex flex-col lg:w-48">
+                        <span className="font-semibold text-sm">Lahn Jali (Fatal)</span>
+                        <span className="text-xs text-muted-foreground">Penalti -2 per salah</span>
+                      </div>
+                      <div className="flex-1 flex flex-wrap gap-4 lg:justify-end">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs font-medium w-16">Huruf</Label>
+                          <div className="flex items-center border rounded-md">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border-r" onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_jali_detail: {...wizard.core.lahn_jali_detail, huruf: Math.max(0, wizard.core.lahn_jali_detail.huruf - 1)}}})}><Minus className="h-3 w-3" /></Button>
+                            <div className="w-8 text-center text-xs font-medium">{wizard.core.lahn_jali_detail.huruf}</div>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border-l" onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_jali_detail: {...wizard.core.lahn_jali_detail, huruf: wizard.core.lahn_jali_detail.huruf + 1}}})}><Plus className="h-3 w-3" /></Button>
+                          </div>
                         </div>
-                        <div className="w-20 text-right">
-                          <Badge variant="destructive" className="bg-rose-100 text-rose-700">- {wizard.core.lahn_jali_count * 2}</Badge>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs font-medium w-16">Harakat</Label>
+                          <div className="flex items-center border rounded-md">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border-r" onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_jali_detail: {...wizard.core.lahn_jali_detail, harakat: Math.max(0, wizard.core.lahn_jali_detail.harakat - 1)}}})}><Minus className="h-3 w-3" /></Button>
+                            <div className="w-8 text-center text-xs font-medium">{wizard.core.lahn_jali_detail.harakat}</div>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border-l" onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_jali_detail: {...wizard.core.lahn_jali_detail, harakat: wizard.core.lahn_jali_detail.harakat + 1}}})}><Plus className="h-3 w-3" /></Button>
+                          </div>
                         </div>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs font-medium w-16">Tasydid</Label>
+                          <div className="flex items-center border rounded-md">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border-r" onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_jali_detail: {...wizard.core.lahn_jali_detail, tasydid: Math.max(0, wizard.core.lahn_jali_detail.tasydid - 1)}}})}><Minus className="h-3 w-3" /></Button>
+                            <div className="w-8 text-center text-xs font-medium">{wizard.core.lahn_jali_detail.tasydid}</div>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border-l" onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_jali_detail: {...wizard.core.lahn_jali_detail, tasydid: wizard.core.lahn_jali_detail.tasydid + 1}}})}><Plus className="h-3 w-3" /></Button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="w-16 text-right self-end lg:self-auto">
+                        <Badge variant="destructive" className="bg-rose-100 text-rose-700">- {(wizard.core.lahn_jali_detail.huruf + wizard.core.lahn_jali_detail.harakat + wizard.core.lahn_jali_detail.tasydid) * 2}</Badge>
                       </div>
                     </div>
 
                     {/* Lahn Khofi */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-sm">Lahn Khofi (Kesalahan Ringan)</span>
-                        <span className="text-xs text-muted-foreground">Mad, Qalqalah, Tajwid dasar.</span>
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between p-4 gap-4 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                      <div className="flex flex-col lg:w-48">
+                        <span className="font-semibold text-sm">Lahn Khofi (Ringan)</span>
+                        <span className="text-xs text-muted-foreground">Penalti -1 per salah</span>
                       </div>
-                      <div className="flex items-center gap-4 self-end sm:self-auto">
-                        <div className="flex items-center border rounded-md">
-                          <Button 
-                            variant="ghost" size="icon" className="h-8 w-8 rounded-none border-r"
-                            onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_khofi_count: Math.max(0, wizard.core.lahn_khofi_count - 1)}})}
-                          >
-                            <Minus className="h-4 w-4" />
-                          </Button>
-                          <div className="w-12 text-center text-sm font-medium">{wizard.core.lahn_khofi_count}</div>
-                          <Button 
-                            variant="ghost" size="icon" className="h-8 w-8 rounded-none border-l"
-                            onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_khofi_count: wizard.core.lahn_khofi_count + 1}})}
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
+                      <div className="flex-1 flex flex-wrap gap-4 lg:justify-end">
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs font-medium w-16">Mad</Label>
+                          <div className="flex items-center border rounded-md">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border-r" onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_khofi_detail: {...wizard.core.lahn_khofi_detail, mad: Math.max(0, wizard.core.lahn_khofi_detail.mad - 1)}}})}><Minus className="h-3 w-3" /></Button>
+                            <div className="w-8 text-center text-xs font-medium">{wizard.core.lahn_khofi_detail.mad}</div>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border-l" onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_khofi_detail: {...wizard.core.lahn_khofi_detail, mad: wizard.core.lahn_khofi_detail.mad + 1}}})}><Plus className="h-3 w-3" /></Button>
+                          </div>
                         </div>
-                        <div className="w-20 text-right">
-                          <Badge variant="destructive" className="bg-amber-100 text-amber-700">- {wizard.core.lahn_khofi_count * 1}</Badge>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs font-medium w-16">Qalqalah</Label>
+                          <div className="flex items-center border rounded-md">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border-r" onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_khofi_detail: {...wizard.core.lahn_khofi_detail, qalqalah: Math.max(0, wizard.core.lahn_khofi_detail.qalqalah - 1)}}})}><Minus className="h-3 w-3" /></Button>
+                            <div className="w-8 text-center text-xs font-medium">{wizard.core.lahn_khofi_detail.qalqalah}</div>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border-l" onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_khofi_detail: {...wizard.core.lahn_khofi_detail, qalqalah: wizard.core.lahn_khofi_detail.qalqalah + 1}}})}><Plus className="h-3 w-3" /></Button>
+                          </div>
                         </div>
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs font-medium w-16">Tajwid</Label>
+                          <div className="flex items-center border rounded-md">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border-r" onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_khofi_detail: {...wizard.core.lahn_khofi_detail, tajwid: Math.max(0, wizard.core.lahn_khofi_detail.tajwid - 1)}}})}><Minus className="h-3 w-3" /></Button>
+                            <div className="w-8 text-center text-xs font-medium">{wizard.core.lahn_khofi_detail.tajwid}</div>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-none border-l" onClick={() => setWizard({...wizard, core: {...wizard.core, lahn_khofi_detail: {...wizard.core.lahn_khofi_detail, tajwid: wizard.core.lahn_khofi_detail.tajwid + 1}}})}><Plus className="h-3 w-3" /></Button>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="w-16 text-right self-end lg:self-auto">
+                        <Badge variant="destructive" className="bg-amber-100 text-amber-700">- {wizard.core.lahn_khofi_detail.mad + wizard.core.lahn_khofi_detail.qalqalah + wizard.core.lahn_khofi_detail.tajwid}</Badge>
                       </div>
                     </div>
                   </div>
