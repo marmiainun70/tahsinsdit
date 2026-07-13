@@ -28,7 +28,7 @@ export const useDiagnosticStudents = ({
       let query = supabase
         .from("students")
         // @ts-expect-error evaluasi_awal_semester is dynamic in the DB now
-        .select("*, evaluasi_awal_semester(final_predicate)", { count: "exact" });
+        .select("*, evaluasi_awal_semester(final_predicate, evaluator_id)", { count: "exact" });
 
       if (search.trim()) {
         const searchTerm = `%${search.trim()}%`;
@@ -81,7 +81,7 @@ export type FullDiagnosticData = {
   selected_level_id?: string;
   
   // Profil Awal
-  jawaban_profil: Record<string, any>;
+  jawaban_profil: Record<string, unknown>;
   
   // Core
   fluency_score: number;
@@ -132,21 +132,21 @@ export const useSubmitDiagnosticWizard = () => {
 
       // 2. Batch insert children
       const promises = [
-        // @ts-expect-error
+        // @ts-expect-error Types not regenerated yet
         supabase.from("evaluasi_profil_awal").insert({ evaluasi_id, jawaban: data.jawaban_profil }),
-        // @ts-expect-error
+        // @ts-expect-error Types not regenerated yet
         supabase.from("evaluasi_kelancaran").insert({ evaluasi_id, score: data.fluency_score }),
-        // @ts-expect-error
+        // @ts-expect-error Types not regenerated yet
         supabase.from("evaluasi_kesalahan_bacaan").insert({ evaluasi_id, lahn_jali_count: data.lahn_jali_count, lahn_khofi_count: data.lahn_khofi_count }),
-        // @ts-expect-error
+        // @ts-expect-error Types not regenerated yet
         supabase.from("evaluasi_makharij").insert({ evaluasi_id, checklist: data.checklist_makharij }),
-        // @ts-expect-error
+        // @ts-expect-error Types not regenerated yet
         supabase.from("evaluasi_tajwid").insert({ evaluasi_id, checklist: data.checklist_tajwid }),
-        // @ts-expect-error
+        // @ts-expect-error Types not regenerated yet
         supabase.from("evaluasi_waqaf").insert({ evaluasi_id, error_count: data.waqaf_error_count }),
-        // @ts-expect-error
+        // @ts-expect-error Types not regenerated yet
         supabase.from("evaluasi_tahfizh").insert({ evaluasi_id, salah_sambung_ayat_count: data.salah_sambung_ayat_count }),
-        // @ts-expect-error
+        // @ts-expect-error Types not regenerated yet
         supabase.from("evaluasi_rekomendasi").insert({ evaluasi_id, fokus_pembinaan: data.fokus_pembinaan, recommended_level_id: data.recommended_level_id })
       ];
 

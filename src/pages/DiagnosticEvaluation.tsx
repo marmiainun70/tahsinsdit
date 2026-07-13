@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useDiagnosticStudents, useSubmitDiagnosticWizard, FullDiagnosticData } from "@/hooks/useDiagnostic";
 import { useAddStudent } from "@/hooks/useSupabaseData";
 import { useAcademicYears } from "@/hooks/useAcademicCalendar";
+import { useProfileMap } from "@/hooks/useProfiles";
 import { evaluateStudent, EvaluationInput, EvaluationOutput, LEVEL_ORDER, LevelType } from "@/services/diagnosticEngine";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -191,6 +192,7 @@ const renderEvaluationMetrics = (
 };
 
 export default function DiagnosticEvaluation() {
+  const profileMap = useProfileMap();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [kelas, setKelas] = useState("all");
@@ -541,9 +543,16 @@ export default function DiagnosticEvaluation() {
                         <TableCell className="px-6 py-4 whitespace-nowrap">Kelas {student.kelas}{student.rombel}</TableCell>
                         <TableCell className="px-6 py-4 whitespace-nowrap">
                           {isEvaluated ? (
-                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
-                              Sudah Dievaluasi ({evaluation.final_predicate})
-                            </Badge>
+                            <div className="flex flex-col gap-1">
+                              <Badge variant="outline" className="w-fit bg-emerald-50 text-emerald-700 border-emerald-200">
+                                Sudah Dievaluasi ({evaluation.final_predicate})
+                              </Badge>
+                              {evaluation.evaluator_id && profileMap.get(evaluation.evaluator_id) && (
+                                <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                                  Oleh: {profileMap.get(evaluation.evaluator_id)}
+                                </span>
+                              )}
+                            </div>
                           ) : (
                             <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                               Belum Dievaluasi
