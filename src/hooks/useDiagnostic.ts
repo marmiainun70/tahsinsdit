@@ -27,7 +27,7 @@ export const useDiagnosticStudents = ({
     queryFn: async () => {
       let query = supabase
         .from("students")
-        .select("*, evaluasi_awal_semester(final_predicate, evaluator_id, master_level_kemampuan(nama_level, kode_level))", { count: "exact" });
+        .select("*, evaluasi_awal_semester(final_predicate, evaluator_id, master_level_kemampuan(nama_level, kode_level), evaluasi_kelancaran(score))", { count: "exact" });
 
 
 

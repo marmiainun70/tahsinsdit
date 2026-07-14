@@ -729,6 +729,7 @@ export default function DiagnosticEvaluation() {
                   <TableHead className="whitespace-nowrap px-6 py-4">Nama Siswa</TableHead>
                   <TableHead className="whitespace-nowrap px-6 py-4">Kelas</TableHead>
                   <TableHead className="whitespace-nowrap px-6 py-4">Level</TableHead>
+                  <TableHead className="whitespace-nowrap px-6 py-4">Poin IBP</TableHead>
                   <TableHead className="whitespace-nowrap px-6 py-4">Status Evaluasi</TableHead>
                   <TableHead className="whitespace-nowrap px-6 py-4 text-right">Aksi</TableHead>
                 </TableRow>
@@ -736,27 +737,33 @@ export default function DiagnosticEvaluation() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-40 text-center">
+                    <TableCell colSpan={6} className="h-40 text-center">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
                     </TableCell>
                   </TableRow>
                 ) : students.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                       Tidak ada data siswa ditemukan.
                     </TableCell>
                   </TableRow>
                 ) : (
                   students.map((student) => {
                     // We mapped evaluasi_awal_semester dynamically
-                    const evaluation = (student as { evaluasi_awal_semester?: Array<{ final_predicate?: string; evaluator_id?: string; master_level_kemampuan?: { kode_level: string } }> }).evaluasi_awal_semester?.[0];
+                    const evaluation = (student as { evaluasi_awal_semester?: Array<{ final_predicate?: string; evaluator_id?: string; master_level_kemampuan?: { kode_level: string }; evaluasi_kelancaran?: { score: number } }> }).evaluasi_awal_semester?.[0];
                     const isEvaluated = !!evaluation;
                     
                     let levelDisplay = "-";
+                    let ibpDisplay = "-";
                     if (isEvaluated && evaluation.master_level_kemampuan?.kode_level) {
                       const wizLevel = mapKodeLevelToWizardLevel(evaluation.master_level_kemampuan.kode_level);
                       if (wizLevel) {
                         levelDisplay = wizLevel.startsWith("Iqra") ? `Tahsin Dasar - ${wizLevel}` : wizLevel;
+                        
+                        const levelP = getLevelPoin(wizLevel);
+                        const fluencyP = getKelancaranPoin(evaluation.evaluasi_kelancaran?.score || 0);
+                        const ibpP = levelP - fluencyP;
+                        ibpDisplay = ibpP.toString();
                       }
                     }
                     
@@ -770,6 +777,9 @@ export default function DiagnosticEvaluation() {
                               {levelDisplay}
                             </Badge>
                           ) : "-"}
+                        </TableCell>
+                        <TableCell className="px-6 py-4 whitespace-nowrap font-bold text-blue-700 dark:text-blue-400">
+                          {ibpDisplay}
                         </TableCell>
                         <TableCell className="px-6 py-4 whitespace-nowrap">
                           {isEvaluated ? (
@@ -1635,6 +1645,40 @@ export default function DiagnosticEvaluation() {
                     <p className="text-xs text-muted-foreground mb-1">Lahn (Jali/Khofi)</p>
                     <p className="font-semibold text-lg text-red-600 dark:text-red-400">{previewData.evaluasi_kesalahan_bacaan?.lahn_jali_count || 0} <span className="text-muted-foreground text-sm font-normal">/</span> <span className="text-amber-600 dark:text-amber-400">{previewData.evaluasi_kesalahan_bacaan?.lahn_khofi_count || 0}</span></p>
                   </div>
+                </div>
+
+                {/* IBP */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm border-b pb-1">Indeks Beban Pengajaran (IBP)</h4>
+                  {(() => {
+                    const previewTargetLevel = previewData?.master_level_kemampuan?.kode_level 
+                      ? mapKodeLevelToWizardLevel(previewData.master_level_kemampuan.kode_level) || "Iqra 1"
+                      : "Iqra 1";
+                    const previewLevelPoin = getLevelPoin(previewTargetLevel);
+                    const previewFluency = previewData?.evaluasi_kelancaran?.score || 0;
+                    const previewKelancaranPoin = getKelancaranPoin(previewFluency);
+                    const previewIbp = previewLevelPoin - previewKelancaranPoin;
+
+                    return (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-100 dark:border-blue-900">
+                          <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">Poin Level ({previewTargetLevel})</p>
+                          <p className="font-bold text-lg text-blue-800 dark:text-blue-300">{previewLevelPoin}</p>
+                        </div>
+                        <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-100 dark:border-blue-900">
+                          <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">Skor Kelancaran ({previewFluency})</p>
+                          <p className="font-bold text-lg text-blue-800 dark:text-blue-300">
+                            {previewKelancaranPoin > 0 ? `+${previewKelancaranPoin}` : previewKelancaranPoin}
+                          </p>
+                          <p className="text-[10px] text-blue-600/70 dark:text-blue-400/70 mt-1 line-clamp-1">{kelancaranPoinLabel(previewKelancaranPoin)}</p>
+                        </div>
+                        <div className="bg-blue-100 dark:bg-blue-900/40 p-3 rounded-lg border border-blue-300 dark:border-blue-700">
+                          <p className="text-xs font-bold text-blue-800 dark:text-blue-200 mb-1">Total Poin IBP</p>
+                          <p className="font-black text-2xl text-blue-900 dark:text-blue-100">{previewIbp}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* 2. Profil & Kebiasaan */}
