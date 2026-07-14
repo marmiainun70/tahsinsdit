@@ -119,6 +119,65 @@ export type Database = {
         }
         Relationships: []
       }
+      academic_year_transitions: {
+        Row: {
+          academic_year_id: string
+          class_mapping: Json
+          created_at: string
+          duration_ms: number | null
+          id: string
+          notes: string | null
+          processed_at: string
+          processed_by: string
+          status: Database["public"]["Enums"]["transition_status"]
+          teacher_action: string
+          total_alumni: number
+          total_gagal: number
+          total_naik: number
+          total_students: number
+        }
+        Insert: {
+          academic_year_id: string
+          class_mapping?: Json
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          notes?: string | null
+          processed_at?: string
+          processed_by: string
+          status?: Database["public"]["Enums"]["transition_status"]
+          teacher_action?: string
+          total_alumni?: number
+          total_gagal?: number
+          total_naik?: number
+          total_students?: number
+        }
+        Update: {
+          academic_year_id?: string
+          class_mapping?: Json
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          notes?: string | null
+          processed_at?: string
+          processed_by?: string
+          status?: Database["public"]["Enums"]["transition_status"]
+          teacher_action?: string
+          total_alumni?: number
+          total_gagal?: number
+          total_naik?: number
+          total_students?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academic_year_transitions_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       academic_years: {
         Row: {
           created_at: string
@@ -128,6 +187,10 @@ export type Database = {
           status: string
           tanggal_mulai: string
           tanggal_selesai: string
+          transition_notes: string | null
+          transition_processed_at: string | null
+          transition_processed_by: string | null
+          transition_status: Database["public"]["Enums"]["transition_status"]
         }
         Insert: {
           created_at?: string
@@ -137,6 +200,10 @@ export type Database = {
           status?: string
           tanggal_mulai: string
           tanggal_selesai: string
+          transition_notes?: string | null
+          transition_processed_at?: string | null
+          transition_processed_by?: string | null
+          transition_status?: Database["public"]["Enums"]["transition_status"]
         }
         Update: {
           created_at?: string
@@ -146,6 +213,10 @@ export type Database = {
           status?: string
           tanggal_mulai?: string
           tanggal_selesai?: string
+          transition_notes?: string | null
+          transition_processed_at?: string | null
+          transition_processed_by?: string | null
+          transition_status?: Database["public"]["Enums"]["transition_status"]
         }
         Relationships: []
       }
@@ -186,6 +257,111 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asesmen_jawaban: {
+        Row: {
+          answered_at: string
+          benar: boolean | null
+          id: string
+          jawaban: string | null
+          session_id: string
+          skor: number | null
+          soal_id: string
+        }
+        Insert: {
+          answered_at?: string
+          benar?: boolean | null
+          id?: string
+          jawaban?: string | null
+          session_id: string
+          skor?: number | null
+          soal_id: string
+        }
+        Update: {
+          answered_at?: string
+          benar?: boolean | null
+          id?: string
+          jawaban?: string | null
+          session_id?: string
+          skor?: number | null
+          soal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asesmen_jawaban_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "asesmen_session"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asesmen_jawaban_soal_id_fkey"
+            columns: ["soal_id"]
+            isOneToOne: false
+            referencedRelation: "bank_soal"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asesmen_session: {
+        Row: {
+          created_at: string
+          finished_at: string | null
+          id: string
+          jumlah_benar: number | null
+          jumlah_salah: number | null
+          last_question: number | null
+          nilai: number | null
+          peserta_asesmen_id: string
+          remaining_time: number | null
+          started_at: string
+          status: string
+          total_soal: number | null
+        }
+        Insert: {
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          jumlah_benar?: number | null
+          jumlah_salah?: number | null
+          last_question?: number | null
+          nilai?: number | null
+          peserta_asesmen_id: string
+          remaining_time?: number | null
+          started_at?: string
+          status?: string
+          total_soal?: number | null
+        }
+        Update: {
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          jumlah_benar?: number | null
+          jumlah_salah?: number | null
+          last_question?: number | null
+          nilai?: number | null
+          peserta_asesmen_id?: string
+          remaining_time?: number | null
+          started_at?: string
+          status?: string
+          total_soal?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asesmen_session_peserta_asesmen_id_fkey"
+            columns: ["peserta_asesmen_id"]
+            isOneToOne: true
+            referencedRelation: "peserta_asesmen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asesmen_session_peserta_asesmen_id_fkey"
+            columns: ["peserta_asesmen_id"]
+            isOneToOne: true
+            referencedRelation: "vw_peserta_asesmen_detail"
             referencedColumns: ["id"]
           },
         ]
@@ -282,6 +458,69 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_soal: {
+        Row: {
+          aktif: boolean
+          bobot: number
+          created_at: string
+          id: string
+          indikator_kompetensi: string
+          jawaban_benar: string
+          kategori: string
+          level_kognitif: string
+          opsi_a: string | null
+          opsi_b: string | null
+          opsi_c: string | null
+          opsi_d: string | null
+          pembahasan: string | null
+          soal: string
+          sub_aspek: string
+          tingkat_kesulitan: string
+          tipe_soal: string
+          updated_at: string
+        }
+        Insert: {
+          aktif?: boolean
+          bobot?: number
+          created_at?: string
+          id?: string
+          indikator_kompetensi: string
+          jawaban_benar: string
+          kategori: string
+          level_kognitif: string
+          opsi_a?: string | null
+          opsi_b?: string | null
+          opsi_c?: string | null
+          opsi_d?: string | null
+          pembahasan?: string | null
+          soal: string
+          sub_aspek: string
+          tingkat_kesulitan: string
+          tipe_soal: string
+          updated_at?: string
+        }
+        Update: {
+          aktif?: boolean
+          bobot?: number
+          created_at?: string
+          id?: string
+          indikator_kompetensi?: string
+          jawaban_benar?: string
+          kategori?: string
+          level_kognitif?: string
+          opsi_a?: string | null
+          opsi_b?: string | null
+          opsi_c?: string | null
+          opsi_d?: string | null
+          pembahasan?: string | null
+          soal?: string
+          sub_aspek?: string
+          tingkat_kesulitan?: string
+          tipe_soal?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       config_audit_log: {
         Row: {
           alasan: string | null
@@ -321,6 +560,363 @@ export type Database = {
           modul?: string
           new_value?: string | null
           old_value?: string | null
+        }
+        Relationships: []
+      }
+      evaluasi_awal_semester: {
+        Row: {
+          academic_year_id: string
+          created_at: string
+          evaluator_id: string
+          final_predicate: string | null
+          final_score: number
+          id: string
+          selected_level_id: string | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year_id: string
+          created_at?: string
+          evaluator_id: string
+          final_predicate?: string | null
+          final_score: number
+          id?: string
+          selected_level_id?: string | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year_id?: string
+          created_at?: string
+          evaluator_id?: string
+          final_predicate?: string | null
+          final_score?: number
+          id?: string
+          selected_level_id?: string | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluasi_awal_semester_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluasi_awal_semester_selected_level_id_fkey"
+            columns: ["selected_level_id"]
+            isOneToOne: false
+            referencedRelation: "master_level_kemampuan"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluasi_awal_semester_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluasi_kelancaran: {
+        Row: {
+          evaluasi_id: string
+          id: string
+          score: number
+        }
+        Insert: {
+          evaluasi_id: string
+          id?: string
+          score: number
+        }
+        Update: {
+          evaluasi_id?: string
+          id?: string
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluasi_kelancaran_evaluasi_id_fkey"
+            columns: ["evaluasi_id"]
+            isOneToOne: true
+            referencedRelation: "evaluasi_awal_semester"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluasi_kesalahan_bacaan: {
+        Row: {
+          evaluasi_id: string
+          id: string
+          lahn_jali_count: number
+          lahn_khofi_count: number
+        }
+        Insert: {
+          evaluasi_id: string
+          id?: string
+          lahn_jali_count?: number
+          lahn_khofi_count?: number
+        }
+        Update: {
+          evaluasi_id?: string
+          id?: string
+          lahn_jali_count?: number
+          lahn_khofi_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluasi_kesalahan_bacaan_evaluasi_id_fkey"
+            columns: ["evaluasi_id"]
+            isOneToOne: true
+            referencedRelation: "evaluasi_awal_semester"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluasi_lahn: {
+        Row: {
+          catatan: string | null
+          evaluasi_id: string
+          id: string
+          jenis_kesalahan: string
+          jenis_lahn: string
+          jumlah: number
+        }
+        Insert: {
+          catatan?: string | null
+          evaluasi_id: string
+          id?: string
+          jenis_kesalahan: string
+          jenis_lahn: string
+          jumlah?: number
+        }
+        Update: {
+          catatan?: string | null
+          evaluasi_id?: string
+          id?: string
+          jenis_kesalahan?: string
+          jenis_lahn?: string
+          jumlah?: number
+        }
+        Relationships: []
+      }
+      evaluasi_makharij: {
+        Row: {
+          checklist: Json
+          evaluasi_id: string
+          id: string
+        }
+        Insert: {
+          checklist?: Json
+          evaluasi_id: string
+          id?: string
+        }
+        Update: {
+          checklist?: Json
+          evaluasi_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluasi_makharij_evaluasi_id_fkey"
+            columns: ["evaluasi_id"]
+            isOneToOne: true
+            referencedRelation: "evaluasi_awal_semester"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluasi_profil_awal: {
+        Row: {
+          evaluasi_id: string
+          id: string
+          jawaban: Json
+        }
+        Insert: {
+          evaluasi_id: string
+          id?: string
+          jawaban?: Json
+        }
+        Update: {
+          evaluasi_id?: string
+          id?: string
+          jawaban?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluasi_profil_awal_evaluasi_id_fkey"
+            columns: ["evaluasi_id"]
+            isOneToOne: true
+            referencedRelation: "evaluasi_awal_semester"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluasi_rekomendasi: {
+        Row: {
+          evaluasi_id: string
+          fokus_pembinaan: string[]
+          id: string
+          recommended_level_id: string | null
+        }
+        Insert: {
+          evaluasi_id: string
+          fokus_pembinaan?: string[]
+          id?: string
+          recommended_level_id?: string | null
+        }
+        Update: {
+          evaluasi_id?: string
+          fokus_pembinaan?: string[]
+          id?: string
+          recommended_level_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluasi_rekomendasi_evaluasi_id_fkey"
+            columns: ["evaluasi_id"]
+            isOneToOne: true
+            referencedRelation: "evaluasi_awal_semester"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluasi_rekomendasi_recommended_level_id_fkey"
+            columns: ["recommended_level_id"]
+            isOneToOne: false
+            referencedRelation: "master_level_kemampuan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluasi_sambung_ayat: {
+        Row: {
+          catatan: string | null
+          evaluasi_id: string
+          id: string
+          ketepatan: string
+          keyakinan: string
+          respon: string
+        }
+        Insert: {
+          catatan?: string | null
+          evaluasi_id: string
+          id?: string
+          ketepatan: string
+          keyakinan: string
+          respon: string
+        }
+        Update: {
+          catatan?: string | null
+          evaluasi_id?: string
+          id?: string
+          ketepatan?: string
+          keyakinan?: string
+          respon?: string
+        }
+        Relationships: []
+      }
+      evaluasi_tahfizh: {
+        Row: {
+          evaluasi_id: string
+          id: string
+          salah_sambung_ayat_count: number
+        }
+        Insert: {
+          evaluasi_id: string
+          id?: string
+          salah_sambung_ayat_count?: number
+        }
+        Update: {
+          evaluasi_id?: string
+          id?: string
+          salah_sambung_ayat_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluasi_tahfizh_evaluasi_id_fkey"
+            columns: ["evaluasi_id"]
+            isOneToOne: true
+            referencedRelation: "evaluasi_awal_semester"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluasi_tajwid: {
+        Row: {
+          checklist: Json
+          evaluasi_id: string
+          id: string
+        }
+        Insert: {
+          checklist?: Json
+          evaluasi_id: string
+          id?: string
+        }
+        Update: {
+          checklist?: Json
+          evaluasi_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluasi_tajwid_evaluasi_id_fkey"
+            columns: ["evaluasi_id"]
+            isOneToOne: true
+            referencedRelation: "evaluasi_awal_semester"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluasi_waqaf: {
+        Row: {
+          error_count: number
+          evaluasi_id: string
+          id: string
+        }
+        Insert: {
+          error_count?: number
+          evaluasi_id: string
+          id?: string
+        }
+        Update: {
+          error_count?: number
+          evaluasi_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluasi_waqaf_evaluasi_id_fkey"
+            columns: ["evaluasi_id"]
+            isOneToOne: true
+            referencedRelation: "evaluasi_awal_semester"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      evaluasi_waqaf_ibtida: {
+        Row: {
+          catatan: string | null
+          evaluasi_id: string
+          id: string
+          jumlah_kesalahan: number
+          kategori: string
+        }
+        Insert: {
+          catatan?: string | null
+          evaluasi_id: string
+          id?: string
+          jumlah_kesalahan?: number
+          kategori: string
+        }
+        Update: {
+          catatan?: string | null
+          evaluasi_id?: string
+          id?: string
+          jumlah_kesalahan?: number
+          kategori?: string
         }
         Relationships: []
       }
@@ -506,6 +1102,33 @@ export type Database = {
           nama_lembaga?: string
           updated_at?: string
           updated_by?: string | null
+        }
+        Relationships: []
+      }
+      master_level_kemampuan: {
+        Row: {
+          created_at: string
+          id: string
+          kode_level: string
+          nama_level: string
+          poin_ibp_dasar: number
+          program_nama: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kode_level: string
+          nama_level: string
+          poin_ibp_dasar?: number
+          program_nama: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kode_level?: string
+          nama_level?: string
+          poin_ibp_dasar?: number
+          program_nama?: string
         }
         Relationships: []
       }
@@ -745,6 +1368,99 @@ export type Database = {
         }
         Relationships: []
       }
+      paket_asesmen: {
+        Row: {
+          acak_opsi: boolean | null
+          acak_soal: boolean | null
+          created_at: string
+          durasi_menit: number
+          id: string
+          jenis_asesmen: string
+          jumlah_soal: number
+          kategori_kompetensi: string[] | null
+          kode_paket: string
+          nama_paket: string
+          nilai_minimum: number
+          periode: string
+          status: string
+          tanggal_mulai: string
+          tanggal_selesai: string
+          updated_at: string
+        }
+        Insert: {
+          acak_opsi?: boolean | null
+          acak_soal?: boolean | null
+          created_at?: string
+          durasi_menit?: number
+          id?: string
+          jenis_asesmen: string
+          jumlah_soal?: number
+          kategori_kompetensi?: string[] | null
+          kode_paket: string
+          nama_paket: string
+          nilai_minimum?: number
+          periode: string
+          status?: string
+          tanggal_mulai: string
+          tanggal_selesai: string
+          updated_at?: string
+        }
+        Update: {
+          acak_opsi?: boolean | null
+          acak_soal?: boolean | null
+          created_at?: string
+          durasi_menit?: number
+          id?: string
+          jenis_asesmen?: string
+          jumlah_soal?: number
+          kategori_kompetensi?: string[] | null
+          kode_paket?: string
+          nama_paket?: string
+          nilai_minimum?: number
+          periode?: string
+          status?: string
+          tanggal_mulai?: string
+          tanggal_selesai?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      paket_asesmen_soal: {
+        Row: {
+          created_at: string
+          id: string
+          paket_id: string
+          soal_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          paket_id: string
+          soal_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          paket_id?: string
+          soal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paket_asesmen_soal_paket_id_fkey"
+            columns: ["paket_id"]
+            isOneToOne: false
+            referencedRelation: "paket_asesmen"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "paket_asesmen_soal_soal_id_fkey"
+            columns: ["soal_id"]
+            isOneToOne: false
+            referencedRelation: "bank_soal"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parents: {
         Row: {
           created_at: string
@@ -777,11 +1493,66 @@ export type Database = {
           },
         ]
       }
+      peserta_asesmen: {
+        Row: {
+          catatan: string | null
+          created_at: string
+          guru_id: string
+          id: string
+          nilai_akhir: number | null
+          paket_id: string
+          status: string
+          updated_at: string
+          waktu_mulai: string | null
+          waktu_selesai: string | null
+        }
+        Insert: {
+          catatan?: string | null
+          created_at?: string
+          guru_id: string
+          id?: string
+          nilai_akhir?: number | null
+          paket_id: string
+          status?: string
+          updated_at?: string
+          waktu_mulai?: string | null
+          waktu_selesai?: string | null
+        }
+        Update: {
+          catatan?: string | null
+          created_at?: string
+          guru_id?: string
+          id?: string
+          nilai_akhir?: number | null
+          paket_id?: string
+          status?: string
+          updated_at?: string
+          waktu_mulai?: string | null
+          waktu_selesai?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "peserta_asesmen_guru_id_fkey"
+            columns: ["guru_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "peserta_asesmen_paket_id_fkey"
+            columns: ["paket_id"]
+            isOneToOne: false
+            referencedRelation: "paket_asesmen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
           full_name: string
           id: string
+          is_read_by_admin: boolean | null
           registered_at: string
           role: string
           status: string
@@ -794,6 +1565,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          is_read_by_admin?: boolean | null
           registered_at?: string
           role?: string
           status?: string
@@ -806,6 +1578,7 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          is_read_by_admin?: boolean | null
           registered_at?: string
           role?: string
           status?: string
@@ -1017,6 +1790,7 @@ export type Database = {
       }
       students: {
         Row: {
+          alasan_keluar: string | null
           catatan_perhatian: string | null
           created_at: string
           created_by: string | null
@@ -1030,9 +1804,13 @@ export type Database = {
           perlu_perhatian: boolean
           rombel: string
           status_bacaan: Database["public"]["Enums"]["reading_status"]
+          status_siswa: Database["public"]["Enums"]["student_status"]
+          tahun_lulus: number | null
+          tanggal_keluar: string | null
           updated_at: string
         }
         Insert: {
+          alasan_keluar?: string | null
           catatan_perhatian?: string | null
           created_at?: string
           created_by?: string | null
@@ -1046,9 +1824,13 @@ export type Database = {
           perlu_perhatian?: boolean
           rombel?: string
           status_bacaan?: Database["public"]["Enums"]["reading_status"]
+          status_siswa?: Database["public"]["Enums"]["student_status"]
+          tahun_lulus?: number | null
+          tanggal_keluar?: string | null
           updated_at?: string
         }
         Update: {
+          alasan_keluar?: string | null
           catatan_perhatian?: string | null
           created_at?: string
           created_by?: string | null
@@ -1062,6 +1844,9 @@ export type Database = {
           perlu_perhatian?: boolean
           rombel?: string
           status_bacaan?: Database["public"]["Enums"]["reading_status"]
+          status_siswa?: Database["public"]["Enums"]["student_status"]
+          tahun_lulus?: number | null
+          tanggal_keluar?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1475,7 +2260,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      vw_peserta_asesmen_detail: {
+        Row: {
+          catatan: string | null
+          created_at: string | null
+          guru_id: string | null
+          id: string | null
+          nama_guru: string | null
+          nilai_akhir: number | null
+          paket_id: string | null
+          status: string | null
+          waktu_mulai: string | null
+          waktu_selesai: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "peserta_asesmen_guru_id_fkey"
+            columns: ["guru_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "peserta_asesmen_paket_id_fkey"
+            columns: ["paket_id"]
+            isOneToOne: false
+            referencedRelation: "paket_asesmen"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       approve_all_pending_teacher_student_requests: {
@@ -1534,6 +2348,37 @@ export type Database = {
           _user_id: string
         }
         Returns: undefined
+      }
+      execute_academic_year_transition: {
+        Args: {
+          p_academic_year_id: string
+          p_class_mappings: Json
+          p_notes?: string
+          p_teacher_action: string
+        }
+        Returns: Json
+      }
+      generate_random_soal_for_paket: {
+        Args: {
+          p_jumlah_soal: number
+          p_kategori: string
+          p_paket_id: string
+          p_sub_aspek: string
+          p_tingkat_kesulitan: string
+        }
+        Returns: number
+      }
+      get_class_mapping_suggestion: {
+        Args: { p_academic_year_id: string }
+        Returns: Json
+      }
+      get_transition_history: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: Json
+      }
+      get_transition_preview: {
+        Args: { p_academic_year_id: string }
+        Returns: Json
       }
       has_role: {
         Args: {
@@ -1614,7 +2459,25 @@ export type Database = {
         | "nilai_rendah"
         | "catatan_progres"
         | "naik_level"
+        | "naik_kelas"
+        | "lulus_alumni"
+        | "keluar_sekolah"
+        | "pindah_sekolah"
       app_role: "admin" | "guru" | "parent"
+      diagnostic_level_awal:
+        | "belum_bisa_baca"
+        | "iqro_1"
+        | "iqro_2"
+        | "iqro_3"
+        | "iqro_4"
+        | "iqro_5"
+        | "iqro_6"
+        | "tahsin_lanjutan"
+        | "tahfizh"
+      evaluation_status:
+        | "belum_dievaluasi"
+        | "sudah_dievaluasi"
+        | "perlu_evaluasi_ulang"
       exam_result: "Lulus" | "Tidak Lulus"
       exam_schedule_type:
         | "tahsin_dasar_ke_lanjutan"
@@ -1631,6 +2494,14 @@ export type Database = {
         | "Tahsin Lanjutan"
         | "Tahfizh"
       reading_status: "Lancar" | "Cukup" | "Perlu Latihan" | "Terbata-bata"
+      student_status: "aktif" | "alumni" | "keluar" | "pindah"
+      tajwid_skor: "belum" | "mulai" | "baik" | "menguasai"
+      transition_status:
+        | "draft"
+        | "waiting"
+        | "processing"
+        | "completed"
+        | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1765,8 +2636,28 @@ export const Constants = {
         "nilai_rendah",
         "catatan_progres",
         "naik_level",
+        "naik_kelas",
+        "lulus_alumni",
+        "keluar_sekolah",
+        "pindah_sekolah",
       ],
       app_role: ["admin", "guru", "parent"],
+      diagnostic_level_awal: [
+        "belum_bisa_baca",
+        "iqro_1",
+        "iqro_2",
+        "iqro_3",
+        "iqro_4",
+        "iqro_5",
+        "iqro_6",
+        "tahsin_lanjutan",
+        "tahfizh",
+      ],
+      evaluation_status: [
+        "belum_dievaluasi",
+        "sudah_dievaluasi",
+        "perlu_evaluasi_ulang",
+      ],
       exam_result: ["Lulus", "Tidak Lulus"],
       exam_schedule_type: [
         "tahsin_dasar_ke_lanjutan",
@@ -1785,6 +2676,15 @@ export const Constants = {
         "Tahfizh",
       ],
       reading_status: ["Lancar", "Cukup", "Perlu Latihan", "Terbata-bata"],
+      student_status: ["aktif", "alumni", "keluar", "pindah"],
+      tajwid_skor: ["belum", "mulai", "baik", "menguasai"],
+      transition_status: [
+        "draft",
+        "waiting",
+        "processing",
+        "completed",
+        "failed",
+      ],
     },
   },
 } as const
