@@ -480,6 +480,7 @@ export default function DiagnosticEvaluation() {
       final_score: engineOutput.finalScore,
       final_predicate: engineOutput.finalPredicate,
       selected_level_id: undefined, // Let the backend default or we can map recommendedKodeLevel if we fetch the master table
+      recommendedKodeLevel: engineOutput.recommendedKodeLevel,
       jawaban_profil: {
         ...wizard.profil,
         hafalan_juz: wizard.advanced.hafalan_juz,

@@ -100,6 +100,7 @@ export type FullDiagnosticData = {
   // Recommendation
   fokus_pembinaan: string[];
   recommended_level_id?: string;
+  recommendedKodeLevel?: string;
 };
 
 export const useSubmitDiagnosticWizard = () => {
@@ -110,7 +111,18 @@ export const useSubmitDiagnosticWizard = () => {
     mutationFn: async (data: FullDiagnosticData) => {
       if (!user?.id) throw new Error("Tidak ada user login");
 
-
+      let final_selected_level_id = data.selected_level_id;
+      
+      if (!final_selected_level_id && data.recommendedKodeLevel) {
+        const { data: levelData } = await supabase
+          .from("master_level_kemampuan")
+          .select("id")
+          .eq("kode_level", data.recommendedKodeLevel)
+          .single();
+        if (levelData) {
+          final_selected_level_id = levelData.id;
+        }
+      }
 
       // Hapus data lama jika ada untuk menghindari duplikasi saat fitur "Ubah Evaluasi" digunakan.
       // Relasi ON DELETE CASCADE di database akan otomatis menghapus data di tabel-tabel child.
@@ -131,7 +143,7 @@ export const useSubmitDiagnosticWizard = () => {
           academic_year_id: data.academic_year_id,
           final_score: data.final_score,
           final_predicate: data.final_predicate,
-          selected_level_id: data.selected_level_id
+          selected_level_id: final_selected_level_id
         } as never)
         .select()
         .single();
@@ -149,7 +161,7 @@ export const useSubmitDiagnosticWizard = () => {
         supabase.from("evaluasi_tajwid").insert({ evaluasi_id, checklist: data.checklist_tajwid } as never),
         supabase.from("evaluasi_waqaf").insert({ evaluasi_id, error_count: data.waqaf_error_count } as never),
         supabase.from("evaluasi_tahfizh").insert({ evaluasi_id, salah_sambung_ayat_count: data.salah_sambung_ayat_count } as never),
-        supabase.from("evaluasi_rekomendasi").insert({ evaluasi_id, fokus_pembinaan: data.fokus_pembinaan, recommended_level_id: data.recommended_level_id } as never)
+        supabase.from("evaluasi_rekomendasi").insert({ evaluasi_id, fokus_pembinaan: data.fokus_pembinaan, recommended_level_id: final_selected_level_id } as never)
       ];
 
       const results = await Promise.allSettled(promises);
