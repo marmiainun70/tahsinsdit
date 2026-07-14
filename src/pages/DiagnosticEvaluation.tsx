@@ -284,6 +284,7 @@ export default function DiagnosticEvaluation() {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [step, setStep] = useState(1);
   const [wizard, setWizard] = useState<WizardState>(initialWizardState);
+  const [isVerified, setIsVerified] = useState(false);
 
   useEffect(() => {
     setLocalMotivasi(wizard.profil.motivasi || "");
@@ -379,6 +380,7 @@ export default function DiagnosticEvaluation() {
       setWizard(initialWizardState);
       setStep(1);
     }
+    setIsVerified(false);
     setEvalOpen(true);
   }
 
@@ -403,6 +405,7 @@ export default function DiagnosticEvaluation() {
       setStep(1);
       setLocalMotivasi("");
     }
+    setIsVerified(false);
     setEvalOpen(true);
   };
 
@@ -575,6 +578,41 @@ export default function DiagnosticEvaluation() {
     const showAdvanced = !wizard.targetLevel.startsWith("Iqra");
   const isTahfizh = wizard.targetLevel === "Tahfizh";
   const showWaqaf = wizard.targetLevel === "Tahsin Lanjutan";
+
+  const getLevelPoin = (level: string) => {
+    if (level.includes('Iqra 1')) return 10;
+    if (level.includes('Iqra 2')) return 9;
+    if (level.includes('Iqra 3')) return 8;
+    if (level.includes('Iqra 4')) return 7;
+    if (level.includes('Iqra 5')) return 6;
+    if (level.includes('Iqra 6')) return 5;
+    if (level.includes('Tahsin Lanjutan')) return 4;
+    if (level.includes('Tahfizh')) return 3;
+    return 10;
+  };
+
+  const getKelancaranPoin = (score: number) => {
+    if (score >= 90) return 2;
+    if (score >= 80) return 1;
+    if (score >= 70) return 0;
+    return -1;
+  };
+
+  const kelancaranPoinLabel = (poin: number) => {
+    if (poin === 2) return "Bacaan lancar, hanya perlu koreksi minimal";
+    if (poin === 1) return "Cukup lancar, masih ada beberapa koreksi";
+    if (poin === 0) return "Kurang lancar, masih perlu banyak koreksi";
+    return "Tidak siap membaca saat mendapat giliran";
+  };
+
+  const levelPoin = getLevelPoin(wizard.targetLevel);
+  // Calculate average fluency if Tahfizh, otherwise use core fluency
+  const totalSoal = wizard.targetLevel.includes("Tahfizh") ? Math.max(1, wizard.core.bahan_bacaan_tahfizh_soal.length) : 1;
+  const avgFluency = wizard.targetLevel.includes("Tahfizh") 
+    ? Math.round(wizard.core.bahan_bacaan_tahfizh_soal.reduce((acc, curr) => acc + curr.fluency_score, 0) / totalSoal)
+    : wizard.core.fluency_score;
+  const kelancaranPoin = getKelancaranPoin(avgFluency);
+  const ibpPoin = levelPoin - kelancaranPoin;
 
   return (
     <div className="space-y-6">
@@ -1487,6 +1525,58 @@ export default function DiagnosticEvaluation() {
                     </ul>
                   )}
                 </div>
+
+                <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 shadow-sm">
+                  <CardHeader className="pb-2 md:pb-4">
+                    <CardTitle className="text-blue-800 dark:text-blue-400 text-lg md:text-xl flex items-center gap-2">
+                      Indeks Beban Pengajaran (IBP) Siswa
+                    </CardTitle>
+                    <CardDescription>
+                      Beban guru mengampu siswa ini dihitung berdasarkan level kemampuan dan kelancaran bacaan.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center p-3 bg-white dark:bg-slate-950 rounded-lg border">
+                        <div>
+                          <p className="font-semibold text-sm">Poin Level ({wizard.targetLevel})</p>
+                        </div>
+                        <div className="font-bold text-lg">{levelPoin}</div>
+                      </div>
+                      <div className="flex justify-between items-center p-3 bg-white dark:bg-slate-950 rounded-lg border">
+                        <div>
+                          <p className="font-semibold text-sm">Skor Kelancaran ({avgFluency})</p>
+                          <p className="text-xs text-muted-foreground">{kelancaranPoinLabel(kelancaranPoin)}</p>
+                        </div>
+                        <div className="font-bold text-lg">
+                          {kelancaranPoin > 0 ? `+${kelancaranPoin}` : kelancaranPoin}
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center p-4 bg-blue-100 dark:bg-blue-900/40 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div>
+                          <p className="font-bold text-blue-900 dark:text-blue-100">Total Poin IBP Siswa</p>
+                          <p className="text-xs text-blue-700 dark:text-blue-300">Poin Level − Skor Kelancaran</p>
+                        </div>
+                        <div className="font-black text-2xl text-blue-700 dark:text-blue-300">
+                          {ibpPoin}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="flex items-center space-x-2 mt-6 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-lg">
+                  <input 
+                    type="checkbox" 
+                    id="verify-eval" 
+                    checked={isVerified}
+                    onChange={(e) => setIsVerified(e.target.checked)}
+                    className="h-5 w-5 rounded border-amber-300 text-amber-600 focus:ring-amber-600 cursor-pointer" 
+                  />
+                  <Label htmlFor="verify-eval" className="font-medium cursor-pointer text-amber-900 dark:text-amber-100">
+                    Saya menyatakan bahwa evaluasi ini telah dilakukan dengan benar dan teliti
+                  </Label>
+                </div>
               </div>
             )}
           </div>
@@ -1505,7 +1595,7 @@ export default function DiagnosticEvaluation() {
                 Lanjut <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
-              <Button type="button" onClick={handleSubmit} disabled={submitMutation.isPending} className="bg-emerald-600 hover:bg-emerald-700">
+              <Button type="button" onClick={handleSubmit} disabled={submitMutation.isPending || !isVerified} className="bg-emerald-600 hover:bg-emerald-700">
                 {submitMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSignature className="mr-2 h-4 w-4" />}
                 Simpan Hasil Evaluasi
               </Button>
