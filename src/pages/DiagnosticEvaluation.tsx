@@ -1449,40 +1449,99 @@ export default function DiagnosticEvaluation() {
 
       {/* PREVIEW DIALOG */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Hasil Evaluasi - {selectedStudent?.nama}</DialogTitle>
+        <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-2">
+            <DialogTitle className="text-xl">Hasil Evaluasi - {selectedStudent?.nama}</DialogTitle>
             <DialogDescription>Rincian hasil evaluasi diagnostik awal semester.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          
+          <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-6">
             {previewLoading ? (
               <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
             ) : previewData ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded border">
-                    <p className="text-xs text-muted-foreground">Level</p>
-                    <p className="font-medium">{previewData.master_level_kemampuan?.nama_level || "-"}</p>
+              <div className="space-y-6">
+                {/* 1. Skor & Level */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border">
+                    <p className="text-xs text-muted-foreground mb-1">Level</p>
+                    <p className="font-semibold text-lg">{previewData.master_level_kemampuan?.nama_level || "-"}</p>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded border">
-                    <p className="text-xs text-muted-foreground">Skor & Predikat</p>
-                    <p className="font-medium text-emerald-600">{previewData.final_score} ({previewData.final_predicate})</p>
+                  <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900">
+                    <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-1">Skor & Predikat</p>
+                    <p className="font-bold text-lg text-emerald-700 dark:text-emerald-400">{previewData.final_score} <span className="text-sm font-normal">({previewData.final_predicate})</span></p>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded border">
-                    <p className="text-xs text-muted-foreground">Kelancaran</p>
-                    <p className="font-medium">{previewData.evaluasi_kelancaran?.score || "-"}</p>
+                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border">
+                    <p className="text-xs text-muted-foreground mb-1">Kelancaran</p>
+                    <p className="font-semibold text-lg">{previewData.evaluasi_kelancaran?.score || "-"}</p>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded border">
-                    <p className="text-xs text-muted-foreground">Kesalahan Jali / Khofi</p>
-                    <p className="font-medium">{previewData.evaluasi_kesalahan_bacaan?.lahn_jali_count || 0} / {previewData.evaluasi_kesalahan_bacaan?.lahn_khofi_count || 0}</p>
+                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border">
+                    <p className="text-xs text-muted-foreground mb-1">Lahn (Jali/Khofi)</p>
+                    <p className="font-semibold text-lg text-red-600 dark:text-red-400">{previewData.evaluasi_kesalahan_bacaan?.lahn_jali_count || 0} <span className="text-muted-foreground text-sm font-normal">/</span> <span className="text-amber-600 dark:text-amber-400">{previewData.evaluasi_kesalahan_bacaan?.lahn_khofi_count || 0}</span></p>
                   </div>
                 </div>
+
+                {/* 2. Profil & Kebiasaan */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm border-b pb-1">Profil & Kebiasaan Anak</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground block text-xs">Rutinitas Mengaji:</span>
+                      <span className="font-medium">{previewData.evaluasi_profil_awal?.jawaban?.rutinitas_mengaji || "-"}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-xs">Pendamping Belajar:</span>
+                      <span className="font-medium">
+                        {(previewData.evaluasi_profil_awal?.jawaban?.pendamping_belajar || []).join(", ") || "-"}
+                      </span>
+                    </div>
+                    <div className="col-span-1 md:col-span-2 bg-amber-50 dark:bg-amber-950/20 p-3 rounded border border-amber-100 dark:border-amber-900/50">
+                      <span className="text-amber-700 dark:text-amber-400 block text-xs font-semibold mb-1">Catatan Tambahan & Motivasi (Guru):</span>
+                      <p className="italic text-slate-700 dark:text-slate-300">
+                        "{previewData.evaluasi_profil_awal?.jawaban?.motivasi || "Tidak ada catatan."}"
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Detail Bacaan */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-sm border-b pb-1">Detail Kemampuan Bacaan</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    {previewData.evaluasi_makharij?.checklist && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs mb-1">Makharijul Huruf (Perlu Latihan):</span>
+                        <ul className="list-disc list-inside">
+                          {Object.entries(previewData.evaluasi_makharij.checklist)
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            .filter(([_, v]: [string, any]) => v.status === "Perlu Latihan")
+                            .map(([k]) => <li key={k}>{k}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    {previewData.evaluasi_tajwid?.checklist && (
+                      <div>
+                        <span className="text-muted-foreground block text-xs mb-1">Tajwid (Perlu Perhatian):</span>
+                        <ul className="list-disc list-inside">
+                          {Object.entries(previewData.evaluasi_tajwid.checklist)
+                            .filter(([_, v]) => v === "Perlu")
+                            .map(([k]) => <li key={k}>{k}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 4. Rekomendasi */}
                 <div className="space-y-2">
-                  <Label>Rekomendasi / Fokus Pembinaan</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {previewData.evaluasi_rekomendasi?.fokus_pembinaan?.map((f: string) => (
-                      <Badge key={f} variant="secondary">{f}</Badge>
-                    ))}
+                  <h4 className="font-semibold text-sm border-b pb-1">Rekomendasi / Fokus Pembinaan</h4>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {previewData.evaluasi_rekomendasi?.fokus_pembinaan?.length > 0 ? (
+                      previewData.evaluasi_rekomendasi.fokus_pembinaan.map((f: string) => (
+                        <Badge key={f} variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200">{f}</Badge>
+                      ))
+                    ) : (
+                      <span className="text-sm text-muted-foreground">-</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1490,7 +1549,7 @@ export default function DiagnosticEvaluation() {
               <p className="text-center p-4 text-muted-foreground">Data tidak ditemukan.</p>
             )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="p-6 pt-2 border-t mt-auto">
             <Button variant="outline" onClick={() => setPreviewOpen(false)}>Tutup</Button>
             <Button onClick={() => {
               setPreviewOpen(false);
