@@ -26,6 +26,7 @@ const classColors = [
 const Dashboard = () => {
   const { user, profile } = useAuth();
   const isTeacher = isTeacherRole(profile?.role);
+  useAdminRegistrationNotifier(profile?.role === "admin");
 
   const { data: allStudents = [], isLoading: loadingStudents } = useStudents();
   const { data: assignments = [], isLoading: loadingAssignments } = useTeacherStudents(user?.id, "approved");
