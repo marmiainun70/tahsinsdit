@@ -124,7 +124,7 @@ export const useSubmitDiagnosticWizard = () => {
           final_score: data.final_score,
           final_predicate: data.final_predicate,
           selected_level_id: data.selected_level_id
-        })
+        } as never)
         .select()
         .single();
 
@@ -134,14 +134,14 @@ export const useSubmitDiagnosticWizard = () => {
 
       // 2. Batch insert children
       const promises = [
-        supabase.from("evaluasi_profil_awal").insert({ evaluasi_id, jawaban: data.jawaban_profil }),
-        supabase.from("evaluasi_kelancaran").insert({ evaluasi_id, score: data.fluency_score }),
-        supabase.from("evaluasi_kesalahan_bacaan").insert({ evaluasi_id, lahn_jali_count: data.lahn_jali_count, lahn_khofi_count: data.lahn_khofi_count }),
-        supabase.from("evaluasi_makharij").insert({ evaluasi_id, checklist: data.checklist_makharij }),
-        supabase.from("evaluasi_tajwid").insert({ evaluasi_id, checklist: data.checklist_tajwid }),
-        supabase.from("evaluasi_waqaf").insert({ evaluasi_id, error_count: data.waqaf_error_count }),
-        supabase.from("evaluasi_tahfizh").insert({ evaluasi_id, salah_sambung_ayat_count: data.salah_sambung_ayat_count }),
-        supabase.from("evaluasi_rekomendasi").insert({ evaluasi_id, fokus_pembinaan: data.fokus_pembinaan, recommended_level_id: data.recommended_level_id })
+        supabase.from("evaluasi_profil_awal").insert({ evaluasi_id, jawaban: data.jawaban_profil } as never),
+        supabase.from("evaluasi_kelancaran").insert({ evaluasi_id, score: data.fluency_score } as never),
+        supabase.from("evaluasi_kesalahan_bacaan").insert({ evaluasi_id, lahn_jali_count: data.lahn_jali_count, lahn_khofi_count: data.lahn_khofi_count } as never),
+        supabase.from("evaluasi_makharij").insert({ evaluasi_id, checklist: data.checklist_makharij } as never),
+        supabase.from("evaluasi_tajwid").insert({ evaluasi_id, checklist: data.checklist_tajwid } as never),
+        supabase.from("evaluasi_waqaf").insert({ evaluasi_id, error_count: data.waqaf_error_count } as never),
+        supabase.from("evaluasi_tahfizh").insert({ evaluasi_id, salah_sambung_ayat_count: data.salah_sambung_ayat_count } as never),
+        supabase.from("evaluasi_rekomendasi").insert({ evaluasi_id, fokus_pembinaan: data.fokus_pembinaan, recommended_level_id: data.recommended_level_id } as never)
       ];
 
       const results = await Promise.allSettled(promises);
