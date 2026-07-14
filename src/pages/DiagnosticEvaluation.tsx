@@ -17,6 +17,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+
 type Rombel = "A" | "B" | "C" | "D";
 
 interface WizardState {
@@ -260,6 +262,94 @@ export default function DiagnosticEvaluation() {
   }, [wizard.profil.motivasi]);
 
   const submitMutation = useSubmitDiagnosticWizard();
+
+  const [previewData, setPreviewData] = useState<any>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
+  const fetchDetail = async (studentId: string) => {
+    setPreviewLoading(true);
+    const { data, error } = await supabase
+        .from("evaluasi_awal_semester")
+        .select(`
+          *,
+          evaluasi_profil_awal(jawaban),
+          evaluasi_kelancaran(score),
+          evaluasi_kesalahan_bacaan(lahn_jali_count, lahn_khofi_count),
+          evaluasi_makharij(checklist),
+          evaluasi_tajwid(checklist),
+          evaluasi_waqaf(error_count),
+          evaluasi_tahfizh(salah_sambung_ayat_count),
+          evaluasi_rekomendasi(fokus_pembinaan, recommended_level_id),
+          master_level_kemampuan!evaluasi_awal_semester_selected_level_id_fkey(kode_level, nama_level)
+        `)
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+    setPreviewLoading(false);
+    return data;
+  }
+
+  const handlePreview = async (student: any) => {
+    setSelectedStudent(student);
+    setPreviewOpen(true);
+    const data = await fetchDetail(student.id);
+    setPreviewData(data);
+  }
+
+  const handleEdit = async (student: any) => {
+    setSelectedStudent(student);
+    const data = await fetchDetail(student.id);
+    if (data) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const jawaban = (data.evaluasi_profil_awal as any)?.jawaban || {};
+      const newWizard = {
+        ...initialWizardState,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        targetLevel: (data.master_level_kemampuan as any)?.nama_level as LevelType || initialWizardState.targetLevel,
+        profil: {
+          rutinitas_mengaji: jawaban.rutinitas_mengaji || initialWizardState.profil.rutinitas_mengaji,
+          pendamping_belajar: jawaban.pendamping_belajar || initialWizardState.profil.pendamping_belajar,
+          motivasi: jawaban.motivasi || "",
+          jumlah_hafalan: jawaban.jumlah_hafalan || "",
+          hafalan_terakhir: jawaban.hafalan_terakhir || "",
+        },
+        core: {
+          ...initialWizardState.core,
+          bahan_bacaan_iqra: jawaban.bahan_bacaan_iqra || initialWizardState.core.bahan_bacaan_iqra,
+          bahan_bacaan_tahsin_surat: jawaban.bahan_bacaan_tahsin_surat || "",
+          bahan_bacaan_tahsin_ayat: jawaban.bahan_bacaan_tahsin_ayat || "",
+          bahan_bacaan_tahfizh_soal: jawaban.bahan_bacaan_tahfizh_soal || initialWizardState.core.bahan_bacaan_tahfizh_soal,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          fluency_score: jawaban.fluency_score || (data.evaluasi_kelancaran as any)?.score || 90,
+          lahn_jali_detail: jawaban.lahn_jali_detail || { huruf: 0, harakat: 0, tasydid: 0 },
+          lahn_khofi_detail: jawaban.lahn_khofi_detail || { mad: 0, qalqalah: 0, tajwid: 0 },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          checklist_makharij: (data.evaluasi_makharij as any)?.checklist || initialWizardState.core.checklist_makharij,
+          huruf_tertukar: jawaban.huruf_tertukar || [],
+        },
+        advanced: {
+          ...initialWizardState.advanced,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          checklist_tajwid: (data.evaluasi_tajwid as any)?.checklist || initialWizardState.advanced.checklist_tajwid,
+          waqaf_ibtida: jawaban.waqaf_ibtida || initialWizardState.advanced.waqaf_ibtida,
+          hafalan_juz: jawaban.hafalan_juz || "",
+          hafalan_surat: jawaban.hafalan_surat || "",
+          hafalan_ayat: jawaban.hafalan_ayat || "",
+          sambung_ayat_respon: jawaban.sambung_ayat_respon || initialWizardState.advanced.sambung_ayat_respon,
+          sambung_ayat_ketepatan: jawaban.sambung_ayat_ketepatan || initialWizardState.advanced.sambung_ayat_ketepatan,
+          murojaah: jawaban.murojaah || initialWizardState.advanced.murojaah,
+        }
+      };
+      setWizard(newWizard);
+      setStep(1);
+    } else {
+      setWizard(initialWizardState);
+      setStep(1);
+    }
+    setEvalOpen(true);
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleOpenWizard = (student: any) => {
@@ -595,14 +685,34 @@ export default function DiagnosticEvaluation() {
                           )}
                         </TableCell>
                         <TableCell className="text-right px-6 py-4 whitespace-nowrap">
-                          <Button 
-                            variant={isEvaluated ? "outline" : "default"}
-                            size="sm"
-                            onClick={() => handleOpenWizard(student)}
-                          >
-                            <FileSignature className="mr-2 h-4 w-4" />
-                            {isEvaluated ? "Ubah Evaluasi" : "Mulai Evaluasi"}
-                          </Button>
+                          {isEvaluated ? (
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePreview(student)}
+                              >
+                                Lihat Hasil
+                              </Button>
+                              <Button 
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleEdit(student)}
+                              >
+                                <FileSignature className="mr-2 h-4 w-4" />
+                                Ubah Evaluasi
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button 
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleOpenWizard(student)}
+                            >
+                              <FileSignature className="mr-2 h-4 w-4" />
+                              Mulai Evaluasi
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     );
@@ -1333,6 +1443,59 @@ export default function DiagnosticEvaluation() {
                 Simpan Hasil Evaluasi
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* PREVIEW DIALOG */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="sm:max-w-md md:max-w-lg lg:max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Hasil Evaluasi - {selectedStudent?.nama}</DialogTitle>
+            <DialogDescription>Rincian hasil evaluasi diagnostik awal semester.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {previewLoading ? (
+              <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>
+            ) : previewData ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded border">
+                    <p className="text-xs text-muted-foreground">Level</p>
+                    <p className="font-medium">{previewData.master_level_kemampuan?.nama_level || "-"}</p>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded border">
+                    <p className="text-xs text-muted-foreground">Skor & Predikat</p>
+                    <p className="font-medium text-emerald-600">{previewData.final_score} ({previewData.final_predicate})</p>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded border">
+                    <p className="text-xs text-muted-foreground">Kelancaran</p>
+                    <p className="font-medium">{previewData.evaluasi_kelancaran?.score || "-"}</p>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded border">
+                    <p className="text-xs text-muted-foreground">Kesalahan Jali / Khofi</p>
+                    <p className="font-medium">{previewData.evaluasi_kesalahan_bacaan?.lahn_jali_count || 0} / {previewData.evaluasi_kesalahan_bacaan?.lahn_khofi_count || 0}</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Rekomendasi / Fokus Pembinaan</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {previewData.evaluasi_rekomendasi?.fokus_pembinaan?.map((f: string) => (
+                      <Badge key={f} variant="secondary">{f}</Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-center p-4 text-muted-foreground">Data tidak ditemukan.</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPreviewOpen(false)}>Tutup</Button>
+            <Button onClick={() => {
+              setPreviewOpen(false);
+              handleEdit(selectedStudent);
+            }}>Ubah Evaluasi</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

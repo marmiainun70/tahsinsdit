@@ -173,3 +173,39 @@ export const useSubmitDiagnosticWizard = () => {
     },
   });
 };
+
+export const useDiagnosticDetail = (studentId: string | undefined) => {
+  return useQuery({
+    queryKey: ["diagnostic-detail", studentId],
+    queryFn: async () => {
+      if (!studentId) return null;
+      
+      const { data, error } = await supabase
+        .from("evaluasi_awal_semester")
+        .select(`
+          *,
+          evaluasi_profil_awal(jawaban),
+          evaluasi_kelancaran(score),
+          evaluasi_kesalahan_bacaan(lahn_jali_count, lahn_khofi_count),
+          evaluasi_makharij(checklist),
+          evaluasi_tajwid(checklist),
+          evaluasi_waqaf(error_count),
+          evaluasi_tahfizh(salah_sambung_ayat_count),
+          evaluasi_rekomendasi(fokus_pembinaan, recommended_level_id),
+          master_level_kemampuan(kode_level, nama_level)
+        `)
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+        
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching diagnostic detail:", error);
+        throw error;
+      }
+      
+      return data || null;
+    },
+    enabled: !!studentId,
+  });
+};
