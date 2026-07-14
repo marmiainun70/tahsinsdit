@@ -194,6 +194,34 @@ const renderEvaluationMetrics = (
   );
 };
 
+const mapKodeLevelToWizardLevel = (kodeLevel: string): LevelType | null => {
+  switch (kodeLevel) {
+    case "LEVEL_1_1": return "Iqra 1";
+    case "LEVEL_1_2": return "Iqra 2";
+    case "LEVEL_1_3": return "Iqra 3";
+    case "LEVEL_1_4": return "Iqra 4";
+    case "LEVEL_1_5": return "Iqra 5";
+    case "LEVEL_1_6": return "Iqra 6";
+    case "LEVEL_2": return "Tahsin Lanjutan";
+    case "LEVEL_3": return "Tahfizh";
+    default: return null;
+  }
+};
+
+const mapWizardLevelToKodeLevel = (level: string): string => {
+  switch (level) {
+    case "Iqra 1": return "LEVEL_1_1";
+    case "Iqra 2": return "LEVEL_1_2";
+    case "Iqra 3": return "LEVEL_1_3";
+    case "Iqra 4": return "LEVEL_1_4";
+    case "Iqra 5": return "LEVEL_1_5";
+    case "Iqra 6": return "LEVEL_1_6";
+    case "Tahsin Lanjutan": return "LEVEL_2";
+    case "Tahfizh": return "LEVEL_3";
+    default: return "LEVEL_1_1";
+  }
+};
+
 export default function DiagnosticEvaluation() {
   const { user } = useAuth();
   const profileMap = useProfileMap();
@@ -304,10 +332,13 @@ export default function DiagnosticEvaluation() {
     if (data) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const jawaban = (data.evaluasi_profil_awal as any)?.jawaban || {};
+      const savedKodeLevel = (data.master_level_kemampuan as any)?.kode_level;
+      const targetLevelFromDb = savedKodeLevel ? mapKodeLevelToWizardLevel(savedKodeLevel) : null;
+      
       const newWizard = {
         ...initialWizardState,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        targetLevel: (data.master_level_kemampuan as any)?.nama_level as LevelType || initialWizardState.targetLevel,
+        targetLevel: targetLevelFromDb || initialWizardState.targetLevel,
         profil: {
           rutinitas_mengaji: jawaban.rutinitas_mengaji || initialWizardState.profil.rutinitas_mengaji,
           pendamping_belajar: jawaban.pendamping_belajar || initialWizardState.profil.pendamping_belajar,
@@ -479,8 +510,8 @@ export default function DiagnosticEvaluation() {
       academic_year_id: activeYear.id,
       final_score: engineOutput.finalScore,
       final_predicate: engineOutput.finalPredicate,
-      selected_level_id: undefined, // Let the backend default or we can map recommendedKodeLevel if we fetch the master table
-      recommendedKodeLevel: engineOutput.recommendedKodeLevel,
+      selected_level_id: undefined, // Let the backend default or we can map selectedKodeLevel if we fetch the master table
+      selectedKodeLevel: mapWizardLevelToKodeLevel(wizard.targetLevel),
       jawaban_profil: {
         ...wizard.profil,
         hafalan_juz: wizard.advanced.hafalan_juz,

@@ -100,7 +100,7 @@ export type FullDiagnosticData = {
   // Recommendation
   fokus_pembinaan: string[];
   recommended_level_id?: string;
-  recommendedKodeLevel?: string;
+  selectedKodeLevel?: string;
 };
 
 export const useSubmitDiagnosticWizard = () => {
@@ -113,11 +113,11 @@ export const useSubmitDiagnosticWizard = () => {
 
       let final_selected_level_id = data.selected_level_id;
       
-      if (!final_selected_level_id && data.recommendedKodeLevel) {
+      if (!final_selected_level_id && data.selectedKodeLevel) {
         const { data: levelData } = await supabase
           .from("master_level_kemampuan")
           .select("id")
-          .eq("kode_level", data.recommendedKodeLevel)
+          .eq("kode_level", data.selectedKodeLevel)
           .single();
         if (levelData) {
           final_selected_level_id = levelData.id;
