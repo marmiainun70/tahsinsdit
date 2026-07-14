@@ -690,6 +690,7 @@ export default function DiagnosticEvaluation() {
                 <TableRow>
                   <TableHead className="whitespace-nowrap px-6 py-4">Nama Siswa</TableHead>
                   <TableHead className="whitespace-nowrap px-6 py-4">Kelas</TableHead>
+                  <TableHead className="whitespace-nowrap px-6 py-4">Level</TableHead>
                   <TableHead className="whitespace-nowrap px-6 py-4">Status Evaluasi</TableHead>
                   <TableHead className="whitespace-nowrap px-6 py-4 text-right">Aksi</TableHead>
                 </TableRow>
@@ -697,26 +698,41 @@ export default function DiagnosticEvaluation() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-40 text-center">
+                    <TableCell colSpan={5} className="h-40 text-center">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
                     </TableCell>
                   </TableRow>
                 ) : students.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-32 text-center text-muted-foreground">
+                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
                       Tidak ada data siswa ditemukan.
                     </TableCell>
                   </TableRow>
                 ) : (
                   students.map((student) => {
                     // We mapped evaluasi_awal_semester dynamically
-                    const evaluation = (student as { evaluasi_awal_semester?: Array<{ final_predicate?: string; evaluator_id?: string }> }).evaluasi_awal_semester?.[0];
+                    const evaluation = (student as { evaluasi_awal_semester?: Array<{ final_predicate?: string; evaluator_id?: string; master_level_kemampuan?: { kode_level: string } }> }).evaluasi_awal_semester?.[0];
                     const isEvaluated = !!evaluation;
+                    
+                    let levelDisplay = "-";
+                    if (isEvaluated && evaluation.master_level_kemampuan?.kode_level) {
+                      const wizLevel = mapKodeLevelToWizardLevel(evaluation.master_level_kemampuan.kode_level);
+                      if (wizLevel) {
+                        levelDisplay = wizLevel.startsWith("Iqra") ? `Tahsin Dasar - ${wizLevel}` : wizLevel;
+                      }
+                    }
                     
                     return (
                       <TableRow key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                         <TableCell className="font-medium px-6 py-4">{student.nama}</TableCell>
                         <TableCell className="px-6 py-4 whitespace-nowrap">Kelas {student.kelas}{student.rombel}</TableCell>
+                        <TableCell className="px-6 py-4 whitespace-nowrap">
+                          {isEvaluated ? (
+                            <Badge variant="secondary" className="font-medium">
+                              {levelDisplay}
+                            </Badge>
+                          ) : "-"}
+                        </TableCell>
                         <TableCell className="px-6 py-4 whitespace-nowrap">
                           {isEvaluated ? (
                             <div className="flex flex-col gap-1">
