@@ -1560,6 +1560,7 @@ export type Database = {
           user_id: string
           username: string | null
           whatsapp: string | null
+          is_read_by_admin: boolean | null
         }
         Insert: {
           created_at?: string
@@ -1573,6 +1574,7 @@ export type Database = {
           user_id: string
           username?: string | null
           whatsapp?: string | null
+          is_read_by_admin?: boolean | null
         }
         Update: {
           created_at?: string
@@ -1586,6 +1588,7 @@ export type Database = {
           user_id?: string
           username?: string | null
           whatsapp?: string | null
+          is_read_by_admin?: boolean | null
         }
         Relationships: []
       }

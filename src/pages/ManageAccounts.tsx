@@ -13,6 +13,7 @@ type AccountRow = {
   role: string;
   status: "pending" | "approved" | "rejected" | "inactive";
   registered_at: string;
+  is_read_by_admin: boolean | null;
 };
 
 type AccountWithChildren = AccountRow & { children: string[] };
@@ -43,8 +44,6 @@ export default function ManageAccounts() {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ full_name: "", username: "", role: "" });
   const [isSavingEdit, setIsSavingEdit] = useState(false);
-  
-  const isSuperAdmin = profile?.full_name?.toUpperCase() === "MIFTAHUL ARSYAD ASRI";
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -56,7 +55,7 @@ export default function ManageAccounts() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("user_id,full_name,username,whatsapp,role,status,registered_at")
+        .select("user_id,full_name,username,whatsapp,role,status,registered_at,is_read_by_admin")
         .order("registered_at", { ascending: false });
       if (error) throw error;
 
@@ -98,7 +97,7 @@ export default function ManageAccounts() {
 
     setActionError("");
     setUpdatingUserId(userId);
-    const { error } = await supabase.from("profiles").update({ status }).eq("user_id", userId);
+    const { error } = await supabase.from("profiles").update({ status, is_read_by_admin: true }).eq("user_id", userId);
 
     if (error) {
       setActionError(error.message);
@@ -115,6 +114,15 @@ export default function ManageAccounts() {
     setUpdatingUserId(null);
   };
 
+  const markAsRead = async (userId: string) => {
+    setUpdatingUserId(userId);
+    const { error } = await supabase.from("profiles").update({ is_read_by_admin: true }).eq("user_id", userId);
+    if (!error) {
+      await queryClient.invalidateQueries({ queryKey: ["managed-accounts"] });
+    }
+    setUpdatingUserId(null);
+  };
+
   const handleEditSave = async (userId: string) => {
     setActionError("");
     setIsSavingEdit(true);
@@ -123,7 +131,8 @@ export default function ManageAccounts() {
     const { error: profileError } = await supabase.from("profiles").update({ 
       full_name: editForm.full_name, 
       username: editForm.username || null,
-      role: editForm.role || undefined 
+      role: editForm.role || undefined,
+      is_read_by_admin: true 
     }).eq("user_id", userId);
 
     if (profileError) {
@@ -132,21 +141,45 @@ export default function ManageAccounts() {
       return;
     } 
 
-    // Update user_roles if changed and user is super admin
-    if (isSuperAdmin && editForm.role) {
+    // Update user_roles if changed
+    if (editForm.role) {
       const { error: roleError } = await supabase.from("user_roles").update({
         role: editForm.role as "admin" | "guru" | "parent"
       }).eq("user_id", userId);
       
       if (roleError) {
          console.warn("Gagal memperbarui tabel user_roles: ", roleError.message);
-         // Often user_roles is handled by triggers, so if it fails we just log it
       }
     }
 
     await queryClient.invalidateQueries({ queryKey: ["managed-accounts"] });
     setEditingUserId(null);
     setIsSavingEdit(false);
+  };
+
+  const deleteAccount = async (userId: string) => {
+    if (userId === user?.id) {
+      setActionError("Tidak dapat menghapus akun Anda sendiri.");
+      return;
+    }
+
+    if (!window.confirm("PERINGATAN: Apakah Anda yakin ingin menghapus akun ini secara permanen? Semua data terkait (termasuk jadwal ujian, presensi, dll) mungkin akan ikut terhapus atau kehilangan relasi. Tindakan ini tidak dapat dibatalkan!")) {
+      return;
+    }
+
+    setActionError("");
+    setUpdatingUserId(userId);
+
+    const { error } = await supabase.rpc("delete_user", { target_user_id: userId });
+
+    if (error) {
+      setActionError("Gagal menghapus akun: " + error.message);
+      setUpdatingUserId(null);
+      return;
+    }
+
+    await queryClient.invalidateQueries({ queryKey: ["managed-accounts"] });
+    setUpdatingUserId(null);
   };
 
   const stats = useMemo(() => {
@@ -492,17 +525,16 @@ export default function ManageAccounts() {
                           onChange={(e) => setEditForm({...editForm, username: e.target.value})}
                           className="h-8 rounded-lg border border-border bg-background px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
                         />
-                        {isSuperAdmin && (
-                          <select
-                            value={editForm.role}
-                            onChange={(e) => setEditForm({...editForm, role: e.target.value})}
-                            className="h-8 rounded-lg border border-border bg-background px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
-                          >
-                            <option value="admin">Admin</option>
-                            <option value="teacher">Guru</option>
-                            <option value="parent">Orang Tua</option>
-                          </select>
-                        )}
+                        <select
+                          value={editForm.role}
+                          onChange={(e) => setEditForm({...editForm, role: e.target.value})}
+                          className="h-8 rounded-lg border border-border bg-background px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="teacher">Guru</option>
+                          <option value="parent">Orang Tua</option>
+                          <option value="koordinator">Koordinator</option>
+                        </select>
                       </div>
                       <div className="flex gap-2 mt-1">
                         <button
@@ -534,6 +566,12 @@ export default function ManageAccounts() {
                       {isCurrentAdmin && (
                         <span className="rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-muted-foreground border border-border">
                           Akun Anda
+                        </span>
+                      )}
+                      {!account.is_read_by_admin && (
+                        <span className="relative flex h-2.5 w-2.5 mt-0.5 ml-1" title="Baru / Belum Dilihat">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
                         </span>
                       )}
                     </div>
@@ -583,6 +621,16 @@ export default function ManageAccounts() {
                   >
                     <ShieldCheck className="h-4 w-4" /> Nonaktifkan
                   </button>
+                  {!account.is_read_by_admin && (
+                    <button
+                      disabled={isUpdating || isBulkUpdating}
+                      onClick={() => markAsRead(account.user_id)}
+                      className="inline-flex items-center gap-1 rounded-xl bg-secondary/80 border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-secondary disabled:opacity-50"
+                    >
+                      {isUpdating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                      Tandai Dibaca
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
@@ -598,6 +646,15 @@ export default function ManageAccounts() {
                   Edit Akun
                 </button>
                 <div className="w-px h-4 bg-border mx-1"></div>
+                <button
+                  onClick={() => deleteAccount(account.user_id)}
+                  disabled={isUpdating || isCurrentAdmin}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 transition-colors hover:bg-rose-100 disabled:opacity-50 dark:border-rose-900/50 dark:bg-rose-950/30 dark:hover:bg-rose-900/50"
+                  title="Hapus Akun Permanen"
+                >
+                  {isUpdating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserX className="h-3.5 w-3.5" />}
+                  Hapus
+                </button>
                 <button
                   onClick={() => copyToClipboard(account as AccountWithChildren)}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-secondary"
