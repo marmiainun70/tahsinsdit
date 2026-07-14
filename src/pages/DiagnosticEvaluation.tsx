@@ -615,7 +615,7 @@ export default function DiagnosticEvaluation() {
   const ibpPoin = levelPoin - kelancaranPoin;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 lg:[zoom:0.9]">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Evaluasi Diagnostik</h1>
