@@ -112,6 +112,14 @@ export const useSubmitDiagnosticWizard = () => {
 
 
 
+      // Hapus data lama jika ada untuk menghindari duplikasi saat fitur "Ubah Evaluasi" digunakan.
+      // Relasi ON DELETE CASCADE di database akan otomatis menghapus data di tabel-tabel child.
+      await supabase
+        .from("evaluasi_awal_semester")
+        .delete()
+        .eq("student_id", data.student_id)
+        .eq("academic_year_id", data.academic_year_id);
+
       // We use a custom RPC or batch insert since Supabase JS Client does not support multi-statement transactions directly
       // However, since we're using the standard JS client, we can insert into the parent table and then promise.all the child tables.
       // 1. Insert Core evaluasi_awal_semester
