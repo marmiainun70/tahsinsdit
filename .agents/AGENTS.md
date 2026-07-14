@@ -35,9 +35,10 @@ Lakukan perubahan sekecil mungkin untuk memenuhi permintaan pengguna. Pertahanka
 
 - Jangan menganggap pekerjaan selesai jika perubahan hanya ada di komputer lokal.
 - Default untuk tugas implementasi adalah: edit -> verifikasi -> commit -> `npm run push:remote` -> verifikasi remote.
-- Lingkungan agent dapat menyuntikkan dummy `GITHUB_TOKEN`. Karena itu, gunakan `npm run push:remote`; script ini membersihkan token environment dan memakai Git Credential Manager secara eksplisit.
+- Lingkungan agent dapat menyuntikkan dummy `GITHUB_TOKEN`. Karena itu, gunakan `npm run push:remote`; script ini membersihkan token environment dan memakai Git Credential Manager secara eksplisit. JANGAN PERNAH gunakan `git push` biasa secara langsung.
+- Jika `npm run push:remote` gagal karena *non-fast-forward* (branch lokal tertinggal), lakukan sinkronisasi terlebih dahulu menggunakan `git pull --rebase`, kemudian jalankan `npm run push:remote` kembali.
 - Jika push gagal karena autentikasi atau jaringan, tampilkan error sebenarnya dan langkah yang diperlukan. Jangan mengatakan tugas selesai.
-- Jangan menggunakan force push, reset, rebase, atau mengubah riwayat tanpa izin eksplisit.
+- Jangan menggunakan force push, reset, rebase (kecuali `git pull --rebase` yang disetujui untuk pull), atau mengubah riwayat tanpa izin eksplisit.
 - Jangan memasukkan file lain yang tidak terkait hanya agar worktree terlihat bersih.
 - Setelah push, `npm run verify:remote` harus menampilkan hash lokal dan remote yang sama.
 

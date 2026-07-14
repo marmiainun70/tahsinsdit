@@ -130,9 +130,9 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: -20 }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
-            className="fixed top-[5%] left-1/2 -translate-x-1/2 w-full max-w-2xl z-50 px-4"
+            className="fixed inset-x-4 top-[5%] sm:top-[10%] mx-auto max-w-2xl z-50 flex flex-col max-h-[90vh] sm:max-h-[80vh]"
           >
-            <div className="bg-card rounded-2xl shadow-[0_20px_60px_hsl(0_0%_0%/0.25)] border border-border overflow-hidden">
+            <div className="bg-card rounded-2xl shadow-2xl border border-border flex flex-col min-h-0 overflow-hidden">
               {/* Search input */}
               <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
                 <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
@@ -178,7 +178,7 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
+                    className="overflow-hidden flex-shrink-0"
                   >
                     <div className="px-4 py-3 bg-muted/40 border-b border-border space-y-3">
                       {/* Kelas filter */}
@@ -255,9 +255,9 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
               </AnimatePresence>
 
               {/* Results */}
-              <div className="max-h-[55vh] overflow-y-auto scrollbar-thin">
+              <div className="overflow-y-auto scrollbar-thin min-h-0 flex-1">
                 {/* Results count */}
-                <div className="px-4 py-2.5 bg-muted/20 border-b border-border flex items-center justify-between">
+                <div className="px-4 py-2.5 bg-muted/20 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2 sticky top-0 z-10 backdrop-blur-md">
                   <p className="text-xs text-muted-foreground">
                     {isSearching ? (
                       <>Menampilkan maks <span className="font-semibold text-foreground">{results.length}</span> siswa</>
@@ -329,9 +329,9 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
               </div>
 
               {/* Footer hint */}
-              <div className="px-4 py-2.5 border-t border-border bg-muted/20 flex items-center justify-between">
+              <div className="px-4 py-2.5 border-t border-border bg-muted/20 flex items-center justify-between flex-shrink-0">
                 <p className="text-xs text-muted-foreground">Klik siswa untuk melihat detail progres</p>
-                <kbd className="text-xs bg-muted border border-border px-1.5 py-0.5 rounded text-muted-foreground">ESC</kbd>
+                <kbd className="hidden sm:inline-block text-xs bg-muted border border-border px-1.5 py-0.5 rounded text-muted-foreground">ESC</kbd>
               </div>
             </div>
           </motion.div>
