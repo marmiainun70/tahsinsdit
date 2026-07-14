@@ -199,7 +199,7 @@ export const usePaginatedStudents = ({
       }
 
       if (statusSiswa !== "all" && statusSiswa !== "semua") {
-        query = query.eq("status_siswa", statusSiswa.toLowerCase());
+        query = query.eq("status_siswa", statusSiswa.toLowerCase() as "aktif" | "alumni" | "keluar" | "pindah");
       }
 
       const from = (page - 1) * pageSize;
@@ -292,7 +292,7 @@ export const useUpdateStudent = () => {
     mutationFn: async ({ id, ...updates }: { id: string; nama?: string; kelas?: number; level?: ReadingLevel; halaman_terakhir?: number; status_bacaan?: ReadingStatus; rombel?: string; nis?: string | null; nisn?: string | null; status_siswa?: string }) => {
       const { data, error } = await supabase
         .from("students")
-        .update(updates)
+        .update(updates as never)
         .eq("id", id)
         .select()
         .single();

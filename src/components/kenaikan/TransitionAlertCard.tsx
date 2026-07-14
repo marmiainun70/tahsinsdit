@@ -30,7 +30,7 @@ const TransitionAlertCard = () => {
     title: "",
     subtitle: "",
     buttonLabel: "Mulai Wizard",
-    buttonVariant: "default" as const,
+    buttonVariant: "default" as "default" | "destructive",
     buttonIcon: ArrowUpCircle,
     isUrgent: false,
   };

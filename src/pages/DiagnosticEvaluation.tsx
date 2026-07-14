@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import type { Rombel } from "@/integrations/supabase/types";
+type Rombel = "A" | "B" | "C" | "D";
 
 interface WizardState {
   targetLevel: LevelType;
@@ -225,6 +225,7 @@ export default function DiagnosticEvaluation() {
       nis: newNis || undefined,
       kelas: parseInt(newKelas),
       rombel: newRombel,
+      level: "Iqro 1",
     }, {
       onSuccess: () => {
         setAddOpen(false);
@@ -408,7 +409,8 @@ export default function DiagnosticEvaluation() {
       fluency_score: finalFluency, 
       lahn_jali_count: finalJali.huruf + finalJali.harakat + finalJali.tasydid,
       lahn_khofi_count: finalKhofi.mad + finalKhofi.qalqalah + finalKhofi.tajwid,
-      checklist_makharij: wizard.core.checklist_makharij,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      checklist_makharij: wizard.core.checklist_makharij as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       checklist_tajwid: wizard.advanced.checklist_tajwid as any,
       waqaf_error_count: waqafError,
@@ -567,8 +569,7 @@ export default function DiagnosticEvaluation() {
                 ) : (
                   students.map((student) => {
                     // We mapped evaluasi_awal_semester dynamically
-                    // @ts-expect-error dynamic access
-                    const evaluation = student.evaluasi_awal_semester?.[0];
+                    const evaluation = (student as { evaluasi_awal_semester?: Array<{ final_predicate?: string; evaluator_id?: string }> }).evaluasi_awal_semester?.[0];
                     const isEvaluated = !!evaluation;
                     
                     return (

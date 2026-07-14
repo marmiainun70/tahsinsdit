@@ -44,7 +44,7 @@ import {
   type RecapJoinedRow,
 } from "@/utils/recapMonthlyReportRows";
 import { Eye, FileText, Download, Calendar, Users, ListChecks, FileWarning, Filter, RotateCcw, Search, ShieldCheck, AlertCircle, Star, ClipboardList, Loader2, BookOpen, BookOpenCheck, Award } from "lucide-react";
-import { StickyScrollbar } from "../components/StickyScrollbar";
+
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];

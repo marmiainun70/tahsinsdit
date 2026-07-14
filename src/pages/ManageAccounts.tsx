@@ -135,7 +135,7 @@ export default function ManageAccounts() {
     // Update user_roles if changed and user is super admin
     if (isSuperAdmin && editForm.role) {
       const { error: roleError } = await supabase.from("user_roles").update({
-        role: editForm.role
+        role: editForm.role as "admin" | "guru" | "parent"
       }).eq("user_id", userId);
       
       if (roleError) {

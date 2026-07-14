@@ -84,7 +84,7 @@ export default function CBTDashboard() {
                     </span>
                   </div>
                   <CardTitle className="text-xl">{paket.nama_paket}</CardTitle>
-                  <CardDescription>{paket.jenis_asesmen} - {paket.periode}</CardDescription>
+                  <CardDescription>{paket.jenis_asesmen}</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 space-y-3 text-sm">
                   <div className="flex items-center gap-2 text-muted-foreground">
