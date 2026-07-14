@@ -444,7 +444,7 @@ export function useBatchUpdateCalendarDays() {
             ...updates,
             source: "admin_override",
             is_override: true,
-          });
+          } as never);
         }
       }
     },

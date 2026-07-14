@@ -27,7 +27,6 @@ export const useDiagnosticStudents = ({
     queryFn: async () => {
       let query = supabase
         .from("students")
-        // @ts-expect-error evaluasi_awal_semester is dynamic in the DB now
         .select("*, evaluasi_awal_semester(final_predicate, evaluator_id)", { count: "exact" });
 
 
@@ -38,7 +37,7 @@ export const useDiagnosticStudents = ({
       }
 
       if (kelas && kelas !== "all") {
-        query = query.eq("kelas", kelas);
+        query = query.eq("kelas", parseInt(kelas));
       }
 
       if (rombel && rombel !== "all") {
@@ -116,7 +115,6 @@ export const useSubmitDiagnosticWizard = () => {
       // We use a custom RPC or batch insert since Supabase JS Client does not support multi-statement transactions directly
       // However, since we're using the standard JS client, we can insert into the parent table and then promise.all the child tables.
       // 1. Insert Core evaluasi_awal_semester
-      // @ts-expect-error Types not fully regenerated
       const { data: evalResult, error: evalError } = await supabase
         .from("evaluasi_awal_semester")
         .insert({
@@ -126,7 +124,7 @@ export const useSubmitDiagnosticWizard = () => {
           final_score: data.final_score,
           final_predicate: data.final_predicate,
           selected_level_id: data.selected_level_id
-        })
+        } as never)
         .select()
         .single();
 
@@ -136,22 +134,14 @@ export const useSubmitDiagnosticWizard = () => {
 
       // 2. Batch insert children
       const promises = [
-        // @ts-expect-error Types not regenerated yet
-        supabase.from("evaluasi_profil_awal").insert({ evaluasi_id, jawaban: data.jawaban_profil }),
-        // @ts-expect-error Types not regenerated yet
-        supabase.from("evaluasi_kelancaran").insert({ evaluasi_id, score: data.fluency_score }),
-        // @ts-expect-error Types not regenerated yet
-        supabase.from("evaluasi_kesalahan_bacaan").insert({ evaluasi_id, lahn_jali_count: data.lahn_jali_count, lahn_khofi_count: data.lahn_khofi_count }),
-        // @ts-expect-error Types not regenerated yet
-        supabase.from("evaluasi_makharij").insert({ evaluasi_id, checklist: data.checklist_makharij }),
-        // @ts-expect-error Types not regenerated yet
-        supabase.from("evaluasi_tajwid").insert({ evaluasi_id, checklist: data.checklist_tajwid }),
-        // @ts-expect-error Types not regenerated yet
-        supabase.from("evaluasi_waqaf").insert({ evaluasi_id, error_count: data.waqaf_error_count }),
-        // @ts-expect-error Types not regenerated yet
-        supabase.from("evaluasi_tahfizh").insert({ evaluasi_id, salah_sambung_ayat_count: data.salah_sambung_ayat_count }),
-        // @ts-expect-error Types not regenerated yet
-        supabase.from("evaluasi_rekomendasi").insert({ evaluasi_id, fokus_pembinaan: data.fokus_pembinaan, recommended_level_id: data.recommended_level_id })
+        supabase.from("evaluasi_profil_awal").insert({ evaluasi_id, jawaban: data.jawaban_profil } as never),
+        supabase.from("evaluasi_kelancaran").insert({ evaluasi_id, score: data.fluency_score } as never),
+        supabase.from("evaluasi_kesalahan_bacaan").insert({ evaluasi_id, lahn_jali_count: data.lahn_jali_count, lahn_khofi_count: data.lahn_khofi_count } as never),
+        supabase.from("evaluasi_makharij").insert({ evaluasi_id, checklist: data.checklist_makharij } as never),
+        supabase.from("evaluasi_tajwid").insert({ evaluasi_id, checklist: data.checklist_tajwid } as never),
+        supabase.from("evaluasi_waqaf").insert({ evaluasi_id, error_count: data.waqaf_error_count } as never),
+        supabase.from("evaluasi_tahfizh").insert({ evaluasi_id, salah_sambung_ayat_count: data.salah_sambung_ayat_count } as never),
+        supabase.from("evaluasi_rekomendasi").insert({ evaluasi_id, fokus_pembinaan: data.fokus_pembinaan, recommended_level_id: data.recommended_level_id } as never)
       ];
 
       const results = await Promise.allSettled(promises);

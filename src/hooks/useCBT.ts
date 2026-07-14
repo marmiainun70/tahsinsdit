@@ -393,7 +393,7 @@ export const useCBTResultDetails = (pesertaId: string) => {
       const { data: session, error: sessionError } = await supabase
         .from('asesmen_session')
         .select('*')
-        .eq('peserta_id', pesertaId)
+        .eq('peserta_asesmen_id', pesertaId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();

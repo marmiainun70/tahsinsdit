@@ -865,9 +865,9 @@ export default function Monitoring() {
 
         <TabsContent value="ibp" className="mt-0 outline-none space-y-6">
           <MonitoringIBP
-            reports={reports}
+            reports={reports as never}
             students={students}
-            allTeacherStudents={allTeacherStudents}
+            allTeacherStudents={allTeacherStudents as never}
             profileMap={profileMap}
             selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
           />
@@ -875,11 +875,11 @@ export default function Monitoring() {
 
         <TabsContent value="ipp" className="mt-0 outline-none space-y-6">
           <MonitoringIPP
-            reports={reports}
-            reportsM1={reportsM1}
-            reportsM2={reportsM2}
+            reports={reports as never}
+            reportsM1={reportsM1 as never}
+            reportsM2={reportsM2 as never}
             students={accessibleStudents}
-            allTeacherStudents={allTeacherStudents}
+            allTeacherStudents={allTeacherStudents as never}
             profileMap={profileMap}
             selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
           />
@@ -887,11 +887,11 @@ export default function Monitoring() {
 
         <TabsContent value="sep" className="mt-0 outline-none space-y-6">
           <MonitoringSEP
-            reports={reports}
-            reportsM1={reportsM1}
-            reportsM2={reportsM2}
+            reports={reports as never}
+            reportsM1={reportsM1 as never}
+            reportsM2={reportsM2 as never}
             students={accessibleStudents}
-            allTeacherStudents={allTeacherStudents}
+            allTeacherStudents={allTeacherStudents as never}
             profileMap={profileMap}
             selectedPeriodLabel={getMonthLabel(selectedMonth, selectedYear)}
             selectedMonth={selectedMonth}

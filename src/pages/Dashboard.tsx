@@ -6,6 +6,7 @@ import { Users, BookOpen, Star, TrendingUp, Award, Loader2, AlertTriangle, Chevr
 import StudentRanking from "@/components/StudentRanking";
 import RelatedSystemCard from "@/components/RelatedSystemCard";
 import type { Database } from "@/integrations/supabase/types";
+type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 import { useAuth } from "@/contexts/AuthContext";
 import { isTeacherRole } from "@/lib/roleLabels";
 import { useTeacherStudents } from "@/hooks/useTeacherStudents";

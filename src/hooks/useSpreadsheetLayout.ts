@@ -338,7 +338,7 @@ export const useSpreadsheetLayout = <ColumnKey extends string = SpreadsheetColum
   );
 
   const stickyLeft = useMemo(() => {
-    const numberWidth = getColumnWidth("number");
+    const numberWidth = getColumnWidth("number" as ColumnKey);
     return { number: 0, studentName: numberWidth };
   }, [getColumnWidth]);
 

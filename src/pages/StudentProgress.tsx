@@ -500,7 +500,6 @@ const StudentProgress = () => {
           ref={reportRef}
           student={student}
           progres={progres}
-          ujian={[]}
           tahsinData={tahsinData}
         />
       </div>

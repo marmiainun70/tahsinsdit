@@ -261,7 +261,7 @@ function TeacherProfileDiagnostics() {
     for (const assignment of listData?.assignments ?? []) {
       const label = students.get(assignment.student_id);
       if (!label) continue;
-      map.set(assignment.teacher_id, Array.from(new Set([...(map.get(assignment.teacher_id) ?? []), label])));
+      map.set(assignment.teacher_id, Array.from(new Set([...(map.get(assignment.teacher_id) ?? []), label])) as string[]);
     }
     return map;
   }, [listData?.assignments, listData?.students]);
@@ -476,7 +476,7 @@ function TeacherDetail({
             user_id: targetUserId,
             full_name: accountResult.data?.full_name ?? "",
             specialization: [],
-          } as TeacherProfile;
+          } as unknown as TeacherProfile;
         }
       } else {
         const profileResult = await db.from("teacher_profiles").select("*").eq("id", profileId).maybeSingle();

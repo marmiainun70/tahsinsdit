@@ -158,7 +158,7 @@ function TeacherCard({ t, maxIbpVisual }: { t: TeacherSessionData; maxIbpVisual:
               <span>Siswa (Level)</span>
               <span>Poin</span>
             </div>
-            {t.details.sort((a, b) => b.ibp - a.ibp || a.nama.localeCompare(b.nama)).map((d) => (
+            {t.details.sort((a, b) => b.studentIbp - a.studentIbp || a.nama.localeCompare(b.nama)).map((d) => (
               <div key={d.id} className="grid grid-cols-[1fr_auto] gap-2 items-center py-0.5">
                 <span className={`truncate ${d.isAbsent ? 'text-muted-foreground line-through' : ''}`} title={d.nama}>
                   {d.nama.split(" ")[0]} ({d.level})

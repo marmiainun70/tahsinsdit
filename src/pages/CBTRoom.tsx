@@ -45,7 +45,7 @@ export default function CBTRoom() {
       }
 
       if (data.status === 'Selesai') {
-        setSessionData(data);
+        setSessionData(data as unknown as import('@/types/cbt').AsesmenSession);
         setPaketId(data.peserta.paket_id);
         return;
       }
@@ -56,7 +56,7 @@ export default function CBTRoom() {
         return;
       }
 
-      setSessionData(data);
+      setSessionData(data as unknown as import('@/types/cbt').AsesmenSession);
       setPaketId(data.peserta.paket_id);
       const savedIndex = localStorage.getItem('cbt_last_question_' + sessionId);
       setCurrentIndex(savedIndex ? parseInt(savedIndex, 10) : (data.last_question || 0));
