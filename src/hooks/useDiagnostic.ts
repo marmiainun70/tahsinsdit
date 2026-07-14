@@ -165,12 +165,13 @@ export const useSubmitDiagnosticWizard = () => {
 
       return evalResult;
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast({
         title: "Evaluasi Berhasil",
         description: "Data evaluasi diagnostik telah disimpan.",
       });
       queryClient.invalidateQueries({ queryKey: ["diagnostic-students"] });
+      queryClient.invalidateQueries({ queryKey: ["diagnostic-detail", variables.student_id] });
     },
     onError: (error) => {
       toast({
