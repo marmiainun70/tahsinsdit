@@ -142,7 +142,7 @@ export const useDetailHasilAsesmen = (pesertaAsesmenId: string | null) => {
       // 2. Get answers with related questions
       const { data: answers, error: answersErr } = await supabase
         .from('asesmen_jawaban')
-        .select('id, jawaban, benar, skor, soal_id, bank_soal:soal_id(soal, jawaban_benar, tipe_soal, bobot)')
+        .select('id, jawaban, benar, skor, soal_id, bank_soal:soal_id(soal, jawaban_benar, tipe_soal, bobot, opsi_a, opsi_b, opsi_c, opsi_d)')
         .eq('session_id', session.id);
 
       if (answersErr) throw new Error(answersErr.message);

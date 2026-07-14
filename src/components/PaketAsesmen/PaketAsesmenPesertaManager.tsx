@@ -330,9 +330,23 @@ function ResultViewerDialog({ pesertaId, namaGuru, paketId, nilaiAkhir }: { pese
 
             <div className="space-y-4">
               <h3 className="font-semibold text-lg border-b pb-2">Rincian Jawaban</h3>
-              {data.jawaban.map((ans: { id: string; jawaban: string; bank_soal?: { soal: string; jawaban_benar: string; } }, index: number) => {
+              {data.jawaban.map((ans: { id: string; jawaban: string; bank_soal?: { soal: string; jawaban_benar: string; opsi_a?: string; opsi_b?: string; opsi_c?: string; opsi_d?: string; } }, index: number) => {
                 const soal = ans.bank_soal;
                 const isBenar = ans.jawaban === soal?.jawaban_benar;
+                
+                const getOptionContent = (optionKey?: string) => {
+                  if (!optionKey || !soal) return null;
+                  const key = optionKey.toLowerCase();
+                  if (key === 'a') return soal.opsi_a;
+                  if (key === 'b') return soal.opsi_b;
+                  if (key === 'c') return soal.opsi_c;
+                  if (key === 'd') return soal.opsi_d;
+                  return null;
+                };
+
+                const jawabanPesertaContent = getOptionContent(ans.jawaban);
+                const kunciJawabanContent = getOptionContent(soal?.jawaban_benar);
+
                 return (
                   <div key={ans.id} className="p-4 border rounded-lg bg-card">
                     <div className="flex justify-between items-start mb-2">
@@ -348,11 +362,21 @@ function ResultViewerDialog({ pesertaId, namaGuru, paketId, nilaiAkhir }: { pese
                     <div className="grid md:grid-cols-2 gap-4 text-sm mt-4">
                       <div className="p-3 bg-muted/40 rounded border">
                         <span className="text-muted-foreground block mb-1 text-xs uppercase tracking-wider">Jawaban Peserta</span>
-                        <div className={`font-medium ${isBenar ? 'text-emerald-600' : 'text-red-600'}`} dangerouslySetInnerHTML={{ __html: ans.jawaban || '-' }} />
+                        <div className={`font-medium ${isBenar ? 'text-emerald-600' : 'text-red-600'}`}>
+                          <span dangerouslySetInnerHTML={{ __html: ans.jawaban || '-' }} />
+                          {jawabanPesertaContent && (
+                            <div className="mt-2 text-sm font-normal text-muted-foreground border-t pt-2" dangerouslySetInnerHTML={{ __html: jawabanPesertaContent }} />
+                          )}
+                        </div>
                       </div>
                       <div className="p-3 bg-emerald-50 rounded border border-emerald-100">
                         <span className="text-emerald-800/70 block mb-1 text-xs uppercase tracking-wider">Kunci Jawaban</span>
-                        <div className="font-medium text-emerald-700" dangerouslySetInnerHTML={{ __html: soal?.jawaban_benar || '-' }} />
+                        <div className="font-medium text-emerald-700">
+                          <span dangerouslySetInnerHTML={{ __html: soal?.jawaban_benar || '-' }} />
+                          {kunciJawabanContent && (
+                            <div className="mt-2 text-sm font-normal text-emerald-700/80 border-t border-emerald-200 pt-2" dangerouslySetInnerHTML={{ __html: kunciJawabanContent }} />
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
