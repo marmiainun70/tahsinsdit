@@ -553,7 +553,26 @@ export default function DiagnosticEvaluation() {
     });
   };
 
-  const showAdvanced = !wizard.targetLevel.startsWith("Iqra");
+    const handleNext = () => {
+      if (step === 3 && wizard.targetLevel === "Tahsin Lanjutan") {
+        const waqafIncomplete = WAQAF_SIGNS.some(waqaf => 
+          wizard.advanced.waqaf_ibtida[waqaf] !== "BENAR" && 
+          wizard.advanced.waqaf_ibtida[waqaf] !== "SALAH"
+        );
+        
+        if (waqafIncomplete) {
+          toast({
+            title: "Penilaian Belum Lengkap",
+            description: "Mohon isi semua penilaian Waqaf Ibtida' (BENAR / SALAH) sebelum melanjutkan.",
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+      setStep(s => s + 1);
+    };
+
+    const showAdvanced = !wizard.targetLevel.startsWith("Iqra");
   const isTahfizh = wizard.targetLevel === "Tahfizh";
   const showWaqaf = wizard.targetLevel === "Tahsin Lanjutan";
 
@@ -1466,7 +1485,7 @@ export default function DiagnosticEvaluation() {
             </Button>
             
             {step < 4 ? (
-              <Button type="button" onClick={() => setStep(s => s + 1)}>
+              <Button type="button" onClick={handleNext}>
                 Lanjut <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
