@@ -326,15 +326,23 @@ const SpreadsheetReport = () => {
   });
 
   const filteredStudents = useMemo(
-    () => students.filter(s => {
-      const keyword = studentSearch.trim().toLowerCase();
-      return (
-        (kelas === "semua" || s.kelas === parseInt(kelas)) &&
-        (rombel === "semua" || s.rombel === rombel) &&
-        (!keyword || s.nama.toLowerCase().includes(keyword))
-      );
-    }),
-    [students, kelas, rombel, studentSearch],
+    () => {
+      const selectedMonthReports = reports.filter(r => r.month === month && r.year === year);
+      const studentsWithReports = new Set(selectedMonthReports.map(r => r.student_id));
+
+      return students.filter(s => {
+        const keyword = studentSearch.trim().toLowerCase();
+        const isActiveOrHasReport = s.status_siswa === 'aktif' || studentsWithReports.has(s.id);
+
+        return (
+          isActiveOrHasReport &&
+          (kelas === "semua" || s.kelas === parseInt(kelas)) &&
+          (rombel === "semua" || s.rombel === rombel) &&
+          (!keyword || s.nama.toLowerCase().includes(keyword))
+        );
+      });
+    },
+    [students, kelas, rombel, studentSearch, reports, month, year],
   );
 
   const [rows, setRows] = useState<Row[]>([]);

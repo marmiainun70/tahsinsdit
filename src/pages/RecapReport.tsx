@@ -270,6 +270,12 @@ const RecapReport = () => {
   // Filter siswa sesuai kelas/rombel/search
   const filteredStudents = useMemo(() => {
     let s = students;
+
+    // Filter siswa: hanya tampilkan yang aktif ATAU yang memiliki laporan di bulan/tahun yang dipilih
+    const selectedMonthReports = reports.filter(r => r.month === selectedMonth && r.year === selectedYear);
+    const studentsWithReports = new Set(selectedMonthReports.map(r => r.student_id));
+    s = s.filter(st => st.status_siswa === 'aktif' || studentsWithReports.has(st.id));
+
     if (filterKelas !== "all") s = s.filter(st => st.kelas === Number(filterKelas));
     if (filterRombel !== "all") s = s.filter(st => st.rombel === filterRombel);
     if (search.trim()) {
@@ -277,7 +283,7 @@ const RecapReport = () => {
       s = s.filter(st => st.nama.toLowerCase().includes(q));
     }
     return s.sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel) || a.nama.localeCompare(b.nama));
-  }, [students, filterKelas, filterRombel, search]);
+  }, [students, filterKelas, filterRombel, search, reports, selectedMonth, selectedYear]);
 
   const availableRombels = useMemo<RombelOption[]>(() => {
     const map = new Map<string, RombelOption>();
