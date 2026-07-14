@@ -12,6 +12,7 @@ import { useTeacherStudents } from "@/hooks/useTeacherStudents";
 import { useAllMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
 import { LineChart, AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LabelList } from "recharts";
 import TransitionAlertCard from "@/components/kenaikan/TransitionAlertCard";
+import { useAdminRegistrationNotifier } from "@/hooks/useAdminRegistrationNotifier";
 
 const classColors = [
 "from-blue-500 to-blue-600",
@@ -25,6 +26,7 @@ const classColors = [
 const Dashboard = () => {
   const { user, profile } = useAuth();
   const isTeacher = isTeacherRole(profile?.role);
+  useAdminRegistrationNotifier(profile?.role === "admin");
 
   const { data: allStudents = [], isLoading: loadingStudents } = useStudents();
   const { data: assignments = [], isLoading: loadingAssignments } = useTeacherStudents(user?.id, "approved");
