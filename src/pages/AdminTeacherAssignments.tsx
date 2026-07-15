@@ -493,12 +493,12 @@ export default function AdminTeacherAssignments() {
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Data Siswa Binaan per Guru</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start pb-4">
             {teacherColumns.map((column, idx) => (
-              <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-full max-w-full overflow-x-auto">
+              <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-[280px] max-w-full overflow-x-auto justify-self-center">
                 <table className="text-xs border-collapse w-full" style={{ tableLayout: "fixed" }}>
                   <colgroup>
-                    <col style={{ width: 35 }} />
+                    <col style={{ width: 30 }} />
                     <col style={{ width: "auto" }} />
-                    <col style={{ width: 85 }} />
+                    <col style={{ width: 65 }} />
                   </colgroup>
                   <thead className="bg-emerald-600 text-white text-[10px] uppercase tracking-wider">
                     <tr>
