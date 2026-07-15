@@ -78,7 +78,51 @@ export default function AdminTeacherAssignments() {
 
   useEffect(() => {
     if (data && !isDirty) {
-      setDraftGroups(data.classes.map(c => ({ id: c.id, teacher_id: c.teacher_id, kelas: String(c.kelas), rombel: c.rombel, _status: 'unchanged' })));
+      // --- Create the predefined fixed template for classes 1-6, rombels A-D, 2 slots each ---
+      const newDraftGroups: DraftGroup[] = [];
+      const rombels = ['A', 'B', 'C', 'D'];
+      let globalIndex = 1;
+
+      // Group existing classes from DB by kelas + rombel
+      const dbClasses = data.classes;
+      const dbMap = new Map<string, ClassGroup[]>();
+      dbClasses.forEach(c => {
+        const key = `${c.kelas}-${c.rombel}`;
+        if (!dbMap.has(key)) dbMap.set(key, []);
+        dbMap.get(key)!.push(c);
+      });
+
+      for (let k = 1; k <= 6; k++) {
+        for (const r of rombels) {
+          const key = `${k}-${r}`;
+          const existing = dbMap.get(key) || [];
+          
+          // Slot 1
+          if (existing[0]) {
+             newDraftGroups.push({ id: existing[0].id, teacher_id: existing[0].teacher_id, kelas: String(k), rombel: r, _status: 'unchanged' });
+          } else {
+             newDraftGroups.push({ id: `temp-${globalIndex}`, teacher_id: "", kelas: String(k), rombel: r, _status: 'new' });
+          }
+          globalIndex++;
+
+          // Slot 2
+          if (existing[1]) {
+             newDraftGroups.push({ id: existing[1].id, teacher_id: existing[1].teacher_id, kelas: String(k), rombel: r, _status: 'unchanged' });
+          } else {
+             newDraftGroups.push({ id: `temp-${globalIndex}`, teacher_id: "", kelas: String(k), rombel: r, _status: 'new' });
+          }
+          globalIndex++;
+
+          // If there are more than 2 in the database, push them too!
+          for (let i = 2; i < existing.length; i++) {
+             newDraftGroups.push({ id: existing[i].id, teacher_id: existing[i].teacher_id, kelas: String(k), rombel: r, _status: 'unchanged' });
+             globalIndex++;
+          }
+        }
+      }
+      setDraftGroups(newDraftGroups);
+
+      // --- Assignments and Students remain the same ---
       setDraftAssignments(data.assignments.filter(a => a.status === 'approved' || a.status === 'pending').map(a => ({ id: a.id, teacher_id: a.teacher_id, student_id: a.student_id, _status: 'unchanged' })));
       setDraftStudents(data.students.map(s => ({ id: s.id, nama: s.nama, _status: 'unchanged' })));
     }
@@ -100,68 +144,34 @@ export default function AdminTeacherAssignments() {
 
   const deleteGroup = (id: string) => {
     setIsDirty(true);
+    // Don't fully delete, just clear the teacher_id and mark as 'deleted' if it's from DB, or if it's new just clear it
     setDraftGroups(draftGroups.map(g => {
-      if (g.id === id) return { ...g, _status: 'deleted' };
+      if (g.id === id) {
+        if (!g.id.startsWith('temp-')) {
+          return { ...g, _status: 'deleted' };
+        } else {
+          return { ...g, teacher_id: "" };
+        }
+      }
       return g;
     }));
   };
 
+  const activeGroups = draftGroups.filter(g => g._status !== 'deleted');
+
   const groupedGroups = useMemo(() => {
     const groupsMap = new Map<string, DraftGroup[]>();
-    for (const group of draftGroups.filter(g => g._status !== 'deleted')) {
-      const key = `${group.kelas}-${group.rombel}`;
+    for (const group of activeGroups) {
+      const key = `${group.kelas}`;
       if (!groupsMap.has(key)) groupsMap.set(key, []);
       groupsMap.get(key)!.push(group);
     }
     return Array.from(groupsMap.entries()).map(([key, items]) => ({
       key,
-      kelas: items[0].kelas,
-      rombel: items[0].rombel,
+      kelas: key,
       items
-    })).sort((a, b) => a.key.localeCompare(b.key));
-  }, [draftGroups]);
-
-  const handleAddGroupContainer = () => {
-    setIsDirty(true);
-    setDraftGroups([...draftGroups, {
-      id: `temp-${Date.now()}`,
-      teacher_id: "",
-      kelas: "1",
-      rombel: "A",
-      _status: 'new'
-    }]);
-  };
-
-  const handleAddTeacherToGroup = (kelas: string, rombel: string) => {
-    setIsDirty(true);
-    setDraftGroups([...draftGroups, {
-      id: `temp-${Date.now()}`,
-      teacher_id: "",
-      kelas,
-      rombel,
-      _status: 'new'
-    }]);
-  };
-
-  const deleteGroupContainer = (key: string) => {
-    setIsDirty(true);
-    const [kelas, rombel] = key.split('-');
-    setDraftGroups(draftGroups.map(g => {
-      if (g.kelas === kelas && g.rombel === rombel) return { ...g, _status: 'deleted' };
-      return g;
-    }));
-  };
-
-  const updateAllInGroup = (key: string, field: 'kelas' | 'rombel', value: string) => {
-    setIsDirty(true);
-    const [kelas, rombel] = key.split('-');
-    setDraftGroups(draftGroups.map(g => {
-      if (g.kelas === kelas && g.rombel === rombel) {
-        return { ...g, [field]: value, _status: g._status === 'new' ? 'new' : 'updated' };
-      }
-      return g;
-    }));
-  };
+    })).sort((a, b) => Number(a.key) - Number(b.key));
+  }, [activeGroups]);
 
   // Student Assignment helpers
   const addAssignment = (teacherId: string, studentId: string) => {
@@ -211,10 +221,17 @@ export default function AdminTeacherAssignments() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       // 1. Process Groups
-      // Filter out new groups that have empty teacher_id to prevent database constraints error if it requires teacher_id
+      // Only insert if it has a teacher_id selected!
       const newGroups = draftGroups.filter(g => g._status === 'new' && g.teacher_id);
       const updatedGroups = draftGroups.filter(g => g._status === 'updated' && g.teacher_id);
+      
+      // If a draft is updated but teacher_id was cleared, we treat it as deleted
+      const updatedButClearedGroups = draftGroups.filter(g => g._status === 'updated' && !g.teacher_id);
+      
       const deletedGroups = draftGroups.filter(g => g._status === 'deleted' && !g.id.startsWith('temp-'));
+
+      // Merge deletions
+      const allDeletes = [...deletedGroups, ...updatedButClearedGroups];
 
       if (newGroups.length > 0) {
         const { error } = await supabase.from('teacher_classes').insert(
@@ -228,8 +245,8 @@ export default function AdminTeacherAssignments() {
           if (error) throw error;
         }
       }
-      if (deletedGroups.length > 0) {
-        const { error } = await supabase.from('teacher_classes').delete().in('id', deletedGroups.map(g => g.id));
+      if (allDeletes.length > 0) {
+        const { error } = await supabase.from('teacher_classes').delete().in('id', allDeletes.map(g => g.id));
         if (error) throw error;
       }
 
@@ -312,92 +329,74 @@ export default function AdminTeacherAssignments() {
       </div>
 
       {/* Section 1: Grup Halaqah & Kelas */}
-      <section className="space-y-4">
+      <section className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Layout Penugasan Guru (Halaqah & Kelas)</h2>
-          <Button onClick={handleAddGroupContainer} variant="outline" className="border-emerald-200 hover:bg-emerald-50 text-emerald-700 dark:border-emerald-800/30 dark:hover:bg-emerald-900/20 dark:text-emerald-400 bg-white dark:bg-slate-900">
-            <Plus className="mr-2 h-4 w-4" />
-            Tambah Kelompok Kelas
-          </Button>
         </div>
-        <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar items-start">
-          {groupedGroups.map(g => (
-            <div key={g.key} className="snap-start shrink-0 w-[280px] bg-white dark:bg-slate-900 rounded-xl border shadow-sm overflow-hidden flex flex-col">
-              <div className="bg-slate-100 dark:bg-slate-800 p-2 flex justify-between items-center border-b">
-                <div className="font-bold text-sm flex items-center gap-1">
-                  GRUP
-                  <Input 
-                    value={g.kelas} 
-                    onChange={e => updateAllInGroup(g.key, 'kelas', e.target.value)}
-                    className="inline w-10 h-7 px-1 py-0 text-center font-bold text-sm bg-transparent border-transparent hover:border-input focus:bg-background shadow-none"
-                  />
-                  -
-                  <Input 
-                    value={g.rombel} 
-                    onChange={e => updateAllInGroup(g.key, 'rombel', e.target.value)}
-                    className="inline w-10 h-7 px-1 py-0 text-center uppercase font-bold text-sm bg-transparent border-transparent hover:border-input focus:bg-background shadow-none"
-                  />
-                </div>
-                <button 
-                  onClick={() => deleteGroupContainer(g.key)}
-                  className="p-1 rounded-md text-slate-400 hover:bg-rose-100 hover:text-rose-600 transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <div className="p-0">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs text-slate-500 uppercase border-b">
+        
+        {/* Render Grid based on Excel */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+          {groupedGroups.map((g) => {
+            // Retrieve global numbering from activeGroups to match sequence 1-48
+            return (
+              <div key={g.key} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm overflow-hidden shadow-sm">
+                <table className="w-full text-sm border-collapse">
+                  <thead className="bg-black text-white text-[11px] uppercase tracking-wider">
                     <tr>
-                      <th className="px-2 py-2 text-center font-medium w-8 border-r">No</th>
-                      <th className="px-2 py-2 text-left font-medium border-r">Guru</th>
-                      <th className="px-2 py-2 text-center font-medium w-12">Kls</th>
+                      <th className="px-2 py-3 text-center font-bold border-r border-slate-700 w-20 leading-tight">
+                        Grup<br/>Halaqah
+                      </th>
+                      <th className="px-3 py-3 text-left font-bold border-r border-slate-700">
+                        Guru Pengampu
+                      </th>
+                      <th className="px-2 py-3 text-center font-bold w-16">
+                        Kelas
+                      </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
-                    {g.items.map((item, i) => (
-                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 group/row">
-                        <td className="px-2 py-1 text-slate-500 text-xs border-r text-center">{i + 1}</td>
-                        <td className="px-1 py-1 border-r relative">
-                          <Select value={item.teacher_id} onValueChange={v => updateGroup(item.id, 'teacher_id', v)}>
-                            <SelectTrigger className="h-7 text-xs border-transparent hover:border-input focus:border-input px-2 w-full shadow-none bg-transparent">
-                              <SelectValue placeholder="Pilih..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {teachers.map(t => (
-                                <SelectItem key={t.user_id} value={t.user_id}>{t.full_name || t.email}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <button 
-                            onClick={() => deleteGroup(item.id)} 
-                            className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 opacity-0 group-hover/row:opacity-100 transition-opacity bg-white dark:bg-slate-800 rounded"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </td>
-                        <td className="px-2 py-1 text-center text-xs text-slate-500 font-medium">
-                          {g.kelas}{g.rombel}
-                        </td>
-                      </tr>
-                    ))}
-                    <tr>
-                      <td colSpan={3} className="px-2 py-1">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleAddTeacherToGroup(g.kelas, g.rombel)}
-                          className="h-7 text-xs text-slate-500 hover:text-emerald-600 justify-start px-2 w-full"
-                        >
-                          <Plus className="h-3 w-3 mr-2" /> [+] Edit Nama..
-                        </Button>
-                      </td>
-                    </tr>
+                  <tbody>
+                    {g.items.map((item) => {
+                      const globalIndex = activeGroups.indexOf(item) + 1;
+                      const hasTeacher = !!item.teacher_id;
+                      
+                      return (
+                        <tr key={item.id} className="odd:bg-slate-50 even:bg-white dark:odd:bg-slate-900 dark:even:bg-slate-800 border-b border-slate-200 dark:border-slate-700 group/row">
+                          <td className="px-2 py-2 text-center border-r border-slate-200 dark:border-slate-700 font-medium text-slate-600 dark:text-slate-400 text-xs">
+                            {globalIndex}
+                          </td>
+                          <td className="px-1 py-1 border-r border-slate-200 dark:border-slate-700 relative h-9">
+                            <Select value={item.teacher_id} onValueChange={v => updateGroup(item.id, 'teacher_id', v)}>
+                              <SelectTrigger className={cn("h-full min-h-[30px] border-0 rounded-none bg-transparent shadow-none px-2 focus:ring-0", hasTeacher && "font-medium")}>
+                                <SelectValue placeholder="" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {teachers.map(t => (
+                                  <SelectItem key={t.user_id} value={t.user_id}>{t.full_name || t.email}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            
+                            {hasTeacher && (
+                              <button 
+                                onClick={() => deleteGroup(item.id)} 
+                                className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500 p-1 opacity-0 group-hover/row:opacity-100 transition-opacity bg-white dark:bg-slate-800 rounded shadow-sm border border-slate-100"
+                                title="Kosongkan guru"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
+                          </td>
+                          <td className="px-2 py-2 text-center text-xs text-slate-700 dark:text-slate-300 font-semibold uppercase">
+                            {g.kelas}{item.rombel}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
