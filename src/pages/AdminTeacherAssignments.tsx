@@ -486,76 +486,98 @@ export default function AdminTeacherAssignments() {
         </div>
       </section>
 
-      {/* Section 2: Data Siswa Binaan */}
-      <section className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Data Siswa Binaan per Guru</h2>
-        <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar items-start">
-          {teacherColumns.map(column => (
-            <div key={column.user_id} className="snap-start shrink-0 w-[320px] bg-slate-50 dark:bg-slate-900/50 rounded-xl border shadow-sm overflow-hidden flex flex-col max-h-[600px]">
-              {/* Header Kolom */}
-              <div className="bg-emerald-600 p-3 text-white">
-                <h3 className="font-bold text-base truncate">{column.full_name || "Tanpa Nama"}</h3>
-                <p className="text-xs text-emerald-100">{column.assignments.length} siswa</p>
+        {/* Section 2: Data Siswa Binaan */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Data Siswa Binaan per Guru</h2>
+          <div className="flex flex-wrap gap-4 items-start pb-4">
+            {teacherColumns.map(column => (
+              <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-fit max-w-full overflow-x-auto">
+                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: 320, minWidth: 0 }}>
+                  <colgroup>
+                    <col style={{ width: 40 }} />
+                    <col style={{ width: 280 }} />
+                  </colgroup>
+                  <thead className="bg-emerald-600 text-white text-[10px] uppercase tracking-wider">
+                    <tr>
+                      <th colSpan={2} className="relative px-2 py-1.5 text-left font-bold border-b border-emerald-700 leading-tight">
+                        <div className="flex justify-between items-center">
+                          <span className="truncate text-[11px]">{column.full_name || "Tanpa Nama"}</span>
+                          <span className="text-[9px] text-emerald-100">{column.assignments.length} siswa</span>
+                        </div>
+                      </th>
+                    </tr>
+                    <tr className="bg-emerald-700">
+                      <th className="px-1 py-1 text-center font-bold border-r border-emerald-600/50">No</th>
+                      <th className="px-1 py-1 text-left font-bold">Nama Siswa</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {column.assignments.map((assign, idx) => (
+                      <tr key={assign.id} className="odd:bg-slate-50 even:bg-white dark:odd:bg-slate-900 dark:even:bg-slate-800 border-b border-slate-200 dark:border-slate-700 group/row">
+                        <td className="px-1 py-0.5 text-center border-r border-slate-200 dark:border-slate-700 font-medium text-slate-600 dark:text-slate-400 text-[10px]">
+                          {idx + 1}
+                        </td>
+                        <td className="px-1 py-0.5 relative h-7 overflow-hidden">
+                          <Input
+                            value={getStudentName(assign.student_id)}
+                            onChange={e => updateStudentName(assign.student_id, e.target.value)}
+                            className="h-full min-h-[24px] w-full border-0 rounded-none bg-transparent shadow-none px-1 text-xs focus:ring-0 focus-visible:ring-0"
+                          />
+                          <button
+                            onClick={() => removeAssignment(assign.id)}
+                            className="absolute right-0.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500 p-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity bg-white dark:bg-slate-800 rounded shadow-sm border border-slate-100"
+                            title="Hapus siswa"
+                          >
+                            <Trash2 className="h-2.5 w-2.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    
+                    <tr className="bg-white dark:bg-slate-800">
+                      <td colSpan={2} className="px-1 py-0.5">
+                        <Popover open={openStudentCombo === column.user_id} onOpenChange={(open) => setOpenStudentCombo(open ? column.user_id : null)}>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" className="w-full h-6 min-h-0 justify-start text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 px-1 text-[10px] rounded-none">
+                              <Plus className="h-3 w-3 mr-1" />
+                              Tambah Siswa
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-[300px] p-0" align="start">
+                            <Command>
+                              <CommandInput placeholder="Ketik nama siswa..." />
+                              <CommandList>
+                                <CommandEmpty>Siswa tidak ditemukan.</CommandEmpty>
+                                <CommandGroup>
+                                  {draftStudents.filter(s => (s._status as string) !== 'deleted').map(s => {
+                                    const isAssigned = activeAssignments.some(a => a.student_id === s.id);
+                                    return (
+                                      <CommandItem
+                                        key={s.id}
+                                        value={s.nama}
+                                        onSelect={() => addAssignment(column.user_id, s.id)}
+                                        className={isAssigned ? "opacity-50" : ""}
+                                      >
+                                        <div className="flex flex-col">
+                                          <span>{s.nama}</span>
+                                          {isAssigned && <span className="text-[10px] text-muted-foreground">Sudah ditugaskan</span>}
+                                        </div>
+                                      </CommandItem>
+                                    );
+                                  })}
+                                </CommandGroup>
+                              </CommandList>
+                            </Command>
+                          </PopoverContent>
+                        </Popover>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-
-              {/* List Siswa */}
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                {column.assignments.map(assign => (
-                  <div key={assign.id} className="group relative flex items-center bg-white dark:bg-slate-800 rounded-lg border p-1 pr-8 shadow-sm focus-within:ring-2 focus-within:ring-emerald-500">
-                    <Input
-                      value={getStudentName(assign.student_id)}
-                      onChange={e => updateStudentName(assign.student_id, e.target.value)}
-                      className="border-0 focus-visible:ring-0 shadow-none h-8 font-medium text-sm"
-                    />
-                    <button
-                      onClick={() => removeAssignment(assign.id)}
-                      className="absolute right-2 p-1 rounded text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-
-                {/* Tambah Siswa Autocomplete */}
-                <Popover open={openStudentCombo === column.user_id} onOpenChange={(open) => setOpenStudentCombo(open ? column.user_id : null)}>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-start text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 mt-2">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Tambah Siswa
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[300px] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Ketik nama siswa..." />
-                      <CommandList>
-                        <CommandEmpty>Siswa tidak ditemukan.</CommandEmpty>
-                        <CommandGroup>
-                          {draftStudents.filter(s => (s._status as string) !== 'deleted').map(s => {
-                            const isAssigned = activeAssignments.some(a => a.student_id === s.id);
-                            return (
-                              <CommandItem
-                                key={s.id}
-                                value={s.nama}
-                                onSelect={() => addAssignment(column.user_id, s.id)}
-                                className={isAssigned ? "opacity-50" : ""}
-                              >
-                                <div className="flex flex-col">
-                                  <span>{s.nama}</span>
-                                  {isAssigned && <span className="text-[10px] text-muted-foreground">Sudah ditugaskan</span>}
-                                </div>
-                              </CommandItem>
-                            );
-                          })}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
 
       <style dangerouslySetInnerHTML={{__html: `
         .hide-scrollbar::-webkit-scrollbar {
