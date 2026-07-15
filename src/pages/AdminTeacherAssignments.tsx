@@ -12,7 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { isTeacherRole } from "@/lib/roleLabels";
 
-type TeacherAccount = { user_id: string; full_name: string | null; role: string | null; email: string | null };
+type TeacherAccount = { user_id: string; full_name: string | null; role: string | null; };
 type Student = { id: string; nama: string; kelas: number; rombel: string };
 type Assignment = { id: string; teacher_id: string; student_id: string; status: string };
 type ClassGroup = { id: string; teacher_id: string; kelas: number; rombel: string };
@@ -58,7 +58,7 @@ export default function AdminTeacherAssignments() {
       const [studentsResult, assignmentsResult, teachersResult, classesResult] = await Promise.all([
         supabase.from("students").select("id,nama,kelas,rombel").order("nama", { ascending: true }),
         supabase.from("teacher_students").select("*"),
-        supabase.from("profiles").select("user_id,full_name,role,status,email").eq("status", "approved"),
+        supabase.from("profiles").select("user_id,full_name,role,status").eq("status", "approved"),
         supabase.from("teacher_classes").select("*")
       ]);
 
@@ -383,7 +383,7 @@ export default function AdminTeacherAssignments() {
                               </SelectTrigger>
                               <SelectContent>
                                 {teachers.map(t => (
-                                  <SelectItem key={t.user_id} value={t.user_id}>{t.full_name || t.email}</SelectItem>
+                                  <SelectItem key={t.user_id} value={t.user_id}>{t.full_name || "Tanpa Nama"}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -420,7 +420,7 @@ export default function AdminTeacherAssignments() {
             <div key={column.user_id} className="snap-start shrink-0 w-[320px] bg-slate-50 dark:bg-slate-900/50 rounded-xl border shadow-sm overflow-hidden flex flex-col max-h-[600px]">
               {/* Header Kolom */}
               <div className="bg-emerald-600 p-3 text-white">
-                <h3 className="font-bold text-base truncate">{column.full_name || column.email}</h3>
+                <h3 className="font-bold text-base truncate">{column.full_name || "Tanpa Nama"}</h3>
                 <p className="text-xs text-emerald-100">{column.assignments.length} siswa</p>
               </div>
 
