@@ -78,35 +78,6 @@ export default function AdminTeacherAssignments() {
     window.addEventListener("pointerup", onUp);
   };
     const resetColWidths = () => setColWidths({ grup: 79, guru: 337, kelas: 91 });
-
-    // Section 2 Resizable Column Widths
-    const [sec2ColWidths, setSec2ColWidths] = useState<{ no: number; nama: number; kelas: number }>(() => {
-      try {
-        const raw = localStorage.getItem("ata_sec2_col_widths");
-        if (raw) return JSON.parse(raw);
-      } catch {}
-      return { no: 30, nama: 185, kelas: 65 };
-    });
-    useEffect(() => {
-      try { localStorage.setItem("ata_sec2_col_widths", JSON.stringify(sec2ColWidths)); } catch {}
-    }, [sec2ColWidths]);
-    const startResizeSec2 = (key: "no" | "nama" | "kelas") => (e: React.PointerEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const startX = e.clientX;
-      const startW = sec2ColWidths[key];
-      const onMove = (ev: PointerEvent) => {
-        const next = Math.max(10, startW + ev.clientX - startX);
-        setSec2ColWidths(prev => ({ ...prev, [key]: next }));
-      };
-      const onUp = () => {
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerup", onUp);
-      };
-      window.addEventListener("pointermove", onMove);
-      window.addEventListener("pointerup", onUp);
-    };
-    const resetSec2ColWidths = () => setSec2ColWidths({ no: 30, nama: 185, kelas: 65 });
     
     // For autocomplete
   const [openStudentCombo, setOpenStudentCombo] = useState<string | null>(null); // teacher_id
@@ -521,20 +492,17 @@ export default function AdminTeacherAssignments() {
         <section className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Data Siswa Binaan per Guru</h2>
-            <Button variant="outline" size="sm" onClick={resetSec2ColWidths} className="self-start h-8 text-xs">
-              Reset kolom
-            </Button>
           </div>
           <div className="flex flex-wrap gap-6 items-start pb-4">
             {teacherColumns.map((column, idx) => {
-              const sec2TotalWidth = sec2ColWidths.no + sec2ColWidths.nama + sec2ColWidths.kelas;
+              const sec2TotalWidth = colWidths.grup + colWidths.guru + colWidths.kelas;
               return (
               <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm max-w-full overflow-x-auto" style={{ width: sec2TotalWidth }}>
                 <table className="text-xs border-collapse w-full" style={{ tableLayout: "fixed" }}>
                   <colgroup>
-                    <col style={{ width: sec2ColWidths.no }} />
-                    <col style={{ width: sec2ColWidths.nama }} />
-                    <col style={{ width: sec2ColWidths.kelas }} />
+                    <col style={{ width: colWidths.grup }} />
+                    <col style={{ width: colWidths.guru }} />
+                    <col style={{ width: colWidths.kelas }} />
                   </colgroup>
                   <thead className="bg-emerald-600 text-white text-[10px] uppercase tracking-wider">
                     <tr>
@@ -549,21 +517,21 @@ export default function AdminTeacherAssignments() {
                       <th className="relative px-1 py-1 text-center font-bold border-r border-emerald-600/50 overflow-hidden whitespace-nowrap text-ellipsis">
                         No
                         <span
-                          onPointerDown={startResizeSec2("no")}
+                          onPointerDown={startResize("grup")}
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
                         />
                       </th>
                       <th className="relative px-1 py-1 text-left font-bold border-r border-emerald-600/50 overflow-hidden whitespace-nowrap text-ellipsis">
                         Nama Siswa
                         <span
-                          onPointerDown={startResizeSec2("nama")}
+                          onPointerDown={startResize("guru")}
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
                         />
                       </th>
                       <th className="relative px-1 py-1 text-center font-bold overflow-hidden whitespace-nowrap text-ellipsis">
                         Kelas
                         <span
-                          onPointerDown={startResizeSec2("kelas")}
+                          onPointerDown={startResize("kelas")}
                           className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
                         />
                       </th>
