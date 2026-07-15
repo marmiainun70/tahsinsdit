@@ -491,9 +491,9 @@ export default function AdminTeacherAssignments() {
         {/* Section 2: Data Siswa Binaan */}
         <section className="space-y-4">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Data Siswa Binaan per Guru</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start pb-4">
+          <div className="flex flex-wrap gap-6 items-start pb-4">
             {teacherColumns.map((column, idx) => (
-              <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-[280px] max-w-full overflow-x-auto justify-self-center">
+              <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-[280px] max-w-full overflow-x-auto">
                 <table className="text-xs border-collapse w-full" style={{ tableLayout: "fixed" }}>
                   <colgroup>
                     <col style={{ width: 30 }} />
