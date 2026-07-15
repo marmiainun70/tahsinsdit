@@ -47,6 +47,35 @@ export default function AdminTeacherAssignments() {
   const [draftAssignments, setDraftAssignments] = useState<DraftAssignment[]>([]);
   const [draftStudents, setDraftStudents] = useState<DraftStudent[]>([]);
   const [isDirty, setIsDirty] = useState(false);
+
+  // Resizable column widths (px) for Grup/Guru/Kelas table, persisted per user
+  const [colWidths, setColWidths] = useState<{ grup: number; guru: number; kelas: number }>(() => {
+    try {
+      const raw = localStorage.getItem("ata_col_widths");
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return { grup: 48, guru: 220, kelas: 64 };
+  });
+  useEffect(() => {
+    try { localStorage.setItem("ata_col_widths", JSON.stringify(colWidths)); } catch {}
+  }, [colWidths]);
+  const startResize = (key: "grup" | "guru" | "kelas") => (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startW = colWidths[key];
+    const onMove = (ev: PointerEvent) => {
+      const next = Math.max(30, startW + ev.clientX - startX);
+      setColWidths(prev => ({ ...prev, [key]: next }));
+    };
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  };
+  const resetColWidths = () => setColWidths({ grup: 48, guru: 220, kelas: 64 });
   
   // For autocomplete
   const [openStudentCombo, setOpenStudentCombo] = useState<string | null>(null); // teacher_id
