@@ -51,13 +51,13 @@ export default function AdminTeacherAssignments() {
   // Resizable column widths (px) for Grup/Guru/Kelas table, persisted per user
   const [colWidths, setColWidths] = useState<{ grup: number; guru: number; kelas: number }>(() => {
     try {
-      const raw = localStorage.getItem("ata_col_widths");
+      const raw = localStorage.getItem("ata_col_widths_v2");
       if (raw) return JSON.parse(raw);
     } catch {}
-    return { grup: 48, guru: 220, kelas: 64 };
+    return { grup: 79, guru: 337, kelas: 91 };
   });
   useEffect(() => {
-    try { localStorage.setItem("ata_col_widths", JSON.stringify(colWidths)); } catch {}
+    try { localStorage.setItem("ata_col_widths_v2", JSON.stringify(colWidths)); } catch {}
   }, [colWidths]);
   const startResize = (key: "grup" | "guru" | "kelas") => (e: React.PointerEvent) => {
     e.preventDefault();
@@ -75,7 +75,7 @@ export default function AdminTeacherAssignments() {
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
   };
-  const resetColWidths = () => setColWidths({ grup: 48, guru: 220, kelas: 64 });
+  const resetColWidths = () => setColWidths({ grup: 79, guru: 337, kelas: 91 });
   
   // For autocomplete
   const [openStudentCombo, setOpenStudentCombo] = useState<string | null>(null); // teacher_id
