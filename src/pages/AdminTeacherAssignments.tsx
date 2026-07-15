@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { isTeacherRole } from "@/lib/roleLabels";
 
 type TeacherAccount = { user_id: string; full_name: string | null; role: string | null; email: string | null };
 type Student = { id: string; nama: string; kelas: number; rombel: string };
@@ -69,7 +70,7 @@ export default function AdminTeacherAssignments() {
       return {
         students: (studentsResult.data ?? []) as Student[],
         assignments: (assignmentsResult.data ?? []) as Assignment[],
-        teachers: ((teachersResult.data ?? []) as TeacherAccount[]).filter(t => t.role?.includes("teacher")),
+        teachers: ((teachersResult.data ?? []) as TeacherAccount[]).filter(t => isTeacherRole(t.role)),
         classes: (classesResult.data ?? []) as ClassGroup[],
       };
     },
@@ -269,7 +270,7 @@ export default function AdminTeacherAssignments() {
         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Layout Penugasan Guru (Halaqah & Kelas)</h2>
         <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar">
           {activeGroups.map((group, idx) => (
-            <div key={group.id} className="snap-start shrink-0 w-[300px] bg-white dark:bg-slate-900 rounded-xl border shadow-sm p-4 relative group">
+            <div key={group.id} className="snap-start shrink-0 w-[220px] bg-white dark:bg-slate-900 rounded-xl border shadow-sm p-4 relative group">
               <button 
                 onClick={() => deleteGroup(group.id)}
                 className="absolute top-3 right-3 p-1 rounded-md text-slate-400 hover:bg-rose-100 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity"
