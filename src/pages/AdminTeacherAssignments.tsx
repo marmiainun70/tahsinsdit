@@ -547,7 +547,7 @@ export default function AdminTeacherAssignments() {
                           <Input
                             value={getStudentName(assign.student_id)}
                             onChange={e => updateStudentName(assign.student_id, e.target.value)}
-                            className="h-full min-h-[24px] w-full border-0 rounded-none bg-transparent shadow-none px-1 text-[8px] focus:ring-0 focus-visible:ring-0"
+                            className="h-full min-h-[24px] w-full border-0 rounded-none bg-transparent shadow-none px-1 text-[6px] focus:ring-0 focus-visible:ring-0"
                           />
                         </td>
                         <td className="px-1 py-0.5 text-center font-medium text-slate-600 dark:text-slate-400 text-[10px] relative">
