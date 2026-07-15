@@ -370,16 +370,14 @@ export default function AdminTeacherAssignments() {
       </div>
 
       {/* Section 1: Grup Halaqah & Kelas */}
-      <section className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Layout Penugasan Guru (Halaqah & Kelas)</h2>
       <section className="space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Layout Penugasan Guru</h2>
+          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Layout Penugasan Guru (Halaqah & Kelas)</h2>
           <Button variant="outline" size="sm" onClick={resetColWidths} className="self-start h-8 text-xs">
             Reset kolom
           </Button>
         </div>
+
         
         {/* Render Grid based on Excel */}
         <div className="flex flex-wrap gap-4 items-start">
