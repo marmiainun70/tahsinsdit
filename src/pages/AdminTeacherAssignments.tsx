@@ -639,6 +639,7 @@ export default function AdminTeacherAssignments() {
                   </tbody>
                 </table>
               </div>
+              );
             })}
           </div>
         </section>
