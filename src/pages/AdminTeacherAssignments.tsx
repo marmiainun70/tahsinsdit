@@ -373,6 +373,9 @@ export default function AdminTeacherAssignments() {
       <section className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Layout Penugasan Guru (Halaqah & Kelas)</h2>
+          <Button variant="outline" size="sm" onClick={resetColWidths} className="self-start sm:self-auto">
+            Reset lebar kolom
+          </Button>
         </div>
         
         {/* Render Grid based on Excel */}
@@ -381,17 +384,37 @@ export default function AdminTeacherAssignments() {
             // Retrieve global numbering from activeGroups to match sequence 1-48
             return (
               <div key={g.key} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm overflow-hidden shadow-sm">
-                <table className="w-full text-sm border-collapse table-fixed">
+                <table className="w-full text-sm border-collapse" style={{ tableLayout: "fixed" }}>
+                  <colgroup>
+                    <col style={{ width: colWidths.grup }} />
+                    <col style={{ width: colWidths.guru }} />
+                    <col style={{ width: colWidths.kelas }} />
+                  </colgroup>
                   <thead className="bg-black text-white text-[11px] uppercase tracking-wider">
                     <tr>
-                      <th className="px-2 py-3 text-center font-bold border-r border-slate-700 w-[15%] leading-tight">
+                      <th className="relative px-2 py-3 text-center font-bold border-r border-slate-700 leading-tight">
                         Grup
+                        <span
+                          onPointerDown={startResize("grup")}
+                          className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
+                          title="Geser untuk mengubah lebar"
+                        />
                       </th>
-                      <th className="px-2 py-3 text-left font-bold border-r border-slate-700 w-[65%]">
+                      <th className="relative px-2 py-3 text-left font-bold border-r border-slate-700">
                         Guru Pengampu
+                        <span
+                          onPointerDown={startResize("guru")}
+                          className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
+                          title="Geser untuk mengubah lebar"
+                        />
                       </th>
-                      <th className="px-2 py-3 text-center font-bold w-[20%]">
+                      <th className="relative px-2 py-3 text-center font-bold">
                         Kelas
+                        <span
+                          onPointerDown={startResize("kelas")}
+                          className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
+                          title="Geser untuk mengubah lebar"
+                        />
                       </th>
                     </tr>
                   </thead>
