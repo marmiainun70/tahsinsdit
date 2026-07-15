@@ -379,12 +379,12 @@ export default function AdminTeacherAssignments() {
         </div>
         
         {/* Render Grid based on Excel */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div className="flex flex-wrap gap-8 items-start">
           {groupedGroups.map((g) => {
             // Retrieve global numbering from activeGroups to match sequence 1-48
             return (
-              <div key={g.key} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm overflow-hidden shadow-sm">
-                <table className="w-full text-sm border-collapse" style={{ tableLayout: "fixed" }}>
+              <div key={g.key} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-fit max-w-full overflow-x-auto">
+                <table className="w-max text-sm border-collapse" style={{ tableLayout: "fixed" }}>
                   <colgroup>
                     <col style={{ width: colWidths.grup }} />
                     <col style={{ width: colWidths.guru }} />
