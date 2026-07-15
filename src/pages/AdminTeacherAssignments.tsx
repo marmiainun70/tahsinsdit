@@ -493,12 +493,12 @@ export default function AdminTeacherAssignments() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Data Siswa Binaan per Guru</h2>
           </div>
-          <div className="flex flex-wrap gap-6 items-start pb-4">
+          <div className="flex flex-wrap gap-4 items-start pb-4">
             {teacherColumns.map((column, idx) => {
               const sec2TotalWidth = colWidths.grup + colWidths.guru + colWidths.kelas;
               return (
-              <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm max-w-full overflow-x-auto" style={{ width: sec2TotalWidth }}>
-                <table className="text-xs border-collapse w-full" style={{ tableLayout: "fixed" }}>
+              <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-fit max-w-full overflow-x-auto">
+                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: sec2TotalWidth, minWidth: 0 }}>
                   <colgroup>
                     <col style={{ width: colWidths.grup }} />
                     <col style={{ width: colWidths.guru }} />
