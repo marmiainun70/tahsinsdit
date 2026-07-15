@@ -382,9 +382,10 @@ export default function AdminTeacherAssignments() {
         <div className="flex flex-wrap gap-8 items-start">
           {groupedGroups.map((g) => {
             // Retrieve global numbering from activeGroups to match sequence 1-48
+            const totalWidth = colWidths.grup + colWidths.guru + colWidths.kelas;
             return (
               <div key={g.key} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-fit max-w-full overflow-x-auto">
-                <table className="w-max text-sm border-collapse" style={{ tableLayout: "fixed" }}>
+                <table className="text-sm border-collapse" style={{ tableLayout: "fixed", width: totalWidth }}>
                   <colgroup>
                     <col style={{ width: colWidths.grup }} />
                     <col style={{ width: colWidths.guru }} />
