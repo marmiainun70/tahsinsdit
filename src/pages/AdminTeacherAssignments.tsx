@@ -88,17 +88,6 @@ export default function AdminTeacherAssignments() {
   const students = data?.students ?? [];
 
   // Group helpers
-  const handleAddGroup = () => {
-    setIsDirty(true);
-    setDraftGroups([...draftGroups, {
-      id: `temp-${Date.now()}`,
-      teacher_id: teachers[0]?.user_id || "",
-      kelas: "1",
-      rombel: "A",
-      _status: 'new'
-    }]);
-  };
-
   const updateGroup = (id: string, field: keyof DraftGroup, value: string) => {
     setIsDirty(true);
     setDraftGroups(draftGroups.map(g => {
@@ -113,6 +102,63 @@ export default function AdminTeacherAssignments() {
     setIsDirty(true);
     setDraftGroups(draftGroups.map(g => {
       if (g.id === id) return { ...g, _status: 'deleted' };
+      return g;
+    }));
+  };
+
+  const groupedGroups = useMemo(() => {
+    const groupsMap = new Map<string, DraftGroup[]>();
+    for (const group of draftGroups.filter(g => g._status !== 'deleted')) {
+      const key = `${group.kelas}-${group.rombel}`;
+      if (!groupsMap.has(key)) groupsMap.set(key, []);
+      groupsMap.get(key)!.push(group);
+    }
+    return Array.from(groupsMap.entries()).map(([key, items]) => ({
+      key,
+      kelas: items[0].kelas,
+      rombel: items[0].rombel,
+      items
+    })).sort((a, b) => a.key.localeCompare(b.key));
+  }, [draftGroups]);
+
+  const handleAddGroupContainer = () => {
+    setIsDirty(true);
+    setDraftGroups([...draftGroups, {
+      id: `temp-${Date.now()}`,
+      teacher_id: "",
+      kelas: "1",
+      rombel: "A",
+      _status: 'new'
+    }]);
+  };
+
+  const handleAddTeacherToGroup = (kelas: string, rombel: string) => {
+    setIsDirty(true);
+    setDraftGroups([...draftGroups, {
+      id: `temp-${Date.now()}`,
+      teacher_id: "",
+      kelas,
+      rombel,
+      _status: 'new'
+    }]);
+  };
+
+  const deleteGroupContainer = (key: string) => {
+    setIsDirty(true);
+    const [kelas, rombel] = key.split('-');
+    setDraftGroups(draftGroups.map(g => {
+      if (g.kelas === kelas && g.rombel === rombel) return { ...g, _status: 'deleted' };
+      return g;
+    }));
+  };
+
+  const updateAllInGroup = (key: string, field: 'kelas' | 'rombel', value: string) => {
+    setIsDirty(true);
+    const [kelas, rombel] = key.split('-');
+    setDraftGroups(draftGroups.map(g => {
+      if (g.kelas === kelas && g.rombel === rombel) {
+        return { ...g, [field]: value, _status: g._status === 'new' ? 'new' : 'updated' };
+      }
       return g;
     }));
   };
@@ -165,8 +211,9 @@ export default function AdminTeacherAssignments() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       // 1. Process Groups
-      const newGroups = draftGroups.filter(g => g._status === 'new');
-      const updatedGroups = draftGroups.filter(g => g._status === 'updated');
+      // Filter out new groups that have empty teacher_id to prevent database constraints error if it requires teacher_id
+      const newGroups = draftGroups.filter(g => g._status === 'new' && g.teacher_id);
+      const updatedGroups = draftGroups.filter(g => g._status === 'updated' && g.teacher_id);
       const deletedGroups = draftGroups.filter(g => g._status === 'deleted' && !g.id.startsWith('temp-'));
 
       if (newGroups.length > 0) {
@@ -229,7 +276,6 @@ export default function AdminTeacherAssignments() {
   }
 
   // Active items
-  const activeGroups = draftGroups.filter(g => g._status !== 'deleted');
   const activeAssignments = draftAssignments.filter(a => a._status !== 'deleted');
   
   // Teachers who have columns (either they have students assigned, or they are just teachers)
@@ -267,59 +313,91 @@ export default function AdminTeacherAssignments() {
 
       {/* Section 1: Grup Halaqah & Kelas */}
       <section className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Layout Penugasan Guru (Halaqah & Kelas)</h2>
-        <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar">
-          {activeGroups.map((group, idx) => (
-            <div key={group.id} className="snap-start shrink-0 w-[220px] bg-white dark:bg-slate-900 rounded-xl border shadow-sm p-4 relative group">
-              <button 
-                onClick={() => deleteGroup(group.id)}
-                className="absolute top-3 right-3 p-1 rounded-md text-slate-400 hover:bg-rose-100 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="h-4 w-4" />
-              </button>
-              
-              <div className="space-y-3 mt-2">
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Grup Halaqah</label>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Layout Penugasan Guru (Halaqah & Kelas)</h2>
+          <Button onClick={handleAddGroupContainer} variant="outline" className="border-emerald-200 hover:bg-emerald-50 text-emerald-700 dark:border-emerald-800/30 dark:hover:bg-emerald-900/20 dark:text-emerald-400 bg-white dark:bg-slate-900">
+            <Plus className="mr-2 h-4 w-4" />
+            Tambah Kelompok Kelas
+          </Button>
+        </div>
+        <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar items-start">
+          {groupedGroups.map(g => (
+            <div key={g.key} className="snap-start shrink-0 w-[280px] bg-white dark:bg-slate-900 rounded-xl border shadow-sm overflow-hidden flex flex-col">
+              <div className="bg-slate-100 dark:bg-slate-800 p-2 flex justify-between items-center border-b">
+                <div className="font-bold text-sm flex items-center gap-1">
+                  GRUP
                   <Input 
-                    value={group.rombel} 
-                    onChange={e => updateGroup(group.id, 'rombel', e.target.value)}
-                    className="mt-1 h-8 font-medium"
+                    value={g.kelas} 
+                    onChange={e => updateAllInGroup(g.key, 'kelas', e.target.value)}
+                    className="inline w-10 h-7 px-1 py-0 text-center font-bold text-sm bg-transparent border-transparent hover:border-input focus:bg-background shadow-none"
+                  />
+                  -
+                  <Input 
+                    value={g.rombel} 
+                    onChange={e => updateAllInGroup(g.key, 'rombel', e.target.value)}
+                    className="inline w-10 h-7 px-1 py-0 text-center uppercase font-bold text-sm bg-transparent border-transparent hover:border-input focus:bg-background shadow-none"
                   />
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Kelas</label>
-                  <Input 
-                    value={group.kelas} 
-                    onChange={e => updateGroup(group.id, 'kelas', e.target.value)}
-                    className="mt-1 h-8 font-medium"
-                    type="number"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Guru Pengampu</label>
-                  <Select value={group.teacher_id} onValueChange={v => updateGroup(group.id, 'teacher_id', v)}>
-                    <SelectTrigger className="mt-1 h-8">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {teachers.map(t => (
-                        <SelectItem key={t.user_id} value={t.user_id}>{t.full_name || t.email}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <button 
+                  onClick={() => deleteGroupContainer(g.key)}
+                  className="p-1 rounded-md text-slate-400 hover:bg-rose-100 hover:text-rose-600 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="p-0">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs text-slate-500 uppercase border-b">
+                    <tr>
+                      <th className="px-2 py-2 text-center font-medium w-8 border-r">No</th>
+                      <th className="px-2 py-2 text-left font-medium border-r">Guru</th>
+                      <th className="px-2 py-2 text-center font-medium w-12">Kls</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {g.items.map((item, i) => (
+                      <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 group/row">
+                        <td className="px-2 py-1 text-slate-500 text-xs border-r text-center">{i + 1}</td>
+                        <td className="px-1 py-1 border-r relative">
+                          <Select value={item.teacher_id} onValueChange={v => updateGroup(item.id, 'teacher_id', v)}>
+                            <SelectTrigger className="h-7 text-xs border-transparent hover:border-input focus:border-input px-2 w-full shadow-none bg-transparent">
+                              <SelectValue placeholder="Pilih..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {teachers.map(t => (
+                                <SelectItem key={t.user_id} value={t.user_id}>{t.full_name || t.email}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <button 
+                            onClick={() => deleteGroup(item.id)} 
+                            className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-rose-500 p-1 opacity-0 group-hover/row:opacity-100 transition-opacity bg-white dark:bg-slate-800 rounded"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </td>
+                        <td className="px-2 py-1 text-center text-xs text-slate-500 font-medium">
+                          {g.kelas}{g.rombel}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr>
+                      <td colSpan={3} className="px-2 py-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleAddTeacherToGroup(g.kelas, g.rombel)}
+                          className="h-7 text-xs text-slate-500 hover:text-emerald-600 justify-start px-2 w-full"
+                        >
+                          <Plus className="h-3 w-3 mr-2" /> [+] Edit Nama..
+                        </Button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           ))}
-
-          <button 
-            onClick={handleAddGroup}
-            className="snap-start shrink-0 w-[200px] flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-500 hover:text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all"
-          >
-            <Plus className="h-8 w-8" />
-            <span className="font-medium">Tambah Grup</span>
-          </button>
         </div>
       </section>
 
