@@ -508,7 +508,7 @@ export default function AdminTeacherAssignments() {
                       <CommandList>
                         <CommandEmpty>Siswa tidak ditemukan.</CommandEmpty>
                         <CommandGroup>
-                          {draftStudents.filter(s => s._status !== 'deleted').map(s => {
+                          {draftStudents.filter(s => (s._status as string) !== 'deleted').map(s => {
                             const isAssigned = activeAssignments.some(a => a.student_id === s.id);
                             return (
                               <CommandItem
