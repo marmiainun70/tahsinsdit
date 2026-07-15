@@ -373,47 +373,50 @@ export default function AdminTeacherAssignments() {
       <section className="space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Layout Penugasan Guru (Halaqah & Kelas)</h2>
-          <Button variant="outline" size="sm" onClick={resetColWidths} className="self-start sm:self-auto">
-            Reset lebar kolom
+      <section className="space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">Layout Penugasan Guru</h2>
+          <Button variant="outline" size="sm" onClick={resetColWidths} className="self-start h-8 text-xs">
+            Reset kolom
           </Button>
         </div>
         
         {/* Render Grid based on Excel */}
-        <div className="flex flex-wrap gap-8 items-start">
+        <div className="flex flex-wrap gap-4 items-start">
           {groupedGroups.map((g) => {
             // Retrieve global numbering from activeGroups to match sequence 1-48
             const totalWidth = colWidths.grup + colWidths.guru + colWidths.kelas;
             return (
               <div key={g.key} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-fit max-w-full overflow-x-auto">
-                <table className="text-sm border-collapse" style={{ tableLayout: "fixed", width: totalWidth }}>
+                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: totalWidth }}>
                   <colgroup>
                     <col style={{ width: colWidths.grup }} />
                     <col style={{ width: colWidths.guru }} />
                     <col style={{ width: colWidths.kelas }} />
                   </colgroup>
-                  <thead className="bg-black text-white text-[11px] uppercase tracking-wider">
+                  <thead className="bg-black text-white text-[10px] uppercase tracking-wider">
                     <tr>
-                      <th className="relative px-2 py-3 text-center font-bold border-r border-slate-700 leading-tight">
+                      <th className="relative px-1 py-1.5 text-center font-bold border-r border-slate-700 leading-tight">
                         Grup
                         <span
                           onPointerDown={startResize("grup")}
-                          className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
+                          className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
                           title="Geser untuk mengubah lebar"
                         />
                       </th>
-                      <th className="relative px-2 py-3 text-left font-bold border-r border-slate-700">
+                      <th className="relative px-1 py-1.5 text-left font-bold border-r border-slate-700">
                         Guru Pengampu
                         <span
                           onPointerDown={startResize("guru")}
-                          className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
+                          className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
                           title="Geser untuk mengubah lebar"
                         />
                       </th>
-                      <th className="relative px-2 py-3 text-center font-bold">
+                      <th className="relative px-1 py-1.5 text-center font-bold">
                         Kelas
                         <span
                           onPointerDown={startResize("kelas")}
-                          className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
+                          className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
                           title="Geser untuk mengubah lebar"
                         />
                       </th>
@@ -426,17 +429,17 @@ export default function AdminTeacherAssignments() {
                       
                       return (
                         <tr key={item.id} className="odd:bg-slate-50 even:bg-white dark:odd:bg-slate-900 dark:even:bg-slate-800 border-b border-slate-200 dark:border-slate-700 group/row">
-                          <td className="px-2 py-2 text-center border-r border-slate-200 dark:border-slate-700 font-medium text-slate-600 dark:text-slate-400 text-xs">
+                          <td className="px-1 py-0.5 text-center border-r border-slate-200 dark:border-slate-700 font-medium text-slate-600 dark:text-slate-400 text-[10px]">
                             {globalIndex}
                           </td>
-                          <td className="px-1 py-1 border-r border-slate-200 dark:border-slate-700 relative h-9 overflow-hidden">
+                          <td className="px-1 py-0.5 border-r border-slate-200 dark:border-slate-700 relative h-6 overflow-hidden">
                             <Select value={item.teacher_id} onValueChange={v => updateGroup(item.id, 'teacher_id', v)}>
-                              <SelectTrigger className={cn("h-full min-h-[30px] w-full border-0 rounded-none bg-transparent shadow-none px-2 focus:ring-0", hasTeacher && "font-medium")}>
+                              <SelectTrigger className={cn("h-full min-h-[22px] w-full border-0 rounded-none bg-transparent shadow-none px-1 text-xs focus:ring-0", hasTeacher && "font-medium")}>
                                 <div className="truncate text-left w-full"><SelectValue placeholder="" /></div>
                               </SelectTrigger>
                               <SelectContent>
                                 {teachers.map(t => (
-                                  <SelectItem key={t.user_id} value={t.user_id}>{t.full_name || "Tanpa Nama"}</SelectItem>
+                                  <SelectItem key={t.user_id} value={t.user_id} className="text-xs">{t.full_name || "Tanpa Nama"}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -444,14 +447,14 @@ export default function AdminTeacherAssignments() {
                             {hasTeacher && (
                               <button 
                                 onClick={() => deleteGroup(item.id)} 
-                                className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500 p-1 opacity-0 group-hover/row:opacity-100 transition-opacity bg-white dark:bg-slate-800 rounded shadow-sm border border-slate-100"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500 p-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity bg-white dark:bg-slate-800 rounded shadow-sm border border-slate-100"
                                 title="Kosongkan guru"
                               >
-                                <X className="h-3 w-3" />
+                                <X className="h-2.5 w-2.5" />
                               </button>
                             )}
                           </td>
-                          <td className="px-2 py-2 text-center text-xs text-slate-700 dark:text-slate-300 font-semibold uppercase">
+                          <td className="px-1 py-0.5 text-center text-[10px] text-slate-700 dark:text-slate-300 font-semibold uppercase">
                             {g.kelas}{item.rombel}
                           </td>
                         </tr>
