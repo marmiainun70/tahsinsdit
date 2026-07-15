@@ -494,11 +494,11 @@ export default function AdminTeacherAssignments() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start pb-4">
             {teacherColumns.map((column, idx) => (
               <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-full max-w-full overflow-x-auto">
-                <table className="text-xs border-collapse w-full" style={{ tableLayout: "fixed", minWidth: 507 }}>
+                <table className="text-xs border-collapse w-full" style={{ tableLayout: "fixed" }}>
                   <colgroup>
                     <col style={{ width: 35 }} />
-                    <col style={{ width: 381 }} />
-                    <col style={{ width: 91 }} />
+                    <col style={{ width: "auto" }} />
+                    <col style={{ width: 85 }} />
                   </colgroup>
                   <thead className="bg-emerald-600 text-white text-[10px] uppercase tracking-wider">
                     <tr>
