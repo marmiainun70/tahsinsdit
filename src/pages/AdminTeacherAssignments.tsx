@@ -77,9 +77,38 @@ export default function AdminTeacherAssignments() {
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
   };
-  const resetColWidths = () => setColWidths({ grup: 79, guru: 337, kelas: 91 });
-  
-  // For autocomplete
+    const resetColWidths = () => setColWidths({ grup: 79, guru: 337, kelas: 91 });
+
+    // Section 2 Resizable Column Widths
+    const [sec2ColWidths, setSec2ColWidths] = useState<{ no: number; nama: number; kelas: number }>(() => {
+      try {
+        const raw = localStorage.getItem("ata_sec2_col_widths");
+        if (raw) return JSON.parse(raw);
+      } catch {}
+      return { no: 30, nama: 185, kelas: 65 };
+    });
+    useEffect(() => {
+      try { localStorage.setItem("ata_sec2_col_widths", JSON.stringify(sec2ColWidths)); } catch {}
+    }, [sec2ColWidths]);
+    const startResizeSec2 = (key: "no" | "nama" | "kelas") => (e: React.PointerEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const startX = e.clientX;
+      const startW = sec2ColWidths[key];
+      const onMove = (ev: PointerEvent) => {
+        const next = Math.max(10, startW + ev.clientX - startX);
+        setSec2ColWidths(prev => ({ ...prev, [key]: next }));
+      };
+      const onUp = () => {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+      };
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+    };
+    const resetSec2ColWidths = () => setSec2ColWidths({ no: 30, nama: 185, kelas: 65 });
+    
+    // For autocomplete
   const [openStudentCombo, setOpenStudentCombo] = useState<string | null>(null); // teacher_id
 
   const { data, isLoading, isError, error } = useQuery({
@@ -490,15 +519,22 @@ export default function AdminTeacherAssignments() {
 
         {/* Section 2: Data Siswa Binaan */}
         <section className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Data Siswa Binaan per Guru</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Data Siswa Binaan per Guru</h2>
+            <Button variant="outline" size="sm" onClick={resetSec2ColWidths} className="self-start h-8 text-xs">
+              Reset kolom
+            </Button>
+          </div>
           <div className="flex flex-wrap gap-6 items-start pb-4">
-            {teacherColumns.map((column, idx) => (
-              <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-[280px] max-w-full overflow-x-auto">
+            {teacherColumns.map((column, idx) => {
+              const sec2TotalWidth = sec2ColWidths.no + sec2ColWidths.nama + sec2ColWidths.kelas;
+              return (
+              <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm max-w-full overflow-x-auto" style={{ width: sec2TotalWidth }}>
                 <table className="text-xs border-collapse w-full" style={{ tableLayout: "fixed" }}>
                   <colgroup>
-                    <col style={{ width: 30 }} />
-                    <col style={{ width: "auto" }} />
-                    <col style={{ width: 65 }} />
+                    <col style={{ width: sec2ColWidths.no }} />
+                    <col style={{ width: sec2ColWidths.nama }} />
+                    <col style={{ width: sec2ColWidths.kelas }} />
                   </colgroup>
                   <thead className="bg-emerald-600 text-white text-[10px] uppercase tracking-wider">
                     <tr>
@@ -510,9 +546,27 @@ export default function AdminTeacherAssignments() {
                       </th>
                     </tr>
                     <tr className="bg-emerald-700">
-                      <th className="px-1 py-1 text-center font-bold border-r border-emerald-600/50">No</th>
-                      <th className="px-1 py-1 text-left font-bold border-r border-emerald-600/50">Nama Siswa</th>
-                      <th className="px-1 py-1 text-center font-bold">Kelas</th>
+                      <th className="relative px-1 py-1 text-center font-bold border-r border-emerald-600/50 overflow-hidden whitespace-nowrap text-ellipsis">
+                        No
+                        <span
+                          onPointerDown={startResizeSec2("no")}
+                          className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
+                        />
+                      </th>
+                      <th className="relative px-1 py-1 text-left font-bold border-r border-emerald-600/50 overflow-hidden whitespace-nowrap text-ellipsis">
+                        Nama Siswa
+                        <span
+                          onPointerDown={startResizeSec2("nama")}
+                          className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
+                        />
+                      </th>
+                      <th className="relative px-1 py-1 text-center font-bold overflow-hidden whitespace-nowrap text-ellipsis">
+                        Kelas
+                        <span
+                          onPointerDown={startResizeSec2("kelas")}
+                          className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-emerald-400/60 active:bg-emerald-400"
+                        />
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -585,7 +639,7 @@ export default function AdminTeacherAssignments() {
                   </tbody>
                 </table>
               </div>
-            ))}
+            })}
           </div>
         </section>
 
