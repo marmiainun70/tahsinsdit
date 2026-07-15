@@ -51,7 +51,7 @@ export default function AdminTeacherAssignments() {
   // For autocomplete
   const [openStudentCombo, setOpenStudentCombo] = useState<string | null>(null); // teacher_id
 
-  const { data, isLoading, isError } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["teacher-assignment-dashboard-draft"],
     enabled: isAdmin,
     queryFn: async () => {
@@ -291,7 +291,11 @@ export default function AdminTeacherAssignments() {
   if (isError) {
     return (
       <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-600">
-        Terjadi kesalahan saat memuat data. Mohon muat ulang halaman atau hubungi admin.
+        <h3 className="font-bold text-lg mb-2">Terjadi Kesalahan (Debug)</h3>
+        <p>Sistem gagal memuat data. Detail error:</p>
+        <pre className="mt-2 p-4 bg-rose-100 rounded text-sm overflow-auto">
+          {error instanceof Error ? error.message : JSON.stringify(error)}
+        </pre>
       </div>
     );
   }
