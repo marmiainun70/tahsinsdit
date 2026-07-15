@@ -494,11 +494,11 @@ export default function AdminTeacherAssignments() {
           <div className="flex flex-wrap gap-4 items-start pb-4">
             {teacherColumns.map((column, idx) => (
               <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-fit max-w-full overflow-x-auto">
-                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: 340, minWidth: 0 }}>
+                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: 400, minWidth: 0 }}>
                   <colgroup>
-                    <col style={{ width: 30 }} />
-                    <col style={{ width: 230 }} />
-                    <col style={{ width: 80 }} />
+                    <col style={{ width: 35 }} />
+                    <col style={{ width: 275 }} />
+                    <col style={{ width: 90 }} />
                   </colgroup>
                   <thead className="bg-emerald-600 text-white text-[10px] uppercase tracking-wider">
                     <tr>
