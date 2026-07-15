@@ -65,7 +65,7 @@ export default function AdminTeacherAssignments() {
     const startX = e.clientX;
     const startW = colWidths[key];
     const onMove = (ev: PointerEvent) => {
-      const next = Math.max(30, startW + ev.clientX - startX);
+      const next = Math.max(10, startW + ev.clientX - startX);
       setColWidths(prev => ({ ...prev, [key]: next }));
     };
     const onUp = () => {
@@ -394,7 +394,7 @@ export default function AdminTeacherAssignments() {
                   </colgroup>
                   <thead className="bg-black text-white text-[10px] uppercase tracking-wider">
                     <tr>
-                      <th className="relative px-1 py-1.5 text-center font-bold border-r border-slate-700 leading-tight">
+                      <th className="relative px-1 py-1.5 text-center font-bold border-r border-slate-700 leading-tight overflow-hidden whitespace-nowrap text-ellipsis">
                         Grup
                         <span
                           onPointerDown={startResize("grup")}
@@ -402,7 +402,7 @@ export default function AdminTeacherAssignments() {
                           title="Geser untuk mengubah lebar"
                         />
                       </th>
-                      <th className="relative px-1 py-1.5 text-left font-bold border-r border-slate-700">
+                      <th className="relative px-1 py-1.5 text-left font-bold border-r border-slate-700 overflow-hidden whitespace-nowrap text-ellipsis">
                         Guru Pengampu
                         <span
                           onPointerDown={startResize("guru")}
@@ -410,7 +410,7 @@ export default function AdminTeacherAssignments() {
                           title="Geser untuk mengubah lebar"
                         />
                       </th>
-                      <th className="relative px-1 py-1.5 text-center font-bold">
+                      <th className="relative px-1 py-1.5 text-center font-bold overflow-hidden whitespace-nowrap text-ellipsis">
                         Kelas
                         <span
                           onPointerDown={startResize("kelas")}
