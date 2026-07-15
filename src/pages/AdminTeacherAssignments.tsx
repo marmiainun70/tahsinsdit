@@ -352,16 +352,16 @@ export default function AdminTeacherAssignments() {
             // Retrieve global numbering from activeGroups to match sequence 1-48
             return (
               <div key={g.key} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm overflow-hidden shadow-sm">
-                <table className="w-full text-sm border-collapse">
+                <table className="w-full text-sm border-collapse table-fixed">
                   <thead className="bg-black text-white text-[11px] uppercase tracking-wider">
                     <tr>
-                      <th className="px-2 py-3 text-center font-bold border-r border-slate-700 w-20 leading-tight">
-                        Grup<br/>Halaqah
+                      <th className="px-2 py-3 text-center font-bold border-r border-slate-700 w-[15%] leading-tight">
+                        Grup
                       </th>
-                      <th className="px-3 py-3 text-left font-bold border-r border-slate-700">
+                      <th className="px-2 py-3 text-left font-bold border-r border-slate-700 w-[65%]">
                         Guru Pengampu
                       </th>
-                      <th className="px-2 py-3 text-center font-bold w-16">
+                      <th className="px-2 py-3 text-center font-bold w-[20%]">
                         Kelas
                       </th>
                     </tr>
@@ -376,10 +376,10 @@ export default function AdminTeacherAssignments() {
                           <td className="px-2 py-2 text-center border-r border-slate-200 dark:border-slate-700 font-medium text-slate-600 dark:text-slate-400 text-xs">
                             {globalIndex}
                           </td>
-                          <td className="px-1 py-1 border-r border-slate-200 dark:border-slate-700 relative h-9">
+                          <td className="px-1 py-1 border-r border-slate-200 dark:border-slate-700 relative h-9 overflow-hidden">
                             <Select value={item.teacher_id} onValueChange={v => updateGroup(item.id, 'teacher_id', v)}>
-                              <SelectTrigger className={cn("h-full min-h-[30px] border-0 rounded-none bg-transparent shadow-none px-2 focus:ring-0", hasTeacher && "font-medium")}>
-                                <SelectValue placeholder="" />
+                              <SelectTrigger className={cn("h-full min-h-[30px] w-full border-0 rounded-none bg-transparent shadow-none px-2 focus:ring-0", hasTeacher && "font-medium")}>
+                                <div className="truncate text-left w-full"><SelectValue placeholder="" /></div>
                               </SelectTrigger>
                               <SelectContent>
                                 {teachers.map(t => (
