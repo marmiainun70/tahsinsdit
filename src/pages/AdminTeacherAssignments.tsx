@@ -288,6 +288,14 @@ export default function AdminTeacherAssignments() {
     return <div className="rounded-2xl border border-border bg-card p-6">Halaman ini hanya dapat diakses admin.</div>;
   }
 
+  if (isError) {
+    return (
+      <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-600">
+        Terjadi kesalahan saat memuat data. Mohon muat ulang halaman atau hubungi admin.
+      </div>
+    );
+  }
+
   if (isLoading) {
     return <div className="flex h-40 items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-emerald-500" /></div>;
   }
