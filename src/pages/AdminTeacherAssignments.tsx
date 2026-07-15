@@ -186,6 +186,25 @@ export default function AdminTeacherAssignments() {
     }));
   };
 
+  const duplicateGroup = (id: string) => {
+      setIsDirty(true);
+      const idx = draftGroups.findIndex(g => g.id === id);
+      if (idx >= 0) {
+        const item = draftGroups[idx];
+        const newItem = {
+          id: `temp-${Date.now()}`,
+          teacher_id: null,
+          kelas: item.kelas,
+          rombel: item.rombel,
+          _status: 'new' as const
+        };
+        const newGroups = [...draftGroups];
+        // Insert right after the duplicated item
+        newGroups.splice(idx + 1, 0, newItem);
+        setDraftGroups(newGroups);
+      }
+    };
+
   const activeGroups = draftGroups.filter(g => g._status !== 'deleted');
 
   const groupedGroups = useMemo(() => {
@@ -452,8 +471,15 @@ export default function AdminTeacherAssignments() {
                               </button>
                             )}
                           </td>
-                          <td className="px-1 py-0.5 text-center text-[10px] text-slate-700 dark:text-slate-300 font-semibold uppercase">
+                          <td className="px-1 py-0.5 text-center text-[10px] text-slate-700 dark:text-slate-300 font-semibold uppercase relative">
                             {g.kelas}{item.rombel}
+                            <button 
+                              onClick={() => duplicateGroup(item.id)} 
+                              className="absolute right-0.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-emerald-500 p-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity bg-white dark:bg-slate-800 rounded shadow-sm border border-slate-100"
+                              title="Tambah guru untuk kelas ini"
+                            >
+                              <Plus className="h-2.5 w-2.5" />
+                            </button>
                           </td>
                         </tr>
                       );
