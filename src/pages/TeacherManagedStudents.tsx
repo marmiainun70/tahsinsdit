@@ -72,6 +72,9 @@ const SummarySkeleton = () => (
   </div>
 );
 
+const DEFAULT_COL_WIDTHS = { no: 50, nama: 280, kelas: 110, status: 220 };
+type ColKey = "no" | "nama" | "kelas" | "status";
+
 export default function TeacherManagedStudents() {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
@@ -86,6 +89,35 @@ export default function TeacherManagedStudents() {
   const [requestPage, setRequestPage] = useState(1);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const isTeacher = isTeacherRole(profile?.role);
+
+  // Resizable column widths (px), persisted locally
+  const [colWidths, setColWidths] = useState<Record<ColKey, number>>(() => {
+    try {
+      const raw = localStorage.getItem("tms_col_widths_v1");
+      if (raw) return { ...DEFAULT_COL_WIDTHS, ...JSON.parse(raw) };
+    } catch {}
+    return DEFAULT_COL_WIDTHS;
+  });
+  useEffect(() => {
+    try { localStorage.setItem("tms_col_widths_v1", JSON.stringify(colWidths)); } catch {}
+  }, [colWidths]);
+  const startResize = (key: ColKey) => (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const startX = e.clientX;
+    const startW = colWidths[key];
+    const onMove = (ev: PointerEvent) => {
+      const next = Math.max(30, startW + ev.clientX - startX);
+      setColWidths(prev => ({ ...prev, [key]: next }));
+    };
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  };
+  const resetColWidths = () => setColWidths(DEFAULT_COL_WIDTHS);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setSearch(searchInput.trim()), 250);
