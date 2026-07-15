@@ -87,7 +87,7 @@ export default function AdminTeacherAssignments() {
     enabled: isAdmin,
     queryFn: async () => {
       const [studentsResult, assignmentsResult, teachersResult, classesResult] = await Promise.all([
-        supabase.from("students").select("id,nama,kelas,rombel").order("nama", { ascending: true }),
+        supabase.from("students").select("id,nama,kelas,rombel").eq("status_siswa", "aktif").order("nama", { ascending: true }),
         supabase.from("teacher_students").select("*"),
         supabase.from("profiles").select("user_id,full_name,role,status").eq("status", "approved"),
         supabase.from("teacher_classes").select("*")
