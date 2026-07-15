@@ -32,11 +32,13 @@ type DraftAssignment = {
   _status: 'unchanged' | 'new' | 'deleted';
 };
 
-type DraftStudent = {
-  id: string;
-  nama: string;
-  _status: 'unchanged' | 'updated';
-};
+  type DraftStudent = {
+    id: string;
+    nama: string;
+    kelas?: number | null;
+    rombel?: string | null;
+    _status: 'unchanged' | 'updated';
+  };
 
 export default function AdminTeacherAssignments() {
   const { profile } = useAuth();
@@ -153,7 +155,7 @@ export default function AdminTeacherAssignments() {
 
       // --- Assignments and Students remain the same ---
       setDraftAssignments(data.assignments.filter(a => a.status === 'approved' || a.status === 'pending').map(a => ({ id: a.id, teacher_id: a.teacher_id, student_id: a.student_id, _status: 'unchanged' })));
-      setDraftStudents(data.students.map(s => ({ id: s.id, nama: s.nama, _status: 'unchanged' })));
+        setDraftStudents(data.students.map(s => ({ id: s.id, nama: s.nama, kelas: s.kelas, rombel: s.rombel, _status: 'unchanged' })));
     }
   }, [data, isDirty]);
 
@@ -490,39 +492,47 @@ export default function AdminTeacherAssignments() {
         <section className="space-y-4">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Data Siswa Binaan per Guru</h2>
           <div className="flex flex-wrap gap-4 items-start pb-4">
-            {teacherColumns.map(column => (
+            {teacherColumns.map((column, idx) => (
               <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-fit max-w-full overflow-x-auto">
-                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: 320, minWidth: 0 }}>
+                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: 340, minWidth: 0 }}>
                   <colgroup>
-                    <col style={{ width: 40 }} />
-                    <col style={{ width: 280 }} />
+                    <col style={{ width: 30 }} />
+                    <col style={{ width: 230 }} />
+                    <col style={{ width: 80 }} />
                   </colgroup>
                   <thead className="bg-emerald-600 text-white text-[10px] uppercase tracking-wider">
                     <tr>
-                      <th colSpan={2} className="relative px-2 py-1.5 text-left font-bold border-b border-emerald-700 leading-tight">
+                      <th colSpan={3} className="relative px-2 py-1.5 text-left font-bold border-b border-emerald-700 leading-tight">
                         <div className="flex justify-between items-center">
-                          <span className="truncate text-[11px]">{column.full_name || "Tanpa Nama"}</span>
+                          <span className="truncate text-[11px]">{idx + 1}. {column.full_name || "Tanpa Nama"}</span>
                           <span className="text-[9px] text-emerald-100">{column.assignments.length} siswa</span>
                         </div>
                       </th>
                     </tr>
                     <tr className="bg-emerald-700">
                       <th className="px-1 py-1 text-center font-bold border-r border-emerald-600/50">No</th>
-                      <th className="px-1 py-1 text-left font-bold">Nama Siswa</th>
+                      <th className="px-1 py-1 text-left font-bold border-r border-emerald-600/50">Nama Siswa</th>
+                      <th className="px-1 py-1 text-center font-bold">Kelas</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {column.assignments.map((assign, idx) => (
+                    {column.assignments.map((assign, rowIdx) => (
                       <tr key={assign.id} className="odd:bg-slate-50 even:bg-white dark:odd:bg-slate-900 dark:even:bg-slate-800 border-b border-slate-200 dark:border-slate-700 group/row">
                         <td className="px-1 py-0.5 text-center border-r border-slate-200 dark:border-slate-700 font-medium text-slate-600 dark:text-slate-400 text-[10px]">
-                          {idx + 1}
+                          {rowIdx + 1}
                         </td>
-                        <td className="px-1 py-0.5 relative h-7 overflow-hidden">
+                        <td className="px-1 py-0.5 relative h-7 overflow-hidden border-r border-slate-200 dark:border-slate-700">
                           <Input
                             value={getStudentName(assign.student_id)}
                             onChange={e => updateStudentName(assign.student_id, e.target.value)}
                             className="h-full min-h-[24px] w-full border-0 rounded-none bg-transparent shadow-none px-1 text-xs focus:ring-0 focus-visible:ring-0"
                           />
+                        </td>
+                        <td className="px-1 py-0.5 text-center font-medium text-slate-600 dark:text-slate-400 text-[10px] relative">
+                          {(() => {
+                            const student = draftStudents.find(s => s.id === assign.student_id);
+                            return student && student.kelas ? `${student.kelas}${student.rombel || ''}` : '-';
+                          })()}
                           <button
                             onClick={() => removeAssignment(assign.id)}
                             className="absolute right-0.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500 p-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity bg-white dark:bg-slate-800 rounded shadow-sm border border-slate-100"
@@ -535,7 +545,7 @@ export default function AdminTeacherAssignments() {
                     ))}
                     
                     <tr className="bg-white dark:bg-slate-800">
-                      <td colSpan={2} className="px-1 py-0.5">
+                      <td colSpan={3} className="px-1 py-0.5">
                         <Popover open={openStudentCombo === column.user_id} onOpenChange={(open) => setOpenStudentCombo(open ? column.user_id : null)}>
                           <PopoverTrigger asChild>
                             <Button variant="ghost" className="w-full h-6 min-h-0 justify-start text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 px-1 text-[10px] rounded-none">
