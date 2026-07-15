@@ -371,31 +371,66 @@ export default function TeacherManagedStudents() {
         </div>
       ) : (
         <>
-          <div className="space-y-3">
-            {visibleRows.map(({ assignment, student }, idx) => (
-              <article key={assignment.id} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[12px] font-semibold text-muted-foreground min-w-[20px]">
-                        {(page - 1) * PAGE_SIZE + idx + 1}.
-                      </span>
-                      <h2 className="font-semibold text-foreground text-[12px]">{student.nama}</h2>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">Geser tepi kanan tiap kolom untuk mengubah lebar.</p>
+            <Button variant="outline" size="sm" onClick={resetColWidths} className="h-8 text-xs">
+              Reset kolom
+            </Button>
+          </div>
+          <div className="rounded-2xl border border-border bg-card shadow-sm overflow-x-auto">
+            <table
+              className="text-xs border-collapse"
+              style={{ tableLayout: "fixed", width: colWidths.no + colWidths.nama + colWidths.kelas + colWidths.status }}
+            >
+              <colgroup>
+                <col style={{ width: colWidths.no }} />
+                <col style={{ width: colWidths.nama }} />
+                <col style={{ width: colWidths.kelas }} />
+                <col style={{ width: colWidths.status }} />
+              </colgroup>
+              <thead className="bg-emerald-900 text-white text-[10px] uppercase tracking-wider">
+                <tr>
+                  {([
+                    { key: "no" as ColKey, label: "No", align: "text-center" },
+                    { key: "nama" as ColKey, label: "Nama Murid", align: "text-left" },
+                    { key: "kelas" as ColKey, label: "Kelas", align: "text-center" },
+                    { key: "status" as ColKey, label: "Status", align: "text-left" },
+                  ]).map(({ key, label, align }) => (
+                    <th
+                      key={key}
+                      className={`relative px-2 py-2 font-bold border-r border-emerald-800 overflow-hidden whitespace-nowrap text-ellipsis ${align}`}
+                    >
+                      {label}
+                      <span
+                        onPointerDown={startResize(key)}
+                        className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-amber-400/60 active:bg-amber-400"
+                        title="Geser untuk mengubah lebar"
+                      />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {visibleRows.map(({ assignment, student }, idx) => (
+                  <tr key={assignment.id} className="border-b border-border hover:bg-muted/40">
+                    <td className="px-2 py-2 text-center text-muted-foreground border-r border-border overflow-hidden whitespace-nowrap text-ellipsis">
+                      {(page - 1) * PAGE_SIZE + idx + 1}
+                    </td>
+                    <td className="px-2 py-2 font-semibold text-foreground border-r border-border overflow-hidden whitespace-nowrap text-ellipsis" title={student.nama}>
+                      {student.nama}
+                    </td>
+                    <td className="px-2 py-2 text-center border-r border-border overflow-hidden whitespace-nowrap text-ellipsis">
                       <Badge variant="secondary">{getStudentClassLabel(student)}</Badge>
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass[assignment.status]}`}>
+                    </td>
+                    <td className="px-2 py-2 overflow-hidden whitespace-nowrap text-ellipsis">
+                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusClass[assignment.status]}`}>
                         {statusText[assignment.status]}
                       </span>
-                    </div>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      Murid ini sudah disetujui admin untuk dibina oleh {profile?.full_name || "akun guru ini"}.
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700">
-                    Murid binaan aktif
-                  </div>
-                </div>
-              </article>
-            ))}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           <DataTablePagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
