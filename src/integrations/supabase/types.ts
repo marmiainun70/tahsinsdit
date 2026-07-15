@@ -1560,7 +1560,6 @@ export type Database = {
           user_id: string
           username: string | null
           whatsapp: string | null
-          is_read_by_admin: boolean | null
         }
         Insert: {
           created_at?: string
@@ -1574,7 +1573,6 @@ export type Database = {
           user_id: string
           username?: string | null
           whatsapp?: string | null
-          is_read_by_admin?: boolean | null
         }
         Update: {
           created_at?: string
@@ -1588,7 +1586,6 @@ export type Database = {
           user_id?: string
           username?: string | null
           whatsapp?: string | null
-          is_read_by_admin?: boolean | null
         }
         Relationships: []
       }
@@ -2352,6 +2349,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      delete_user: { Args: { target_user_id: string }; Returns: undefined }
       execute_academic_year_transition: {
         Args: {
           p_academic_year_id: string
