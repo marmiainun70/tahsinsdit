@@ -173,17 +173,13 @@ export default function AdminTeacherAssignments() {
 
   const deleteGroup = (id: string) => {
     setIsDirty(true);
-    // Don't fully delete, just clear the teacher_id and mark as 'deleted' if it's from DB, or if it's new just clear it
-    setDraftGroups(draftGroups.map(g => {
-      if (g.id === id) {
-        if (!g.id.startsWith('temp-')) {
-          return { ...g, _status: 'deleted' };
-        } else {
-          return { ...g, teacher_id: "" };
-        }
+    setDraftGroups(prev => {
+      const item = prev.find(g => g.id === id);
+      if (item?.id.startsWith('temp-')) {
+        return prev.filter(g => g.id !== id);
       }
-      return g;
-    }));
+      return prev.map(g => g.id === id ? { ...g, _status: 'deleted' } : g);
+    });
   };
 
   const duplicateGroup = (id: string) => {
@@ -461,15 +457,13 @@ export default function AdminTeacherAssignments() {
                               </SelectContent>
                             </Select>
                             
-                            {hasTeacher && (
-                              <button 
-                                onClick={() => deleteGroup(item.id)} 
-                                className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500 p-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity bg-white dark:bg-slate-800 rounded shadow-sm border border-slate-100"
-                                title="Kosongkan guru"
-                              >
-                                <X className="h-2.5 w-2.5" />
-                              </button>
-                            )}
+                            <button 
+                              onClick={() => deleteGroup(item.id)} 
+                              className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-300 hover:text-rose-500 p-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity bg-white dark:bg-slate-800 rounded shadow-sm border border-slate-100"
+                              title="Hapus baris ini"
+                            >
+                              <X className="h-2.5 w-2.5" />
+                            </button>
                           </td>
                           <td className="px-1 py-0.5 text-center text-[10px] text-slate-700 dark:text-slate-300 font-semibold uppercase relative">
                             {g.kelas}{item.rombel}
