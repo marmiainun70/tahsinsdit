@@ -386,7 +386,7 @@ export default function AdminTeacherAssignments() {
             const totalWidth = colWidths.grup + colWidths.guru + colWidths.kelas;
             return (
               <div key={g.key} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-fit max-w-full overflow-x-auto">
-                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: totalWidth }}>
+                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: totalWidth, minWidth: 0 }}>
                   <colgroup>
                     <col style={{ width: colWidths.grup }} />
                     <col style={{ width: colWidths.guru }} />
