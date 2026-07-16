@@ -58,7 +58,7 @@ export function getDayCellClass(day: CalendarDay | undefined, jenis: JenisHari |
   if (jenis === "kegiatan_sekolah" || jenis === "ujian") return "bg-blue-50 dark:bg-blue-950/30";
   if (jenis === "weekend" || day.status === "tidak_efektif") return "bg-slate-50 dark:bg-slate-800/30";
   if (day.status === "efektif") {
-    if (!day.is_efektif_pembelajaran) return "bg-teal-50/60 dark:bg-teal-950/20";
+    if (jenis !== "reguler") return "bg-teal-50/60 dark:bg-teal-950/20";
     return "bg-emerald-50/60 dark:bg-emerald-950/20";
   }
   return "";
@@ -117,7 +117,7 @@ export function DayCell({ date, calendarDay, currentMonth, isSelected, isMultiSe
       </span>
       {calendarDay && inMonth && (
         <div className="mt-1 space-y-0.5 w-full overflow-hidden">
-          {calendarDay.status === "efektif" && !calendarDay.is_efektif_pembelajaran && (
+          {calendarDay.status === "efektif" && jenis !== "reguler" && (
             <span className="text-[9px] font-medium leading-none px-1 py-0.5 rounded truncate block max-w-full bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300">
               Non-Pembelajaran
             </span>

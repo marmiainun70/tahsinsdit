@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { STATUS_CONFIG, JENIS_CONFIG } from "@/components/kalender/CalendarDayCell";
 import { X, Save, Loader2, Calendar, CalendarRange } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,7 +33,6 @@ export function SingleDayEditPanel({ selectedDate, calendarDay, onClose }: Singl
   const updateDay = useUpdateCalendarDay();
 
   const [status, setStatus] = useState<StatusHari>(calendarDay?.status ?? "efektif");
-  const [isEfektifPembelajaran, setIsEfektifPembelajaran] = useState(calendarDay?.is_efektif_pembelajaran ?? true);
   const [jenis, setJenis] = useState<JenisHari>(calendarDay?.jenis ?? "reguler");
   const [keterangan, setKeterangan] = useState(calendarDay?.keterangan ?? "");
   const [alasan, setAlasan] = useState("");
@@ -43,7 +41,7 @@ export function SingleDayEditPanel({ selectedDate, calendarDay, onClose }: Singl
     if (!user) return;
     await updateDay.mutateAsync({
       tanggal: format(selectedDate, "yyyy-MM-dd"),
-      updates: { status, jenis, keterangan: keterangan || null, is_efektif_pembelajaran: status === "efektif" ? isEfektifPembelajaran : false },
+      updates: { status, jenis, keterangan: keterangan || null },
       changedByRole: profile?.role ?? "koordinator",
       changedBy: user.id,
       alasan: alasan || undefined,
@@ -104,19 +102,6 @@ export function SingleDayEditPanel({ selectedDate, calendarDay, onClose }: Singl
         </div>
       </div>
 
-      {status === "efektif" && (
-        <div className="flex items-center justify-between rounded-lg border p-3">
-          <div className="space-y-0.5">
-            <Label className="text-xs font-medium">Efektif Pembelajaran THS & TFZ</Label>
-            <p className="text-[10px] text-muted-foreground">Jadikan hari ini sebagai acuan belajar Tahsin & Tahfizh</p>
-          </div>
-          <Switch
-            checked={isEfektifPembelajaran}
-            onCheckedChange={setIsEfektifPembelajaran}
-          />
-        </div>
-      )}
-
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">Keterangan (opsional)</Label>
         <Textarea
@@ -162,7 +147,6 @@ export function MultipleDayEditPanel({ selectedDates, onClose }: MultipleDayEdit
   const batchUpdate = useBatchUpdateCalendarDays();
 
   const [status, setStatus] = useState<StatusHari>("tidak_efektif");
-  const [isEfektifPembelajaran, setIsEfektifPembelajaran] = useState(true);
   const [jenis, setJenis] = useState<JenisHari>("kegiatan_sekolah");
   const [keterangan, setKeterangan] = useState("");
   const [alasan, setAlasan] = useState("");
@@ -171,7 +155,7 @@ export function MultipleDayEditPanel({ selectedDates, onClose }: MultipleDayEdit
     if (!user || selectedDates.length === 0) return;
     await batchUpdate.mutateAsync({
       tanggals: selectedDates.map((d) => format(d, "yyyy-MM-dd")),
-      updates: { status, jenis, keterangan: keterangan || null, is_efektif_pembelajaran: status === "efektif" ? isEfektifPembelajaran : false },
+      updates: { status, jenis, keterangan: keterangan || null },
       changedByRole: profile?.role ?? "koordinator",
       changedBy: user.id,
       alasan: alasan || undefined,
@@ -229,19 +213,6 @@ export function MultipleDayEditPanel({ selectedDates, onClose }: MultipleDayEdit
         </div>
       </div>
 
-      {status === "efektif" && (
-        <div className="flex items-center justify-between rounded-lg border p-3 border-blue-200 dark:border-blue-800">
-          <div className="space-y-0.5">
-            <Label className="text-xs font-medium">Efektif Pembelajaran THS & TFZ</Label>
-            <p className="text-[10px] text-muted-foreground">Jadikan hari ini sebagai acuan belajar Tahsin & Tahfizh</p>
-          </div>
-          <Switch
-            checked={isEfektifPembelajaran}
-            onCheckedChange={setIsEfektifPembelajaran}
-          />
-        </div>
-      )}
-
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">Keterangan</Label>
         <Input
@@ -283,7 +254,6 @@ export function DateRangeForm({ onClose }: DateRangeFormProps) {
   const [tanggalMulai, setTanggalMulai] = useState("");
   const [tanggalSelesai, setTanggalSelesai] = useState("");
   const [status, setStatus] = useState<StatusHari>("tidak_efektif");
-  const [isEfektifPembelajaran, setIsEfektifPembelajaran] = useState(true);
   const [jenis, setJenis] = useState<JenisHari>("ujian");
   const [keterangan, setKeterangan] = useState("");
 
@@ -297,7 +267,7 @@ export function DateRangeForm({ onClose }: DateRangeFormProps) {
     const tanggals = range.map((d) => format(d, "yyyy-MM-dd"));
     await batchUpdate.mutateAsync({
       tanggals,
-      updates: { status, jenis, keterangan: keterangan || null, is_efektif_pembelajaran: status === "efektif" ? isEfektifPembelajaran : false },
+      updates: { status, jenis, keterangan: keterangan || null },
       changedByRole: profile?.role ?? "koordinator",
       changedBy: user.id,
     });
@@ -361,19 +331,6 @@ export function DateRangeForm({ onClose }: DateRangeFormProps) {
           </Select>
         </div>
       </div>
-
-      {status === "efektif" && (
-        <div className="flex items-center justify-between rounded-lg border p-3 dark:border-amber-800">
-          <div className="space-y-0.5">
-            <Label className="text-xs font-medium">Efektif Pembelajaran THS & TFZ</Label>
-            <p className="text-[10px] text-muted-foreground">Jadikan hari ini sebagai acuan belajar Tahsin & Tahfizh</p>
-          </div>
-          <Switch
-            checked={isEfektifPembelajaran}
-            onCheckedChange={setIsEfektifPembelajaran}
-          />
-        </div>
-      )}
 
       <div className="space-y-1.5">
         <Label className="text-xs font-medium">Keterangan</Label>

@@ -31,7 +31,7 @@ export function CalendarSidebar({ month, days }: CalendarSidebarProps) {
     }).length;
 
     const efektifSekolah = days.filter((d) => d.status === "efektif").length;
-    const efektifPembelajaran = days.filter((d) => d.status === "efektif" && d.is_efektif_pembelajaran).length;
+    const efektifPembelajaran = days.filter((d) => d.status === "efektif" && d.jenis === "reguler").length;
     const tidakEfektif = days.filter((d) => d.status === "tidak_efektif").length;
     const menunggu = days.filter((d) => d.status === "menunggu_konfirmasi").length;
     const persentase = standar > 0 ? Math.round((efektifPembelajaran / standar) * 100) : 0;
