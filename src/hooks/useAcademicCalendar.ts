@@ -36,6 +36,7 @@ export interface CalendarDay {
   keterangan: string | null;
   source: SourceHari;
   is_override: boolean;
+  is_efektif_pembelajaran: boolean;
   last_synced_at: string | null;
   created_at: string;
   updated_at: string;
@@ -81,6 +82,7 @@ function generateDefaultDays(startDate: string, endDate: string): Omit<CalendarD
       keterangan: null,
       source: "sistem_default",
       is_override: false,
+      is_efektif_pembelajaran: !isWeekend,
       last_synced_at: null,
     };
   });
@@ -170,6 +172,7 @@ export function useCreateAcademicYear() {
                 keterangan: h.name,
                 source: "api_libur",
                 is_override: false,
+                is_efektif_pembelajaran: false,
                 last_synced_at: new Date().toISOString(),
               });
               jumlah_ditambah++;
@@ -182,6 +185,7 @@ export function useCreateAcademicYear() {
                   jenis: jenisHari,
                   keterangan: h.name,
                   source: "api_libur",
+                  is_efektif_pembelajaran: false,
                   last_synced_at: new Date().toISOString(),
                   updated_at: new Date().toISOString(),
                 })
@@ -321,7 +325,7 @@ export function useUpdateCalendarDay() {
       batchId,
     }: {
       tanggal: string;
-      updates: Partial<Pick<CalendarDay, "status" | "jenis" | "keterangan">>;
+      updates: Partial<Pick<CalendarDay, "status" | "jenis" | "keterangan" | "is_efektif_pembelajaran">>;
       changedByRole: string;
       changedBy: string;
       alasan?: string;
@@ -392,7 +396,7 @@ export function useBatchUpdateCalendarDays() {
       alasan,
     }: {
       tanggals: string[];
-      updates: Partial<Pick<CalendarDay, "status" | "jenis" | "keterangan">>;
+      updates: Partial<Pick<CalendarDay, "status" | "jenis" | "keterangan" | "is_efektif_pembelajaran">>;
       changedByRole: string;
       changedBy: string;
       alasan?: string;
@@ -546,6 +550,7 @@ export function useSyncHolidays() {
                 keterangan: h.name,
                 source: "api_libur",
                 is_override: false,
+                is_efektif_pembelajaran: false,
                 last_synced_at: new Date().toISOString(),
               });
               jumlah_ditambah++;
@@ -557,6 +562,7 @@ export function useSyncHolidays() {
                   jenis: jenisHari,
                   keterangan: h.name,
                   source: "api_libur",
+                  is_efektif_pembelajaran: false,
                   last_synced_at: new Date().toISOString(),
                   updated_at: new Date().toISOString(),
                 })

@@ -57,7 +57,10 @@ export function getDayCellClass(day: CalendarDay | undefined, jenis: JenisHari |
   if (jenis === "cuti_bersama" || jenis === "libur_semester" || jenis === "libur_akhir_tahun") return "bg-amber-50 dark:bg-amber-950/30";
   if (jenis === "kegiatan_sekolah" || jenis === "ujian") return "bg-blue-50 dark:bg-blue-950/30";
   if (jenis === "weekend" || day.status === "tidak_efektif") return "bg-slate-50 dark:bg-slate-800/30";
-  if (day.status === "efektif") return "bg-emerald-50/60 dark:bg-emerald-950/20";
+  if (day.status === "efektif") {
+    if (!day.is_efektif_pembelajaran) return "bg-teal-50/60 dark:bg-teal-950/20";
+    return "bg-emerald-50/60 dark:bg-emerald-950/20";
+  }
   return "";
 }
 
@@ -114,6 +117,11 @@ export function DayCell({ date, calendarDay, currentMonth, isSelected, isMultiSe
       </span>
       {calendarDay && inMonth && (
         <div className="mt-1 space-y-0.5 w-full overflow-hidden">
+          {calendarDay.status === "efektif" && !calendarDay.is_efektif_pembelajaran && (
+            <span className="text-[9px] font-medium leading-none px-1 py-0.5 rounded truncate block max-w-full bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300">
+              Non-Pembelajaran
+            </span>
+          )}
           {jenis && jenis !== "reguler" && jenis !== "weekend" && (
             <span
               className={cn(
@@ -146,7 +154,8 @@ export function DayCell({ date, calendarDay, currentMonth, isSelected, isMultiSe
 
 export function CalendarLegend() {
   const items = [
-    { color: "bg-emerald-500", label: "Efektif" },
+    { color: "bg-emerald-500", label: "Efektif Pembelajaran" },
+    { color: "bg-teal-400", label: "Efektif Non-Pembelajaran" },
     { color: "bg-slate-400", label: "Tidak Efektif" },
     { color: "bg-red-500", label: "Libur Nasional" },
     { color: "bg-amber-500", label: "PTS/PAS/Cuti" },

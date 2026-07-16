@@ -30,12 +30,13 @@ export function CalendarSidebar({ month, days }: CalendarSidebarProps) {
       return dow !== 0 && dow !== 6;
     }).length;
 
-    const efektif = days.filter((d) => d.status === "efektif").length;
+    const efektifSekolah = days.filter((d) => d.status === "efektif").length;
+    const efektifPembelajaran = days.filter((d) => d.status === "efektif" && d.is_efektif_pembelajaran).length;
     const tidakEfektif = days.filter((d) => d.status === "tidak_efektif").length;
     const menunggu = days.filter((d) => d.status === "menunggu_konfirmasi").length;
-    const persentase = standar > 0 ? Math.round((efektif / standar) * 100) : 0;
+    const persentase = standar > 0 ? Math.round((efektifPembelajaran / standar) * 100) : 0;
 
-    return { standar, efektif, tidakEfektif, menunggu, persentase };
+    return { standar, efektifSekolah, efektifPembelajaran, tidakEfektif, menunggu, persentase };
   }, [month, days]);
 
   const bulanLabel = format(month, "MMMM yyyy");
@@ -63,9 +64,15 @@ export function CalendarSidebar({ month, days }: CalendarSidebarProps) {
           <div className="space-y-2">
             <StatRow
               icon={<CalendarCheck2 className="w-4 h-4 text-emerald-500" />}
-              label="Hari Efektif"
-              value={`${stats.efektif} / ${stats.standar} hari`}
+              label="Efektif Sekolah"
+              value={`${stats.efektifSekolah} / ${stats.standar} hari`}
               valueClass="text-emerald-600 font-semibold"
+            />
+            <StatRow
+              icon={<CalendarCheck2 className="w-4 h-4 text-teal-500" />}
+              label="Efektif THS & TFZ"
+              value={`${stats.efektifPembelajaran} / ${stats.standar} hari`}
+              valueClass="text-teal-600 font-semibold"
             />
             <StatRow
               icon={<CalendarX2 className="w-4 h-4 text-slate-400" />}
