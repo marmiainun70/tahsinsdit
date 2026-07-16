@@ -114,17 +114,21 @@ export const useUpdateRolePermission = () => {
 };
 
 // ─── STUDENTS ────────────────────────────────────────────────────────────────
-export const useStudents = () => {
+export const useStudents = (statusSiswa: "aktif" | "alumni" | "keluar" | "pindah" | "all" = "aktif") => {
   const { user, profile } = useAuth();
 
   return useQuery({
-    queryKey: ["students", user?.id ?? "anon", profile?.role ?? "none"],
+    queryKey: ["students", statusSiswa, user?.id ?? "anon", profile?.role ?? "none"],
     queryFn: async () => {
       let query = supabase
         .from("students")
         .select("*")
         .order("kelas", { ascending: true })
         .order("nama", { ascending: true });
+
+      if (statusSiswa !== "all") {
+        query = query.eq("status_siswa", statusSiswa);
+      }
 
       const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
       if (managedStudentIds && managedStudentIds.length === 0) return [];
