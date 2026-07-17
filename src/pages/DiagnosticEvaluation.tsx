@@ -313,7 +313,7 @@ export default function DiagnosticEvaluation() {
           evaluasi_tajwid(checklist),
           evaluasi_waqaf(error_count),
           evaluasi_tahfizh(salah_sambung_ayat_count),
-          evaluasi_rekomendasi(fokus_pembinaan, recommended_level_id, manual_iqra, manual_halaman),
+          evaluasi_rekomendasi(fokus_pembinaan, recommended_level_id, manual_iqra, manual_halaman, master_level_kemampuan(kode_level, nama_level)),
           master_level_kemampuan!evaluasi_awal_semester_selected_level_id_fkey(kode_level, nama_level)
         `)
         .eq("student_id", studentId)
@@ -795,9 +795,12 @@ export default function DiagnosticEvaluation() {
                     if (isEvaluated) {
                       const manualIqra = evaluation.evaluasi_rekomendasi?.manual_iqra;
                       const manualHalaman = evaluation.evaluasi_rekomendasi?.manual_halaman;
+                      const recommendedKodeLevel = evaluation.evaluasi_rekomendasi?.master_level_kemampuan?.kode_level;
                       
                       let wizLevel = "";
-                      if (evaluation.master_level_kemampuan?.kode_level) {
+                      if (recommendedKodeLevel) {
+                        wizLevel = mapKodeLevelToWizardLevel(recommendedKodeLevel) || "";
+                      } else if (evaluation.master_level_kemampuan?.kode_level) {
                         wizLevel = mapKodeLevelToWizardLevel(evaluation.master_level_kemampuan.kode_level) || "";
                       }
                       

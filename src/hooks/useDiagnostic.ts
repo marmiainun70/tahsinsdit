@@ -27,10 +27,10 @@ export const useDiagnosticStudents = ({
   return useQuery({
     queryKey: ["diagnostic-students", { page, pageSize, search, kelas, rombel, statusEvaluasi, userId: user?.id, role: profile?.role }],
     queryFn: async () => {
-      let selectStr = "*, evaluasi_awal_semester(final_predicate, evaluator_id, master_level_kemampuan(nama_level, kode_level), evaluasi_kelancaran(score), evaluasi_rekomendasi(manual_iqra, manual_halaman))";
+      let selectStr = "*, evaluasi_awal_semester(final_predicate, evaluator_id, master_level_kemampuan(nama_level, kode_level), evaluasi_kelancaran(score), evaluasi_rekomendasi(manual_iqra, manual_halaman, master_level_kemampuan(kode_level, nama_level)))";
       
       if (statusEvaluasi === "sudah") {
-        selectStr = "*, evaluasi_awal_semester!inner(final_predicate, evaluator_id, master_level_kemampuan(nama_level, kode_level), evaluasi_kelancaran(score), evaluasi_rekomendasi(manual_iqra, manual_halaman))";
+        selectStr = "*, evaluasi_awal_semester!inner(final_predicate, evaluator_id, master_level_kemampuan(nama_level, kode_level), evaluasi_kelancaran(score), evaluasi_rekomendasi(manual_iqra, manual_halaman, master_level_kemampuan(kode_level, nama_level)))";
       }
 
       let query = supabase
@@ -234,7 +234,7 @@ export const useDiagnosticDetail = (studentId: string | undefined) => {
           evaluasi_tajwid(checklist),
           evaluasi_waqaf(error_count),
           evaluasi_tahfizh(salah_sambung_ayat_count),
-          evaluasi_rekomendasi(fokus_pembinaan, recommended_level_id),
+          evaluasi_rekomendasi(fokus_pembinaan, recommended_level_id, master_level_kemampuan(kode_level, nama_level)),
           master_level_kemampuan(kode_level, nama_level)
         `)
         .eq("student_id", studentId)
