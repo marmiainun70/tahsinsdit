@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, FileSignature, Loader2, UserPlus, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Minus, Plus } from "lucide-react";
+import { Search, FileSignature, Loader2, UserPlus, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Minus, Plus, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -432,6 +432,49 @@ export default function DiagnosticEvaluation() {
     }
   }, [wizard, step, manualIqra, manualHalaman, selectedStudent, evalOpen, user?.id]);
 
+  const handleExportUnEvaluatedMD = async () => {
+    try {
+      // Get all evaluated student IDs
+      const { data: evaluated } = await supabase.from("evaluasi_awal_semester").select("student_id");
+      const evaluatedIds = evaluated ? evaluated.map(e => e.student_id) : [];
+
+      // Query active students
+      let q = supabase.from("students").select("nama, kelas, rombel").eq("status_siswa", "aktif");
+      if (evaluatedIds.length > 0) {
+        q = q.not("id", "in", `(${evaluatedIds.join(",")})`);
+      }
+      
+      const { data: notEvaluated, error } = await q.order("kelas").order("rombel").order("nama");
+      if (error) throw error;
+      
+      if (!notEvaluated || notEvaluated.length === 0) {
+        toast({ title: "Info", description: "Tidak ada siswa yang belum dievaluasi." });
+        return;
+      }
+
+      let md = "# Daftar Siswa Aktif Belum Dievaluasi Diagnostik\n\n";
+      md += "| No | Nama Siswa | Kelas | Rombel |\n";
+      md += "|---|---|---|---|\n";
+      notEvaluated.forEach((s, i) => {
+        md += `| ${i+1} | ${s.nama} | ${s.kelas} | ${s.rombel} |\n`;
+      });
+
+      const blob = new Blob([md], { type: "text/markdown" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "Siswa_Belum_Evaluasi.md";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({ title: "Berhasil", description: `Berhasil mengunduh rekap ${notEvaluated.length} siswa.` });
+    } catch (e: any) {
+      toast({ title: "Gagal Mengunduh", description: e.message, variant: "destructive" });
+    }
+  };
+
   const engineOutput: EvaluationOutput | null = useMemo(() => {
     if (!selectedStudent) return null;
     
@@ -647,14 +690,23 @@ export default function DiagnosticEvaluation() {
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Evaluasi Diagnostik</h1>
           <p className="text-muted-foreground">Lakukan penilaian awal untuk pemetaan kelas siswa.</p>
         </div>
-        
-        <Dialog open={addOpen} onOpenChange={setAddOpen}>
-          <DialogTrigger asChild>
-            <Button className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Tambah Siswa
-            </Button>
-          </DialogTrigger>
+        <div className="flex flex-col md:flex-row gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleExportUnEvaluatedMD}
+            className="w-full md:w-auto"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Unduh Rekap Belum Evaluasi (MD)
+          </Button>
+
+          <Dialog open={addOpen} onOpenChange={setAddOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Tambah Siswa
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Tambah Siswa Baru</DialogTitle>
@@ -710,6 +762,7 @@ export default function DiagnosticEvaluation() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <Card>
