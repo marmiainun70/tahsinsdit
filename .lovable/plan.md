@@ -1,49 +1,58 @@
-# Rencana: Landing Page "Islamic Modern International School"
 
-## Ringkasan
-Membangun halaman depan publik baru yang elegan, islami, dan profesional, lengkap dengan Hero, Quick Access, Keunggulan, Alur Kerja, Statistik, Sistem Terkait, dan Footer. Tidak menyentuh database, login, sistem nilai, rapor, sertifikat, QR, PDF, atau halaman/fitur lain yang sudah berjalan.
+# Rencana Optimasi Performa (sebelum upgrade instance)
 
-## Strategi Routing (aman, tidak merusak yang ada)
-- Tambah route publik baru: `/landing` (bebas akses, tanpa Layout/Sidebar).
-- Ubah perilaku root `/` HANYA untuk user yang BELUM login: alih-alih langsung ke `/login`, mereka diarahkan ke `/landing`.
-- User yang SUDAH login: `/` tetap menampilkan Dashboard seperti sekarang (tidak berubah).
-- Tombol "Masuk Sistem" / "Masuk ke Dashboard" di landing → `/login` (sudah ada). Jika sudah login, otomatis ke Dashboard.
-- Semua route lain (`/class/...`, `/laporan-bulanan`, `/pengaturan-notifikasi`, dst.) tidak diubah sama sekali.
+Berdasarkan slow query log, ~90% beban compute berasal dari 3 hotspot: `monthly_reports + students` (list & rekap), `students` (paginated tanpa filter), dan sesi CBT (`asesmen_jawaban` upsert + `asesmen_session` update). Semua bisa diringankan tanpa mengubah fitur.
 
-## File yang Dibuat
-1. `src/pages/Landing.tsx` — Halaman landing utama (publik, tanpa sidebar).
-2. `src/components/landing/Navbar.tsx` — Header: logo + nama + subjudul + menu anchor (Beranda, Fitur, Alur Kerja, Rekap, Sistem Terkait) + tombol "Masuk Sistem".
-3. `src/components/landing/Hero.tsx` — Hero gradient emerald→navy, badge, judul besar, sub-judul, 2 CTA, dashboard preview mock di sisi kanan (card statistik dummy + ikon Al-Qur'an/guru/siswa/sertifikat/QR), ornamen geometric islami SVG halus di background.
-4. `src/components/landing/QuickAccess.tsx` — 4 kartu: Ujian Tahsin, Ujian Tahfizh, Rapor & Sertifikat, Rekap & Statistik (icon, hover lift, tombol kecil "Buka" → link ke `/login`).
-5. `src/components/landing/Features.tsx` — 6 keunggulan, grid 3 kolom desktop / 1 kolom mobile.
-6. `src/components/landing/Workflow.tsx` — Timeline 6 langkah alur kerja (Pilih siswa → … → QR validasi), step card modern dengan connector.
-7. `src/components/landing/Stats.tsx` — Statistik ringkas: Siswa Aktif, Rombel, Ujian Selesai, Sertifikat Terbit, Rapor Terunduh. Menampilkan angka dummy aman (tidak melakukan query baru ke DB di scope ini agar tidak mempengaruhi performa/auth publik).
-8. `src/components/landing/RelatedSystemSection.tsx` — Section "Sistem Terkait" memakai konstanta `RELATED_SYSTEM` yang sudah ada di `src/components/RelatedSystemCard.tsx` (tahsin ↔ tahfizh) dengan `window.location.href` (eksternal, bukan routing internal).
-9. `src/components/landing/Footer.tsx` — Footer elegan: logo, nama, sub-sistem, deskripsi, copyright tahun berjalan.
-10. `src/components/landing/IslamicPattern.tsx` — SVG ornamen geometric (bintang 8/girih) sebagai background halus, opacity rendah.
+## Target hotspot & aksi
 
-## File yang Diubah (minimal)
-- `src/App.tsx` — Tambah `import Landing` dan route `/landing` (publik). Ubah redirect: jika `!session && pathname === "/"` → `<Navigate to="/landing" />`. Tidak mengubah route lain.
-- `index.html` — Update `<title>` & meta description agar SEO landing rapi (judul & deskripsi sekolah). Tidak mengubah skrip/PWA.
+### 1. `monthly_reports` list dengan embed `students` (≈370 ribu ms total)
+- **Masalah:** setiap render `RecapReport`, `MonthlyReport`, `StudentProgress` mengambil embed `students(nama,kelas,rombel,level)` via LEFT JOIN LATERAL. Sering di-refetch oleh React Query (`refetchOnWindowFocus`, `refetchOnMount`).
+- **Aksi kode:**
+  - Set default React Query di `src/main.tsx` / `App.tsx`: `staleTime: 5 * 60_000`, `refetchOnWindowFocus: false`, `refetchOnReconnect: false`.
+  - Di `useMonthlyReports.ts` dan `useMultiMonthReports.ts`: hentikan embed `students(...)` jika snapshot (`student_name_snapshot`, `kelas_snapshot`, dst.) sudah tersedia — pakai snapshot langsung. Jatuhkan embed hanya untuk baris yang benar-benar tidak punya snapshot.
+  - Batasi `.range()` per halaman UI (jangan tarik semua bulan sekaligus di dashboard).
+- **Aksi DB (migration):**
+  - `CREATE INDEX idx_monthly_reports_year_month_id ON public.monthly_reports (year DESC, month DESC, id);`
+  - `CREATE INDEX idx_monthly_reports_student_period ON public.monthly_reports (student_id, year, month);`
 
-## Desain Visual
-- Palet: emerald `#0E5E4E` / `#0A7C66`, navy `#0B1F3A`, putih `#FFFFFF`, gold lembut `#C9A24C`/`#E6CB87`. Diturunkan dari token CSS yang ada (`--primary`, `--gold`) bila memungkinkan; sisanya pakai class Tailwind langsung khusus landing.
-- Tipografi: pakai `Plus Jakarta Sans` (sudah ada) untuk body, `Amiri` (sudah ada) untuk aksen arabic kecil di hero.
-- Gradient hero: `from-[#0B1F3A] via-[#0E5E4E] to-[#0A7C66]` + overlay SVG geometric pattern (opacity 8–12%).
-- Card: rounded-2xl, shadow lembut, border tipis, hover lift + ring gold halus.
-- Animasi: `framer-motion` (sudah ada) untuk fade/slide masuk section, hover micro-interaction. Tidak memakai library baru.
-- Responsif: grid 1/2/3 kolom breakpoint `sm/md/lg`. Navbar collapse jadi menu hamburger di mobile.
+### 2. `students` paginated (≈365 ribu ms total, 13 ribu calls)
+- **Masalah:** hampir setiap halaman memanggil `useStudents()` yang menarik seluruh baris; `usePaginatedStudents` dipakai lagi di banyak layar dengan `queryKey` berbeda sehingga tidak di-share.
+- **Aksi kode:**
+  - Ganti `useStudents()` konsumen yang hanya butuh nama/kelas jadi `usePaginatedStudents` atau selector ringan (`select: id,nama,kelas,rombel,level`).
+  - Satukan `queryKey` daftar siswa yang identik (hapus parameter yang tidak dipakai) agar cache dipakai bersama.
+  - Terapkan `staleTime` 5 menit khusus siswa (data jarang berubah).
+- **Aksi DB:**
+  - `CREATE INDEX idx_students_kelas_nama ON public.students (kelas, nama);` (menyesuaikan ORDER BY).
+  - `CREATE INDEX idx_students_status_kelas ON public.students (status_siswa, kelas);`
 
-## Hal yang TIDAK Disentuh
-- Database/Supabase, schema, migrations, RLS, policies.
-- `AuthContext`, `Login.tsx`, `Dashboard.tsx`, dan semua halaman fitur.
-- Rumus nilai, PDF, sertifikat, QR, rekap, monthly report, attendance, notifikasi, broadcast.
-- `Layout.tsx`, sidebar, `NotificationBell`, `PWAInstallPrompt`, service worker.
-- `src/index.css` token global (perubahan warna landing dilakukan lokal via class Tailwind agar halaman lain tidak terpengaruh).
+### 3. Sesi CBT: `asesmen_jawaban` upsert & `asesmen_session.last_question` (≈330 ribu ms)
+- **Masalah:** setiap klik jawaban / next question → 1 network call. Volume sangat tinggi.
+- **Aksi kode di `useCBT.ts` / `CBTRoom.tsx`:**
+  - Debounce simpan jawaban 400–800 ms (simpan hanya jawaban terakhir per soal).
+  - Debounce update `last_question` (misal 1 detik atau saat pindah soal saja, bukan setiap render).
+  - Batch multiple jawaban dalam satu upsert jika tersedia (kumpulkan queue lalu flush).
+- **Aksi DB:** indeks sudah cukup (PK composite). Tidak perlu tambahan.
 
-## QA Sebelum Selesai
-- Cek `/landing` tampil publik tanpa redirect ke login.
-- Cek `/` tetap mengarah ke Dashboard untuk user login, dan ke `/landing` untuk yang belum login.
-- Cek tombol "Masuk Sistem" → `/login`; tombol "Sistem Terkait" → URL eksternal (full reload).
-- Cek responsif desktop / tablet / mobile.
-- Tidak ada error TypeScript / import icon `lucide-react`.
+### 4. `role_permissions` (3.5 ribu calls, 36 detik total)
+- **Aksi kode:** cache di React Query dengan `staleTime: Infinity` (invalidate manual saat admin menyimpan perubahan). Saat ini dipanggil ulang di banyak layar.
+
+### 5. `exam_schedules` & `attendance`
+- **Aksi DB:**
+  - `CREATE INDEX idx_exam_schedules_tanggal_waktu ON public.exam_schedules (tanggal, waktu_mulai);`
+  - `CREATE INDEX idx_attendance_year_month ON public.attendance (year DESC, month DESC);`
+  - `CREATE INDEX idx_attendance_student_period ON public.attendance (student_id, year, month);`
+
+## Urutan eksekusi
+1. Tambah semua indeks di atas dalam satu migration.
+2. Set React Query defaults global + turunkan `refetchOnWindowFocus`.
+3. Refactor `useMonthlyReports` & konsumen `useStudents` supaya minimal payload dan pakai snapshot.
+4. Debounce & batching di CBT (`useCBT`).
+5. Verifikasi dengan slow_queries lagi setelah 1–2 hari pemakaian nyata.
+
+## Trade-off (bahasa umum)
+- Indeks membuat baca lebih cepat, tulis sedikit lebih lambat, dan pakai storage ekstra — untuk pola pemakaian Anda dampaknya positif jelas.
+- Menurunkan `refetchOnWindowFocus` berarti data tidak auto-refresh saat pindah tab; user tetap bisa refresh manual. Hemat sangat banyak call.
+- Debounce CBT: jawaban tersimpan ~0.5 detik setelah klik terakhir, bukan instan. Aman selama ada flush saat pindah soal / submit.
+
+## Ekspektasi hasil
+Perkiraan penurunan beban compute 40–60% tanpa upgrade instance. Jika masih kurang setelah verifikasi, baru pertimbangkan upgrade.

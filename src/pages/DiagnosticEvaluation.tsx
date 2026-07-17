@@ -624,9 +624,9 @@ export default function DiagnosticEvaluation() {
 
   let effectiveLevelForIbp = wizard.targetLevel;
   if (manualIqra) {
-    effectiveLevelForIbp = manualIqra.toLowerCase().includes("iqra") ? manualIqra : `Iqra ${manualIqra}`;
+    effectiveLevelForIbp = (manualIqra.toLowerCase().includes("iqra") ? manualIqra : `Iqra ${manualIqra}`) as typeof effectiveLevelForIbp;
   } else if (engineOutput?.recommendedKodeLevel) {
-    effectiveLevelForIbp = engineOutput.recommendedKodeLevel;
+    effectiveLevelForIbp = engineOutput.recommendedKodeLevel as typeof effectiveLevelForIbp;
   }
 
   const levelPoin = getLevelPoin(effectiveLevelForIbp);

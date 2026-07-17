@@ -91,6 +91,9 @@ export const useRolePermissions = () => {
       if (error) throw error;
       return data as any[];
     },
+    // Role permissions jarang berubah; cache selama sesi untuk menghemat compute.
+    staleTime: Infinity,
+    gcTime: Infinity,
   });
 };
 
