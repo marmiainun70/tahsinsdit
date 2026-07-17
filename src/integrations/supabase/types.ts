@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_efektif_pembelajaran: boolean
           is_override: boolean
           jenis: string
           keterangan: string | null
@@ -30,6 +31,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_efektif_pembelajaran?: boolean
           is_override?: boolean
           jenis: string
           keterangan?: string | null
@@ -42,6 +44,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_efektif_pembelajaran?: boolean
           is_override?: boolean
           jenis?: string
           keterangan?: string | null
@@ -760,25 +763,25 @@ export type Database = {
           evaluasi_id: string
           fokus_pembinaan: string[]
           id: string
-          recommended_level_id: string | null
-          manual_iqra: string | null
           manual_halaman: string | null
+          manual_iqra: string | null
+          recommended_level_id: string | null
         }
         Insert: {
           evaluasi_id: string
           fokus_pembinaan?: string[]
           id?: string
-          recommended_level_id?: string | null
-          manual_iqra?: string | null
           manual_halaman?: string | null
+          manual_iqra?: string | null
+          recommended_level_id?: string | null
         }
         Update: {
           evaluasi_id?: string
           fokus_pembinaan?: string[]
           id?: string
-          recommended_level_id?: string | null
-          manual_iqra?: string | null
           manual_halaman?: string | null
+          manual_iqra?: string | null
+          recommended_level_id?: string | null
         }
         Relationships: [
           {
