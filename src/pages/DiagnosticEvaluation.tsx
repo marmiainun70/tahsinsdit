@@ -621,7 +621,14 @@ export default function DiagnosticEvaluation() {
     return "Tidak siap membaca saat mendapat giliran";
   };
 
-  const levelPoin = getLevelPoin(wizard.targetLevel);
+  let effectiveLevelForIbp = wizard.targetLevel;
+  if (manualIqra) {
+    effectiveLevelForIbp = manualIqra.toLowerCase().includes("iqra") ? manualIqra : `Iqra ${manualIqra}`;
+  } else if (engineOutput?.recommendedKodeLevel) {
+    effectiveLevelForIbp = engineOutput.recommendedKodeLevel;
+  }
+
+  const levelPoin = getLevelPoin(effectiveLevelForIbp);
   // Calculate average fluency if Tahfizh, otherwise use core fluency
   const totalSoal = wizard.targetLevel.includes("Tahfizh") ? Math.max(1, wizard.core.bahan_bacaan_tahfizh_soal.length) : 1;
   const avgFluency = wizard.targetLevel.includes("Tahfizh") 
@@ -1604,7 +1611,7 @@ export default function DiagnosticEvaluation() {
                     <div className="space-y-4">
                       <div className="flex justify-between items-center p-3 bg-white dark:bg-slate-950 rounded-lg border">
                         <div>
-                          <p className="font-semibold text-sm">Poin Level ({wizard.targetLevel})</p>
+                          <p className="font-semibold text-sm">Poin Level ({effectiveLevelForIbp})</p>
                         </div>
                         <div className="font-bold text-lg">{levelPoin}</div>
                       </div>
