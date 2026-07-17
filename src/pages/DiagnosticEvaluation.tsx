@@ -223,7 +223,7 @@ const mapWizardLevelToKodeLevel = (level: string): string => {
 };
 
 export default function DiagnosticEvaluation() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const profileMap = useProfileMap();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -691,14 +691,16 @@ export default function DiagnosticEvaluation() {
           <p className="text-muted-foreground">Lakukan penilaian awal untuk pemetaan kelas siswa.</p>
         </div>
         <div className="flex flex-col md:flex-row gap-2">
-          <Button 
-            variant="outline" 
-            onClick={handleExportUnEvaluatedMD}
-            className="w-full md:w-auto"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Unduh Rekap Belum Evaluasi (MD)
-          </Button>
+          {profile?.role === "admin" && (
+            <Button 
+              variant="outline" 
+              onClick={handleExportUnEvaluatedMD}
+              className="w-full md:w-auto"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Unduh Rekap Belum Evaluasi (MD)
+            </Button>
+          )}
 
           <Dialog open={addOpen} onOpenChange={setAddOpen}>
             <DialogTrigger asChild>
