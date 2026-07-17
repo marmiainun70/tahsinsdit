@@ -43,7 +43,19 @@ import DiagnosticEvaluation from "@/pages/DiagnosticEvaluation";
 
 import NotFound from "@/pages/NotFound";
 import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotification";
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Kurangi beban compute: hindari refetch berulang saat pindah tab / reconnect
+      // dan anggap data segar selama 5 menit kecuali di-invalidate manual.
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
+    },
+  },
+});
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { session, profile, loading, accountStatus } = useAuth();
