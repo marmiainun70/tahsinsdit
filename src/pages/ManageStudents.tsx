@@ -567,8 +567,8 @@ export default function ManageStudents() {
                 <option value="semua">Semua Status</option>
                 <option value="aktif">Aktif</option>
                 <option value="alumni">Alumni</option>
-                <option value="mutasi">Mutasi</option>
-                <option value="nonaktif">Nonaktif</option>
+                <option value="pindah">Pindah (Mutasi)</option>
+                <option value="keluar">Keluar (Nonaktif)</option>
               </select>
             </div>
 
@@ -991,8 +991,8 @@ export default function ManageStudents() {
                   >
                     <option value="aktif">Aktif</option>
                     <option value="alumni">Alumni</option>
-                    <option value="mutasi">Mutasi</option>
-                    <option value="nonaktif">Nonaktif</option>
+                    <option value="pindah">Pindah (Mutasi)</option>
+                    <option value="keluar">Keluar (Nonaktif)</option>
                   </select>
                 </div>
               </div>
