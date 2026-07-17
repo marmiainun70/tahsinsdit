@@ -229,6 +229,7 @@ export default function DiagnosticEvaluation() {
   const [search, setSearch] = useState("");
   const [kelas, setKelas] = useState("all");
   const [rombel, setRombel] = useState("all");
+  const [statusEvaluasi, setStatusEvaluasi] = useState("all");
   const [customPendamping, setCustomPendamping] = useState("");
   const [localMotivasi, setLocalMotivasi] = useState("");
 
@@ -272,6 +273,7 @@ export default function DiagnosticEvaluation() {
     search,
     kelas,
     rombel,
+    statusEvaluasi,
   });
 
   const students = diagnosticData?.students || [];
@@ -742,6 +744,16 @@ export default function DiagnosticEvaluation() {
                 {['A', 'B', 'C', 'D', 'E'].map((r) => (
                   <SelectItem key={r} value={r}>Rombel {r}</SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+            <Select value={statusEvaluasi} onValueChange={setStatusEvaluasi}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Status Evaluasi" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Status</SelectItem>
+                <SelectItem value="sudah">Sudah Dievaluasi</SelectItem>
+                <SelectItem value="belum">Belum Dievaluasi</SelectItem>
               </SelectContent>
             </Select>
           </div>

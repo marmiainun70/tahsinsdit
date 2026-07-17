@@ -12,24 +12,38 @@ export const useDiagnosticStudents = ({
   search,
   kelas,
   rombel,
+  statusEvaluasi,
 }: {
   page: number;
   pageSize: number;
   search: string;
   kelas: string;
   rombel: string;
+  statusEvaluasi?: string;
 }) => {
   const { user, profile } = useAuth();
   const { data: permissions } = useRolePermissions();
 
   return useQuery({
-    queryKey: ["diagnostic-students", { page, pageSize, search, kelas, rombel, userId: user?.id, role: profile?.role }],
+    queryKey: ["diagnostic-students", { page, pageSize, search, kelas, rombel, statusEvaluasi, userId: user?.id, role: profile?.role }],
     queryFn: async () => {
+      let selectStr = "*, evaluasi_awal_semester(final_predicate, evaluator_id, master_level_kemampuan(nama_level, kode_level), evaluasi_kelancaran(score), evaluasi_rekomendasi(manual_iqra, manual_halaman))";
+      
+      if (statusEvaluasi === "sudah") {
+        selectStr = "*, evaluasi_awal_semester!inner(final_predicate, evaluator_id, master_level_kemampuan(nama_level, kode_level), evaluasi_kelancaran(score), evaluasi_rekomendasi(manual_iqra, manual_halaman))";
+      }
+
       let query = supabase
         .from("students")
-        .select("*, evaluasi_awal_semester(final_predicate, evaluator_id, master_level_kemampuan(nama_level, kode_level), evaluasi_kelancaran(score), evaluasi_rekomendasi(manual_iqra, manual_halaman))", { count: "exact" });
+        .select(selectStr, { count: "exact" });
 
-
+      if (statusEvaluasi === "belum") {
+        const { data: evaluated } = await supabase.from("evaluasi_awal_semester").select("student_id");
+        if (evaluated && evaluated.length > 0) {
+          const evaluatedIds = evaluated.map(e => e.student_id);
+          query = query.not("id", "in", `(${evaluatedIds.join(",")})`);
+        }
+      }
 
       if (search.trim()) {
         const searchTerm = `%${search.trim()}%`;
