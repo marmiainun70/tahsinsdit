@@ -285,6 +285,8 @@ export default function DiagnosticEvaluation() {
   const [step, setStep] = useState(1);
   const [wizard, setWizard] = useState<WizardState>(initialWizardState);
   const [isVerified, setIsVerified] = useState(false);
+  const [manualIqra, setManualIqra] = useState("");
+  const [manualHalaman, setManualHalaman] = useState("");
 
   useEffect(() => {
     setLocalMotivasi(wizard.profil.motivasi || "");
@@ -309,7 +311,7 @@ export default function DiagnosticEvaluation() {
           evaluasi_tajwid(checklist),
           evaluasi_waqaf(error_count),
           evaluasi_tahfizh(salah_sambung_ayat_count),
-          evaluasi_rekomendasi(fokus_pembinaan, recommended_level_id),
+          evaluasi_rekomendasi(fokus_pembinaan, recommended_level_id, manual_iqra, manual_halaman),
           master_level_kemampuan!evaluasi_awal_semester_selected_level_id_fkey(kode_level, nama_level)
         `)
         .eq("student_id", studentId)
@@ -376,9 +378,15 @@ export default function DiagnosticEvaluation() {
       };
       setWizard(newWizard);
       setStep(1);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rekomendasi = (data.evaluasi_rekomendasi as any) || {};
+      setManualIqra(rekomendasi.manual_iqra || "");
+      setManualHalaman(rekomendasi.manual_halaman || "");
     } else {
       setWizard(initialWizardState);
       setStep(1);
+      setManualIqra("");
+      setManualHalaman("");
     }
     setIsVerified(false);
     setEvalOpen(true);
@@ -395,15 +403,21 @@ export default function DiagnosticEvaluation() {
         setWizard(parsed.wizard);
         setStep(parsed.step || 1);
         setLocalMotivasi(parsed.wizard?.profil?.motivasi || "");
+        setManualIqra(parsed.manualIqra || "");
+        setManualHalaman(parsed.manualHalaman || "");
       } catch (e) {
         setWizard(initialWizardState);
         setStep(1);
         setLocalMotivasi("");
+        setManualIqra("");
+        setManualHalaman("");
       }
     } else {
       setWizard(initialWizardState);
       setStep(1);
       setLocalMotivasi("");
+      setManualIqra("");
+      setManualHalaman("");
     }
     setIsVerified(false);
     setEvalOpen(true);
@@ -412,9 +426,9 @@ export default function DiagnosticEvaluation() {
   useEffect(() => {
     if (selectedStudent && evalOpen) {
       const key = `diagnostic_wizard_draft_${user?.id || "anonymous"}_${selectedStudent.id}`;
-      localStorage.setItem(key, JSON.stringify({ wizard, step }));
+      localStorage.setItem(key, JSON.stringify({ wizard, step, manualIqra, manualHalaman }));
     }
-  }, [wizard, step, selectedStudent, evalOpen, user?.id]);
+  }, [wizard, step, manualIqra, manualHalaman, selectedStudent, evalOpen, user?.id]);
 
   const engineOutput: EvaluationOutput | null = useMemo(() => {
     if (!selectedStudent) return null;
@@ -541,6 +555,8 @@ export default function DiagnosticEvaluation() {
       waqaf_error_count: waqafError,
       salah_sambung_ayat_count: sambungAyatError,
       fokus_pembinaan: engineOutput.fokusPembinaan,
+      manual_iqra: manualIqra,
+      manual_halaman: manualHalaman,
     };
 
     // We can't map `recommended_level_id` exactly without querying master_level_kemampuan,
@@ -1518,6 +1534,32 @@ export default function DiagnosticEvaluation() {
                       <p className="text-sm md:text-base text-muted-foreground mt-4 leading-relaxed">
                         Berdasarkan kalkulasi otomatis dari profil, kelancaran, dan tajwid, siswa ini sangat direkomendasikan untuk masuk ke program <strong>{engineOutput.recommendedProgram}</strong> pada level <strong>{engineOutput.recommendedKodeLevel}</strong>.
                       </p>
+                      
+                      {engineOutput.recommendedKodeLevel.includes("Iqra") && (
+                        <div className="mt-6 pt-6 border-t space-y-4">
+                          <h4 className="font-medium text-sm">Penyesuaian Manual Guru (Opsional)</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="manual_iqra">Iqra</Label>
+                              <Input
+                                id="manual_iqra"
+                                placeholder="Contoh: Iqra 2"
+                                value={manualIqra}
+                                onChange={(e) => setManualIqra(e.target.value)}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="manual_halaman">Halaman</Label>
+                              <Input
+                                id="manual_halaman"
+                                placeholder="Contoh: Hal 15"
+                                value={manualHalaman}
+                                onChange={(e) => setManualHalaman(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -1744,6 +1786,16 @@ export default function DiagnosticEvaluation() {
                       <span className="text-sm text-muted-foreground">-</span>
                     )}
                   </div>
+                  {(previewData.evaluasi_rekomendasi?.manual_iqra || previewData.evaluasi_rekomendasi?.manual_halaman) && (
+                    <div className="mt-3 pt-3 border-t">
+                      <span className="text-muted-foreground block text-xs mb-1">Penyesuaian Manual Guru:</span>
+                      <div className="text-sm font-medium">
+                        {previewData.evaluasi_rekomendasi.manual_iqra && <span>Iqra: {previewData.evaluasi_rekomendasi.manual_iqra}</span>}
+                        {previewData.evaluasi_rekomendasi.manual_iqra && previewData.evaluasi_rekomendasi.manual_halaman && <span className="mx-2">•</span>}
+                        {previewData.evaluasi_rekomendasi.manual_halaman && <span>Halaman: {previewData.evaluasi_rekomendasi.manual_halaman}</span>}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (

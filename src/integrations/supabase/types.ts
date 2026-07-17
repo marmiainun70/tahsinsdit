@@ -761,18 +761,24 @@ export type Database = {
           fokus_pembinaan: string[]
           id: string
           recommended_level_id: string | null
+          manual_iqra: string | null
+          manual_halaman: string | null
         }
         Insert: {
           evaluasi_id: string
           fokus_pembinaan?: string[]
           id?: string
           recommended_level_id?: string | null
+          manual_iqra?: string | null
+          manual_halaman?: string | null
         }
         Update: {
           evaluasi_id?: string
           fokus_pembinaan?: string[]
           id?: string
           recommended_level_id?: string | null
+          manual_iqra?: string | null
+          manual_halaman?: string | null
         }
         Relationships: [
           {

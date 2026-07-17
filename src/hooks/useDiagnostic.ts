@@ -101,6 +101,8 @@ export type FullDiagnosticData = {
   fokus_pembinaan: string[];
   recommended_level_id?: string;
   selectedKodeLevel?: string;
+  manual_iqra?: string;
+  manual_halaman?: string;
 };
 
 export const useSubmitDiagnosticWizard = () => {
@@ -161,7 +163,13 @@ export const useSubmitDiagnosticWizard = () => {
         supabase.from("evaluasi_tajwid").insert({ evaluasi_id, checklist: data.checklist_tajwid } as never),
         supabase.from("evaluasi_waqaf").insert({ evaluasi_id, error_count: data.waqaf_error_count } as never),
         supabase.from("evaluasi_tahfizh").insert({ evaluasi_id, salah_sambung_ayat_count: data.salah_sambung_ayat_count } as never),
-        supabase.from("evaluasi_rekomendasi").insert({ evaluasi_id, fokus_pembinaan: data.fokus_pembinaan, recommended_level_id: final_selected_level_id } as never)
+        supabase.from("evaluasi_rekomendasi").insert({ 
+          evaluasi_id, 
+          fokus_pembinaan: data.fokus_pembinaan, 
+          recommended_level_id: final_selected_level_id,
+          manual_iqra: data.manual_iqra,
+          manual_halaman: data.manual_halaman
+        } as never)
       ];
 
       const results = await Promise.allSettled(promises);
