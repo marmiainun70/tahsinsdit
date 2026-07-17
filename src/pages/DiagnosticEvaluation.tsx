@@ -766,16 +766,29 @@ export default function DiagnosticEvaluation() {
                 ) : (
                   students.map((student) => {
                     // We mapped evaluasi_awal_semester dynamically
-                    const evaluation = (student as { evaluasi_awal_semester?: Array<{ final_predicate?: string; evaluator_id?: string; master_level_kemampuan?: { kode_level: string }; evaluasi_kelancaran?: { score: number } }> }).evaluasi_awal_semester?.[0];
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const evaluation = (student as any).evaluasi_awal_semester?.[0];
                     const isEvaluated = !!evaluation;
                     
                     let levelDisplay = "-";
                     let ibpDisplay = "-";
-                    if (isEvaluated && evaluation.master_level_kemampuan?.kode_level) {
-                      const wizLevel = mapKodeLevelToWizardLevel(evaluation.master_level_kemampuan.kode_level);
-                      if (wizLevel) {
+                    if (isEvaluated) {
+                      const manualIqra = evaluation.evaluasi_rekomendasi?.manual_iqra;
+                      const manualHalaman = evaluation.evaluasi_rekomendasi?.manual_halaman;
+                      
+                      let wizLevel = "";
+                      if (evaluation.master_level_kemampuan?.kode_level) {
+                        wizLevel = mapKodeLevelToWizardLevel(evaluation.master_level_kemampuan.kode_level) || "";
+                      }
+                      
+                      if (manualIqra) {
+                        levelDisplay = `Tahsin Dasar - ${manualIqra}${manualHalaman ? ` (Hal ${manualHalaman})` : ''}`;
+                        const levelP = getLevelPoin(manualIqra);
+                        const fluencyP = getKelancaranPoin(evaluation.evaluasi_kelancaran?.score || 0);
+                        const ibpP = levelP - fluencyP;
+                        ibpDisplay = ibpP.toString();
+                      } else if (wizLevel) {
                         levelDisplay = wizLevel.startsWith("Iqra") ? `Tahsin Dasar - ${wizLevel}` : wizLevel;
-                        
                         const levelP = getLevelPoin(wizLevel);
                         const fluencyP = getKelancaranPoin(evaluation.evaluasi_kelancaran?.score || 0);
                         const ibpP = levelP - fluencyP;
