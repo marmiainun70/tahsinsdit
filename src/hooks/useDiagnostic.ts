@@ -35,7 +35,8 @@ export const useDiagnosticStudents = ({
 
       let query = supabase
         .from("students")
-        .select(selectStr, { count: "exact" });
+        .select(selectStr, { count: "exact" })
+        .eq("status_siswa", "aktif");
 
       if (statusEvaluasi === "belum") {
         const { data: evaluated } = await supabase.from("evaluasi_awal_semester").select("student_id");
