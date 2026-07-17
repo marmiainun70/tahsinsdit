@@ -596,14 +596,15 @@ export default function DiagnosticEvaluation() {
   const showWaqaf = wizard.targetLevel === "Tahsin Lanjutan";
 
   const getLevelPoin = (level: string) => {
-    if (level.includes('Iqra 1')) return 10;
-    if (level.includes('Iqra 2')) return 9;
-    if (level.includes('Iqra 3')) return 8;
-    if (level.includes('Iqra 4')) return 7;
-    if (level.includes('Iqra 5')) return 6;
-    if (level.includes('Iqra 6')) return 5;
-    if (level.includes('Tahsin Lanjutan')) return 4;
-    if (level.includes('Tahfizh')) return 3;
+    const l = level.toLowerCase().replace(/\s+/g, '');
+    if (l.includes('iqra1') || l === '1') return 10;
+    if (l.includes('iqra2') || l === '2') return 9;
+    if (l.includes('iqra3') || l === '3') return 8;
+    if (l.includes('iqra4') || l === '4') return 7;
+    if (l.includes('iqra5') || l === '5') return 6;
+    if (l.includes('iqra6') || l === '6') return 5;
+    if (l.includes('tahsinlanjutan')) return 4;
+    if (l.includes('tahfizh')) return 3;
     return 10;
   };
 
