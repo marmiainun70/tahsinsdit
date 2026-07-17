@@ -1562,21 +1562,31 @@ export default function DiagnosticEvaluation() {
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label htmlFor="manual_iqra">Iqra</Label>
-                              <Input
-                                id="manual_iqra"
-                                placeholder="Contoh: Iqra 2"
-                                value={manualIqra}
-                                onChange={(e) => setManualIqra(e.target.value)}
-                              />
+                              <Select value={manualIqra || "kosong"} onValueChange={(val) => setManualIqra(val === "kosong" ? "" : val)}>
+                                <SelectTrigger id="manual_iqra">
+                                  <SelectValue placeholder="Pilih Iqra..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="kosong">-- Kosongkan --</SelectItem>
+                                  {[1, 2, 3, 4, 5, 6].map(num => (
+                                    <SelectItem key={num} value={`Iqra ${num}`}>Iqra {num}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
                             <div className="space-y-2">
                               <Label htmlFor="manual_halaman">Halaman</Label>
-                              <Input
-                                id="manual_halaman"
-                                placeholder="Contoh: Hal 15"
-                                value={manualHalaman}
-                                onChange={(e) => setManualHalaman(e.target.value)}
-                              />
+                              <Select value={manualHalaman || "kosong"} onValueChange={(val) => setManualHalaman(val === "kosong" ? "" : val)}>
+                                <SelectTrigger id="manual_halaman">
+                                  <SelectValue placeholder="Pilih Halaman..." />
+                                </SelectTrigger>
+                                <SelectContent className="max-h-[200px]">
+                                  <SelectItem value="kosong">-- Kosongkan --</SelectItem>
+                                  {Array.from({ length: 50 }, (_, i) => i + 1).map(num => (
+                                    <SelectItem key={num} value={`Hal ${num}`}>Hal {num}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
                           </div>
                         </div>
