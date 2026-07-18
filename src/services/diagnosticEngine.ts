@@ -131,3 +131,23 @@ export function evaluateStudent(input: EvaluationInput): EvaluationOutput {
     fokusPembinaan
   };
 }
+
+export const getLevelPoin = (level: string) => {
+  const l = level.toLowerCase().replace(/\s+/g, '');
+  if (l.includes('iqra1') || l === '1') return 10;
+  if (l.includes('iqra2') || l === '2') return 9;
+  if (l.includes('iqra3') || l === '3') return 8;
+  if (l.includes('iqra4') || l === '4') return 7;
+  if (l.includes('iqra5') || l === '5') return 6;
+  if (l.includes('iqra6') || l === '6') return 5;
+  if (l.includes('tahsinlanjutan')) return 4;
+  if (l.includes('tahfizh')) return 3;
+  return 10;
+};
+
+export const getKelancaranPoin = (score: number) => {
+  if (score >= 90) return 2;
+  if (score >= 80) return 1;
+  if (score >= 70) return 0;
+  return -1;
+};

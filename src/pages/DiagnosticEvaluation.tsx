@@ -9,9 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, FileSignature, Loader2, UserPlus, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Minus, Plus, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DiagnosticSimulation } from "@/components/DiagnosticSimulation";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
@@ -640,26 +642,6 @@ export default function DiagnosticEvaluation() {
   const isTahfizh = wizard.targetLevel === "Tahfizh";
   const showWaqaf = wizard.targetLevel === "Tahsin Lanjutan";
 
-  const getLevelPoin = (level: string) => {
-    const l = level.toLowerCase().replace(/\s+/g, '');
-    if (l.includes('iqra1') || l === '1') return 10;
-    if (l.includes('iqra2') || l === '2') return 9;
-    if (l.includes('iqra3') || l === '3') return 8;
-    if (l.includes('iqra4') || l === '4') return 7;
-    if (l.includes('iqra5') || l === '5') return 6;
-    if (l.includes('iqra6') || l === '6') return 5;
-    if (l.includes('tahsinlanjutan')) return 4;
-    if (l.includes('tahfizh')) return 3;
-    return 10;
-  };
-
-  const getKelancaranPoin = (score: number) => {
-    if (score >= 90) return 2;
-    if (score >= 80) return 1;
-    if (score >= 70) return 0;
-    return -1;
-  };
-
   const kelancaranPoinLabel = (poin: number) => {
     if (poin === 2) return "Bacaan lancar, hanya perlu koreksi minimal";
     if (poin === 1) return "Cukup lancar, masih ada beberapa koreksi";
@@ -685,6 +667,15 @@ export default function DiagnosticEvaluation() {
 
   return (
     <div className="space-y-6 lg:[zoom:0.9]">
+      <Tabs defaultValue="data" className="w-full space-y-6">
+        <TabsList className="grid w-full md:w-[400px] grid-cols-2">
+          <TabsTrigger value="data">Data Evaluasi</TabsTrigger>
+          <TabsTrigger value="simulation">Simulasi Distribusi</TabsTrigger>
+        </TabsList>
+        <TabsContent value="simulation" className="m-0">
+          <DiagnosticSimulation />
+        </TabsContent>
+        <TabsContent value="data" className="space-y-6 m-0">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Evaluasi Diagnostik</h1>
@@ -1912,6 +1903,8 @@ export default function DiagnosticEvaluation() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
