@@ -2,9 +2,10 @@ import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getLevelPoin, getKelancaranPoin, mapKodeLevelToWizardLevel } from '@/services/diagnosticEngine';
-import { Loader2, Users, Target, Activity, AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, Database, BarChart3, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Loader2, Users, Target, Activity, AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, Database, ArrowRight, ArrowLeft, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export const DiagnosticSimulation = () => {
   const [step, setStep] = useState<1 | 2>(1);
@@ -70,7 +71,6 @@ export const DiagnosticSimulation = () => {
     let totalMenunggu = 0;
     let grandTotalIBP = 0;
     
-    // Map of student IBP
     const studentIBP = new Map<string, number>();
     const studentSesi = new Map<string, string>();
     const studentJalur = new Map<string, string>();
@@ -86,9 +86,7 @@ export const DiagnosticSimulation = () => {
       return 'Putri (C/D)';
     };
 
-    const sesiStats = new Map<string, { count: number, ibp: number }>();
-    const jalurStats = new Map<string, { count: number, ibp: number }>();
-    const rombelStats = new Map<string, { count: number, ibp: number }>();
+    const sesiMap = new Map<string, Map<number, Map<string, { count: number, ibp: number, jalur: string }>>>();
 
     studentsData.forEach(student => {
       const evals = student.evaluasi_awal_semester;
@@ -97,6 +95,7 @@ export const DiagnosticSimulation = () => {
       const sesi = getSesi(student.kelas);
       const jalur = getJalur(student.rombel);
       const rombel = student.rombel;
+      const kelas = student.kelas;
 
       if (isEvaluated) {
         totalSiap++;
@@ -118,14 +117,15 @@ export const DiagnosticSimulation = () => {
         studentIBP.set(student.id, ibp);
         grandTotalIBP += ibp;
 
-        const sStat = sesiStats.get(sesi) || { count: 0, ibp: 0 };
-        sesiStats.set(sesi, { count: sStat.count + 1, ibp: sStat.ibp + ibp });
+        if (!sesiMap.has(sesi)) sesiMap.set(sesi, new Map());
+        const kelasMap = sesiMap.get(sesi)!;
+        
+        if (!kelasMap.has(kelas)) kelasMap.set(kelas, new Map());
+        const rMap = kelasMap.get(kelas)!;
 
-        const jStat = jalurStats.get(jalur) || { count: 0, ibp: 0 };
-        jalurStats.set(jalur, { count: jStat.count + 1, ibp: jStat.ibp + ibp });
+        const current = rMap.get(rombel) || { count: 0, ibp: 0, jalur: jalur.includes('Putra') ? 'Putra' : 'Putri' };
+        rMap.set(rombel, { count: current.count + 1, ibp: current.ibp + ibp, jalur: current.jalur });
 
-        const rStat = rombelStats.get(rombel) || { count: 0, ibp: 0 };
-        rombelStats.set(rombel, { count: rStat.count + 1, ibp: rStat.ibp + ibp });
       } else {
         totalMenunggu++;
       }
@@ -134,7 +134,29 @@ export const DiagnosticSimulation = () => {
       studentJalur.set(student.id, jalur);
     });
 
-    // Calculate Target IBP per Sesi + Jalur
+    const detailedStats = Array.from(sesiMap.entries()).map(([sesiName, kelasMap]) => {
+      return {
+        name: sesiName,
+        classes: Array.from(kelasMap.entries()).sort((a,b)=>a[0]-b[0]).map(([kelasNum, rMap]) => {
+          return {
+            kelas: kelasNum,
+            name: `Kelas ${kelasNum}`,
+            rombels: Array.from(rMap.entries()).sort((a,b)=>a[0].localeCompare(b[0])).map(([rName, data]) => {
+              return {
+                name: rName,
+                jalur: data.jalur,
+                count: data.count,
+                ibp: data.ibp,
+                targetCount: data.count / 2,
+                targetIBP: data.ibp / 2
+              }
+            })
+          }
+        })
+      }
+    }).sort((a,b) => a.name.localeCompare(b.name));
+
+    // Calculate Target IBP per Sesi + Jalur (for existing Simulation Step 2)
     const groupTotalIBP = new Map<string, number>();
     const groupTeacherCount = new Map<string, Set<string>>();
 
@@ -159,7 +181,6 @@ export const DiagnosticSimulation = () => {
       targetIBPPerGroup.set(groupKey, Math.round(totalIBP / teacherCount));
     });
 
-    // Teacher Stats
     const teacherStats = teachersData.map(teacher => {
       const assignedStudents = assignmentsData.filter(a => 
         a.teacher_id === teacher.user_id && studentsData.some(s => s.id === a.student_id)
@@ -203,16 +224,12 @@ export const DiagnosticSimulation = () => {
       return b.difference - a.difference;
     });
 
-    const sortByName = (a: any, b: any) => a.name.localeCompare(b.name);
-
     return {
       totalAktif: studentsData.length,
       totalSiap,
       totalMenunggu,
       grandTotalIBP,
-      sesiStats: Array.from(sesiStats.entries()).map(([name, data]) => ({ name, ...data })).sort(sortByName),
-      jalurStats: Array.from(jalurStats.entries()).map(([name, data]) => ({ name, ...data })).sort(sortByName),
-      rombelStats: Array.from(rombelStats.entries()).map(([name, data]) => ({ name, ...data })).sort(sortByName),
+      detailedStats,
       activeTeachers: teacherStats.length,
       teacherStats
     };
@@ -240,7 +257,7 @@ export const DiagnosticSimulation = () => {
                 Data Validation Engine
               </h2>
               <p className="text-slate-500 dark:text-slate-400 mt-1">
-                Tahap 1: Validasi kelengkapan data Evaluasi Diagnostik sebelum melakukan simulasi distribusi IBP.
+                Tahap 1: Validasi kelengkapan data dan estimasi pembagian 2 Halaqah per Rombel.
               </p>
             </div>
             <Button onClick={() => setStep(2)} className="w-full sm:w-auto bg-primary text-white shadow-md hover:shadow-lg transition-all">
@@ -289,60 +306,73 @@ export const DiagnosticSimulation = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center mb-4">
-                <BarChart3 className="w-4 h-4 mr-2 text-primary" />
-                Rekap per Sesi
-              </h3>
-              <div className="space-y-3">
-                {stats.sesiStats.map(s => (
-                  <div key={s.name} className="flex justify-between items-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                    <span className="font-medium text-slate-700 dark:text-slate-300 text-sm">{s.name}</span>
-                    <div className="text-right">
-                      <div className="text-sm font-bold">{s.count} <span className="text-xs font-normal text-slate-500">siswa</span></div>
-                      <div className="text-xs font-semibold text-primary">{s.ibp} IBP</div>
-                    </div>
-                  </div>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-4">
+              Rincian Pembagian Halaqah
+            </h3>
+            
+            {stats.detailedStats.length > 0 ? (
+              <Accordion type="multiple" defaultValue={stats.detailedStats.map(s => s.name)} className="space-y-4">
+                {stats.detailedStats.map((sesi) => (
+                  <AccordionItem key={sesi.name} value={sesi.name} className="border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-800/30 px-2">
+                    <AccordionTrigger className="hover:no-underline px-4 py-4">
+                      <div className="flex items-center text-lg font-bold text-slate-800 dark:text-white">
+                        {sesi.name}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4">
+                      <div className="space-y-6 mt-2">
+                        {sesi.classes.map((cls) => (
+                          <div key={cls.name} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+                            <div className="bg-slate-100 dark:bg-slate-800 px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+                              <h4 className="font-bold text-slate-800 dark:text-slate-200">{cls.name}</h4>
+                            </div>
+                            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                              {cls.rombels.map(rombel => (
+                                <div key={rombel.name} className="p-4 sm:flex items-center justify-between gap-4">
+                                  <div className="mb-4 sm:mb-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="font-bold text-lg text-slate-900 dark:text-white">
+                                        Kelas {cls.kelas}{rombel.name}
+                                      </span>
+                                      <span className={`text-xs font-semibold px-2 py-1 rounded-md ${rombel.jalur === 'Putra' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300'}`}>
+                                        {rombel.jalur}
+                                      </span>
+                                    </div>
+                                    <div className="text-sm text-slate-500 dark:text-slate-400 flex flex-wrap gap-x-4">
+                                      <span>Total Siswa: <strong>{rombel.count}</strong></span>
+                                      <span>Total IBP: <strong>{rombel.ibp}</strong></span>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-stretch divide-x divide-slate-200 dark:divide-slate-700 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 rounded-lg overflow-hidden shrink-0">
+                                    <div className="p-3 bg-emerald-100/50 dark:bg-emerald-900/40 flex items-center justify-center font-semibold text-emerald-800 dark:text-emerald-300 text-sm whitespace-nowrap">
+                                      Simulasi<br/>2 Halaqah
+                                    </div>
+                                    <div className="p-3 text-center min-w-[90px]">
+                                      <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Siswa/Halaqah</div>
+                                      <div className="font-bold text-slate-900 dark:text-white">~{rombel.targetCount.toFixed(1).replace('.0', '')}</div>
+                                    </div>
+                                    <div className="p-3 text-center min-w-[90px]">
+                                      <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Target IBP</div>
+                                      <div className="font-bold text-primary">~{rombel.targetIBP.toFixed(1).replace('.0', '')}</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
                 ))}
+              </Accordion>
+            ) : (
+              <div className="text-center p-8 text-slate-500">
+                Belum ada data evaluasi.
               </div>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center mb-4">
-                <Users className="w-4 h-4 mr-2 text-primary" />
-                Rekap per Jalur
-              </h3>
-              <div className="space-y-3">
-                {stats.jalurStats.map(j => (
-                  <div key={j.name} className="flex justify-between items-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                    <span className="font-medium text-slate-700 dark:text-slate-300 text-sm">{j.name}</span>
-                    <div className="text-right">
-                      <div className="text-sm font-bold">{j.count} <span className="text-xs font-normal text-slate-500">siswa</span></div>
-                      <div className="text-xs font-semibold text-primary">{j.ibp} IBP</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-white flex items-center mb-4">
-                <Target className="w-4 h-4 mr-2 text-primary" />
-                Rekap per Rombel
-              </h3>
-              <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                {stats.rombelStats.map(r => (
-                  <div key={r.name} className="flex justify-between items-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                    <span className="font-medium text-slate-700 dark:text-slate-300 text-sm">Rombel {r.name}</span>
-                    <div className="text-right">
-                      <div className="text-sm font-bold">{r.count} <span className="text-xs font-normal text-slate-500">siswa</span></div>
-                      <div className="text-xs font-semibold text-primary">{r.ibp} IBP</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
           </div>
         </div>
       ) : (
@@ -354,7 +384,7 @@ export const DiagnosticSimulation = () => {
                 Simulasi Beban Pengajaran
               </h2>
               <p className="text-slate-500 dark:text-slate-400 mt-1">
-                Tahap 2: Analisis target IBP dan sebaran beban kerja guru.
+                Tahap 2: Analisis target IBP dan sebaran beban kerja guru aktual.
               </p>
             </div>
             <Button variant="outline" onClick={() => setStep(1)} className="w-full sm:w-auto hover:bg-slate-100">
