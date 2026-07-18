@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAddStudent } from "@/hooks/useSupabaseData";
 import { useAcademicYears } from "@/hooks/useAcademicCalendar";
 import { useProfileMap } from "@/hooks/useProfiles";
-import { evaluateStudent, EvaluationInput, EvaluationOutput, LEVEL_ORDER, LevelType } from "@/services/diagnosticEngine";
+import { evaluateStudent, EvaluationInput, EvaluationOutput, LEVEL_ORDER, LevelType, getLevelPoin, getKelancaranPoin } from "@/services/diagnosticEngine";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
