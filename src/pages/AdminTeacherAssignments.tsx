@@ -306,6 +306,15 @@ export default function AdminTeacherAssignments() {
         );
         if (error) throw error;
       }
+
+      const updatedAssignments = draftAssignments.filter(a => a._status === 'updated');
+      if (updatedAssignments.length > 0) {
+        for (const a of updatedAssignments) {
+          const { error } = await supabase.from('teacher_students').update({ teacher_id: a.teacher_id }).eq('id', a.id);
+          if (error) throw error;
+        }
+      }
+
       if (deletedAssignments.length > 0) {
         const { error } = await supabase.from('teacher_students').delete().in('id', deletedAssignments.map(a => a.id));
         if (error) throw error;
