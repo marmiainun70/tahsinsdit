@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAddStudent } from "@/hooks/useSupabaseData";
 import { useAcademicYears } from "@/hooks/useAcademicCalendar";
 import { useProfileMap } from "@/hooks/useProfiles";
-import { evaluateStudent, EvaluationInput, EvaluationOutput, LEVEL_ORDER, LevelType, getLevelPoin, getKelancaranPoin } from "@/services/diagnosticEngine";
+import { evaluateStudent, EvaluationInput, EvaluationOutput, LEVEL_ORDER, LevelType, getLevelPoin, getKelancaranPoin, mapKodeLevelToWizardLevel } from "@/services/diagnosticEngine";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -194,20 +194,6 @@ const renderEvaluationMetrics = (
       </div>
     </div>
   );
-};
-
-const mapKodeLevelToWizardLevel = (kodeLevel: string): LevelType | null => {
-  switch (kodeLevel) {
-    case "LEVEL_1_1": return "Iqra 1";
-    case "LEVEL_1_2": return "Iqra 2";
-    case "LEVEL_1_3": return "Iqra 3";
-    case "LEVEL_1_4": return "Iqra 4";
-    case "LEVEL_1_5": return "Iqra 5";
-    case "LEVEL_1_6": return "Iqra 6";
-    case "LEVEL_2": return "Tahsin Lanjutan";
-    case "LEVEL_3": return "Tahfizh";
-    default: return null;
-  }
 };
 
 const mapWizardLevelToKodeLevel = (level: string): string => {

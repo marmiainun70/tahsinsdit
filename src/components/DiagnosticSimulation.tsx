@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { getLevelPoin, getKelancaranPoin } from '@/services/diagnosticEngine';
+import { getLevelPoin, getKelancaranPoin, mapKodeLevelToWizardLevel } from '@/services/diagnosticEngine';
 import { Loader2, Users, Target, Activity, AlertTriangle, CheckCircle2, TrendingUp, TrendingDown } from 'lucide-react';
 
 export const DiagnosticSimulation = () => {
@@ -95,9 +95,9 @@ export const DiagnosticSimulation = () => {
           levelCode = ev.evaluasi_rekomendasi[0].manual_iqra;
           levelCode = levelCode.toLowerCase().includes('iqra') ? levelCode : `Iqra ${levelCode}`;
         } else if (ev.evaluasi_rekomendasi?.[0]?.master_level_kemampuan?.kode_level) {
-          levelCode = ev.evaluasi_rekomendasi[0].master_level_kemampuan.kode_level;
+          levelCode = mapKodeLevelToWizardLevel(ev.evaluasi_rekomendasi[0].master_level_kemampuan.kode_level) || 'Iqra 1';
         } else if (ev.master_level_kemampuan?.kode_level) {
-          levelCode = ev.master_level_kemampuan.kode_level;
+          levelCode = mapKodeLevelToWizardLevel(ev.master_level_kemampuan.kode_level) || 'Iqra 1';
         }
         
         const fluency = ev.evaluasi_kelancaran?.[0]?.score ?? 0;
@@ -141,8 +141,10 @@ export const DiagnosticSimulation = () => {
 
     // Teacher Stats
     const teacherStats = teachersData.map(teacher => {
-      // Find teacher's assigned students
-      const assignedStudents = assignmentsData.filter(a => a.teacher_id === teacher.user_id);
+      // Find teacher's assigned students who are active
+      const assignedStudents = assignmentsData.filter(a => 
+        a.teacher_id === teacher.user_id && studentsData.some(s => s.id === a.student_id)
+      );
       
       let totalTeacherIBP = 0;
       let teacherGroupKey = ''; // Determine primary group based on their classes
