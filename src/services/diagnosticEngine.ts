@@ -67,7 +67,9 @@ export function getRecommendation(score: number, currentLevel: LevelType): { pro
   
   let isPassed = false;
   
-  if (currentLevel === "Iqra 6") {
+  if (currentLevel === "Tahsin Lanjutan") {
+    isPassed = score >= 86;
+  } else if (currentLevel === "Iqra 6") {
     isPassed = score >= 85;
   } else {
     isPassed = score >= 80;
