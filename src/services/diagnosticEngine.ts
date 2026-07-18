@@ -132,7 +132,7 @@ export function evaluateStudent(input: EvaluationInput): EvaluationOutput {
   };
 }
 
-export const getLevelPoin = (level: string) => {
+export function getLevelPoin(level: string) {
   const l = level.toLowerCase().replace(/\s+/g, '');
   if (l.includes('iqra1') || l === '1') return 10;
   if (l.includes('iqra2') || l === '2') return 9;
@@ -143,11 +143,25 @@ export const getLevelPoin = (level: string) => {
   if (l.includes('tahsinlanjutan')) return 4;
   if (l.includes('tahfizh')) return 3;
   return 10;
-};
+}
 
-export const getKelancaranPoin = (score: number) => {
+export function getKelancaranPoin(score: number) {
   if (score >= 90) return 2;
   if (score >= 80) return 1;
   if (score >= 70) return 0;
   return -1;
-};
+}
+
+export function mapKodeLevelToWizardLevel(kodeLevel: string): LevelType | null {
+  switch (kodeLevel) {
+    case "LEVEL_1_1": return "Iqra 1";
+    case "LEVEL_1_2": return "Iqra 2";
+    case "LEVEL_1_3": return "Iqra 3";
+    case "LEVEL_1_4": return "Iqra 4";
+    case "LEVEL_1_5": return "Iqra 5";
+    case "LEVEL_1_6": return "Iqra 6";
+    case "LEVEL_2": return "Tahsin Lanjutan";
+    case "LEVEL_3": return "Tahfizh";
+    default: return null;
+  }
+}
