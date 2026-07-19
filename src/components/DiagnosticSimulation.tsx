@@ -89,7 +89,7 @@ export const DiagnosticSimulation = () => {
       return 'Putri (C/D)';
     };
 
-    const sesiMap = new Map<string, Map<number, Map<string, { count: number, ibp: number, jalur: string, students: { name: string, level: string, ibp: number }[] }>>>();
+    const sesiMap = new Map<string, Map<number, Map<string, { count: number, ibp: number, jalur: string, students: { name: string, level: string, ibp: number, isEvaluated?: boolean, kelasAsli?: string }[] }>>>();
 
     studentsData.forEach(student => {
       const evals = student.evaluasi_awal_semester;
@@ -137,7 +137,8 @@ export const DiagnosticSimulation = () => {
           name: student.nama,
           level: levelCode,
           ibp: ibp,
-          isEvaluated: true
+          isEvaluated: true,
+          kelasAsli: `${kelas}${rombel}`
         });
 
         rMap.set(rombel, { 
@@ -155,7 +156,8 @@ export const DiagnosticSimulation = () => {
           name: student.nama,
           level: "Belum Dievaluasi",
           ibp: 0,
-          isEvaluated: false
+          isEvaluated: false,
+          kelasAsli: `${kelas}${rombel}`
         });
 
         rMap.set(rombel, {
@@ -544,8 +546,9 @@ export const DiagnosticSimulation = () => {
                                           </div>
                                           {rombel.halaqah1.students.map((s, i) => (
                                             <div key={i} className={`flex items-center justify-between px-3 py-2 ${s.isEvaluated ? 'hover:bg-slate-100/50 dark:hover:bg-slate-800/50' : 'bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30'}`}>
-                                              <div className={`font-medium truncate pr-2 flex-1 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
-                                                {s.name}
+                                              <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
+                                                <span className="truncate">{s.name}</span>
+                                                <span className="shrink-0 text-[10px] bg-slate-200/60 dark:bg-slate-700 px-1.5 rounded-sm text-slate-500 font-medium">{s.kelasAsli}</span>
                                               </div>
                                               <div className="flex items-center gap-2 shrink-0">
                                                 <div className={`w-16 truncate text-[11px] ${s.isEvaluated ? 'text-slate-600 dark:text-slate-400' : 'text-red-600 dark:text-red-400'}`} title={s.level}>
@@ -583,8 +586,9 @@ export const DiagnosticSimulation = () => {
                                           </div>
                                           {rombel.halaqah2.students.map((s, i) => (
                                             <div key={i} className={`flex items-center justify-between px-3 py-2 ${s.isEvaluated ? 'hover:bg-slate-100/50 dark:hover:bg-slate-800/50' : 'bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30'}`}>
-                                              <div className={`font-medium truncate pr-2 flex-1 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
-                                                {s.name}
+                                              <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
+                                                <span className="truncate">{s.name}</span>
+                                                <span className="shrink-0 text-[10px] bg-slate-200/60 dark:bg-slate-700 px-1.5 rounded-sm text-slate-500 font-medium">{s.kelasAsli}</span>
                                               </div>
                                               <div className="flex items-center gap-2 shrink-0">
                                                 <div className={`w-16 truncate text-[11px] ${s.isEvaluated ? 'text-slate-600 dark:text-slate-400' : 'text-red-600 dark:text-red-400'}`} title={s.level}>
