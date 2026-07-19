@@ -215,7 +215,18 @@ export const DiagnosticSimulation = () => {
            const maxCap = Math.ceil(sortedByIBP.length / numHalaqahs);
            
            sortedByIBP.forEach(student => {
-              const available = halaqahs.filter(h => h.students.length < maxCap);
+              const studentKelasNum = student.kelasAsli ? parseInt(student.kelasAsli.substring(0, 1)) : 0;
+              
+              let available = halaqahs.filter(h => h.students.length < maxCap);
+              
+              // Bias towards halaqahs that match the student's original class to minimize cross-grade shifts
+              if (studentKelasNum > 0) {
+                 const matchingClassAvailable = available.filter(h => h.kelasNum === studentKelasNum);
+                 if (matchingClassAvailable.length > 0) {
+                    available = matchingClassAvailable;
+                 }
+              }
+
               if (available.length === 0) {
                  halaqahs[0].students.push(student);
                  halaqahs[0].totalIBP += student.ibp;
@@ -233,6 +244,10 @@ export const DiagnosticSimulation = () => {
               target.students.push(student);
               target.totalIBP += student.ibp;
            });
+
+           const getShiftCount = (student: any, halaqah: any) => {
+              return student.kelasAsli && !student.kelasAsli.startsWith(halaqah.kelasNum.toString()) ? 1 : 0;
+           };
 
            // Local Search (Swap) to minimize absolute IBP difference across ALL N halaqahs
            let improved = true;
@@ -255,9 +270,14 @@ export const DiagnosticSimulation = () => {
                for (let j = 0; j < minH.students.length; j++) {
                  const s1 = maxH.students[i];
                  const s2 = minH.students[j];
+                 
+                 const currentShifts = getShiftCount(s1, maxH) + getShiftCount(s2, minH);
+                 const newShifts = getShiftCount(s2, maxH) + getShiftCount(s1, minH);
+                 const shiftPenalty = (newShifts - currentShifts) * 1000;
+                 
                  const newMaxHIBP = maxH.totalIBP - s1.ibp + s2.ibp;
                  const newMinHIBP = minH.totalIBP - s2.ibp + s1.ibp;
-                 const newDiff = Math.abs(newMaxHIBP - newMinHIBP);
+                 const newDiff = Math.abs(newMaxHIBP - newMinHIBP) + shiftPenalty;
                  
                  if (newDiff < currentDiff) {
                    currentDiff = newDiff;
@@ -296,14 +316,18 @@ export const DiagnosticSimulation = () => {
                             const s1 = h1.students[i];
                             const s2 = h2.students[j];
                             if (s1.ibp > s2.ibp) {
+                               const currentShifts = getShiftCount(s1, h1) + getShiftCount(s2, h2);
+                               const newShifts = getShiftCount(s2, h1) + getShiftCount(s1, h2);
+                               const shiftPenalty = (newShifts - currentShifts) * 1000;
+                               
                                const newH1IBP = h1.totalIBP - s1.ibp + s2.ibp;
                                const newH2IBP = h2.totalIBP - s2.ibp + s1.ibp;
-                               const newDiff = Math.abs(newH1IBP - newH2IBP);
+                               const newDiff = Math.abs(newH1IBP - newH2IBP) + shiftPenalty;
                                
                                if (newH1IBP <= newH2IBP && newDiff < minPenalty) {
                                   minPenalty = newDiff;
                                   bestShift = { i, j };
-                               } else if (newH1IBP > newH2IBP && newDiff < Math.abs(h1.totalIBP - h2.totalIBP)) {
+                               } else if (newH1IBP > newH2IBP && newDiff < Math.abs(h1.totalIBP - h2.totalIBP) + shiftPenalty) {
                                   minPenalty = newDiff;
                                   bestShift = { i, j };
                                }
