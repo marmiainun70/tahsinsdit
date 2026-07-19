@@ -187,16 +187,126 @@ export const DiagnosticSimulation = () => {
               let h1IBP = 0;
               let h2IBP = 0;
 
-              // Greedy distribution for balanced IBP
+              // Advanced Greedy Distribution with Capacity Constraints
+              const maxCap = Math.ceil(sortedByIBP.length / 2);
+              
               sortedByIBP.forEach(student => {
-                if (h1IBP <= h2IBP) {
+                if (halaqah1.length >= maxCap) {
+                  halaqah2.push(student);
+                  h2IBP += student.ibp;
+                } else if (halaqah2.length >= maxCap) {
                   halaqah1.push(student);
                   h1IBP += student.ibp;
                 } else {
-                  halaqah2.push(student);
-                  h2IBP += student.ibp;
+                  if (h1IBP < h2IBP) {
+                    halaqah1.push(student);
+                    h1IBP += student.ibp;
+                  } else if (h2IBP < h1IBP) {
+                    halaqah2.push(student);
+                    h2IBP += student.ibp;
+                  } else {
+                    // Tie-breaker: give to the one with fewer students
+                    if (halaqah1.length <= halaqah2.length) {
+                      halaqah1.push(student);
+                      h1IBP += student.ibp;
+                    } else {
+                      halaqah2.push(student);
+                      h2IBP += student.ibp;
+                    }
+                  }
                 }
               });
+
+              // Local Search (Swap) to perfectly minimize absolute IBP difference
+              let improved = true;
+              while (improved) {
+                improved = false;
+                let currentDiff = Math.abs(h1IBP - h2IBP);
+                if (currentDiff <= 1) break; // Optimal
+
+                let bestSwap = null;
+                for (let i = 0; i < halaqah1.length; i++) {
+                  for (let j = 0; j < halaqah2.length; j++) {
+                    const s1 = halaqah1[i];
+                    const s2 = halaqah2[j];
+                    const newH1IBP = h1IBP - s1.ibp + s2.ibp;
+                    const newH2IBP = h2IBP - s2.ibp + s1.ibp;
+                    const newDiff = Math.abs(newH1IBP - newH2IBP);
+                    
+                    if (newDiff < currentDiff) {
+                      currentDiff = newDiff;
+                      bestSwap = { i, j };
+                    }
+                  }
+                }
+
+                if (bestSwap) {
+                  const s1 = halaqah1[bestSwap.i];
+                  const s2 = halaqah2[bestSwap.j];
+                  halaqah1[bestSwap.i] = s2;
+                  halaqah2[bestSwap.j] = s1;
+                  h1IBP = h1IBP - s1.ibp + s2.ibp;
+                  h2IBP = h2IBP - s2.ibp + s1.ibp;
+                  improved = true;
+                }
+              }
+
+              // Enforce the rule: The group with MORE students should ideally NOT have MORE IBP.
+              // "Tdk masalah jika siswa yg lebih sedikit tapi bebannya lebih berat ... jangan sebaliknya"
+              if (halaqah1.length !== halaqah2.length) {
+                let larger = halaqah1.length > halaqah2.length ? halaqah1 : halaqah2;
+                let smaller = halaqah1.length > halaqah2.length ? halaqah2 : halaqah1;
+                let largerIBP = halaqah1.length > halaqah2.length ? h1IBP : h2IBP;
+                let smallerIBP = halaqah1.length > halaqah2.length ? h2IBP : h1IBP;
+
+                let shiftImproved = true;
+                while (shiftImproved && largerIBP > smallerIBP) {
+                  shiftImproved = false;
+                  let bestShift = null;
+                  let minPenalty = Infinity;
+
+                  for (let i = 0; i < larger.length; i++) {
+                    for (let j = 0; j < smaller.length; j++) {
+                      const l_s = larger[i];
+                      const s_s = smaller[j];
+                      
+                      if (l_s.ibp > s_s.ibp) {
+                        const newLargerIBP = largerIBP - l_s.ibp + s_s.ibp;
+                        const newSmallerIBP = smallerIBP - s_s.ibp + l_s.ibp;
+                        const newDiff = Math.abs(newLargerIBP - newSmallerIBP);
+                        
+                        // Accept if it flips the balance (larger <= smaller) with minimal penalty
+                        // Or if it just purely improves the gap
+                        if (newLargerIBP <= newSmallerIBP && newDiff < minPenalty) {
+                          minPenalty = newDiff;
+                          bestShift = { i, j };
+                        } else if (newLargerIBP > newSmallerIBP && newDiff < Math.abs(largerIBP - smallerIBP)) {
+                           minPenalty = newDiff;
+                           bestShift = { i, j };
+                        }
+                      }
+                    }
+                  }
+
+                  if (bestShift) {
+                    const l_s = larger[bestShift.i];
+                    const s_s = smaller[bestShift.j];
+                    larger[bestShift.i] = s_s;
+                    smaller[bestShift.j] = l_s;
+                    largerIBP = largerIBP - l_s.ibp + s_s.ibp;
+                    smallerIBP = smallerIBP - s_s.ibp + l_s.ibp;
+                    shiftImproved = true;
+                  }
+                }
+                
+                if (halaqah1.length > halaqah2.length) {
+                  h1IBP = largerIBP;
+                  h2IBP = smallerIBP;
+                } else {
+                  h2IBP = largerIBP;
+                  h1IBP = smallerIBP;
+                }
+              }
 
               // Sort back alphabetically for display
               halaqah1.sort((a, b) => a.name.localeCompare(b.name));
