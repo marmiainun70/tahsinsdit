@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 
 export const DiagnosticSimulation = () => {
   const [step, setStep] = useState<1 | 2>(1);
-  const [usePooling, setUsePooling] = useState(true);
+  const [usePooling, setUsePooling] = useState(false);
 
   // 1. Fetch data
   const { data: studentsData, isLoading: loadingStudents } = useQuery({
@@ -619,7 +619,7 @@ export const DiagnosticSimulation = () => {
                                             <div key={i} className={`flex items-center justify-between px-3 py-2 ${bgClass}`}>
                                               <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? (isShifted ? 'text-purple-900 dark:text-purple-200' : 'text-slate-700 dark:text-slate-300') : 'text-red-700 dark:text-red-400'}`} title={s.name}>
                                                 <span className="truncate">{s.name}</span>
-                                                <span className={`shrink-0 text-[10px] px-1.5 rounded-sm font-medium ${isShifted ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700/50 shadow-[0_0_8px_rgba(168,85,247,0.4)]' : 'bg-slate-200/60 dark:bg-slate-700 text-slate-500'}`}>{s.kelasAsli}</span>
+                                                {isShifted && <span className={`shrink-0 text-[10px] px-1.5 rounded-sm font-medium bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700/50 shadow-[0_0_8px_rgba(168,85,247,0.4)]`}>{s.kelasAsli}</span>}
                                               </div>
                                               <div className="flex items-center gap-2 shrink-0">
                                                 <div className={`w-16 truncate text-[11px] ${s.isEvaluated ? 'text-slate-600 dark:text-slate-400' : 'text-red-600 dark:text-red-400'}`} title={s.level}>
@@ -664,7 +664,7 @@ export const DiagnosticSimulation = () => {
                                             <div key={i} className={`flex items-center justify-between px-3 py-2 ${bgClass}`}>
                                               <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? (isShifted ? 'text-purple-900 dark:text-purple-200' : 'text-slate-700 dark:text-slate-300') : 'text-red-700 dark:text-red-400'}`} title={s.name}>
                                                 <span className="truncate">{s.name}</span>
-                                                <span className={`shrink-0 text-[10px] px-1.5 rounded-sm font-medium ${isShifted ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700/50 shadow-[0_0_8px_rgba(168,85,247,0.4)]' : 'bg-slate-200/60 dark:bg-slate-700 text-slate-500'}`}>{s.kelasAsli}</span>
+                                                {isShifted && <span className={`shrink-0 text-[10px] px-1.5 rounded-sm font-medium bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700/50 shadow-[0_0_8px_rgba(168,85,247,0.4)]`}>{s.kelasAsli}</span>}
                                               </div>
                                               <div className="flex items-center gap-2 shrink-0">
                                                 <div className={`w-16 truncate text-[11px] ${s.isEvaluated ? 'text-slate-600 dark:text-slate-400' : 'text-red-600 dark:text-red-400'}`} title={s.level}>
