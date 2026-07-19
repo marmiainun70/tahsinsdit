@@ -2,13 +2,16 @@ import React, { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { getLevelPoin, getKelancaranPoin, mapKodeLevelToWizardLevel } from '@/services/diagnosticEngine';
-import { Loader2, Users, Target, Activity, AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, Database, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Loader2, Users, Target, Activity, AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, Database, ArrowRight, ArrowLeft, ArrowRightLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 export const DiagnosticSimulation = () => {
   const [step, setStep] = useState<1 | 2>(1);
+  const [usePooling, setUsePooling] = useState(true);
 
   // 1. Fetch data
   const { data: studentsData, isLoading: loadingStudents } = useQuery({
@@ -107,7 +110,8 @@ export const DiagnosticSimulation = () => {
       const rMap = kelasMap.get(kelas)!;
 
       const jalurKey = jalur.includes('Putra') ? 'Putra' : 'Putri';
-      const current = rMap.get(jalurKey) || { count: 0, ibp: 0, jalur: jalurKey, rombels: new Set<string>(), students: [] };
+      const mapKey = usePooling ? jalurKey : rombel;
+      const current = rMap.get(mapKey) || { count: 0, ibp: 0, jalur: jalurKey, rombels: new Set<string>(), students: [] };
       current.rombels.add(rombel);
 
       if (isEvaluated) {
@@ -143,7 +147,7 @@ export const DiagnosticSimulation = () => {
           kelasAsli: `${kelas}${rombel}`
         });
 
-        rMap.set(jalurKey, { 
+        rMap.set(mapKey, { 
           count: current.count + 1, 
           ibp: current.ibp + ibp, 
           jalur: current.jalur,
@@ -163,7 +167,7 @@ export const DiagnosticSimulation = () => {
           kelasAsli: `${kelas}${rombel}`
         });
 
-        rMap.set(jalurKey, {
+        rMap.set(mapKey, {
           count: current.count + 1,
           ibp: current.ibp,
           jalur: current.jalur,
@@ -443,10 +447,22 @@ export const DiagnosticSimulation = () => {
                 Tahap 1: Validasi kelengkapan data dan simulasi distribusi merata 2 Halaqah per Rombel.
               </p>
             </div>
-            <Button onClick={() => setStep(2)} className="w-full sm:w-auto bg-primary text-white shadow-md hover:shadow-lg transition-all">
-              Lanjutkan ke Simulasi
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+            <div className="flex items-center gap-4 flex-col sm:flex-row w-full sm:w-auto">
+              <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg">
+                <Switch 
+                  id="pooling-mode" 
+                  checked={usePooling}
+                  onCheckedChange={setUsePooling}
+                />
+                <Label htmlFor="pooling-mode" className="text-sm font-medium cursor-pointer">
+                  Gabung Siswa (Pooling)
+                </Label>
+              </div>
+              <Button onClick={() => setStep(2)} className="w-full sm:w-auto bg-primary text-white shadow-md hover:shadow-lg transition-all">
+                Lanjutkan ke Simulasi
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
           </div>
 
           {stats.totalMenunggu > 0 && (
@@ -639,10 +655,22 @@ export const DiagnosticSimulation = () => {
                 Tahap 2: Analisis target IBP dan sebaran beban kerja guru aktual.
               </p>
             </div>
-            <Button variant="outline" onClick={() => setStep(1)} className="w-full sm:w-auto hover:bg-slate-100">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Kembali ke Validasi
-            </Button>
+            <div className="flex items-center gap-4 flex-col sm:flex-row w-full sm:w-auto">
+              <div className="flex items-center space-x-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg">
+                <Switch 
+                  id="pooling-mode-2" 
+                  checked={usePooling}
+                  onCheckedChange={setUsePooling}
+                />
+                <Label htmlFor="pooling-mode-2" className="text-sm font-medium cursor-pointer">
+                  Gabung Siswa (Pooling)
+                </Label>
+              </div>
+              <Button variant="outline" onClick={() => setStep(1)} className="w-full sm:w-auto hover:bg-slate-100">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Kembali ke Validasi
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
