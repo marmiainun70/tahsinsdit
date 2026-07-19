@@ -420,7 +420,7 @@ export const DiagnosticSimulation = () => {
       activeTeachers: teacherStats.length,
       teacherStats
     };
-  }, [studentsData, teachersData, assignmentsData, classesData]);
+  }, [studentsData, teachersData, assignmentsData, classesData, usePooling]);
 
   if (isLoading) {
     return (
