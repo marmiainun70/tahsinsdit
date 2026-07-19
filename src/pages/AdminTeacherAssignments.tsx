@@ -266,34 +266,24 @@ export default function AdminTeacherAssignments() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      // 1. Process Groups
-      // Only insert if it has a teacher_id selected!
-      const newGroups = draftGroups.filter(g => g._status === 'new' && g.teacher_id);
-      const updatedGroups = draftGroups.filter(g => g._status === 'updated' && g.teacher_id);
+      // 1. Process Groups (Wipe and Replace Strategy for perfect sync)
+      // Delete all existing teacher_classes
+      const { error: deleteClassesError } = await supabase.from('teacher_classes').delete().neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
+      if (deleteClassesError) throw deleteClassesError;
       
-      // If a draft is updated but teacher_id was cleared, we treat it as deleted
-      const updatedButClearedGroups = draftGroups.filter(g => g._status === 'updated' && !g.teacher_id);
+      // Get all active groups that have a teacher assigned
+      const activeGroupsToSave = draftGroups.filter(g => g._status !== 'deleted' && g.teacher_id);
       
-      const deletedGroups = draftGroups.filter(g => g._status === 'deleted' && !g.id.startsWith('temp-'));
-
-      // Merge deletions
-      const allDeletes = [...deletedGroups, ...updatedButClearedGroups];
-
-      if (newGroups.length > 0) {
-        const { error } = await supabase.from('teacher_classes').insert(
-          newGroups.map(g => ({ teacher_id: g.teacher_id, kelas: parseInt(g.kelas) || 0, rombel: g.rombel }))
+      if (activeGroupsToSave.length > 0) {
+        // Insert them all fresh
+        const { error: insertClassesError } = await supabase.from('teacher_classes').insert(
+          activeGroupsToSave.map(g => ({
+            teacher_id: g.teacher_id,
+            kelas: parseInt(g.kelas) || 0,
+            rombel: g.rombel
+          }))
         );
-        if (error) throw error;
-      }
-      if (updatedGroups.length > 0) {
-        for (const g of updatedGroups) {
-          const { error } = await supabase.from('teacher_classes').update({ teacher_id: g.teacher_id, kelas: parseInt(g.kelas) || 0, rombel: g.rombel }).eq('id', g.id);
-          if (error) throw error;
-        }
-      }
-      if (allDeletes.length > 0) {
-        const { error } = await supabase.from('teacher_classes').delete().in('id', allDeletes.map(g => g.id));
-        if (error) throw error;
+        if (insertClassesError) throw insertClassesError;
       }
 
       // 2. Process Assignments
