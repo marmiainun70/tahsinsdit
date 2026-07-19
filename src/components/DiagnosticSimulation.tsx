@@ -107,8 +107,13 @@ export const DiagnosticSimulation = () => {
       const pMap = poolMap.get(sesi)!;
 
       const jalurKey = jalur.includes('Putra') ? 'Putra' : 'Putri';
-      const mapKey = usePooling ? jalurKey : rombel;
+      let mapKey = usePooling ? jalurKey : rombel;
       
+      // Isolate pools by class for non-Sesi 2 sessions (only allow cross-grade in Sesi 2)
+      if (sesi !== 'Sesi 2 (Kelas 5-6)') {
+        mapKey = `${kelas}-${mapKey}`;
+      }
+
       const current = pMap.get(mapKey) || { count: 0, ibp: 0, jalur: jalurKey, rombels: new Set<string>(), students: [] };
       current.rombels.add(`${kelas}${rombel}`);
 
