@@ -113,16 +113,21 @@ export const DiagnosticSimulation = () => {
         const ev = evals[0];
         
         let levelCode = 'Iqra 1';
-        if (ev.evaluasi_rekomendasi?.[0]?.manual_iqra) {
-          levelCode = ev.evaluasi_rekomendasi[0].manual_iqra;
+        
+        // Handle Supabase one-to-one relationships (they are objects, not arrays)
+        const rekomendasi = ev.evaluasi_rekomendasi as any;
+        const kelancaran = ev.evaluasi_kelancaran as any;
+
+        if (rekomendasi?.manual_iqra) {
+          levelCode = rekomendasi.manual_iqra;
           levelCode = levelCode.toLowerCase().includes('iqra') ? levelCode : `Iqra ${levelCode}`;
-        } else if (ev.evaluasi_rekomendasi?.[0]?.master_level_kemampuan?.kode_level) {
-          levelCode = mapKodeLevelToWizardLevel(ev.evaluasi_rekomendasi[0].master_level_kemampuan.kode_level) || 'Iqra 1';
+        } else if (rekomendasi?.master_level_kemampuan?.kode_level) {
+          levelCode = mapKodeLevelToWizardLevel(rekomendasi.master_level_kemampuan.kode_level) || 'Iqra 1';
         } else if (ev.master_level_kemampuan?.kode_level) {
           levelCode = mapKodeLevelToWizardLevel(ev.master_level_kemampuan.kode_level) || 'Iqra 1';
         }
         
-        const fluency = ev.evaluasi_kelancaran?.[0]?.score ?? 0;
+        const fluency = kelancaran?.score ?? 0;
         const ibp = getLevelPoin(levelCode) - getKelancaranPoin(fluency);
         
         studentIBP.set(student.id, ibp);
