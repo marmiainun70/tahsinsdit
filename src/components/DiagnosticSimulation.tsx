@@ -183,7 +183,7 @@ export const DiagnosticSimulation = () => {
           return {
             kelas: kelasNum,
             name: `Kelas ${kelasNum}`,
-            jalurGroups: Array.from(rMap.entries()).sort((a,b)=>a[0].localeCompare(b[0])).map(([jName, data]) => {
+            rombels: Array.from(rMap.entries()).sort((a,b)=>a[0].localeCompare(b[0])).flatMap(([jName, data]) => {
               
               // Sort students by IBP descending to distribute them evenly
               const sortedByIBP = [...data.students].sort((a, b) => b.ibp - a.ibp);
@@ -320,13 +320,19 @@ export const DiagnosticSimulation = () => {
               // Sort back alphabetically for display
               halaqahs.forEach(h => h.students.sort((a, b) => a.name.localeCompare(b.name)));
 
-              return {
-                name: `Pool ${jName} (${rombelsArr.join(' & ')})`,
-                jalur: data.jalur,
-                count: data.count,
-                ibp: data.ibp,
-                halaqahs: halaqahs
-              }
+              const mappedRombels = rombelsArr.map(rName => {
+                 const rHalaqahs = halaqahs.filter(h => h.name.includes(`${kelasNum}${rName}.`));
+                 return {
+                    name: rName,
+                    jalur: data.jalur,
+                    count: rHalaqahs.reduce((sum, h) => sum + h.students.length, 0),
+                    ibp: rHalaqahs.reduce((sum, h) => sum + h.totalIBP, 0),
+                    halaqah1: rHalaqahs[0] || { name: `Halaqah ${kelasNum}${rName}.1`, students: [], totalIBP: 0 },
+                    halaqah2: rHalaqahs[1] || { name: `Halaqah ${kelasNum}${rName}.2`, students: [], totalIBP: 0 }
+                 };
+              });
+              
+              return mappedRombels;
             })
           }
         })
@@ -505,78 +511,104 @@ export const DiagnosticSimulation = () => {
                               <h4 className="font-bold text-slate-800 dark:text-slate-200">{cls.name}</h4>
                             </div>
                             <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                              {cls.jalurGroups.map(group => (
-                                <div key={group.name} className="p-4">
+                              {cls.rombels.map(rombel => (
+                                <div key={rombel.name} className="p-4">
                                   <div className="flex items-center justify-between mb-4 pb-2 border-b border-dashed border-slate-200 dark:border-slate-700">
                                     <div>
                                       <div className="flex items-center gap-2 mb-1">
                                         <span className="font-bold text-lg text-slate-900 dark:text-white">
-                                          {group.name}
+                                          Kelas {cls.kelas}{rombel.name}
                                         </span>
-                                        <span className={`text-xs font-semibold px-2 py-1 rounded-md ${group.jalur === 'Putra' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300'}`}>
-                                          {group.jalur}
+                                        <span className={`text-xs font-semibold px-2 py-1 rounded-md ${rombel.jalur === 'Putra' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300'}`}>
+                                          {rombel.jalur}
                                         </span>
                                       </div>
                                       <div className="text-sm text-slate-500 dark:text-slate-400">
-                                        Total: {group.count} Siswa | {group.ibp} IBP
+                                        Total: {rombel.count} Siswa | {rombel.ibp} IBP
                                       </div>
                                     </div>
                                   </div>
                                   
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {group.halaqahs.map((halaqah, hIdx) => {
-                                       // Give them different colors based on index to look nice
-                                       const colorVariants = [
-                                          { bg: 'bg-emerald-50 dark:bg-emerald-900/30', border: 'border-emerald-200 dark:border-emerald-700', text: 'text-emerald-800 dark:text-emerald-300', badge: 'text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-800/50' },
-                                          { bg: 'bg-blue-50 dark:bg-blue-900/30', border: 'border-blue-200 dark:border-blue-700', text: 'text-blue-800 dark:text-blue-300', badge: 'text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-800/50' },
-                                          { bg: 'bg-purple-50 dark:bg-purple-900/30', border: 'border-purple-200 dark:border-purple-700', text: 'text-purple-800 dark:text-purple-300', badge: 'text-purple-700 dark:text-purple-400 bg-purple-100 dark:bg-purple-800/50' },
-                                          { bg: 'bg-amber-50 dark:bg-amber-900/30', border: 'border-amber-200 dark:border-amber-700', text: 'text-amber-800 dark:text-amber-300', badge: 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-800/50' },
-                                          { bg: 'bg-rose-50 dark:bg-rose-900/30', border: 'border-rose-200 dark:border-rose-700', text: 'text-rose-800 dark:text-rose-300', badge: 'text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-800/50' },
-                                          { bg: 'bg-cyan-50 dark:bg-cyan-900/30', border: 'border-cyan-200 dark:border-cyan-700', text: 'text-cyan-800 dark:text-cyan-300', badge: 'text-cyan-700 dark:text-cyan-400 bg-cyan-100 dark:bg-cyan-800/50' }
-                                       ];
-                                       const theme = colorVariants[hIdx % colorVariants.length];
-                                       
-                                       return (
-                                          <div key={hIdx} className="bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-                                            <div className={`${theme.bg} px-3 py-2 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center`}>
-                                              <span className={`font-bold text-sm ${theme.text}`}>{halaqah.name}</span>
-                                              <span className={`text-xs font-semibold ${theme.badge} px-2 py-0.5 rounded-md`}>
-                                                {halaqah.students.length} Siswa | {halaqah.totalIBP} IBP
-                                              </span>
-                                            </div>
-                                            <div className="max-h-[300px] overflow-y-auto overflow-x-hidden custom-scrollbar">
-                                              <div className="flex flex-col divide-y divide-slate-200 dark:divide-slate-700 text-xs text-left">
-                                                <div className="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 sticky top-0 z-10">
-                                                  <div className="font-semibold flex-1">Nama Siswa</div>
-                                                  <div className="flex items-center gap-2 shrink-0">
-                                                    <div className="w-16 font-semibold">Level</div>
-                                                    <div className="w-8 font-semibold text-center">IBP</div>
-                                                  </div>
-                                                </div>
-                                                {halaqah.students.map((s, i) => (
-                                                  <div key={i} className={`flex items-center justify-between px-3 py-2 ${s.isEvaluated ? 'hover:bg-slate-100/50 dark:hover:bg-slate-800/50' : 'bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30'}`}>
-                                                    <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
-                                                      <span className="truncate">{s.name}</span>
-                                                      <span className="shrink-0 text-[10px] bg-slate-200/60 dark:bg-slate-700 px-1.5 rounded-sm text-slate-500 font-medium">{s.kelasAsli}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 shrink-0">
-                                                      <div className={`w-16 truncate text-[11px] ${s.isEvaluated ? 'text-slate-600 dark:text-slate-400' : 'text-red-600 dark:text-red-400'}`} title={s.level}>
-                                                        {s.level}
-                                                      </div>
-                                                      <div className="w-8 text-center font-bold text-primary">
-                                                        {s.ibp}
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                ))}
-                                                {halaqah.students.length === 0 && (
-                                                  <div className="px-3 py-4 text-center text-muted-foreground">Tidak ada siswa</div>
-                                                )}
-                                              </div>
+                                    {/* Halaqah 1 */}
+                                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                                      <div className="bg-emerald-50 dark:bg-emerald-900/30 px-3 py-2 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                                        <span className="font-bold text-sm text-emerald-800 dark:text-emerald-300">{rombel.halaqah1.name}</span>
+                                        <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-800/50 px-2 py-0.5 rounded-md">
+                                          {rombel.halaqah1.students.length} Siswa | {rombel.halaqah1.totalIBP} IBP
+                                        </span>
+                                      </div>
+                                      <div className="max-h-[300px] overflow-y-auto overflow-x-hidden custom-scrollbar">
+                                        <div className="flex flex-col divide-y divide-slate-200 dark:divide-slate-700 text-xs text-left">
+                                          <div className="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 sticky top-0">
+                                            <div className="font-semibold flex-1">Nama Siswa</div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                              <div className="w-16 font-semibold">Level</div>
+                                              <div className="w-8 font-semibold text-center">IBP</div>
                                             </div>
                                           </div>
-                                       );
-                                    })}
+                                          {rombel.halaqah1.students.map((s, i) => (
+                                            <div key={i} className={`flex items-center justify-between px-3 py-2 ${s.isEvaluated ? 'hover:bg-slate-100/50 dark:hover:bg-slate-800/50' : 'bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30'}`}>
+                                              <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
+                                                <span className="truncate">{s.name}</span>
+                                                <span className="shrink-0 text-[10px] bg-slate-200/60 dark:bg-slate-700 px-1.5 rounded-sm text-slate-500 font-medium">{s.kelasAsli}</span>
+                                              </div>
+                                              <div className="flex items-center gap-2 shrink-0">
+                                                <div className={`w-16 truncate text-[11px] ${s.isEvaluated ? 'text-slate-600 dark:text-slate-400' : 'text-red-600 dark:text-red-400'}`} title={s.level}>
+                                                  {s.level}
+                                                </div>
+                                                <div className="w-8 text-center font-bold text-primary">
+                                                  {s.ibp}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                          {rombel.halaqah1.students.length === 0 && (
+                                            <div className="px-3 py-4 text-center text-muted-foreground">Tidak ada siswa</div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Halaqah 2 */}
+                                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                                      <div className="bg-blue-50 dark:bg-blue-900/30 px-3 py-2 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                                        <span className="font-bold text-sm text-blue-800 dark:text-blue-300">{rombel.halaqah2.name}</span>
+                                        <span className="text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-800/50 px-2 py-0.5 rounded-md">
+                                          {rombel.halaqah2.students.length} Siswa | {rombel.halaqah2.totalIBP} IBP
+                                        </span>
+                                      </div>
+                                      <div className="max-h-[300px] overflow-y-auto overflow-x-hidden custom-scrollbar">
+                                        <div className="flex flex-col divide-y divide-slate-200 dark:divide-slate-700 text-xs text-left">
+                                          <div className="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 sticky top-0">
+                                            <div className="font-semibold flex-1">Nama Siswa</div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                              <div className="w-16 font-semibold">Level</div>
+                                              <div className="w-8 font-semibold text-center">IBP</div>
+                                            </div>
+                                          </div>
+                                          {rombel.halaqah2.students.map((s, i) => (
+                                            <div key={i} className={`flex items-center justify-between px-3 py-2 ${s.isEvaluated ? 'hover:bg-slate-100/50 dark:hover:bg-slate-800/50' : 'bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30'}`}>
+                                              <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
+                                                <span className="truncate">{s.name}</span>
+                                                <span className="shrink-0 text-[10px] bg-slate-200/60 dark:bg-slate-700 px-1.5 rounded-sm text-slate-500 font-medium">{s.kelasAsli}</span>
+                                              </div>
+                                              <div className="flex items-center gap-2 shrink-0">
+                                                <div className={`w-16 truncate text-[11px] ${s.isEvaluated ? 'text-slate-600 dark:text-slate-400' : 'text-red-600 dark:text-red-400'}`} title={s.level}>
+                                                  {s.level}
+                                                </div>
+                                                <div className="w-8 text-center font-bold text-primary">
+                                                  {s.ibp}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                          {rombel.halaqah2.students.length === 0 && (
+                                            <div className="px-3 py-4 text-center text-muted-foreground">Tidak ada siswa</div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
                               ))}
