@@ -613,11 +613,11 @@ export const DiagnosticSimulation = () => {
                                           {rombel.halaqah1.students.map((s, i) => {
                                             const isShifted = !s.kelasAsli?.startsWith(cls.kelas.toString());
                                             const bgClass = isShifted 
-                                              ? 'bg-purple-100/70 hover:bg-purple-200/80 dark:bg-purple-900/40 dark:hover:bg-purple-900/60' 
+                                              ? 'bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/60' 
                                               : (s.isEvaluated ? 'hover:bg-slate-100/50 dark:hover:bg-slate-800/50' : 'bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30');
                                             return (
                                             <div key={i} className={`flex items-center justify-between px-3 py-2 ${bgClass}`}>
-                                              <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
+                                              <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? (isShifted ? 'text-purple-900 dark:text-purple-200' : 'text-slate-700 dark:text-slate-300') : 'text-red-700 dark:text-red-400'}`} title={s.name}>
                                                 <span className="truncate">{s.name}</span>
                                                 <span className={`shrink-0 text-[10px] px-1.5 rounded-sm font-medium ${isShifted ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700/50 shadow-[0_0_8px_rgba(168,85,247,0.4)]' : 'bg-slate-200/60 dark:bg-slate-700 text-slate-500'}`}>{s.kelasAsli}</span>
                                               </div>
@@ -658,11 +658,11 @@ export const DiagnosticSimulation = () => {
                                           {rombel.halaqah2.students.map((s, i) => {
                                             const isShifted = !s.kelasAsli?.startsWith(cls.kelas.toString());
                                             const bgClass = isShifted 
-                                              ? 'bg-purple-100/70 hover:bg-purple-200/80 dark:bg-purple-900/40 dark:hover:bg-purple-900/60' 
+                                              ? 'bg-purple-100 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/60' 
                                               : (s.isEvaluated ? 'hover:bg-slate-100/50 dark:hover:bg-slate-800/50' : 'bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30');
                                             return (
                                             <div key={i} className={`flex items-center justify-between px-3 py-2 ${bgClass}`}>
-                                              <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
+                                              <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? (isShifted ? 'text-purple-900 dark:text-purple-200' : 'text-slate-700 dark:text-slate-300') : 'text-red-700 dark:text-red-400'}`} title={s.name}>
                                                 <span className="truncate">{s.name}</span>
                                                 <span className={`shrink-0 text-[10px] px-1.5 rounded-sm font-medium ${isShifted ? 'bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 ring-1 ring-purple-300 dark:ring-purple-700/50 shadow-[0_0_8px_rgba(168,85,247,0.4)]' : 'bg-slate-200/60 dark:bg-slate-700 text-slate-500'}`}>{s.kelasAsli}</span>
                                               </div>
