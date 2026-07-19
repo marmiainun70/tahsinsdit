@@ -400,29 +400,33 @@ export const DiagnosticSimulation = () => {
                                         </span>
                                       </div>
                                       <div className="max-h-[300px] overflow-y-auto overflow-x-hidden custom-scrollbar">
-                                        <table className="w-full text-xs text-left table-fixed">
-                                          <thead className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 sticky top-0">
-                                            <tr>
-                                              <th className="px-3 py-2 font-semibold">Nama Siswa</th>
-                                              <th className="px-2 py-2 font-semibold w-20">Level</th>
-                                              <th className="px-2 py-2 font-semibold w-12 text-center">IBP</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                                            {rombel.halaqah1.students.map((s, i) => (
-                                              <tr key={i} className="hover:bg-slate-100/50 dark:hover:bg-slate-800/50">
-                                                <td className="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 truncate max-w-0" title={s.name}>{s.name}</td>
-                                                <td className="px-2 py-2 text-slate-600 dark:text-slate-400 truncate max-w-0" title={s.level}>{s.level}</td>
-                                                <td className="px-2 py-2 text-center font-bold text-primary">{s.ibp}</td>
-                                              </tr>
-                                            ))}
-                                            {rombel.halaqah1.students.length === 0 && (
-                                              <tr>
-                                                <td colSpan={3} className="px-3 py-4 text-center text-muted-foreground">Tidak ada siswa</td>
-                                              </tr>
-                                            )}
-                                          </tbody>
-                                        </table>
+                                        <div className="flex flex-col divide-y divide-slate-200 dark:divide-slate-700 text-xs text-left">
+                                          <div className="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 sticky top-0">
+                                            <div className="font-semibold flex-1">Nama Siswa</div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                              <div className="w-16 font-semibold">Level</div>
+                                              <div className="w-8 font-semibold text-center">IBP</div>
+                                            </div>
+                                          </div>
+                                          {rombel.halaqah1.students.map((s, i) => (
+                                            <div key={i} className="flex items-center justify-between px-3 py-2 hover:bg-slate-100/50 dark:hover:bg-slate-800/50">
+                                              <div className="font-medium text-slate-700 dark:text-slate-300 truncate pr-2 flex-1" title={s.name}>
+                                                {s.name}
+                                              </div>
+                                              <div className="flex items-center gap-2 shrink-0">
+                                                <div className="w-16 text-slate-600 dark:text-slate-400 truncate text-[11px]" title={s.level}>
+                                                  {s.level}
+                                                </div>
+                                                <div className="w-8 text-center font-bold text-primary">
+                                                  {s.ibp}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                          {rombel.halaqah1.students.length === 0 && (
+                                            <div className="px-3 py-4 text-center text-muted-foreground">Tidak ada siswa</div>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
 
@@ -435,29 +439,33 @@ export const DiagnosticSimulation = () => {
                                         </span>
                                       </div>
                                       <div className="max-h-[300px] overflow-y-auto overflow-x-hidden custom-scrollbar">
-                                        <table className="w-full text-xs text-left table-fixed">
-                                          <thead className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 sticky top-0">
-                                            <tr>
-                                              <th className="px-3 py-2 font-semibold">Nama Siswa</th>
-                                              <th className="px-2 py-2 font-semibold w-20">Level</th>
-                                              <th className="px-2 py-2 font-semibold w-12 text-center">IBP</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                                            {rombel.halaqah2.students.map((s, i) => (
-                                              <tr key={i} className="hover:bg-slate-100/50 dark:hover:bg-slate-800/50">
-                                                <td className="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 truncate max-w-0" title={s.name}>{s.name}</td>
-                                                <td className="px-2 py-2 text-slate-600 dark:text-slate-400 truncate max-w-0" title={s.level}>{s.level}</td>
-                                                <td className="px-2 py-2 text-center font-bold text-primary">{s.ibp}</td>
-                                              </tr>
-                                            ))}
-                                            {rombel.halaqah2.students.length === 0 && (
-                                              <tr>
-                                                <td colSpan={3} className="px-3 py-4 text-center text-muted-foreground">Tidak ada siswa</td>
-                                              </tr>
-                                            )}
-                                          </tbody>
-                                        </table>
+                                        <div className="flex flex-col divide-y divide-slate-200 dark:divide-slate-700 text-xs text-left">
+                                          <div className="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 sticky top-0">
+                                            <div className="font-semibold flex-1">Nama Siswa</div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                              <div className="w-16 font-semibold">Level</div>
+                                              <div className="w-8 font-semibold text-center">IBP</div>
+                                            </div>
+                                          </div>
+                                          {rombel.halaqah2.students.map((s, i) => (
+                                            <div key={i} className="flex items-center justify-between px-3 py-2 hover:bg-slate-100/50 dark:hover:bg-slate-800/50">
+                                              <div className="font-medium text-slate-700 dark:text-slate-300 truncate pr-2 flex-1" title={s.name}>
+                                                {s.name}
+                                              </div>
+                                              <div className="flex items-center gap-2 shrink-0">
+                                                <div className="w-16 text-slate-600 dark:text-slate-400 truncate text-[11px]" title={s.level}>
+                                                  {s.level}
+                                                </div>
+                                                <div className="w-8 text-center font-bold text-primary">
+                                                  {s.ibp}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                          {rombel.halaqah2.students.length === 0 && (
+                                            <div className="px-3 py-4 text-center text-muted-foreground">Tidak ada siswa</div>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
