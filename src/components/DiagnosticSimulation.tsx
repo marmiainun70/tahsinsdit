@@ -89,7 +89,7 @@ export const DiagnosticSimulation = () => {
       return 'Putri (C/D)';
     };
 
-    const sesiMap = new Map<string, Map<number, Map<string, { count: number, ibp: number, jalur: string, students: { name: string, level: string, ibp: number, isEvaluated?: boolean, kelasAsli?: string }[] }>>>();
+    const sesiMap = new Map<string, Map<number, Map<string, { count: number, ibp: number, jalur: string, rombels: Set<string>, students: { name: string, level: string, ibp: number, isEvaluated?: boolean, kelasAsli?: string }[] }>>>();
 
     studentsData.forEach(student => {
       const evals = student.evaluasi_awal_semester;
@@ -106,7 +106,9 @@ export const DiagnosticSimulation = () => {
       if (!kelasMap.has(kelas)) kelasMap.set(kelas, new Map());
       const rMap = kelasMap.get(kelas)!;
 
-      const current = rMap.get(rombel) || { count: 0, ibp: 0, jalur: jalur.includes('Putra') ? 'Putra' : 'Putri', students: [] };
+      const jalurKey = jalur.includes('Putra') ? 'Putra' : 'Putri';
+      const current = rMap.get(jalurKey) || { count: 0, ibp: 0, jalur: jalurKey, rombels: new Set<string>(), students: [] };
+      current.rombels.add(rombel);
 
       if (isEvaluated) {
         totalSiap++;
@@ -141,10 +143,11 @@ export const DiagnosticSimulation = () => {
           kelasAsli: `${kelas}${rombel}`
         });
 
-        rMap.set(rombel, { 
+        rMap.set(jalurKey, { 
           count: current.count + 1, 
           ibp: current.ibp + ibp, 
           jalur: current.jalur,
+          rombels: current.rombels,
           students: current.students
         });
 
@@ -160,10 +163,11 @@ export const DiagnosticSimulation = () => {
           kelasAsli: `${kelas}${rombel}`
         });
 
-        rMap.set(rombel, {
+        rMap.set(jalurKey, {
           count: current.count + 1,
           ibp: current.ibp,
           jalur: current.jalur,
+          rombels: current.rombels,
           students: current.students
         });
       }
@@ -179,156 +183,149 @@ export const DiagnosticSimulation = () => {
           return {
             kelas: kelasNum,
             name: `Kelas ${kelasNum}`,
-            rombels: Array.from(rMap.entries()).sort((a,b)=>a[0].localeCompare(b[0])).map(([rName, data]) => {
+            jalurGroups: Array.from(rMap.entries()).sort((a,b)=>a[0].localeCompare(b[0])).map(([jName, data]) => {
               
               // Sort students by IBP descending to distribute them evenly
               const sortedByIBP = [...data.students].sort((a, b) => b.ibp - a.ibp);
               
-              const halaqah1: typeof data.students = [];
-              const halaqah2: typeof data.students = [];
-              let h1IBP = 0;
-              let h2IBP = 0;
-
-              // Advanced Greedy Distribution with Capacity Constraints
-              const maxCap = Math.ceil(sortedByIBP.length / 2);
+              const rombelsArr = Array.from(data.rombels).sort();
+              // Each rombel contributes 2 halaqahs to the pool
+              const numHalaqahs = rombelsArr.length * 2;
               
-              sortedByIBP.forEach(student => {
-                if (halaqah1.length >= maxCap) {
-                  halaqah2.push(student);
-                  h2IBP += student.ibp;
-                } else if (halaqah2.length >= maxCap) {
-                  halaqah1.push(student);
-                  h1IBP += student.ibp;
-                } else {
-                  if (h1IBP < h2IBP) {
-                    halaqah1.push(student);
-                    h1IBP += student.ibp;
-                  } else if (h2IBP < h1IBP) {
-                    halaqah2.push(student);
-                    h2IBP += student.ibp;
-                  } else {
-                    // Tie-breaker: give to the one with fewer students
-                    if (halaqah1.length <= halaqah2.length) {
-                      halaqah1.push(student);
-                      h1IBP += student.ibp;
-                    } else {
-                      halaqah2.push(student);
-                      h2IBP += student.ibp;
-                    }
-                  }
-                }
+              const halaqahs = Array.from({length: numHalaqahs}, (_, i) => {
+                 const rombelIndex = Math.floor(i / 2);
+                 const halaqahSubIndex = (i % 2) + 1;
+                 const originalRombel = rombelsArr[rombelIndex];
+                 return {
+                    name: `Halaqah ${kelasNum}${originalRombel}.${halaqahSubIndex}`,
+                    students: [] as typeof data.students,
+                    totalIBP: 0
+                 };
               });
 
-              // Local Search (Swap) to perfectly minimize absolute IBP difference
+              // Advanced Greedy Distribution with Capacity Constraints for N halaqahs
+              const maxCap = Math.ceil(sortedByIBP.length / numHalaqahs);
+              
+              sortedByIBP.forEach(student => {
+                 const available = halaqahs.filter(h => h.students.length < maxCap);
+                 if (available.length === 0) {
+                    halaqahs[0].students.push(student);
+                    halaqahs[0].totalIBP += student.ibp;
+                    return;
+                 }
+                 
+                 available.sort((a, b) => {
+                    if (a.totalIBP !== b.totalIBP) {
+                       return a.totalIBP - b.totalIBP;
+                    }
+                    return a.students.length - b.students.length;
+                 });
+                 
+                 const target = available[0];
+                 target.students.push(student);
+                 target.totalIBP += student.ibp;
+              });
+
+              // Local Search (Swap) to minimize absolute IBP difference across ALL N halaqahs
               let improved = true;
               while (improved) {
                 improved = false;
-                let currentDiff = Math.abs(h1IBP - h2IBP);
+                
+                let maxH = halaqahs[0];
+                let minH = halaqahs[0];
+                
+                for (let h of halaqahs) {
+                   if (h.totalIBP > maxH.totalIBP) maxH = h;
+                   if (h.totalIBP < minH.totalIBP) minH = h;
+                }
+                
+                let currentDiff = maxH.totalIBP - minH.totalIBP;
                 if (currentDiff <= 1) break; // Optimal
 
                 let bestSwap = null;
-                for (let i = 0; i < halaqah1.length; i++) {
-                  for (let j = 0; j < halaqah2.length; j++) {
-                    const s1 = halaqah1[i];
-                    const s2 = halaqah2[j];
-                    const newH1IBP = h1IBP - s1.ibp + s2.ibp;
-                    const newH2IBP = h2IBP - s2.ibp + s1.ibp;
-                    const newDiff = Math.abs(newH1IBP - newH2IBP);
+                for (let i = 0; i < maxH.students.length; i++) {
+                  for (let j = 0; j < minH.students.length; j++) {
+                    const s1 = maxH.students[i];
+                    const s2 = minH.students[j];
+                    const newMaxHIBP = maxH.totalIBP - s1.ibp + s2.ibp;
+                    const newMinHIBP = minH.totalIBP - s2.ibp + s1.ibp;
+                    const newDiff = Math.abs(newMaxHIBP - newMinHIBP);
                     
                     if (newDiff < currentDiff) {
                       currentDiff = newDiff;
-                      bestSwap = { i, j };
+                      bestSwap = { i, j, h1: maxH, h2: minH };
                     }
                   }
                 }
 
                 if (bestSwap) {
-                  const s1 = halaqah1[bestSwap.i];
-                  const s2 = halaqah2[bestSwap.j];
-                  halaqah1[bestSwap.i] = s2;
-                  halaqah2[bestSwap.j] = s1;
-                  h1IBP = h1IBP - s1.ibp + s2.ibp;
-                  h2IBP = h2IBP - s2.ibp + s1.ibp;
+                  const s1 = bestSwap.h1.students[bestSwap.i];
+                  const s2 = bestSwap.h2.students[bestSwap.j];
+                  bestSwap.h1.students[bestSwap.i] = s2;
+                  bestSwap.h2.students[bestSwap.j] = s1;
+                  bestSwap.h1.totalIBP = bestSwap.h1.totalIBP - s1.ibp + s2.ibp;
+                  bestSwap.h2.totalIBP = bestSwap.h2.totalIBP - s2.ibp + s1.ibp;
                   improved = true;
                 }
               }
 
-              // Enforce the rule: The group with MORE students should ideally NOT have MORE IBP.
-              // "Tdk masalah jika siswa yg lebih sedikit tapi bebannya lebih berat ... jangan sebaliknya"
-              if (halaqah1.length !== halaqah2.length) {
-                let larger = halaqah1.length > halaqah2.length ? halaqah1 : halaqah2;
-                let smaller = halaqah1.length > halaqah2.length ? halaqah2 : halaqah1;
-                let largerIBP = halaqah1.length > halaqah2.length ? h1IBP : h2IBP;
-                let smallerIBP = halaqah1.length > halaqah2.length ? h2IBP : h1IBP;
-
-                let shiftImproved = true;
-                while (shiftImproved && largerIBP > smallerIBP) {
-                  shiftImproved = false;
-                  let bestShift = null;
-                  let minPenalty = Infinity;
-
-                  for (let i = 0; i < larger.length; i++) {
-                    for (let j = 0; j < smaller.length; j++) {
-                      const l_s = larger[i];
-                      const s_s = smaller[j];
-                      
-                      if (l_s.ibp > s_s.ibp) {
-                        const newLargerIBP = largerIBP - l_s.ibp + s_s.ibp;
-                        const newSmallerIBP = smallerIBP - s_s.ibp + l_s.ibp;
-                        const newDiff = Math.abs(newLargerIBP - newSmallerIBP);
-                        
-                        // Accept if it flips the balance (larger <= smaller) with minimal penalty
-                        // Or if it just purely improves the gap
-                        if (newLargerIBP <= newSmallerIBP && newDiff < minPenalty) {
-                          minPenalty = newDiff;
-                          bestShift = { i, j };
-                        } else if (newLargerIBP > newSmallerIBP && newDiff < Math.abs(largerIBP - smallerIBP)) {
-                           minPenalty = newDiff;
-                           bestShift = { i, j };
-                        }
-                      }
+              // Enforce rule: Groups with more students should NOT have strictly more IBP if possible
+              for (let x = 0; x < halaqahs.length; x++) {
+                 for (let y = 0; y < halaqahs.length; y++) {
+                    if (x === y) continue;
+                    let h1 = halaqahs[x];
+                    let h2 = halaqahs[y];
+                    
+                    if (h1.students.length > h2.students.length && h1.totalIBP > h2.totalIBP) {
+                       let shiftImproved = true;
+                       while (shiftImproved && h1.totalIBP > h2.totalIBP) {
+                          shiftImproved = false;
+                          let bestShift = null;
+                          let minPenalty = Infinity;
+                          
+                          for (let i = 0; i < h1.students.length; i++) {
+                            for (let j = 0; j < h2.students.length; j++) {
+                               const s1 = h1.students[i];
+                               const s2 = h2.students[j];
+                               if (s1.ibp > s2.ibp) {
+                                  const newH1IBP = h1.totalIBP - s1.ibp + s2.ibp;
+                                  const newH2IBP = h2.totalIBP - s2.ibp + s1.ibp;
+                                  const newDiff = Math.abs(newH1IBP - newH2IBP);
+                                  
+                                  if (newH1IBP <= newH2IBP && newDiff < minPenalty) {
+                                     minPenalty = newDiff;
+                                     bestShift = { i, j };
+                                  } else if (newH1IBP > newH2IBP && newDiff < Math.abs(h1.totalIBP - h2.totalIBP)) {
+                                     minPenalty = newDiff;
+                                     bestShift = { i, j };
+                                  }
+                               }
+                            }
+                          }
+                          
+                          if (bestShift) {
+                             const s1 = h1.students[bestShift.i];
+                             const s2 = h2.students[bestShift.j];
+                             h1.students[bestShift.i] = s2;
+                             h2.students[bestShift.j] = s1;
+                             h1.totalIBP = h1.totalIBP - s1.ibp + s2.ibp;
+                             h2.totalIBP = h2.totalIBP - s2.ibp + s1.ibp;
+                             shiftImproved = true;
+                          }
+                       }
                     }
-                  }
-
-                  if (bestShift) {
-                    const l_s = larger[bestShift.i];
-                    const s_s = smaller[bestShift.j];
-                    larger[bestShift.i] = s_s;
-                    smaller[bestShift.j] = l_s;
-                    largerIBP = largerIBP - l_s.ibp + s_s.ibp;
-                    smallerIBP = smallerIBP - s_s.ibp + l_s.ibp;
-                    shiftImproved = true;
-                  }
-                }
-                
-                if (halaqah1.length > halaqah2.length) {
-                  h1IBP = largerIBP;
-                  h2IBP = smallerIBP;
-                } else {
-                  h2IBP = largerIBP;
-                  h1IBP = smallerIBP;
-                }
+                 }
               }
 
               // Sort back alphabetically for display
-              halaqah1.sort((a, b) => a.name.localeCompare(b.name));
-              halaqah2.sort((a, b) => a.name.localeCompare(b.name));
+              halaqahs.forEach(h => h.students.sort((a, b) => a.name.localeCompare(b.name)));
 
               return {
-                name: rName,
+                name: `Pool ${jName} (${rombelsArr.join(' & ')})`,
                 jalur: data.jalur,
                 count: data.count,
                 ibp: data.ibp,
-                halaqah1: {
-                  name: `Halaqah ${kelasNum}${rName}.1`,
-                  students: halaqah1,
-                  totalIBP: h1IBP
-                },
-                halaqah2: {
-                  name: `Halaqah ${kelasNum}${rName}.2`,
-                  students: halaqah2,
-                  totalIBP: h2IBP
-                }
+                halaqahs: halaqahs
               }
             })
           }
@@ -508,104 +505,78 @@ export const DiagnosticSimulation = () => {
                               <h4 className="font-bold text-slate-800 dark:text-slate-200">{cls.name}</h4>
                             </div>
                             <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                              {cls.rombels.map(rombel => (
-                                <div key={rombel.name} className="p-4">
+                              {cls.jalurGroups.map(group => (
+                                <div key={group.name} className="p-4">
                                   <div className="flex items-center justify-between mb-4 pb-2 border-b border-dashed border-slate-200 dark:border-slate-700">
                                     <div>
                                       <div className="flex items-center gap-2 mb-1">
                                         <span className="font-bold text-lg text-slate-900 dark:text-white">
-                                          Kelas {cls.kelas}{rombel.name}
+                                          {group.name}
                                         </span>
-                                        <span className={`text-xs font-semibold px-2 py-1 rounded-md ${rombel.jalur === 'Putra' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300'}`}>
-                                          {rombel.jalur}
+                                        <span className={`text-xs font-semibold px-2 py-1 rounded-md ${group.jalur === 'Putra' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300'}`}>
+                                          {group.jalur}
                                         </span>
                                       </div>
                                       <div className="text-sm text-slate-500 dark:text-slate-400">
-                                        Total: {rombel.count} Siswa | {rombel.ibp} IBP
+                                        Total: {group.count} Siswa | {group.ibp} IBP
                                       </div>
                                     </div>
                                   </div>
                                   
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Halaqah 1 */}
-                                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-                                      <div className="bg-emerald-50 dark:bg-emerald-900/30 px-3 py-2 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                                        <span className="font-bold text-sm text-emerald-800 dark:text-emerald-300">{rombel.halaqah1.name}</span>
-                                        <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-800/50 px-2 py-0.5 rounded-md">
-                                          {rombel.halaqah1.students.length} Siswa | {rombel.halaqah1.totalIBP} IBP
-                                        </span>
-                                      </div>
-                                      <div className="max-h-[300px] overflow-y-auto overflow-x-hidden custom-scrollbar">
-                                        <div className="flex flex-col divide-y divide-slate-200 dark:divide-slate-700 text-xs text-left">
-                                          <div className="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 sticky top-0">
-                                            <div className="font-semibold flex-1">Nama Siswa</div>
-                                            <div className="flex items-center gap-2 shrink-0">
-                                              <div className="w-16 font-semibold">Level</div>
-                                              <div className="w-8 font-semibold text-center">IBP</div>
+                                    {group.halaqahs.map((halaqah, hIdx) => {
+                                       // Give them different colors based on index to look nice
+                                       const colorVariants = [
+                                          { bg: 'bg-emerald-50 dark:bg-emerald-900/30', border: 'border-emerald-200 dark:border-emerald-700', text: 'text-emerald-800 dark:text-emerald-300', badge: 'text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-800/50' },
+                                          { bg: 'bg-blue-50 dark:bg-blue-900/30', border: 'border-blue-200 dark:border-blue-700', text: 'text-blue-800 dark:text-blue-300', badge: 'text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-800/50' },
+                                          { bg: 'bg-purple-50 dark:bg-purple-900/30', border: 'border-purple-200 dark:border-purple-700', text: 'text-purple-800 dark:text-purple-300', badge: 'text-purple-700 dark:text-purple-400 bg-purple-100 dark:bg-purple-800/50' },
+                                          { bg: 'bg-amber-50 dark:bg-amber-900/30', border: 'border-amber-200 dark:border-amber-700', text: 'text-amber-800 dark:text-amber-300', badge: 'text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-800/50' },
+                                          { bg: 'bg-rose-50 dark:bg-rose-900/30', border: 'border-rose-200 dark:border-rose-700', text: 'text-rose-800 dark:text-rose-300', badge: 'text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-800/50' },
+                                          { bg: 'bg-cyan-50 dark:bg-cyan-900/30', border: 'border-cyan-200 dark:border-cyan-700', text: 'text-cyan-800 dark:text-cyan-300', badge: 'text-cyan-700 dark:text-cyan-400 bg-cyan-100 dark:bg-cyan-800/50' }
+                                       ];
+                                       const theme = colorVariants[hIdx % colorVariants.length];
+                                       
+                                       return (
+                                          <div key={hIdx} className="bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                                            <div className={`${theme.bg} px-3 py-2 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center`}>
+                                              <span className={`font-bold text-sm ${theme.text}`}>{halaqah.name}</span>
+                                              <span className={`text-xs font-semibold ${theme.badge} px-2 py-0.5 rounded-md`}>
+                                                {halaqah.students.length} Siswa | {halaqah.totalIBP} IBP
+                                              </span>
+                                            </div>
+                                            <div className="max-h-[300px] overflow-y-auto overflow-x-hidden custom-scrollbar">
+                                              <div className="flex flex-col divide-y divide-slate-200 dark:divide-slate-700 text-xs text-left">
+                                                <div className="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 sticky top-0 z-10">
+                                                  <div className="font-semibold flex-1">Nama Siswa</div>
+                                                  <div className="flex items-center gap-2 shrink-0">
+                                                    <div className="w-16 font-semibold">Level</div>
+                                                    <div className="w-8 font-semibold text-center">IBP</div>
+                                                  </div>
+                                                </div>
+                                                {halaqah.students.map((s, i) => (
+                                                  <div key={i} className={`flex items-center justify-between px-3 py-2 ${s.isEvaluated ? 'hover:bg-slate-100/50 dark:hover:bg-slate-800/50' : 'bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30'}`}>
+                                                    <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
+                                                      <span className="truncate">{s.name}</span>
+                                                      <span className="shrink-0 text-[10px] bg-slate-200/60 dark:bg-slate-700 px-1.5 rounded-sm text-slate-500 font-medium">{s.kelasAsli}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                      <div className={`w-16 truncate text-[11px] ${s.isEvaluated ? 'text-slate-600 dark:text-slate-400' : 'text-red-600 dark:text-red-400'}`} title={s.level}>
+                                                        {s.level}
+                                                      </div>
+                                                      <div className="w-8 text-center font-bold text-primary">
+                                                        {s.ibp}
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                                {halaqah.students.length === 0 && (
+                                                  <div className="px-3 py-4 text-center text-muted-foreground">Tidak ada siswa</div>
+                                                )}
+                                              </div>
                                             </div>
                                           </div>
-                                          {rombel.halaqah1.students.map((s, i) => (
-                                            <div key={i} className={`flex items-center justify-between px-3 py-2 ${s.isEvaluated ? 'hover:bg-slate-100/50 dark:hover:bg-slate-800/50' : 'bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30'}`}>
-                                              <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
-                                                <span className="truncate">{s.name}</span>
-                                                <span className="shrink-0 text-[10px] bg-slate-200/60 dark:bg-slate-700 px-1.5 rounded-sm text-slate-500 font-medium">{s.kelasAsli}</span>
-                                              </div>
-                                              <div className="flex items-center gap-2 shrink-0">
-                                                <div className={`w-16 truncate text-[11px] ${s.isEvaluated ? 'text-slate-600 dark:text-slate-400' : 'text-red-600 dark:text-red-400'}`} title={s.level}>
-                                                  {s.level}
-                                                </div>
-                                                <div className="w-8 text-center font-bold text-primary">
-                                                  {s.ibp}
-                                                </div>
-                                              </div>
-                                            </div>
-                                          ))}
-                                          {rombel.halaqah1.students.length === 0 && (
-                                            <div className="px-3 py-4 text-center text-muted-foreground">Tidak ada siswa</div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    {/* Halaqah 2 */}
-                                    <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-                                      <div className="bg-blue-50 dark:bg-blue-900/30 px-3 py-2 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-                                        <span className="font-bold text-sm text-blue-800 dark:text-blue-300">{rombel.halaqah2.name}</span>
-                                        <span className="text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-100 dark:bg-blue-800/50 px-2 py-0.5 rounded-md">
-                                          {rombel.halaqah2.students.length} Siswa | {rombel.halaqah2.totalIBP} IBP
-                                        </span>
-                                      </div>
-                                      <div className="max-h-[300px] overflow-y-auto overflow-x-hidden custom-scrollbar">
-                                        <div className="flex flex-col divide-y divide-slate-200 dark:divide-slate-700 text-xs text-left">
-                                          <div className="flex items-center justify-between px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 sticky top-0">
-                                            <div className="font-semibold flex-1">Nama Siswa</div>
-                                            <div className="flex items-center gap-2 shrink-0">
-                                              <div className="w-16 font-semibold">Level</div>
-                                              <div className="w-8 font-semibold text-center">IBP</div>
-                                            </div>
-                                          </div>
-                                          {rombel.halaqah2.students.map((s, i) => (
-                                            <div key={i} className={`flex items-center justify-between px-3 py-2 ${s.isEvaluated ? 'hover:bg-slate-100/50 dark:hover:bg-slate-800/50' : 'bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30'}`}>
-                                              <div className={`font-medium truncate pr-2 flex-1 flex items-center gap-1.5 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
-                                                <span className="truncate">{s.name}</span>
-                                                <span className="shrink-0 text-[10px] bg-slate-200/60 dark:bg-slate-700 px-1.5 rounded-sm text-slate-500 font-medium">{s.kelasAsli}</span>
-                                              </div>
-                                              <div className="flex items-center gap-2 shrink-0">
-                                                <div className={`w-16 truncate text-[11px] ${s.isEvaluated ? 'text-slate-600 dark:text-slate-400' : 'text-red-600 dark:text-red-400'}`} title={s.level}>
-                                                  {s.level}
-                                                </div>
-                                                <div className="w-8 text-center font-bold text-primary">
-                                                  {s.ibp}
-                                                </div>
-                                              </div>
-                                            </div>
-                                          ))}
-                                          {rombel.halaqah2.students.length === 0 && (
-                                            <div className="px-3 py-4 text-center text-muted-foreground">Tidak ada siswa</div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
+                                       );
+                                    })}
                                   </div>
                                 </div>
                               ))}
