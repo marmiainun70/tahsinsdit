@@ -19,9 +19,12 @@ export const DiagnosticSimulation = () => {
         .select(`
           id, nama, kelas, rombel, status_siswa,
           evaluasi_awal_semester(
-            master_level_kemampuan(kode_level), 
+            master_level_kemampuan!evaluasi_awal_semester_selected_level_id_fkey(kode_level), 
             evaluasi_kelancaran(score),
-            evaluasi_rekomendasi(manual_iqra, master_level_kemampuan(kode_level))
+            evaluasi_rekomendasi(
+              manual_iqra, 
+              master_level_kemampuan!evaluasi_rekomendasi_recommended_level_id_fkey(kode_level)
+            )
           )
         `)
         .eq('status_siswa', 'aktif');
@@ -97,6 +100,14 @@ export const DiagnosticSimulation = () => {
       const rombel = student.rombel;
       const kelas = student.kelas;
 
+      if (!sesiMap.has(sesi)) sesiMap.set(sesi, new Map());
+      const kelasMap = sesiMap.get(sesi)!;
+      
+      if (!kelasMap.has(kelas)) kelasMap.set(kelas, new Map());
+      const rMap = kelasMap.get(kelas)!;
+
+      const current = rMap.get(rombel) || { count: 0, ibp: 0, jalur: jalur.includes('Putra') ? 'Putra' : 'Putri', students: [] };
+
       if (isEvaluated) {
         totalSiap++;
         const ev = evals[0];
@@ -117,18 +128,11 @@ export const DiagnosticSimulation = () => {
         studentIBP.set(student.id, ibp);
         grandTotalIBP += ibp;
 
-        if (!sesiMap.has(sesi)) sesiMap.set(sesi, new Map());
-        const kelasMap = sesiMap.get(sesi)!;
-        
-        if (!kelasMap.has(kelas)) kelasMap.set(kelas, new Map());
-        const rMap = kelasMap.get(kelas)!;
-
-        const current = rMap.get(rombel) || { count: 0, ibp: 0, jalur: jalur.includes('Putra') ? 'Putra' : 'Putri', students: [] };
-        
         current.students.push({
           name: student.nama,
           level: levelCode,
-          ibp: ibp
+          ibp: ibp,
+          isEvaluated: true
         });
 
         rMap.set(rombel, { 
@@ -140,6 +144,21 @@ export const DiagnosticSimulation = () => {
 
       } else {
         totalMenunggu++;
+        studentIBP.set(student.id, 0);
+        
+        current.students.push({
+          name: student.nama,
+          level: "Belum Dievaluasi",
+          ibp: 0,
+          isEvaluated: false
+        });
+
+        rMap.set(rombel, {
+          count: current.count + 1,
+          ibp: current.ibp,
+          jalur: current.jalur,
+          students: current.students
+        });
       }
 
       studentSesi.set(student.id, sesi);
@@ -409,12 +428,12 @@ export const DiagnosticSimulation = () => {
                                             </div>
                                           </div>
                                           {rombel.halaqah1.students.map((s, i) => (
-                                            <div key={i} className="flex items-center justify-between px-3 py-2 hover:bg-slate-100/50 dark:hover:bg-slate-800/50">
-                                              <div className="font-medium text-slate-700 dark:text-slate-300 truncate pr-2 flex-1" title={s.name}>
+                                            <div key={i} className={`flex items-center justify-between px-3 py-2 ${s.isEvaluated ? 'hover:bg-slate-100/50 dark:hover:bg-slate-800/50' : 'bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30'}`}>
+                                              <div className={`font-medium truncate pr-2 flex-1 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
                                                 {s.name}
                                               </div>
                                               <div className="flex items-center gap-2 shrink-0">
-                                                <div className="w-16 text-slate-600 dark:text-slate-400 truncate text-[11px]" title={s.level}>
+                                                <div className={`w-16 truncate text-[11px] ${s.isEvaluated ? 'text-slate-600 dark:text-slate-400' : 'text-red-600 dark:text-red-400'}`} title={s.level}>
                                                   {s.level}
                                                 </div>
                                                 <div className="w-8 text-center font-bold text-primary">
@@ -448,12 +467,12 @@ export const DiagnosticSimulation = () => {
                                             </div>
                                           </div>
                                           {rombel.halaqah2.students.map((s, i) => (
-                                            <div key={i} className="flex items-center justify-between px-3 py-2 hover:bg-slate-100/50 dark:hover:bg-slate-800/50">
-                                              <div className="font-medium text-slate-700 dark:text-slate-300 truncate pr-2 flex-1" title={s.name}>
+                                            <div key={i} className={`flex items-center justify-between px-3 py-2 ${s.isEvaluated ? 'hover:bg-slate-100/50 dark:hover:bg-slate-800/50' : 'bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/30'}`}>
+                                              <div className={`font-medium truncate pr-2 flex-1 ${s.isEvaluated ? 'text-slate-700 dark:text-slate-300' : 'text-red-700 dark:text-red-400'}`} title={s.name}>
                                                 {s.name}
                                               </div>
                                               <div className="flex items-center gap-2 shrink-0">
-                                                <div className="w-16 text-slate-600 dark:text-slate-400 truncate text-[11px]" title={s.level}>
+                                                <div className={`w-16 truncate text-[11px] ${s.isEvaluated ? 'text-slate-600 dark:text-slate-400' : 'text-red-600 dark:text-red-400'}`} title={s.level}>
                                                   {s.level}
                                                 </div>
                                                 <div className="w-8 text-center font-bold text-primary">
