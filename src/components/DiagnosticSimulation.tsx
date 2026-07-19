@@ -399,20 +399,20 @@ export const DiagnosticSimulation = () => {
                                           {rombel.halaqah1.students.length} Siswa | {rombel.halaqah1.totalIBP} IBP
                                         </span>
                                       </div>
-                                      <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                      <div className="max-h-[300px] overflow-y-auto overflow-x-hidden custom-scrollbar">
                                         <table className="w-full text-xs text-left table-fixed">
                                           <thead className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 sticky top-0">
                                             <tr>
-                                              <th className="px-2 py-2 font-semibold truncate">Nama Siswa</th>
-                                              <th className="px-2 py-2 font-semibold w-24">Level</th>
+                                              <th className="px-3 py-2 font-semibold">Nama Siswa</th>
+                                              <th className="px-2 py-2 font-semibold w-20">Level</th>
                                               <th className="px-2 py-2 font-semibold w-12 text-center">IBP</th>
                                             </tr>
                                           </thead>
                                           <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                                             {rombel.halaqah1.students.map((s, i) => (
                                               <tr key={i} className="hover:bg-slate-100/50 dark:hover:bg-slate-800/50">
-                                                <td className="px-2 py-2 font-medium text-slate-700 dark:text-slate-300 truncate" title={s.name}>{s.name}</td>
-                                                <td className="px-2 py-2 text-slate-600 dark:text-slate-400 truncate">{s.level}</td>
+                                                <td className="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 truncate max-w-0" title={s.name}>{s.name}</td>
+                                                <td className="px-2 py-2 text-slate-600 dark:text-slate-400 truncate max-w-0" title={s.level}>{s.level}</td>
                                                 <td className="px-2 py-2 text-center font-bold text-primary">{s.ibp}</td>
                                               </tr>
                                             ))}
@@ -434,20 +434,20 @@ export const DiagnosticSimulation = () => {
                                           {rombel.halaqah2.students.length} Siswa | {rombel.halaqah2.totalIBP} IBP
                                         </span>
                                       </div>
-                                      <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                      <div className="max-h-[300px] overflow-y-auto overflow-x-hidden custom-scrollbar">
                                         <table className="w-full text-xs text-left table-fixed">
                                           <thead className="bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 sticky top-0">
                                             <tr>
-                                              <th className="px-2 py-2 font-semibold truncate">Nama Siswa</th>
-                                              <th className="px-2 py-2 font-semibold w-24">Level</th>
+                                              <th className="px-3 py-2 font-semibold">Nama Siswa</th>
+                                              <th className="px-2 py-2 font-semibold w-20">Level</th>
                                               <th className="px-2 py-2 font-semibold w-12 text-center">IBP</th>
                                             </tr>
                                           </thead>
                                           <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                                             {rombel.halaqah2.students.map((s, i) => (
                                               <tr key={i} className="hover:bg-slate-100/50 dark:hover:bg-slate-800/50">
-                                                <td className="px-2 py-2 font-medium text-slate-700 dark:text-slate-300 truncate" title={s.name}>{s.name}</td>
-                                                <td className="px-2 py-2 text-slate-600 dark:text-slate-400 truncate">{s.level}</td>
+                                                <td className="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 truncate max-w-0" title={s.name}>{s.name}</td>
+                                                <td className="px-2 py-2 text-slate-600 dark:text-slate-400 truncate max-w-0" title={s.level}>{s.level}</td>
                                                 <td className="px-2 py-2 text-center font-bold text-primary">{s.ibp}</td>
                                               </tr>
                                             ))}
