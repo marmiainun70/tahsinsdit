@@ -10,8 +10,7 @@ export const useParentStudents = (userId?: string) => {
       const { data, error } = await supabase
         .from("parents")
         .select("student_id")
-        .eq("user_id", userId)
-        .eq("status", "approved");
+        .eq("user_id", userId);
 
       if (error) throw error;
 
