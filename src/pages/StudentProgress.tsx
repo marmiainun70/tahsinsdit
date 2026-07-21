@@ -9,6 +9,7 @@ import {
 import { useMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
 import { useAddActivityLog } from "@/hooks/useActivityLog";
 import ActivityLogPanel from "@/components/ActivityLogPanel";
+import { useAuth } from "@/contexts/AuthContext";
 import { ChevronRight, TrendingUp, Award, BookOpen, CalendarDays, ClipboardList, Loader2, AlertTriangle, FileDown, ArrowRightLeft } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import TahsinTrendChart from "@/components/TahsinTrendChart";
@@ -68,6 +69,8 @@ const StudentProgress = () => {
   const addActivityLog = useAddActivityLog();
   const { reportRef, exporting, exportPDF } = useExportPDF();
   const { toast } = useToast();
+  const { profile } = useAuth();
+  const isParent = profile?.role === "parent";
 
   const [form, setForm] = useState({
     halaman: "", kelancaran: "", makhraj: "", tajwid: "", catatan: "",
@@ -183,12 +186,18 @@ const StudentProgress = () => {
             <div className="flex flex-wrap gap-2 mt-2">
               <span className="text-xs bg-secondary text-secondary-foreground px-2.5 py-1 rounded-full">Kelas {student.kelas}</span>
               {/* Rombel badge — clickable shortcut to open pindah rombel */}
-              <button
-                onClick={() => { setTargetRombel((student as any).rombel as Rombel); setShowPindahRombel(true); }}
-                className={`text-xs px-2.5 py-1 rounded-full font-semibold border transition-opacity hover:opacity-80 ${ROMBEL_COLORS[(student as any).rombel as Rombel] ?? "bg-muted text-muted-foreground border-border"}`}
-              >
-                Rombel {(student as any).rombel}
-              </button>
+              {!isParent ? (
+                <button
+                  onClick={() => { setTargetRombel((student as any).rombel as Rombel); setShowPindahRombel(true); }}
+                  className={`text-xs px-2.5 py-1 rounded-full font-semibold border transition-opacity hover:opacity-80 ${ROMBEL_COLORS[(student as any).rombel as Rombel] ?? "bg-muted text-muted-foreground border-border"}`}
+                >
+                  Rombel {(student as any).rombel}
+                </button>
+              ) : (
+                <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${ROMBEL_COLORS[(student as any).rombel as Rombel] ?? "bg-muted text-muted-foreground border-border"}`}>
+                  Rombel {(student as any).rombel}
+                </span>
+              )}
               <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LEVEL_COLORS[student.level]}`}>
                 {getLevelDisplayLabel(student.level as ReadingLevel)}
               </span>
@@ -202,20 +211,24 @@ const StudentProgress = () => {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => { setTargetRombel((student as any).rombel as Rombel); setShowPindahRombel(true); }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-card border border-border text-foreground rounded-xl text-sm font-medium hover:bg-muted transition-colors"
-            >
-              <ArrowRightLeft className="w-4 h-4" />
-              Pindah Rombel
-            </button>
-            {isTahsinDasar(student.level as ReadingLevel) && (
-              <Link to={`/tahsin/${student.id}`}>
-                <button className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
-                  <BookOpen className="w-4 h-4" />
-                  Penilaian Tahsin
+            {!isParent && (
+              <>
+                <button
+                  onClick={() => { setTargetRombel((student as any).rombel as Rombel); setShowPindahRombel(true); }}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-card border border-border text-foreground rounded-xl text-sm font-medium hover:bg-muted transition-colors"
+                >
+                  <ArrowRightLeft className="w-4 h-4" />
+                  Pindah Rombel
                 </button>
-              </Link>
+                {isTahsinDasar(student.level as ReadingLevel) && (
+                  <Link to={`/tahsin/${student.id}`}>
+                    <button className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity">
+                      <BookOpen className="w-4 h-4" />
+                      Penilaian Tahsin
+                    </button>
+                  </Link>
+                )}
+              </>
             )}
             <button
               onClick={() => exportPDF(student, progres, [], tahsinData)}
@@ -428,7 +441,8 @@ const StudentProgress = () => {
       </div>
 
       {/* Add Progress Form */}
-      <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+      {!isParent && (
+        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
         <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-primary" />
           Catat Progres Hari Ini
@@ -466,6 +480,7 @@ const StudentProgress = () => {
           </div>
         </form>
       </div>
+      )}
 
       {/* Tahsin Trend Chart — untuk level Tahsin Dasar (Iqro) dan Tahsin Lanjutan/Tahfizh */}
       {isTahsinDasar(student.level as ReadingLevel) && (

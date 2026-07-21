@@ -24,8 +24,15 @@ const classColors = [
 "from-teal-500 to-teal-600"];
 
 
+import ParentDashboard from "@/components/ParentDashboard";
+
 const Dashboard = () => {
   const { user, profile } = useAuth();
+  
+  if (profile?.role === "parent") {
+    return <ParentDashboard />;
+  }
+
   const isTeacher = isTeacherRole(profile?.role);
   useAdminRegistrationNotifier(profile?.role === "admin");
 

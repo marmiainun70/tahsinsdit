@@ -54,7 +54,12 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
     // Admin selalu punya akses penuh ke semua menu (bypass table check)
     if (profile?.role === "admin") return true;
     
-    // Jika belum loading atau bukan admin, maka cek tabel role_permissions
+    // Parent HANYA boleh melihat Dashboard (Portal Anak)
+    if (profile?.role === "parent") {
+      return featureKey === "dashboard";
+    }
+
+    // Jika belum loading atau bukan admin/parent, maka cek tabel role_permissions
     if (!permissions || !profile?.role) return false;
 
     const perm = permissions.find(p => p.feature_key === featureKey);
@@ -63,7 +68,6 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
     if (featureKey === "evaluasi_diagnostik" && isTeacherRole(profile.role)) return true;
 
     if (isTeacherRole(profile.role)) return perm.teacher_access;
-    if (profile.role === "parent") return perm.parent_access;
 
     return false;
   };
@@ -341,20 +345,24 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="hidden sm:flex items-center gap-2 px-3 py-2 bg-muted hover:bg-secondary border border-border rounded-xl text-sm text-muted-foreground transition-all hover:border-primary/40"
-            >
-              <Search className="w-4 h-4" />
-              <span className="hidden md:inline w-40 text-left">Cari siswa...</span>
-              <kbd className="hidden md:inline text-xs bg-background border border-border px-1.5 py-0.5 rounded text-muted-foreground/60 ml-auto">/</kbd>
-            </button>
-            <button
-              onClick={() => setSearchOpen(true)}
-              className="sm:hidden p-2 rounded-xl hover:bg-secondary transition-colors"
-            >
-              <Search className="w-5 h-5 text-muted-foreground" />
-            </button>
+            {profile?.role !== "parent" && (
+              <>
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  className="hidden sm:flex items-center gap-2 px-3 py-2 bg-muted hover:bg-secondary border border-border rounded-xl text-sm text-muted-foreground transition-all hover:border-primary/40"
+                >
+                  <Search className="w-4 h-4" />
+                  <span className="hidden md:inline w-40 text-left">Cari siswa...</span>
+                  <kbd className="hidden md:inline text-xs bg-background border border-border px-1.5 py-0.5 rounded text-muted-foreground/60 ml-auto">/</kbd>
+                </button>
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  className="sm:hidden p-2 rounded-xl hover:bg-secondary transition-colors"
+                >
+                  <Search className="w-5 h-5 text-muted-foreground" />
+                </button>
+              </>
+            )}
             <ThemeToggle />
             <NotificationBell />
             <div className="flex items-center gap-2 bg-secondary rounded-xl px-2 sm:px-3 py-2">
