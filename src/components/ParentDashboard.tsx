@@ -90,7 +90,7 @@ const ParentDashboard = () => {
                   </div>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Status: {child.status_bacaan || "Belum ada"}</span>
+                    <span>Status Bacaan: {child.status_bacaan || "Belum ada"}</span>
                   </div>
                 </div>
               </motion.div>
