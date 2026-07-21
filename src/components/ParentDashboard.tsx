@@ -1,19 +1,20 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
-import { useParentStudents } from "@/hooks/useParentStudents";
+import { useParentStudents, useChildrenTeachers } from "@/hooks/useParentStudents";
 import { useStudents } from "@/hooks/useSupabaseData";
-import { Users, Loader2, ChevronRight, BookOpen } from "lucide-react";
+import { Users, Loader2, ChevronRight, BookOpen, GraduationCap, School, CheckCircle2 } from "lucide-react";
 import RelatedSystemCard from "@/components/RelatedSystemCard";
 
 const ParentDashboard = () => {
   const { user, profile } = useAuth();
   const { data: parentStudentIds = [], isLoading: loadingParentStudents } = useParentStudents(user?.id);
   const { data: allStudents = [], isLoading: loadingStudents } = useStudents();
-
-  const isLoading = loadingParentStudents || loadingStudents;
-
+  
   const children = allStudents.filter(s => parentStudentIds.includes(s.id));
+  const { data: childrenTeachers = {}, isLoading: loadingTeachers } = useChildrenTeachers(children.map(c => c.id));
+
+  const isLoading = loadingParentStudents || loadingStudents || loadingTeachers;
 
   if (isLoading) {
     return (
@@ -35,9 +36,9 @@ const ParentDashboard = () => {
       >
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_70%_50%,hsl(43_74%_49%),transparent)]" />
         <div className="relative z-10">
-          <p className="text-primary-foreground/70 text-sm mb-1">Selamat Datang 👋</p>
-          <h1 className="text-2xl font-bold mb-1">Portal Monitoring Anak</h1>
-          <p className="text-primary-foreground/70 text-sm">{profile?.full_name || 'Orang Tua'}</p>
+          <p className="text-primary-foreground/70 text-sm mb-1">Assalamu'alaikum 👋</p>
+          <h1 className="text-2xl font-bold mb-1 leading-tight">Selamat datang,<br />Bapak/Ibu {profile?.full_name || 'Orang Tua'}</h1>
+          <p className="text-primary-foreground/70 text-sm mt-2">Pantau perkembangan tahsin putra/putri Anda secara real-time.</p>
         </div>
       </motion.div>
 
@@ -72,16 +73,25 @@ const ParentDashboard = () => {
                   </div>
                 </div>
                 
-                <h3 className="text-lg font-bold text-foreground mb-1 group-hover:text-primary transition-colors line-clamp-1">{child.nama}</h3>
+                <h3 className="text-lg font-bold text-foreground mb-3 group-hover:text-primary transition-colors line-clamp-1">{child.nama}</h3>
                 
-                <div className="flex flex-wrap gap-2 mt-auto pt-4">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-xs font-medium text-muted-foreground">
-                    Kelas {child.kelas}{child.rombel}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 text-xs font-medium">
-                    <BookOpen className="w-3 h-3" />
-                    {child.level}
-                  </span>
+                <div className="flex flex-col gap-2 mt-auto">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <School className="w-4 h-4" />
+                    <span>Kelas {child.kelas}{child.rombel}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <GraduationCap className="w-4 h-4" />
+                    <span className="line-clamp-1">Guru: {childrenTeachers[child.id] || "Belum ada"}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <BookOpen className="w-4 h-4" />
+                    <span>Level: {child.level}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Status: {child.status_bacaan || "Belum ada"}</span>
+                  </div>
                 </div>
               </motion.div>
             </Link>
