@@ -37,7 +37,9 @@ export type SpreadsheetColumnKey =
   | "saveStatus"
   | "tahfizhJuz"
   | "tahfizhStartPage"
-  | "tahfizhEndPage";
+  | "tahfizhEndPage"
+  | "tahfizhPagesRead"
+  | "tahfizhTarget";
 
 export interface SpreadsheetCellStyle {
   fontFamily?: SpreadsheetFont;

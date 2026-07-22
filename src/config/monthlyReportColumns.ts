@@ -21,6 +21,8 @@ export const MONTHLY_REPORT_COLUMNS: SpreadsheetColumnConfig[] = [
   { key: "tahfizhJuz", label: "Juz (Setoran)", group: "monthlyProgress", defaultWidth: 82, minWidth: 24, maxWidth: 140 },
   { key: "tahfizhStartPage", label: "Hal Awal (Setoran)", group: "monthlyProgress", defaultWidth: 88, minWidth: 24, maxWidth: 130 },
   { key: "tahfizhEndPage", label: "Hal Akhir (Setoran)", group: "monthlyProgress", defaultWidth: 88, minWidth: 24, maxWidth: 130 },
+  { key: "tahfizhPagesRead", label: "Jml Hal (Setoran)", group: "monthlyProgress", defaultWidth: 70, minWidth: 24, maxWidth: 120 },
+  { key: "tahfizhTarget", label: "Target (Setoran)", group: "monthlyProgress", defaultWidth: 70, minWidth: 24, maxWidth: 120 },
 ];
 
 export const MONTHLY_REPORT_COLUMN_KEYS = MONTHLY_REPORT_COLUMNS.map((column) => column.key) as SpreadsheetColumnKey[];

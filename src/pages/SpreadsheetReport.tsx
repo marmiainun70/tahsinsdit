@@ -1311,7 +1311,17 @@ const SpreadsheetReport = () => {
                           <div className="h-6 w-full flex items-center justify-center text-muted-foreground text-[10px] bg-muted/20">-</div>
                         )}
                       </td>
-                      <td {...layoutCellProps(r.studentId, "totalProgress")} className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
+                        <td {...layoutCellProps(r.studentId, "tahfizhPagesRead")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px]">
+                          {r.program === "tahsin" && getTahsinLanjutanFase(Math.max(r.startPage || 1, r.endPage || 1)) >= 2 ? (
+                            <span className={r.tahfizhEndPage !== null && (r.tahfizhEndPage - r.tahfizhStartPage) < 0 ? "text-red-600 font-bold" : ""}>
+                              {r.tahfizhEndPage !== null ? (r.tahfizhEndPage - r.tahfizhStartPage) : "-"}
+                            </span>
+                          ) : "-"}
+                        </td>
+                        <td {...layoutCellProps(r.studentId, "tahfizhTarget")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px]">
+                          {r.program === "tahsin" && getTahsinLanjutanFase(Math.max(r.startPage || 1, r.endPage || 1)) >= 2 ? targetForProgram("tahfizh") : "-"}
+                        </td>
+                        <td {...layoutCellProps(r.studentId, "totalProgress")} className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
                     <td {...layoutCellProps(r.studentId, "target")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px]">{target}</td>
                     {INDICATOR_GUIDES.map((guide) => {
                       const point = r[guide.field] as ProgressivePoint;
