@@ -20,8 +20,6 @@ export default function ParentDashboard() {
   const { data: childrenTeachers = {}, isLoading: loadingTeachers } = useChildrenTeachers(children.map(c => c.id));
   
   const [activeStudentId, setActiveStudentId] = useState<string | null>(null);
-  const { data: evaluationDetail } = useDiagnosticDetail(activeStudentId || "");
-  const { data: progressEntries = [] } = useProgressEntries(activeStudentId || "");
 
   useEffect(() => {
     if (children.length > 0 && !activeStudentId) {
@@ -33,6 +31,7 @@ export default function ParentDashboard() {
   const activeTeacher = activeChild ? childrenTeachers[activeChild.id] : null;
 
   const { data: evaluationDetail, isLoading: loadingEval } = useDiagnosticDetail(activeChild?.id);
+  const { data: progressEntries = [] } = useProgressEntries(activeChild?.id || "");
 
   const isLoading = loadingParentStudents || loadingStudents || loadingTeachers;
 
