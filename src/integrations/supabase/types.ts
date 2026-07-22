@@ -2414,6 +2414,15 @@ export type Database = {
           username: string
         }[]
       }
+      list_students_for_registration: {
+        Args: never
+        Returns: {
+          id: string
+          kelas: number
+          nama: string
+          rombel: string
+        }[]
+      }
       reject_teacher_student_request: {
         Args: { p_note?: string; p_request_id: string }
         Returns: {
