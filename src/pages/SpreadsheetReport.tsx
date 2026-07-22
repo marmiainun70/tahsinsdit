@@ -691,8 +691,8 @@ const SpreadsheetReport = () => {
   const saveRow = async (idx: number, silent = false): Promise<boolean> => {
     const r = rows[idx];
     if (!r.dirty || r.saving) return true;
-    if (!r.endLevel || r.endPage === null) {
-      if (!silent) toast({ title: `Lengkapi Akhir dan Hal. Akhir untuk ${r.studentName}`, variant: "destructive" });
+    if (r.endPage === null) {
+      if (!silent) toast({ title: `Lengkapi Hal. Akhir untuk ${r.studentName}`, variant: "destructive" });
       return false;
     }
     setRows(prev => prev.map((x, i) => i === idx ? { ...x, saving: true } : x));
