@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useParentStudents, useChildrenTeachers } from "@/hooks/useParentStudents";
 import { useStudents } from "@/hooks/useSupabaseData";
 import { useDiagnosticDetail } from "@/hooks/useDiagnostic";
+import { useProgressEntries } from "@/hooks/useSupabaseData";
 import { Loader2, BookOpen, School, FileText, ClipboardList, TrendingUp, Target, ShieldCheck, User } from "lucide-react";
 import { StudentSwitcher } from "./parent/StudentSwitcher";
 import { StudentAvatar } from "./parent/StudentAvatar";
@@ -19,6 +20,8 @@ export default function ParentDashboard() {
   const { data: childrenTeachers = {}, isLoading: loadingTeachers } = useChildrenTeachers(children.map(c => c.id));
   
   const [activeStudentId, setActiveStudentId] = useState<string | null>(null);
+  const { data: evaluationDetail } = useDiagnosticDetail(activeStudentId || "");
+  const { data: progressEntries = [] } = useProgressEntries(activeStudentId || "");
 
   useEffect(() => {
     if (children.length > 0 && !activeStudentId) {
@@ -151,13 +154,23 @@ export default function ParentDashboard() {
                     <TrendingUp className="w-4 h-4 text-emerald-600" />
                   </div>
                 </div>
-                <p className="text-2xl font-black text-emerald-600 leading-none mt-1">56%</p>
-                <Progress value={56} className="h-1.5 my-1.5 bg-slate-200 [&>div]:bg-emerald-500" />
-                <p className="text-[12px] text-slate-600 leading-tight">18 dari 32 halaman dikuasai</p>
-                <div className="mt-1 flex items-center gap-1">
-                  <p className="text-[11px] text-slate-400">Level Aktif:</p>
-                  <p className="text-[12px] font-semibold text-slate-700">Iqra 3</p>
-                </div>
+                {(() => {
+                  const isTahsin = activeChild.level && activeChild.level !== "Tahfizh";
+                  const maxPage = 32;
+                  const currentPage = isTahsin ? (activeChild.halaman_terakhir || 0) : 0;
+                  const pct = isTahsin ? Math.min(100, Math.round((currentPage / maxPage) * 100)) : 0;
+                  return (
+                    <>
+                      <p className="text-2xl font-black text-emerald-600 leading-none mt-1">{pct}%</p>
+                      <Progress value={pct} className="h-1.5 my-1.5 bg-slate-200 [&>div]:bg-emerald-500" />
+                      <p className="text-[12px] text-slate-600 leading-tight">{currentPage} dari {maxPage} halaman dikuasai</p>
+                      <div className="mt-1 flex items-center gap-1">
+                        <p className="text-[11px] text-slate-400">Level Aktif:</p>
+                        <p className="text-[12px] font-semibold text-slate-700">{isTahsin ? activeChild.level : "-"}</p>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
               
               {/* Tahfizh */}
@@ -168,13 +181,23 @@ export default function ParentDashboard() {
                     <Target className="w-4 h-4 text-amber-600" />
                   </div>
                 </div>
-                <p className="text-2xl font-black text-amber-600 leading-none mt-1">40%</p>
-                <Progress value={40} className="h-1.5 my-1.5 bg-slate-200 [&>div]:bg-amber-500" />
-                <p className="text-[12px] text-slate-600 leading-tight">8 dari 20 halaman diselesaikan</p>
-                <div className="mt-1 flex items-center gap-1">
-                  <p className="text-[11px] text-slate-400">Target Saat Ini:</p>
-                  <p className="text-[12px] font-semibold text-slate-700">Juz 30</p>
-                </div>
+                {(() => {
+                  const isTahfizh = activeChild.level === "Tahfizh";
+                  const maxPage = 20; // Asumsi 1 juz = 20 halaman
+                  const currentPage = isTahfizh ? (activeChild.halaman_terakhir || 0) : 0;
+                  const pct = isTahfizh ? Math.min(100, Math.round((currentPage / maxPage) * 100)) : 0;
+                  return (
+                    <>
+                      <p className="text-2xl font-black text-amber-600 leading-none mt-1">{pct}%</p>
+                      <Progress value={pct} className="h-1.5 my-1.5 bg-slate-200 [&>div]:bg-amber-500" />
+                      <p className="text-[12px] text-slate-600 leading-tight">{currentPage} dari {maxPage} halaman diselesaikan</p>
+                      <div className="mt-1 flex items-center gap-1">
+                        <p className="text-[11px] text-slate-400">Target Saat Ini:</p>
+                        <p className="text-[12px] font-semibold text-slate-700">{isTahfizh ? "Juz 30" : "-"}</p>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             </div>
 
@@ -244,25 +267,44 @@ export default function ParentDashboard() {
           <h3 className="text-lg font-bold text-slate-800 mb-6">Aktivitas Terkini</h3>
           
           <div className="relative border-l-2 border-slate-100 ml-4 space-y-8 pb-4">
-            {/* Timeline Item 1 */}
-            <div className="relative pl-6">
-              <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-emerald-100 border-2 border-emerald-500"></div>
-              <p className="text-xs font-semibold text-emerald-600 mb-1">
-                {evaluationDetail?.created_at ? new Date(evaluationDetail.created_at).toLocaleDateString("id-ID") : "Baru-baru ini"}
-              </p>
-              <h4 className="font-bold text-slate-800">Evaluasi Diagnostik {evaluationDetail ? "Selesai" : ""}</h4>
-              <p className="text-sm text-slate-500 mt-1">
-                {evaluationDetail ? `Skor: ${evaluationDetail.final_score} (${evaluationDetail.final_predicate})` : "Menunggu evaluasi diagnostik semester ini."}
-              </p>
-            </div>
+            
+            {/* Timeline Item (Diagnostic) */}
+            {evaluationDetail && (
+              <div className="relative pl-6">
+                <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-emerald-100 border-2 border-emerald-500"></div>
+                <p className="text-xs font-semibold text-emerald-600 mb-1">
+                  {new Date(evaluationDetail.created_at).toLocaleDateString("id-ID")}
+                </p>
+                <h4 className="font-bold text-slate-800">Evaluasi Diagnostik Selesai</h4>
+                <p className="text-sm text-slate-500 mt-1">
+                  Skor: {evaluationDetail.final_score} ({evaluationDetail.final_predicate})
+                </p>
+              </div>
+            )}
 
-            {/* Timeline Item 2 */}
-            <div className="relative pl-6">
-              <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-blue-100 border-2 border-blue-500"></div>
-              <p className="text-xs font-semibold text-blue-600 mb-1">Kemarin</p>
-              <h4 className="font-bold text-slate-800">Setoran Hafalan</h4>
-              <p className="text-sm text-slate-500 mt-1">Siswa menyetorkan hafalan QS. An-Naba: 1-10 dengan kelancaran baik.</p>
-            </div>
+            {/* Timeline Items (Progress Entries) */}
+            {progressEntries.slice(0, 3).map((entry, idx) => (
+              <div key={entry.id} className="relative pl-6">
+                <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 ${idx === 0 ? "bg-blue-100 border-blue-500" : "bg-slate-100 border-slate-300"}`}></div>
+                <p className={`text-xs font-semibold mb-1 ${idx === 0 ? "text-blue-600" : "text-slate-500"}`}>
+                  {new Date(entry.tanggal).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+                <h4 className="font-bold text-slate-800">Setoran Laporan Harian</h4>
+                <p className="text-sm text-slate-500 mt-1">
+                  {entry.buku} Hal. {entry.halaman} 
+                  {entry.catatan ? ` - Catatan: ${entry.catatan}` : ""}
+                </p>
+              </div>
+            ))}
+
+            {!evaluationDetail && progressEntries.length === 0 && (
+              <div className="relative pl-6">
+                <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-slate-100 border-2 border-slate-300"></div>
+                <p className="text-xs font-semibold text-slate-500 mb-1">Hari ini</p>
+                <h4 className="font-bold text-slate-800">Belum ada aktivitas</h4>
+                <p className="text-sm text-slate-500 mt-1">Siswa belum memiliki catatan progres membaca.</p>
+              </div>
+            )}
           </div>
         </motion.div>
 
