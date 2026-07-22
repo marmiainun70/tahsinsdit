@@ -29,7 +29,7 @@ type DraftAssignment = {
   id: string;
   teacher_id: string;
   student_id: string;
-  _status: 'unchanged' | 'new' | 'deleted';
+  _status: 'unchanged' | 'new' | 'updated' | 'deleted';
 };
 
   type DraftStudent = {
@@ -37,7 +37,7 @@ type DraftAssignment = {
     nama: string;
     kelas?: number | null;
     rombel?: string | null;
-    _status: 'unchanged' | 'updated';
+    _status: 'unchanged' | 'new' | 'updated' | 'deleted';
   };
 
 export default function AdminTeacherAssignments() {
@@ -580,7 +580,7 @@ export default function AdminTeacherAssignments() {
                               <CommandList>
                                 <CommandEmpty>Siswa tidak ditemukan.</CommandEmpty>
                                 <CommandGroup>
-                                  {draftStudents.filter(s => (s._status as string) !== 'deleted').map(s => {
+                                  {draftStudents.filter(s => s._status !== 'deleted').map(s => {
                                     const isAssigned = activeAssignments.some(a => a.student_id === s.id);
                                     return (
                                       <CommandItem
