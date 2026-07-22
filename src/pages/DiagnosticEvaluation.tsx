@@ -20,6 +20,7 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { mapBackendError } from "@/utils/errorMapper";
 
 type Rombel = "A" | "B" | "C" | "D";
 
@@ -458,8 +459,9 @@ export default function DiagnosticEvaluation() {
       URL.revokeObjectURL(url);
       
       toast({ title: "Berhasil", description: `Berhasil mengunduh rekap ${notEvaluated.length} siswa.` });
-    } catch (e: any) {
-      toast({ title: "Gagal Mengunduh", description: e.message, variant: "destructive" });
+    } catch (e: unknown) {
+      const err = mapBackendError(e);
+      toast({ title: "Gagal Mengunduh", description: err.message, variant: "destructive" });
     }
   };
 
