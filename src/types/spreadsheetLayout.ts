@@ -34,12 +34,7 @@ export type SpreadsheetColumnKey =
   | "progressCategory"
   | "finalScore"
   | "notes"
-  | "saveStatus"
-  | "tahfizhJuz"
-  | "tahfizhStartPage"
-  | "tahfizhEndPage"
-  | "tahfizhPagesRead"
-  | "tahfizhTarget";
+  | "saveStatus";
 
 export interface SpreadsheetCellStyle {
   fontFamily?: SpreadsheetFont;

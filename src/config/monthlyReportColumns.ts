@@ -18,11 +18,6 @@ export const MONTHLY_REPORT_COLUMNS: SpreadsheetColumnConfig[] = [
   { key: "finalScore", label: "Nilai", group: "result", defaultWidth: 76, minWidth: 20, maxWidth: 120 },
   { key: "notes", label: "Catatan", group: "result", defaultWidth: 230, minWidth: 32, maxWidth: 420 },
   { key: "saveStatus", label: "Status Simpan", group: "result", defaultWidth: 116, minWidth: 28, maxWidth: 170 },
-  { key: "tahfizhJuz", label: "Juz (Setoran)", group: "monthlyProgress", defaultWidth: 82, minWidth: 24, maxWidth: 140 },
-  { key: "tahfizhStartPage", label: "Hal Awal (Setoran)", group: "monthlyProgress", defaultWidth: 88, minWidth: 24, maxWidth: 130 },
-  { key: "tahfizhEndPage", label: "Hal Akhir (Setoran)", group: "monthlyProgress", defaultWidth: 88, minWidth: 24, maxWidth: 130 },
-  { key: "tahfizhPagesRead", label: "Jml Hal (Setoran)", group: "monthlyProgress", defaultWidth: 70, minWidth: 24, maxWidth: 120 },
-  { key: "tahfizhTarget", label: "Target (Setoran)", group: "monthlyProgress", defaultWidth: 70, minWidth: 24, maxWidth: 120 },
 ];
 
 export const MONTHLY_REPORT_COLUMN_KEYS = MONTHLY_REPORT_COLUMNS.map((column) => column.key) as SpreadsheetColumnKey[];
