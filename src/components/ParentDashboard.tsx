@@ -5,7 +5,7 @@ import { useParentStudents, useChildrenTeachers } from "@/hooks/useParentStudent
 import { useStudents } from "@/hooks/useSupabaseData";
 import { useDiagnosticDetail } from "@/hooks/useDiagnostic";
 import { useProgressEntries } from "@/hooks/useSupabaseData";
-import { Loader2, BookOpen, School, FileText, ClipboardList, TrendingUp, Target, ShieldCheck, User } from "lucide-react";
+import { Loader2, BookOpen, School, FileText, ClipboardList, TrendingUp, Target, ShieldCheck, User, Lock } from "lucide-react";
 import { StudentSwitcher } from "./parent/StudentSwitcher";
 import { StudentAvatar } from "./parent/StudentAvatar";
 import { Progress } from "@/components/ui/progress";
@@ -181,10 +181,27 @@ export default function ParentDashboard() {
                   </div>
                 </div>
                 {(() => {
-                  const isTahfizh = activeChild.level === "Tahfizh";
+                  const level = activeChild.level || "";
+                  const isIqraOrDasar = level.startsWith("Iqro") || level === "Tahsin Dasar";
+                  
+                  if (isIqraOrDasar) {
+                    return (
+                      <div className="flex flex-col items-center justify-center py-2 mt-1 text-center">
+                        <div className="p-2 bg-slate-100 rounded-full mb-1">
+                          <Lock className="w-4 h-4 text-slate-400" />
+                        </div>
+                        <p className="text-[10px] text-slate-500 leading-tight px-2">
+                          Siswa belum direkomendasikan untuk menjalankan program ini.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  const isTahfizh = level === "Tahfizh";
                   const maxPage = 20; // Asumsi 1 juz = 20 halaman
                   const currentPage = isTahfizh ? (activeChild.halaman_terakhir || 0) : 0;
                   const pct = isTahfizh ? Math.min(100, Math.round((currentPage / maxPage) * 100)) : 0;
+                  
                   return (
                     <>
                       <p className="text-2xl font-black text-amber-600 leading-none mt-1">{pct}%</p>
