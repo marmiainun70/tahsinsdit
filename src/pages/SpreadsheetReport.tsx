@@ -1396,7 +1396,7 @@ const SpreadsheetReport = () => {
                     </td>
                     </tr>
                     {hasSetoran && (
-                      <tr className="bg-blue-50/30">
+                      <tr className="bg-muted/40">
                         <td {...layoutCellProps(r.studentId, "startLevel")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                            <div className="h-full flex items-center justify-center">
                              <Select value={r.tahfizhJuz} onValueChange={v => updateRow(idx, { tahfizhJuz: v })} disabled={spreadsheetLayout.isEditing}>
