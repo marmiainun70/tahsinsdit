@@ -5,7 +5,7 @@ import { useParentStudents, useChildrenTeachers } from "@/hooks/useParentStudent
 import { useStudents } from "@/hooks/useSupabaseData";
 import { useDiagnosticDetail } from "@/hooks/useDiagnostic";
 import { useProgressEntries } from "@/hooks/useSupabaseData";
-import { Loader2, BookOpen, School, FileText, ClipboardList, TrendingUp, Target, ShieldCheck, User, Lock } from "lucide-react";
+import { Loader2, BookOpen, School, FileText, ClipboardList, TrendingUp, Target, ShieldCheck, User, Lock, CheckCircle2 } from "lucide-react";
 import { StudentSwitcher } from "./parent/StudentSwitcher";
 import { StudentAvatar } from "./parent/StudentAvatar";
 import { Progress } from "@/components/ui/progress";
@@ -147,26 +147,48 @@ export default function ParentDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Tahsin */}
               <div className="bg-[#F8FAFC] rounded-[16px] p-4 border border-slate-100 flex flex-col gap-1 relative overflow-hidden">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-bold text-[15px] text-slate-800">Progress Tahsin</h3>
-                  <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-50 shrink-0">
-                    <TrendingUp className="w-4 h-4 text-emerald-600" />
-                  </div>
-                </div>
                 {(() => {
-                  const isTahsin = activeChild.level && activeChild.level !== "Tahfizh";
-                  const maxPage = 32;
-                  const currentPage = isTahsin ? (activeChild.halaman_terakhir || 0) : 0;
-                  const pct = isTahsin ? Math.min(100, Math.round((currentPage / maxPage) * 100)) : 0;
+                  const level = activeChild.level || "";
+                  const isIqraOrDasar = level.startsWith("Iqro") || level === "Tahsin Dasar";
+                  const isTahfizh = level === "Tahfizh";
+                  const tahsinTitle = isIqraOrDasar ? "Progress Tahsin Dasar" : "Progress Tahsin";
+                  
                   return (
                     <>
-                      <p className="text-2xl font-black text-emerald-600 leading-none mt-1">{pct}%</p>
-                      <Progress value={pct} className="h-1.5 my-1.5 bg-slate-200 [&>div]:bg-emerald-500" />
-                      <p className="text-[12px] text-slate-600 leading-tight">{currentPage} dari {maxPage} halaman dikuasai</p>
-                      <div className="mt-1 flex items-center gap-1">
-                        <p className="text-[11px] text-slate-400">Level Aktif:</p>
-                        <p className="text-[12px] font-semibold text-slate-700">{isTahsin ? activeChild.level : "-"}</p>
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-bold text-[15px] text-slate-800">{tahsinTitle}</h3>
+                        <div className="p-1.5 bg-white rounded-lg shadow-sm border border-slate-50 shrink-0">
+                          {isTahfizh ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <TrendingUp className="w-4 h-4 text-emerald-600" />}
+                        </div>
                       </div>
+                      
+                      {isTahfizh ? (
+                        <div className="flex flex-col items-center justify-center py-2 mt-1 text-center">
+                          <div className="p-2 bg-emerald-100 rounded-full mb-1">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          </div>
+                          <p className="text-[11px] text-emerald-700 leading-tight px-2 font-medium">
+                            Telah menyelesaikan program tahsin
+                          </p>
+                        </div>
+                      ) : (
+                        (() => {
+                          const maxPage = 32;
+                          const currentPage = activeChild.halaman_terakhir || 0;
+                          const pct = Math.min(100, Math.round((currentPage / maxPage) * 100));
+                          return (
+                            <>
+                              <p className="text-2xl font-black text-emerald-600 leading-none mt-1">{pct}%</p>
+                              <Progress value={pct} className="h-1.5 my-1.5 bg-slate-200 [&>div]:bg-emerald-500" />
+                              <p className="text-[12px] text-slate-600 leading-tight">{currentPage} dari {maxPage} halaman dikuasai</p>
+                              <div className="mt-1 flex items-center gap-1">
+                                <p className="text-[11px] text-slate-400">Level Aktif:</p>
+                                <p className="text-[12px] font-semibold text-slate-700">{level || "-"}</p>
+                              </div>
+                            </>
+                          );
+                        })()
+                      )}
                     </>
                   );
                 })()}
