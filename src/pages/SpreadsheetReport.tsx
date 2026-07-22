@@ -767,6 +767,41 @@ const SpreadsheetReport = () => {
       if (r.reportId) saved = await updateReport.mutateAsync({ id: r.reportId, ...payload });
       else saved = await addReport.mutateAsync(payload);
 
+      // Handle Tahfizh Setoran for Tahsin Lanjutan Fase 2+
+      let savedTahfizhId = r.tahfizhReportId;
+      if (r.program === "tahsin" && getTahsinLanjutanFase(r.startPage) >= 2 && r.tahfizhEndPage !== null) {
+        const tahfizhPayload: MonthlyReportPayload = {
+          student_id: r.studentId,
+          month, year, program_type: "tahfizh",
+          iqra_level: formatStoredLevel("tahfizh", r.tahfizhJuz),
+          end_iqra_level: formatStoredLevel("tahfizh", r.tahfizhJuz),
+          start_page: r.tahfizhStartPage,
+          end_page: r.tahfizhEndPage,
+          pages_read: calcHafalanPagesSigned(parseInt(r.tahfizhJuz), r.tahfizhStartPage, parseInt(r.tahfizhJuz), r.tahfizhEndPage),
+          target_pages: getTarget("tahfizh"),
+          attendance_percentage: r.attendancePercentage,
+          poin_kehadiran_kesiapan: r.poinKehadiranKesiapan,
+          poin_kualitas_bacaan: r.poinKualitasBacaan,
+          poin_perbaikan_bacaan: r.poinPerbaikanBacaan,
+          poin_konsistensi: progressiveScore.poinKonsistensi,
+          pencapaian_target_bulan: clampTargetMonths(r.pencapaianTargetBulan, "tahfizh"),
+          poin_pencapaian: progressiveScore.poinPencapaian,
+          nilai_dasar: progressiveScore.nilaiDasar,
+          nilai_akhir_progresif: progressiveScore.nilaiAkhir,
+          kategori_progres: progressiveScore.kategoriProgres,
+          achievement_status: "achieved",
+          notes: notesForSave,
+        };
+        
+        if (r.tahfizhReportId) {
+          const res = await updateReport.mutateAsync({ id: r.tahfizhReportId, ...tahfizhPayload });
+          savedTahfizhId = res.id;
+        } else {
+          const res = await addReport.mutateAsync(tahfizhPayload);
+          savedTahfizhId = res.id;
+        }
+      }
+
       const stu = filteredStudents.find(s => s.id === r.studentId);
       await ensureTS.mutateAsync({ studentId: r.studentId, kelas: stu?.kelas, rombel: stu?.rombel });
 
