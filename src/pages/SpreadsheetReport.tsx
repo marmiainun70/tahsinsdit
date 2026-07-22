@@ -560,8 +560,8 @@ const SpreadsheetReport = () => {
   const averageScore = rows.length ? Math.round(programStats.totalScore / rows.length) : null;
 
   const buildAutoNote = (r: Row): string => {
-    if (!r.endLevel || r.endPage === null) return "";
-    const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage);
+    if (r.endPage === null) return "";
+    const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel || r.startLevel, r.endPage);
     return getAutoNoteByProgress(r.program, signed, targetForRow(r));
   };
 
@@ -698,7 +698,7 @@ const SpreadsheetReport = () => {
     setRows(prev => prev.map((x, i) => i === idx ? { ...x, saving: true } : x));
     try {
       const target = targetForRow(r);
-      const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage);
+      const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel || r.startLevel, r.endPage);
       const status = isPromotionEnd(r.program, r.endLevel) ? "achieved" : getProgressStatus(signed, target);
       const progressiveScore = scoreForRow(r);
       const notesForSave = r.notes.trim() ? r.notes : buildIntegratedNote(r);
@@ -706,7 +706,7 @@ const SpreadsheetReport = () => {
         student_id: r.studentId,
         month, year, program_type: r.program,
         iqra_level: formatStoredLevel(r.program, r.startLevel),
-        end_iqra_level: formatStoredLevel(r.program, r.endLevel),
+        end_iqra_level: formatStoredLevel(r.program, r.endLevel || r.startLevel),
         start_page: r.startPage,
         end_page: r.endPage,
         pages_read: signed,
@@ -1157,9 +1157,10 @@ const SpreadsheetReport = () => {
               )}
               {currentPageRows.map(({ row: r, index: idx }, pageIndex) => {
                 const target = targetForRow(r);
-                const hasEnd = Boolean(r.endLevel && r.endPage !== null);
-                const signed = hasEnd ? calcSigned(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage as number) : 0;
-                const decline = hasEnd ? isDecline(r.program, r.startLevel, r.startPage, r.endLevel, r.endPage as number) : false;
+                const hasEnd = r.endPage !== null;
+                  const actualEndLevel = r.endLevel || r.startLevel;
+                const signed = hasEnd ? calcSigned(r.program, r.startLevel, r.startPage, actualEndLevel, r.endPage as number) : 0;
+                const decline = hasEnd ? isDecline(r.program, r.startLevel, r.startPage, actualEndLevel, r.endPage as number) : false;
                 const lvlOpts = programLevels(r.program);
                 const endOpts = endLevelOptions(r.program);
                 const showStartLevelSelect = r.program !== "tahsin"; // Tahsin Lanjutan: 1 level, sembunyikan dropdown awal
@@ -1249,7 +1250,7 @@ const SpreadsheetReport = () => {
                     </td>
                     <td {...layoutCellProps(r.studentId, "endPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <div className="flex items-center justify-center">
-                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, -1) })}><Minus className="w-2 h-2" /></Button>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, actualEndLevel), r.endPage ?? 1, -1) })}><Minus className="w-2 h-2" /></Button>
                         <Input
                           type="number"
                           min={1}
@@ -1262,7 +1263,7 @@ const SpreadsheetReport = () => {
                           })}
                           className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-50 dark:focus-visible:bg-blue-900/30"
                         />
-                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, actualEndLevel), r.endPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
                       </div>
                     </td>
                                           <td {...layoutCellProps(r.studentId, "totalProgress")} className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
