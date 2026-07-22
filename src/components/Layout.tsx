@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BookOpen, LayoutDashboard, BarChart3, ClipboardList, PieChart,
-  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings, Megaphone, ExternalLink, UserCheck, UserCog, Users, CalendarDays, ArrowUpCircle
+  Menu, X, LogOut, Bell, ChevronRight, Search, GraduationCap, BarChart2, FileText, FileSpreadsheet, Settings, Megaphone, ExternalLink, UserCheck, UserCog, Users, CalendarDays, ArrowUpCircle, User, MessageCircle
 } from "lucide-react";
 import { RELATED_SYSTEM } from "@/components/RelatedSystemCard";
 import GlobalSearch from "@/components/GlobalSearch";
@@ -40,6 +40,14 @@ const navItems = [
   { featureKey: "kelola_akun", to: "/kelola-akun", icon: UserCog, label: "Manajemen Akun All User" },
 ];
 
+const parentNavItems = [
+  { to: "/", icon: User, label: "Profil Siswa" },
+  { to: "/kalender-akademik", icon: CalendarDays, label: "Kalender Akademik" },
+  { to: "/pengumuman", icon: Megaphone, label: "Pengumuman" },
+  { to: "/hubungi-guru", icon: MessageCircle, label: "Hubungi Guru" },
+  { to: "/pengaturan-akun", icon: Settings, label: "Pengaturan Akun" }
+];
+
 interface SidebarContentProps {
   location: { pathname: string };
   onLogout: () => void;
@@ -53,11 +61,6 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
   const isAllowed = (featureKey: string) => {
     // Admin selalu punya akses penuh ke semua menu (bypass table check)
     if (profile?.role === "admin") return true;
-    
-    // Parent HANYA boleh melihat Dashboard (Portal Anak)
-    if (profile?.role === "parent") {
-      return featureKey === "dashboard";
-    }
 
     // Jika belum loading atau bukan admin/parent, maka cek tabel role_permissions
     if (!permissions || !profile?.role) return false;
@@ -96,16 +99,14 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
       )}
     </div>
 
-    <div className="relative flex-1 overflow-hidden">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b from-sidebar via-sidebar/90 to-transparent" />
-      <nav className="sidebar-scroll h-full overflow-y-auto px-4 py-4 space-y-1">
-        <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-3">Menu Utama</p>
-        {navItems
-          .filter((item) => isAllowed(item.featureKey))
-          .map(({ to, icon: Icon, label }) => {
-          const active = location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
-          return (
-            <Link
+      <div className="relative flex-1 overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-6 bg-gradient-to-b from-sidebar via-sidebar/90 to-transparent" />
+        <nav className="sidebar-scroll h-full overflow-y-auto px-4 py-4 space-y-1">
+          <p className="text-sidebar-foreground/40 text-xs font-semibold uppercase tracking-wider px-3 mb-3">Menu Utama</p>
+          {(profile?.role === "parent" ? parentNavItems : navItems.filter((item) => isAllowed(item.featureKey))).map(({ to, icon: Icon, label }) => {
+            const active = location.pathname === to || (to !== "/" && location.pathname.startsWith(to));
+            return (
+              <Link
               key={to}
               to={to}
               onClick={onClose}
