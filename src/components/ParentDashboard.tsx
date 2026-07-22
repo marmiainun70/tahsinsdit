@@ -104,7 +104,7 @@ export default function ParentDashboard() {
           {/* LEFT: AVATAR & NAME */}
           <div className="flex flex-col items-center justify-center lg:w-[30%] lg:border-r lg:border-slate-100 lg:pr-6 shrink-0">
             <div className="w-28 h-28 mb-4 drop-shadow-sm">
-              <StudentAvatar gender={activeChild.jenis_kelamin || "L"} />
+              <StudentAvatar gender={(activeChild as any).jenis_kelamin || "L"} />
             </div>
             <h2 className="text-xl font-bold text-slate-800 text-center leading-tight">{activeChild.nama}</h2>
             <p className="text-slate-500 font-medium text-xs mt-1">NIS : {activeChild.nis || "240015"}</p>
