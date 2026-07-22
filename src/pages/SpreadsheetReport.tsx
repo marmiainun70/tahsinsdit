@@ -1182,7 +1182,7 @@ const SpreadsheetReport = () => {
                     style={spreadsheetLayout.getRowStyle(r.studentId)}
                   >
                     <td
-                      {...layoutCellProps(r.studentId, "number")}
+                      {...layoutCellProps(r.studentId, "number")} rowSpan={rs}
                       onClick={(event) => {
                         if (!spreadsheetLayout.isEditing) return;
                         event.preventDefault();
@@ -1202,14 +1202,14 @@ const SpreadsheetReport = () => {
                       )}
                     </td>
                     <td
-                      {...layoutCellProps(r.studentId, "studentName")}
+                      {...layoutCellProps(r.studentId, "studentName")} rowSpan={rs}
                       className={`p-0.5 px-1 border border-[1.5px] border-blue-400 dark:border-blue-700 border-r-[1.5px] border-r-blue-500 dark:border-r-blue-400 font-medium text-[10px] shadow-[1px_0_0_0_theme(colors.blue.500)] dark:shadow-[1px_0_0_0_theme(colors.blue.400)] truncate sticky z-10 ${rowBg}`}
                       style={{ ...spreadsheetLayout.getCellStyle(r.studentId, "studentName"), left: spreadsheetLayout.stickyLeft.studentName }}
                       title={r.studentName}
                     >
                       {r.studentName}
                     </td>
-                    <td {...layoutCellProps(r.studentId, "program")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                    <td {...layoutCellProps(r.studentId, "program")} rowSpan={rs} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <Select value={r.program} onValueChange={(v) => updateRow(idx, { program: v as ReportProgram })} disabled={spreadsheetLayout.isEditing}>
                         <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
                         <SelectContent>{PROGRAMS.map(p => <SelectItem key={p.value} value={p.value} className="text-[10px]">{p.label}</SelectItem>)}</SelectContent>
@@ -1276,7 +1276,7 @@ const SpreadsheetReport = () => {
                           ? "readingQuality"
                           : "readingImprovement";
                       return (
-                        <td key={guide.key} {...layoutCellProps(r.studentId, columnKey)} className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                        <td key={guide.key} {...layoutCellProps(r.studentId, columnKey)} rowSpan={rs} className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700">
                           <Select
                             value={String(point)}
                             disabled={spreadsheetLayout.isEditing}
@@ -1309,7 +1309,7 @@ const SpreadsheetReport = () => {
                         </td>
                       );
                     })}
-                    <td {...layoutCellProps(r.studentId, "monthlyAchievement")} className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700 bg-amber-50/40 dark:bg-amber-950/10">
+                    <td {...layoutCellProps(r.studentId, "monthlyAchievement")} rowSpan={rs} className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700 bg-amber-50/40 dark:bg-amber-950/10">
                       <Select
                         value={String(r.pencapaianTargetBulan)}
                         disabled={r.program === "iqra" || spreadsheetLayout.isEditing}
@@ -1334,17 +1334,17 @@ const SpreadsheetReport = () => {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td {...layoutCellProps(r.studentId, "progressCategory")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">
+                    <td {...layoutCellProps(r.studentId, "progressCategory")} rowSpan={rs} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">
                       <Badge variant="outline" className={`py-0 px-1.5 text-[9px] ${getCategoryClass(progressiveScore.kategoriProgres)}`}>
                         {progressiveScore.kategoriProgres}
                       </Badge>
                     </td>
-                    <td {...layoutCellProps(r.studentId, "finalScore")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">
+                    <td {...layoutCellProps(r.studentId, "finalScore")} rowSpan={rs} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">
                       <span className={`inline-flex min-h-7 min-w-10 items-center justify-center rounded-lg border px-2 text-[13px] font-black ${getScoreClass(progressiveScore.nilaiAkhir)}`}>
                         {progressiveScore.nilaiAkhir}
                       </span>
                     </td>
-                    <td {...layoutCellProps(r.studentId, "notes")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                    <td {...layoutCellProps(r.studentId, "notes")} rowSpan={rs} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <div className="flex items-center gap-0.5">
                         <Textarea
                           value={r.notes}
@@ -1387,7 +1387,7 @@ const SpreadsheetReport = () => {
                         </Popover>
                       </div>
                     </td>
-                    <td {...layoutCellProps(r.studentId, "saveStatus")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px]">
+                    <td {...layoutCellProps(r.studentId, "saveStatus")} rowSpan={rs} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px]">
                       {r.saving ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> :
                         r.dirty || !r.reportId ? <Badge variant="outline" className="text-amber-600 border-amber-300 py-0 px-1 text-[9px]">Belum Simpan</Badge> :
                         <Badge variant="outline" className="border-emerald-200 bg-emerald-50 py-0 px-1 text-[9px] text-emerald-700"><CheckCircle2 className="mr-0.5 h-2.5 w-2.5" />Tersimpan</Badge>}{/*
