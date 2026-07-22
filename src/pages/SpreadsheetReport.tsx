@@ -269,45 +269,6 @@ const pageProgramFor = (program: string, level?: string): string => {
   return "iqra";
 };
 
-const calcSigned = (program: string, sl: string, sp: number, el: string, ep: number): number => {
-  if (isPromotionEnd(program, el)) {
-    if (program === "iqra") return calcIqraPagesSigned(parseInt(sl), sp, 6, 32);
-    return getTarget(program);
-  }
-  if (program === "tahfizh") return calcHafalanPagesSigned(parseInt(sl), sp, parseInt(el), ep);
-  if (program === "iqra") return calcIqraPagesSigned(parseInt(sl), sp, parseInt(el), ep);
-  return ep - sp;
-};
-
-const isDecline = (program: string, sl: string, sp: number, el: string, ep: number): boolean => {
-  if (isPromotionEnd(program, el)) return false;
-  if (program === "tahfizh") return isTahfizhDecline(parseInt(sl), sp, parseInt(el), ep);
-  if (program === "iqra") return isIqraDecline(parseInt(sl), sp, parseInt(el), ep);
-  return ep < sp;
-};
-
-const stepPage = (program: string, cur: number, dir: 1 | -1): number => {
-  if (program === "iqra") {
-    const idx = IQRA_PAGES.indexOf(cur);
-    const newIdx = Math.max(0, Math.min(IQRA_PAGES.length - 1, idx + dir));
-    return IQRA_PAGES[newIdx] ?? cur;
-  }
-  if (program === "tahfizh") return Math.max(1, Math.min(JUZ_PAGES_PER_JUZ, cur + dir));
-  return Math.max(1, Math.min(TAHSIN_LANJUTAN_PAGES, cur + dir));
-};
-
-const getPageLimit = (program: string, level?: string): number => {
-  if (level === "Tahfizh" || program === "tahfizh") return JUZ_PAGES_PER_JUZ;
-  if (program === "iqra" && !isAdvancedEndLevel(level || "")) return 32;
-  return TAHSIN_LANJUTAN_PAGES;
-};
-
-const pageProgramFor = (program: string, level?: string): string => {
-  if (level === "Tahfizh") return "tahfizh";
-  if (level === "Tahsin Lanjutan") return "tahsin";
-  return program;
-};
-
 const clampPage = (program: string, page: number, level?: string): number =>
   Math.max(1, Math.min(getPageLimit(program, level), page));
 
