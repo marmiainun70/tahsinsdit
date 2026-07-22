@@ -818,7 +818,7 @@ export default function DiagnosticEvaluation() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  students.map((student) => {
+                  students.map((student: any) => {
                     // We mapped evaluasi_awal_semester dynamically
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const evaluation = (student as any).evaluasi_awal_semester?.[0];
