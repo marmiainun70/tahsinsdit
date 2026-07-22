@@ -1171,16 +1171,19 @@ const SpreadsheetReport = () => {
                     ? "bg-rose-100 dark:bg-rose-900/40"
                     : "bg-card";
 
+                const hasSetoran = r.program === "tahsin" && getTahsinLanjutanFase(Math.max(r.startPage || 1, r.endPage || 1)) >= 2;
+                const rs = hasSetoran ? 2 : 1;
+                const signedTahfizh = r.tahfizhEndPage !== null ? calcHafalanPagesSigned(parseInt(r.tahfizhJuz), r.tahfizhStartPage, parseInt(r.tahfizhJuz), r.tahfizhEndPage) : 0;
                 return (
+                  <React.Fragment key={r.studentId}>
                   <tr
-                    key={r.studentId}
                     className={`divide-x divide-blue-400 dark:divide-blue-700 ${r.dirty ? "bg-amber-50/50 dark:bg-amber-950/20" : decline ? "bg-red-50/30 dark:bg-red-950/20" : "hover:bg-blue-50/80 dark:hover:bg-blue-900/40 transition-colors"}`}
                     data-layout-selected={spreadsheetLayout.isEditing && (spreadsheetLayout.selection.type === "table" || (spreadsheetLayout.selection.type === "row" && spreadsheetLayout.selection.studentId === r.studentId)) ? true : undefined}
                     style={spreadsheetLayout.getRowStyle(r.studentId)}
                   >
                     <td
                       {...layoutCellProps(r.studentId, "number")}
-                      onClick={(event) => {
+                      onClick={(event) = rowSpan={rs}> {
                         if (!spreadsheetLayout.isEditing) return;
                         event.preventDefault();
                         event.stopPropagation();
@@ -1203,10 +1206,10 @@ const SpreadsheetReport = () => {
                       className={`p-0.5 px-1 border border-[1.5px] border-blue-400 dark:border-blue-700 border-r-[1.5px] border-r-blue-500 dark:border-r-blue-400 font-medium text-[10px] shadow-[1px_0_0_0_theme(colors.blue.500)] dark:shadow-[1px_0_0_0_theme(colors.blue.400)] truncate sticky z-10 ${rowBg}`}
                       style={{ ...spreadsheetLayout.getCellStyle(r.studentId, "studentName"), left: spreadsheetLayout.stickyLeft.studentName }}
                       title={r.studentName}
-                    >
+                     rowSpan={rs}>
                       {r.studentName}
                     </td>
-                    <td {...layoutCellProps(r.studentId, "program")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                    <td {...layoutCellProps(r.studentId, "program")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700" rowSpan={rs}>
                       <Select value={r.program} onValueChange={(v) => updateRow(idx, { program: v as ReportProgram })} disabled={spreadsheetLayout.isEditing}>
                         <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
                         <SelectContent>{PROGRAMS.map(p => <SelectItem key={p.value} value={p.value} className="text-[10px]">{p.label}</SelectItem>)}</SelectContent>
@@ -1262,66 +1265,7 @@ const SpreadsheetReport = () => {
                         <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
                       </div>
                     </td>
-                                          <td {...layoutCellProps(r.studentId, "tahfizhJuz")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
-                        {r.program === "tahsin" && getTahsinLanjutanFase(Math.max(r.startPage || 1, r.endPage || 1)) >= 2 ? (
-                          <Select value={r.tahfizhJuz} onValueChange={v => updateRow(idx, { tahfizhJuz: v })} disabled={spreadsheetLayout.isEditing}>
-                            <SelectTrigger className="h-6 w-full border-none bg-blue-50/50 dark:bg-blue-900/20 shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
-                            <SelectContent>{JUZ_LIST.map(l => <SelectItem key={l} value={String(l)} className="text-[10px]">Juz {l}</SelectItem>)}</SelectContent>
-                          </Select>
-                        ) : (
-                          <div className="h-6 w-full flex items-center justify-center text-muted-foreground text-[10px] bg-muted/20">-</div>
-                        )}
-                      </td>
-                      <td {...layoutCellProps(r.studentId, "tahfizhStartPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
-                        {r.program === "tahsin" && getTahsinLanjutanFase(Math.max(r.startPage || 1, r.endPage || 1)) >= 2 ? (
-                          <div className="flex items-center justify-center bg-blue-50/50 dark:bg-blue-900/20 h-full">
-                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhStartPage: stepPage("tahfizh", r.tahfizhStartPage, -1) })}><Minus className="w-2 h-2" /></Button>
-                            <Input
-                              type="number"
-                              min={1}
-                              max={20}
-                              value={r.tahfizhStartPage}
-                              disabled={spreadsheetLayout.isEditing}
-                              onChange={e => updateRow(idx, { tahfizhStartPage: clampPage("tahfizh", parseInt(e.target.value) || 1, r.tahfizhJuz) })}
-                              className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-100 dark:focus-visible:bg-blue-800/30"
-                            />
-                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhStartPage: stepPage("tahfizh", r.tahfizhStartPage, 1) })}><Plus className="w-2 h-2" /></Button>
-                          </div>
-                        ) : (
-                          <div className="h-6 w-full flex items-center justify-center text-muted-foreground text-[10px] bg-muted/20">-</div>
-                        )}
-                      </td>
-                      <td {...layoutCellProps(r.studentId, "tahfizhEndPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
-                        {r.program === "tahsin" && getTahsinLanjutanFase(Math.max(r.startPage || 1, r.endPage || 1)) >= 2 ? (
-                          <div className="flex items-center justify-center bg-blue-50/50 dark:bg-blue-900/20 h-full">
-                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhEndPage: stepPage("tahfizh", r.tahfizhEndPage ?? 1, -1) })}><Minus className="w-2 h-2" /></Button>
-                            <Input
-                              type="number"
-                              min={1}
-                              max={20}
-                              value={r.tahfizhEndPage ?? ""}
-                              disabled={spreadsheetLayout.isEditing}
-                              placeholder="Isi"
-                              onChange={e => updateRow(idx, { tahfizhEndPage: e.target.value === "" ? null : clampPage("tahfizh", parseInt(e.target.value) || 1, r.tahfizhJuz) })}
-                              className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-100 dark:focus-visible:bg-blue-800/30"
-                            />
-                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhEndPage: stepPage("tahfizh", r.tahfizhEndPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
-                          </div>
-                        ) : (
-                          <div className="h-6 w-full flex items-center justify-center text-muted-foreground text-[10px] bg-muted/20">-</div>
-                        )}
-                      </td>
-                        <td {...layoutCellProps(r.studentId, "tahfizhPagesRead")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px]">
-                          {r.program === "tahsin" && getTahsinLanjutanFase(Math.max(r.startPage || 1, r.endPage || 1)) >= 2 ? (
-                            <span className={r.tahfizhEndPage !== null && (r.tahfizhEndPage - r.tahfizhStartPage) < 0 ? "text-red-600 font-bold" : ""}>
-                              {r.tahfizhEndPage !== null ? (r.tahfizhEndPage - r.tahfizhStartPage) : "-"}
-                            </span>
-                          ) : "-"}
-                        </td>
-                        <td {...layoutCellProps(r.studentId, "tahfizhTarget")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px]">
-                          {r.program === "tahsin" && getTahsinLanjutanFase(Math.max(r.startPage || 1, r.endPage || 1)) >= 2 ? targetForProgram("tahfizh") : "-"}
-                        </td>
-                        <td {...layoutCellProps(r.studentId, "totalProgress")} className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
+                                          <td {...layoutCellProps(r.studentId, "totalProgress")} className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
                     <td {...layoutCellProps(r.studentId, "target")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px]">{target}</td>
                     {INDICATOR_GUIDES.map((guide) => {
                       const point = r[guide.field] as ProgressivePoint;
@@ -1332,7 +1276,7 @@ const SpreadsheetReport = () => {
                           ? "readingQuality"
                           : "readingImprovement";
                       return (
-                        <td key={guide.key} {...layoutCellProps(r.studentId, columnKey)} className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                        <td key={guide.key} {...layoutCellProps(r.studentId, columnKey)} rowSpan={rs} className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700">
                           <Select
                             value={String(point)}
                             disabled={spreadsheetLayout.isEditing}
@@ -1365,7 +1309,7 @@ const SpreadsheetReport = () => {
                         </td>
                       );
                     })}
-                    <td {...layoutCellProps(r.studentId, "monthlyAchievement")} className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700 bg-amber-50/40 dark:bg-amber-950/10">
+                    <td {...layoutCellProps(r.studentId, "monthlyAchievement")} className="p-1 border border-[1.5px] border-blue-400 dark:border-blue-700 bg-amber-50/40 dark:bg-amber-950/10" rowSpan={rs}>
                       <Select
                         value={String(r.pencapaianTargetBulan)}
                         disabled={r.program === "iqra" || spreadsheetLayout.isEditing}
@@ -1390,17 +1334,17 @@ const SpreadsheetReport = () => {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td {...layoutCellProps(r.studentId, "progressCategory")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">
+                    <td {...layoutCellProps(r.studentId, "progressCategory")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center" rowSpan={rs}>
                       <Badge variant="outline" className={`py-0 px-1.5 text-[9px] ${getCategoryClass(progressiveScore.kategoriProgres)}`}>
                         {progressiveScore.kategoriProgres}
                       </Badge>
                     </td>
-                    <td {...layoutCellProps(r.studentId, "finalScore")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center">
+                    <td {...layoutCellProps(r.studentId, "finalScore")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center" rowSpan={rs}>
                       <span className={`inline-flex min-h-7 min-w-10 items-center justify-center rounded-lg border px-2 text-[13px] font-black ${getScoreClass(progressiveScore.nilaiAkhir)}`}>
                         {progressiveScore.nilaiAkhir}
                       </span>
                     </td>
-                    <td {...layoutCellProps(r.studentId, "notes")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                    <td {...layoutCellProps(r.studentId, "notes")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700" rowSpan={rs}>
                       <div className="flex items-center gap-0.5">
                         <Textarea
                           value={r.notes}
@@ -1443,16 +1387,73 @@ const SpreadsheetReport = () => {
                         </Popover>
                       </div>
                     </td>
-                    <td {...layoutCellProps(r.studentId, "saveStatus")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px]">
+                    <td {...layoutCellProps(r.studentId, "saveStatus")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px]" rowSpan={rs}>
                       {r.saving ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> :
                         r.dirty || !r.reportId ? <Badge variant="outline" className="text-amber-600 border-amber-300 py-0 px-1 text-[9px]">Belum Simpan</Badge> :
                         <Badge variant="outline" className="border-emerald-200 bg-emerald-50 py-0 px-1 text-[9px] text-emerald-700"><CheckCircle2 className="mr-0.5 h-2.5 w-2.5" />Tersimpan</Badge>}{/*
                         <span className="text-muted-foreground text-[10px]">—</span>}
                     */}
                     </td>
-                  </tr>
-                );
-              })}
+                    </tr>
+                    {hasSetoran && (
+                      <tr className="bg-blue-50/30">
+                        <td {...layoutCellProps(r.studentId, "startLevel")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                           <div className="h-full flex items-center justify-center">
+                             <Select value={r.tahfizhJuz} onValueChange={v => updateRow(idx, { tahfizhJuz: v })} disabled={spreadsheetLayout.isEditing}>
+                               <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0 text-blue-700 font-medium">
+                                 <SelectValue />
+                               </SelectTrigger>
+                               <SelectContent>
+                                 {Array.from({ length: 30 }, (_, i) => 30 - i).map(j => <SelectItem key={j} value={String(j)} className="text-[10px]">Juz {j}</SelectItem>)}
+                               </SelectContent>
+                             </Select>
+                           </div>
+                        </td>
+                        <td {...layoutCellProps(r.studentId, "startPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                          <div className="flex items-center justify-center">
+                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted text-blue-700" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhStartPage: stepPage("tahfizh", r.tahfizhStartPage, -1) })}><Minus className="w-2 h-2" /></Button>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={20}
+                              value={r.tahfizhStartPage}
+                              disabled={spreadsheetLayout.isEditing}
+                              onChange={e => updateRow(idx, { tahfizhStartPage: clampPage("tahfizh", parseInt(e.target.value) || 1, r.tahfizhJuz) })}
+                              className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-100 dark:focus-visible:bg-blue-800/30 text-blue-700 font-medium"
+                            />
+                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted text-blue-700" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhStartPage: stepPage("tahfizh", r.tahfizhStartPage, 1) })}><Plus className="w-2 h-2" /></Button>
+                          </div>
+                        </td>
+                        <td {...layoutCellProps(r.studentId, "endLevel")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700 bg-muted/10">
+                          <div className="h-6 w-full flex items-center justify-center text-muted-foreground text-[10px]">-</div>
+                        </td>
+                        <td {...layoutCellProps(r.studentId, "endPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                          <div className="flex items-center justify-center">
+                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted text-blue-700" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhEndPage: stepPage("tahfizh", r.tahfizhEndPage ?? 1, -1) })}><Minus className="w-2 h-2" /></Button>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={20}
+                              value={r.tahfizhEndPage ?? ""}
+                              disabled={spreadsheetLayout.isEditing}
+                              placeholder="Isi"
+                              onChange={e => updateRow(idx, { tahfizhEndPage: e.target.value === "" ? null : clampPage("tahfizh", parseInt(e.target.value) || 1, r.tahfizhJuz) })}
+                              className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-100 dark:focus-visible:bg-blue-800/30 text-blue-700 font-medium"
+                            />
+                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted text-blue-700" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhEndPage: stepPage("tahfizh", r.tahfizhEndPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
+                          </div>
+                        </td>
+                        <td {...layoutCellProps(r.studentId, "totalProgress")} className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] text-blue-700 font-medium ${signedTahfizh < 0 ? "text-red-600 font-bold" : ""}`}>
+                          {r.tahfizhEndPage !== null ? signedTahfizh : "-"}
+                        </td>
+                        <td {...layoutCellProps(r.studentId, "target")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px]">
+                          {targetForProgram("tahfizh")}
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
+                  );
+                })}
             </tbody>
           </table>
         </CardContent>
