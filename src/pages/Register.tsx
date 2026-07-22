@@ -51,9 +51,7 @@ export default function Register() {
     enabled: role === "parent",
     queryFn: async () => {
       const { data, error: studentsError } = await supabase
-        .from("students")
-        .select("id,nama,kelas,rombel")
-        .order("nama");
+        .rpc("list_students_for_registration" as any);
       if (studentsError) throw studentsError;
       return (data || []) as PublicStudentOption[];
     },
