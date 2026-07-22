@@ -282,6 +282,10 @@ interface Row {
   startPage: number;
   endLevel: string;
   endPage: number | null;
+  tahfizhReportId?: string;
+  tahfizhJuz: string;
+  tahfizhStartPage: number;
+  tahfizhEndPage: number | null;
   poinKehadiranKesiapan: ProgressivePoint;
   poinKualitasBacaan: ProgressivePoint;
   poinPerbaikanBacaan: ProgressivePoint;
@@ -369,8 +373,11 @@ const SpreadsheetReport = () => {
       // existing report is scoped by student + month + year so changing months never overwrites another report.
       const currentScopeKey = buildProgressiveReportScopeKey({ studentId: s.id, month, year });
       const existing = reportRows.find(
-        r => buildProgressiveReportScopeKey({ studentId: r.student_id, month: r.month, year: r.year }) === currentScopeKey,
-      );
+          r => buildProgressiveReportScopeKey({ studentId: r.student_id, month: r.month, year: r.year }) === currentScopeKey,
+        );
+        const existingTahfizh = reportRows.find(
+          r => r.student_id === s.id && r.month === month && r.year === year && r.program_type === "tahfizh"
+        );
       const inferredProgram: ReportProgram = previousEndLevel === "Tahfizh"
         ? "tahfizh"
         : previousEndLevel === "Tahsin Lanjutan"
@@ -408,7 +415,11 @@ const SpreadsheetReport = () => {
           startPage: existing.start_page || 1,
           endLevel: endLvlRaw,
           endPage: existing.end_page || 1,
-          ...progressiveDefaults,
+            tahfizhReportId: existingTahfizh?.id,
+            tahfizhJuz: existingTahfizh ? stripStoredLevelPrefix(existingTahfizh.end_iqra_level || existingTahfizh.iqra_level || "30") : "30",
+            tahfizhStartPage: existingTahfizh?.start_page || 1,
+            tahfizhEndPage: existingTahfizh?.end_page || null,
+            ...progressiveDefaults,
           attendancePercentage: existing.attendance_percentage ?? 0,
           notes: existing.notes || "",
           dirty: false,
@@ -435,7 +446,11 @@ const SpreadsheetReport = () => {
         startPage: sp,
         endLevel: "",
         endPage: null,
-        ...progressiveDefaults,
+          tahfizhReportId: undefined,
+          tahfizhJuz: "30",
+          tahfizhStartPage: 1,
+          tahfizhEndPage: null,
+          ...progressiveDefaults,
         attendancePercentage: 0,
         notes: "",
         dirty: false,
@@ -708,8 +723,9 @@ const SpreadsheetReport = () => {
       await ensureTS.mutateAsync({ studentId: r.studentId, kelas: stu?.kelas, rombel: stu?.rombel });
 
       setRows(prev => prev.map((x, i) => i === idx ? {
-        ...x,
-        reportId: saved.id,
+          ...x,
+          reportId: saved.id,
+          tahfizhReportId: savedTahfizhId,
         pencapaianTargetBulan: progressiveScore.pencapaianTargetBulan,
         notes: notesForSave,
         dirty: false,
@@ -1202,7 +1218,56 @@ const SpreadsheetReport = () => {
                         <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, r.endLevel), r.endPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
                       </div>
                     </td>
-                    <td {...layoutCellProps(r.studentId, "totalProgress")} className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
+                                          <td {...layoutCellProps(r.studentId, "tahfizhJuz")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                        {r.program === "tahsin" && getTahsinLanjutanFase(Math.max(r.startPage || 1, r.endPage || 1)) >= 2 ? (
+                          <Select value={r.tahfizhJuz} onValueChange={v => updateRow(idx, { tahfizhJuz: v })} disabled={spreadsheetLayout.isEditing}>
+                            <SelectTrigger className="h-6 w-full border-none bg-blue-50/50 dark:bg-blue-900/20 shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
+                            <SelectContent>{JUZ_LIST.map(l => <SelectItem key={l} value={String(l)} className="text-[10px]">Juz {l}</SelectItem>)}</SelectContent>
+                          </Select>
+                        ) : (
+                          <div className="h-6 w-full flex items-center justify-center text-muted-foreground text-[10px] bg-muted/20">-</div>
+                        )}
+                      </td>
+                      <td {...layoutCellProps(r.studentId, "tahfizhStartPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                        {r.program === "tahsin" && getTahsinLanjutanFase(Math.max(r.startPage || 1, r.endPage || 1)) >= 2 ? (
+                          <div className="flex items-center justify-center bg-blue-50/50 dark:bg-blue-900/20 h-full">
+                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhStartPage: stepPage("tahfizh", r.tahfizhStartPage, -1) })}><Minus className="w-2 h-2" /></Button>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={20}
+                              value={r.tahfizhStartPage}
+                              disabled={spreadsheetLayout.isEditing}
+                              onChange={e => updateRow(idx, { tahfizhStartPage: clampPage("tahfizh", parseInt(e.target.value) || 1, r.tahfizhJuz) })}
+                              className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-100 dark:focus-visible:bg-blue-800/30"
+                            />
+                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhStartPage: stepPage("tahfizh", r.tahfizhStartPage, 1) })}><Plus className="w-2 h-2" /></Button>
+                          </div>
+                        ) : (
+                          <div className="h-6 w-full flex items-center justify-center text-muted-foreground text-[10px] bg-muted/20">-</div>
+                        )}
+                      </td>
+                      <td {...layoutCellProps(r.studentId, "tahfizhEndPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
+                        {r.program === "tahsin" && getTahsinLanjutanFase(Math.max(r.startPage || 1, r.endPage || 1)) >= 2 ? (
+                          <div className="flex items-center justify-center bg-blue-50/50 dark:bg-blue-900/20 h-full">
+                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhEndPage: stepPage("tahfizh", r.tahfizhEndPage ?? 1, -1) })}><Minus className="w-2 h-2" /></Button>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={20}
+                              value={r.tahfizhEndPage ?? ""}
+                              disabled={spreadsheetLayout.isEditing}
+                              placeholder="Isi"
+                              onChange={e => updateRow(idx, { tahfizhEndPage: e.target.value === "" ? null : clampPage("tahfizh", parseInt(e.target.value) || 1, r.tahfizhJuz) })}
+                              className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-100 dark:focus-visible:bg-blue-800/30"
+                            />
+                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhEndPage: stepPage("tahfizh", r.tahfizhEndPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
+                          </div>
+                        ) : (
+                          <div className="h-6 w-full flex items-center justify-center text-muted-foreground text-[10px] bg-muted/20">-</div>
+                        )}
+                      </td>
+                      <td {...layoutCellProps(r.studentId, "totalProgress")} className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
                     <td {...layoutCellProps(r.studentId, "target")} className="p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-muted-foreground text-[10px]">{target}</td>
                     {INDICATOR_GUIDES.map((guide) => {
                       const point = r[guide.field] as ProgressivePoint;

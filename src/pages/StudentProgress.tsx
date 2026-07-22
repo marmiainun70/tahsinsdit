@@ -198,9 +198,16 @@ const StudentProgress = () => {
                   Rombel {(student as any).rombel}
                 </span>
               )}
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LEVEL_COLORS[student.level]}`}>
-                {getLevelDisplayLabel(student.level as ReadingLevel)}
-              </span>
+                <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${LEVEL_COLORS[student.level as ReadingLevel]}`}>
+                  {student.level === "Tahsin Lanjutan"
+                    ? `Tahsin Lanjutan - Fase ${(() => {
+                        const h = student.halaman_terakhir || 1;
+                        if (h <= 41) return 1;
+                        if (h <= 76) return 2;
+                        return 3;
+                      })()}`
+                    : getLevelDisplayLabel(student.level as ReadingLevel)}
+                </span>
               <span className="text-xs bg-muted text-muted-foreground px-2.5 py-1 rounded-full">Hal. {student.halaman_terakhir}</span>
               <span className="text-xs bg-muted text-muted-foreground px-2.5 py-1 rounded-full">{student.status_bacaan}</span>
               {(student as any).perlu_perhatian && (
