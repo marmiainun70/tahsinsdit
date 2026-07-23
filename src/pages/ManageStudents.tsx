@@ -64,7 +64,54 @@ export default function ManageStudents() {
 
   const [exporting, setExporting] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
+  const handleSyncEvaluasi = async () => {
+    setIsSyncing(true);
+    try {
+      const { data: evaluations, error: evalErr } = await supabase
+        .from("evaluasi_awal_semester")
+        .select('student_id, master_level_kemampuan(nama_level)')
+        .order('created_at', { ascending: false });
+        
+      if (evalErr) throw evalErr;
+
+      const latestEvals: Record<string, string> = {};
+      (evaluations || []).forEach((ev: any) => {
+        if (!latestEvals[ev.student_id] && ev.master_level_kemampuan?.nama_level) {
+          latestEvals[ev.student_id] = ev.master_level_kemampuan.nama_level;
+        }
+      });
+
+      const normalizeLevel = (levelName: string): string => {
+        const lower = levelName.toLowerCase();
+        if (lower.match(/(iqra|iqro|jilid)\s*1/) || lower === "1") return "Iqro 1";
+        if (lower.match(/(iqra|iqro|jilid)\s*2/) || lower === "2") return "Iqro 2";
+        if (lower.match(/(iqra|iqro|jilid)\s*3/) || lower === "3") return "Iqro 3";
+        if (lower.match(/(iqra|iqro|jilid)\s*4/) || lower === "4") return "Iqro 4";
+        if (lower.match(/(iqra|iqro|jilid)\s*5/) || lower === "5") return "Iqro 5";
+        if (lower.match(/(iqra|iqro|jilid)\s*6/) || lower === "6") return "Iqro 6";
+        if (lower.includes("tahsin lanjutan") || lower.includes("level 2")) return "Tahsin Lanjutan";
+        if (lower.includes("tahfizh") || lower.includes("tahfiz") || lower.includes("level 3")) return "Tahfizh";
+        if (lower.includes("tahsin dasar")) return "Tahsin Dasar";
+        return levelName.replace(/iqra/ig, "Iqro").replace(/jilid/ig, "Iqro");
+      };
+
+      let count = 0;
+      for (const [studentId, namaLevel] of Object.entries(latestEvals)) {
+        const newLevel = normalizeLevel(namaLevel);
+        const { error } = await supabase.from('students').update({ level: newLevel as never }).eq('id', studentId);
+        if (!error) count++;
+      }
+      
+      toast({ title: "Sinkronisasi Selesai", description: `${count} data siswa berhasil diperbarui sesuai level evaluasi terakhir.` });
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      toast({ title: "Gagal Sinkronisasi", description: String(err), variant: "destructive" });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleExport = async () => {
     try {
@@ -397,6 +444,16 @@ export default function ManageStudents() {
         </div>
         
         <div className="flex flex-wrap gap-2">
+          {isAdmin && (
+            <button
+              onClick={handleSyncEvaluasi}
+              disabled={isSyncing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-amber-500 text-white hover:bg-amber-600 focus:ring-2 focus:ring-amber-500 focus:outline-none disabled:opacity-50 transition-colors"
+            >
+              {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}
+              Sync Level Evaluasi
+            </button>
+          )}
           <button
             onClick={handleExport}
             disabled={exporting}
