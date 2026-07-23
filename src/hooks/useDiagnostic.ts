@@ -162,7 +162,22 @@ export const useSubmitDiagnosticWizard = () => {
 
       // Update student level based on evaluation
       if (namaLevelUpdate) {
-        const readingLevel = namaLevelUpdate.replace("Iqra", "Iqro");
+        const normalizeLevel = (levelName: string): string => {
+          const lower = levelName.toLowerCase();
+          if (lower.match(/(iqra|iqro|jilid)\s*1/) || lower === "1") return "Iqro 1";
+          if (lower.match(/(iqra|iqro|jilid)\s*2/) || lower === "2") return "Iqro 2";
+          if (lower.match(/(iqra|iqro|jilid)\s*3/) || lower === "3") return "Iqro 3";
+          if (lower.match(/(iqra|iqro|jilid)\s*4/) || lower === "4") return "Iqro 4";
+          if (lower.match(/(iqra|iqro|jilid)\s*5/) || lower === "5") return "Iqro 5";
+          if (lower.match(/(iqra|iqro|jilid)\s*6/) || lower === "6") return "Iqro 6";
+          if (lower.includes("tahsin lanjutan") || lower.includes("level 2")) return "Tahsin Lanjutan";
+          if (lower.includes("tahfizh") || lower.includes("tahfiz") || lower.includes("level 3")) return "Tahfizh";
+          if (lower.includes("tahsin dasar")) return "Tahsin Dasar";
+          return levelName.replace(/iqra/ig, "Iqro").replace(/jilid/ig, "Iqro");
+        };
+
+        const readingLevel = normalizeLevel(namaLevelUpdate);
+        
         const { error: studentUpdateError } = await supabase
           .from("students")
           .update({ level: readingLevel as never })
