@@ -545,6 +545,16 @@ function TeacherDetail({
         : db.from("teacher_profiles").upsert(payload, { onConflict: "user_id" }).select("*").single();
       const { data, error } = await query;
       if (error) throw error;
+      
+      // Sinkronisasi nomor HP ke tabel profiles
+      if (payload.phone) {
+        const { error: profileErr } = await db
+          .from("profiles")
+          .update({ whatsapp: payload.phone })
+          .eq("user_id", payload.user_id);
+        if (profileErr) console.error("Gagal sinkronisasi nomor HP ke profiles:", profileErr);
+      }
+      
       return data as TeacherProfile;
     },
     onSuccess: async (saved) => {

@@ -182,6 +182,55 @@ export default function ManageAccounts() {
     setUpdatingUserId(null);
   };
 
+  const approveAllPending = async () => {
+    setIsBulkUpdating(true);
+    setActionError("");
+
+    const pendingAccounts = accounts.filter(a => a.status === "pending" || !a.is_read_by_admin);
+    if (pendingAccounts.length === 0) {
+      setIsBulkUpdating(false);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("profiles")
+      .update({ status: "approved", is_read_by_admin: true })
+      .in("user_id", pendingAccounts.map(a => a.user_id));
+
+    if (error) {
+      setActionError(error.message);
+    } else {
+      await queryClient.invalidateQueries({ queryKey: ["managed-accounts"] });
+    }
+    setIsBulkUpdating(false);
+  };
+
+  const syncTeacherPhoneNumbers = async () => {
+    if (!window.confirm("Sinkronisasi akan mengambil nomor HP dari Profil Guru dan menyimpannya ke Manajemen Akun. Lanjutkan?")) return;
+    setIsBulkUpdating(true);
+    setActionError("");
+    try {
+      const { data: tpData, error: tpError } = await supabase.from("teacher_profiles").select("user_id, phone").not("phone", "is", null);
+      if (tpError) throw tpError;
+      
+      let syncedCount = 0;
+      for (const tp of tpData) {
+        if (tp.phone && tp.phone.trim() !== "") {
+          const { error: updateErr } = await supabase.from("profiles").update({ whatsapp: tp.phone }).eq("user_id", tp.user_id);
+          if (!updateErr) syncedCount++;
+        }
+      }
+      alert(`Berhasil mensinkronisasi ${syncedCount} nomor HP guru.`);
+      await queryClient.invalidateQueries({ queryKey: ["managed-accounts"] });
+    } catch (error: any) {
+      setActionError(error.message || "Gagal sinkronisasi nomor HP");
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
+  const pendingCount = accounts.filter((a) => a.status === "pending").length;
+
   const stats = useMemo(() => {
     return accounts.reduce(
       (acc, curr) => {
@@ -331,23 +380,33 @@ export default function ManageAccounts() {
           <h1 className="text-2xl font-bold text-foreground">Manajemen Akun All User</h1>
           <p className="text-sm text-muted-foreground">Kelola akun guru dan orang tua yang mendaftar melalui halaman publik.</p>
         </div>
-        <button
-          onClick={handleBulkApprove}
-          disabled={pendingAccounts.length === 0 || isBulkUpdating || isLoading}
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {isBulkUpdating ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Memproses...
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="h-4 w-4" />
-              Setujui Semua Menunggu
-            </>
-          )}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={syncTeacherPhoneNumbers}
+            disabled={isBulkUpdating || isLoading}
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            Sinkronisasi Nomor HP Guru
+          </button>
+          <button
+            onClick={handleBulkApprove}
+            disabled={pendingAccounts.length === 0 || isBulkUpdating || isLoading}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isBulkUpdating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Memproses...
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="h-4 w-4" />
+                Setujui Semua Menunggu
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 mb-2">
