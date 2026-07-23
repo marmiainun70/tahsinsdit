@@ -129,15 +129,26 @@ export const useSubmitDiagnosticWizard = () => {
       if (!user?.id) throw new Error("Tidak ada user login");
 
       let final_selected_level_id = data.selected_level_id;
+      let namaLevelUpdate: string | null = null;
       
       if (!final_selected_level_id && data.selectedKodeLevel) {
         const { data: levelData } = await supabase
           .from("master_level_kemampuan")
-          .select("id")
+          .select("id, nama_level")
           .eq("kode_level", data.selectedKodeLevel)
           .single();
         if (levelData) {
           final_selected_level_id = levelData.id;
+          namaLevelUpdate = levelData.nama_level;
+        }
+      } else if (final_selected_level_id) {
+        const { data: levelData } = await supabase
+          .from("master_level_kemampuan")
+          .select("nama_level")
+          .eq("id", final_selected_level_id)
+          .single();
+        if (levelData) {
+          namaLevelUpdate = levelData.nama_level;
         }
       }
 
@@ -148,6 +159,19 @@ export const useSubmitDiagnosticWizard = () => {
         .delete()
         .eq("student_id", data.student_id)
         .eq("academic_year_id", data.academic_year_id);
+
+      // Update student level based on evaluation
+      if (namaLevelUpdate) {
+        const readingLevel = namaLevelUpdate.replace("Iqra", "Iqro");
+        const { error: studentUpdateError } = await supabase
+          .from("students")
+          .update({ level: readingLevel as never })
+          .eq("id", data.student_id);
+        
+        if (studentUpdateError) {
+          console.error("Gagal mengupdate level siswa:", studentUpdateError);
+        }
+      }
 
       // We use a custom RPC or batch insert since Supabase JS Client does not support multi-statement transactions directly
       // However, since we're using the standard JS client, we can insert into the parent table and then promise.all the child tables.
