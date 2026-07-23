@@ -95,7 +95,7 @@ export const useChildrenTeachers = (studentIds: string[]) => {
       // Map class assignments (medium priority)
       studentsData.forEach(student => {
         const classAssignment = tcData?.find(tc => 
-          tc.kelas === student.kelas && 
+          String(tc.kelas) === String(student.kelas) && 
           (!tc.rombel || tc.rombel === student.rombel)
         );
         if (classAssignment) {
