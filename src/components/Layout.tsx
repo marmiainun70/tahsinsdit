@@ -44,7 +44,6 @@ const parentNavItems = [
   { to: "/", icon: User, label: "Profil Siswa" },
   { to: "/kalender-akademik", icon: CalendarDays, label: "Kalender Akademik" },
   { to: "/pengumuman", icon: Megaphone, label: "Pengumuman" },
-  { to: "/hubungi-guru", icon: MessageCircle, label: "Hubungi Guru" },
   { to: "/pengaturan-akun", icon: Settings, label: "Pengaturan Akun" }
 ];
 
