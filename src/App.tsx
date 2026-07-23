@@ -101,6 +101,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 
+import ContactTeacher from "./pages/ContactTeacher";
+
 const AppRoutes = () => {
   const { session, loading } = useAuth();
   const hasVerifiedSession = !loading && Boolean(session);
@@ -111,6 +113,7 @@ const AppRoutes = () => {
       <Route path="/login" element={hasVerifiedSession ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/register" element={hasVerifiedSession ? <Navigate to="/" replace /> : <Register />} />
       <Route path="/" element={hasVerifiedSession ? <ProtectedRoute><Dashboard /></ProtectedRoute> : <Landing />} />
+      <Route path="/hubungi-guru" element={<ProtectedRoute><ContactTeacher /></ProtectedRoute>} />
       <Route path="/kelola-siswa" element={<ProtectedRoute><ManageStudents /></ProtectedRoute>} />
       <Route path="/murid-binaan" element={<ProtectedRoute><TeacherManagedStudents /></ProtectedRoute>} />
       <Route path="/penugasan-guru" element={<ProtectedRoute><AdminTeacherAssignments /></ProtectedRoute>} />
