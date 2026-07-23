@@ -94,10 +94,16 @@ export const useChildrenTeachers = (studentIds: string[]) => {
 
       // Map class assignments (medium priority)
       studentsData.forEach(student => {
-        const classAssignment = tcData?.find(tc => 
-          String(tc.kelas) === String(student.kelas) && 
-          (!tc.rombel || tc.rombel === student.rombel)
-        );
+        const classAssignment = tcData?.find(tc => {
+          if (String(tc.kelas) !== String(student.kelas)) return false;
+          if (!tc.rombel) return true; // Matches any rombel if teacher_classes has no rombel specified
+          
+          const tRombel = tc.rombel.toUpperCase().trim();
+          const sRombel = (student.rombel || "").toUpperCase().trim();
+          
+          // Match exactly, or if student rombel includes the letter (e.g. "1B" includes "B")
+          return sRombel === tRombel || sRombel.includes(tRombel) || tRombel.includes(sRombel);
+        });
         if (classAssignment) {
           resultMap[student.id] = profileMap[classAssignment.teacher_id] || { name: "Guru Tidak Diketahui", whatsapp: null };
         }
