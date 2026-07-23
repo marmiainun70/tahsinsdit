@@ -52,10 +52,21 @@ export const useChildrenTeachers = (studentIds: string[]) => {
 
       if (tcError) throw tcError;
 
+      // 3.5 Get evaluator from evaluasi_awal_semester as fallback
+      const { data: evalData, error: evalError } = await supabase
+        .from("evaluasi_awal_semester")
+        .select("student_id, evaluator_id")
+        .in("student_id", studentIds);
+
+      if (evalError) throw evalError;
+
       // Collect all teacher IDs to fetch names
       const teacherIds = new Set<string>();
       tsData?.forEach(t => teacherIds.add(t.teacher_id));
       tcData?.forEach(t => teacherIds.add(t.teacher_id));
+      evalData?.forEach(e => {
+        if (e.evaluator_id) teacherIds.add(e.evaluator_id);
+      });
 
       if (teacherIds.size === 0) return {};
 
@@ -74,7 +85,14 @@ export const useChildrenTeachers = (studentIds: string[]) => {
 
       const resultMap: Record<string, { name: string, whatsapp: string | null }> = {};
 
-      // Map class assignments first
+      // Map fallback evaluator first (lowest priority)
+      evalData?.forEach(e => {
+        if (e.evaluator_id) {
+          resultMap[e.student_id] = profileMap[e.evaluator_id] || { name: "Guru Tidak Diketahui", whatsapp: null };
+        }
+      });
+
+      // Map class assignments (medium priority)
       studentsData.forEach(student => {
         const classAssignment = tcData?.find(tc => 
           tc.kelas === student.kelas && 
@@ -85,9 +103,16 @@ export const useChildrenTeachers = (studentIds: string[]) => {
         }
       });
 
-      // Override with individual assignments (higher priority)
+      // Override with individual assignments (highest priority)
       tsData?.forEach(t => {
         resultMap[t.student_id] = profileMap[t.teacher_id] || { name: "Guru Tidak Diketahui", whatsapp: null };
+      });
+
+      // For any student that STILL has no teacher, set to unknown
+      studentsData.forEach(student => {
+        if (!resultMap[student.id]) {
+          resultMap[student.id] = { name: "Guru Tidak Diketahui", whatsapp: null };
+        }
       });
 
       return resultMap;
