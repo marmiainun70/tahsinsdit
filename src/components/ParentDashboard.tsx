@@ -5,7 +5,7 @@ import { useParentStudents, useChildrenTeachers } from "@/hooks/useParentStudent
 import { useStudents } from "@/hooks/useSupabaseData";
 import { useDiagnosticDetail } from "@/hooks/useDiagnostic";
 import { useProgressEntries } from "@/hooks/useSupabaseData";
-import { Loader2, BookOpen, School, FileText, ClipboardList, TrendingUp, Target, ShieldCheck, User, Lock, CheckCircle2 } from "lucide-react";
+import { Loader2, BookOpen, School, FileText, ClipboardList, TrendingUp, Target, ShieldCheck, User, Lock, CheckCircle2, MessageCircle } from "lucide-react";
 import { StudentSwitcher } from "./parent/StudentSwitcher";
 import { StudentAvatar } from "./parent/StudentAvatar";
 import { Progress } from "@/components/ui/progress";
@@ -153,7 +153,18 @@ export default function ParentDashboard() {
                 <div className="w-40 flex items-center gap-2 text-slate-600 font-medium">
                   <User className="w-4 h-4 text-indigo-500" /> Guru Tahsin
                 </div>
-                <div className="text-slate-800 font-semibold">: {activeTeacher || "-"}</div>
+                <div className="text-slate-800 font-semibold flex items-center gap-2">
+                  : {activeTeacher?.name || "-"}
+                  {activeTeacher?.whatsapp && (
+                    <a 
+                      href={`https://wa.me/${activeTeacher.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent("Assalamu'alaikum, saya orang tua dari " + activeChild.nama + "...")}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-100 text-emerald-700 text-[11px] rounded-full hover:bg-emerald-200 transition-colors font-medium ml-1"
+                    >
+                      <MessageCircle className="w-3 h-3" /> Hubungi Guru
+                    </a>
+                  )}
+                </div>
               </div>
               <div className="flex items-center">
                 <div className="w-40 flex items-center gap-2 text-slate-600 font-medium">

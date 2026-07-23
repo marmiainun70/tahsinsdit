@@ -62,17 +62,17 @@ export const useChildrenTeachers = (studentIds: string[]) => {
       // 4. Get profile names for those teachers
       const { data: profData, error: profError } = await supabase
         .from("profiles")
-        .select("user_id, full_name")
+        .select("user_id, full_name, whatsapp")
         .in("user_id", Array.from(teacherIds));
 
       if (profError) throw profError;
 
-      const profileMap: Record<string, string> = {};
+      const profileMap: Record<string, { name: string, whatsapp: string | null }> = {};
       profData?.forEach(p => {
-        profileMap[p.user_id] = p.full_name;
+        profileMap[p.user_id] = { name: p.full_name, whatsapp: p.whatsapp };
       });
 
-      const resultMap: Record<string, string> = {};
+      const resultMap: Record<string, { name: string, whatsapp: string | null }> = {};
 
       // Map class assignments first
       studentsData.forEach(student => {
@@ -81,13 +81,13 @@ export const useChildrenTeachers = (studentIds: string[]) => {
           (!tc.rombel || tc.rombel === student.rombel)
         );
         if (classAssignment) {
-          resultMap[student.id] = profileMap[classAssignment.teacher_id] || "Guru Tidak Diketahui";
+          resultMap[student.id] = profileMap[classAssignment.teacher_id] || { name: "Guru Tidak Diketahui", whatsapp: null };
         }
       });
 
       // Override with individual assignments (higher priority)
       tsData?.forEach(t => {
-        resultMap[t.student_id] = profileMap[t.teacher_id] || "Guru Tidak Diketahui";
+        resultMap[t.student_id] = profileMap[t.teacher_id] || { name: "Guru Tidak Diketahui", whatsapp: null };
       });
 
       return resultMap;
