@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useParentStudents = (userId?: string) => {
@@ -93,5 +93,68 @@ export const useChildrenTeachers = (studentIds: string[]) => {
       return resultMap;
     },
     enabled: studentIds.length > 0,
+  });
+};
+
+export const useAddParentStudent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, code }: { userId: string; code: string }) => {
+      // 1. Find the student by NIS or NISN
+      const { data: students, error: studentError } = await supabase
+        .from("students")
+        .select("id")
+        .or(`nis.eq.${code},nisn.eq.${code}`);
+
+      if (studentError) throw studentError;
+      if (!students || students.length === 0) {
+        throw new Error("Siswa dengan NIS atau NISN tersebut tidak ditemukan.");
+      }
+
+      const studentId = students[0].id;
+
+      // 2. Check if already linked
+      const { data: existing, error: existingError } = await supabase
+        .from("parents")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("student_id", studentId);
+
+      if (existingError) throw existingError;
+      if (existing && existing.length > 0) {
+        throw new Error("Siswa tersebut sudah terhubung dengan akun Anda.");
+      }
+
+      // 3. Link student
+      const { error: insertError } = await supabase
+        .from("parents")
+        .insert({ user_id: userId, student_id: studentId });
+
+      if (insertError) throw insertError;
+      
+      return studentId;
+    },
+    onSuccess: (_, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: ["parent_students", userId] });
+    },
+  });
+};
+
+export const useRemoveParentStudent = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, studentId }: { userId: string; studentId: string }) => {
+      const { error } = await supabase
+        .from("parents")
+        .delete()
+        .eq("user_id", userId)
+        .eq("student_id", studentId);
+
+      if (error) throw error;
+      return studentId;
+    },
+    onSuccess: (_, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: ["parent_students", userId] });
+    },
   });
 };

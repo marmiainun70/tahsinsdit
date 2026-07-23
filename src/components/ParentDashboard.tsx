@@ -10,6 +10,9 @@ import { StudentSwitcher } from "./parent/StudentSwitcher";
 import { StudentAvatar } from "./parent/StudentAvatar";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { LinkStudentDialog } from "./parent/LinkStudentDialog";
+import { useRemoveParentStudent } from "@/hooks/useParentStudents";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function ParentDashboard() {
   const { user } = useAuth();
@@ -20,6 +23,25 @@ export default function ParentDashboard() {
   const { data: childrenTeachers = {}, isLoading: loadingTeachers } = useChildrenTeachers(children.map(c => c.id));
   
   const [activeStudentId, setActiveStudentId] = useState<string | null>(null);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  
+  const removeParentStudent = useRemoveParentStudent();
+  const { toast } = useToast();
+
+  const handleRemoveStudent = async (studentId: string) => {
+    if (confirm("Apakah Anda yakin ingin memutus koneksi dengan siswa ini?")) {
+      try {
+        if (!user?.id) return;
+        await removeParentStudent.mutateAsync({ userId: user.id, studentId });
+        toast({ title: "Akses dihapus", description: "Siswa telah dihapus dari profil Anda." });
+        if (activeStudentId === studentId) {
+          setActiveStudentId(null);
+        }
+      } catch (e: any) {
+        toast({ title: "Gagal menghapus", description: e.message, variant: "destructive" });
+      }
+    }
+  };
 
   useEffect(() => {
     if (children.length > 0 && !activeStudentId) {
@@ -64,11 +86,15 @@ export default function ParentDashboard() {
               <p className="text-[14px] text-slate-500 mb-8 leading-relaxed">
                 Hubungkan data siswa terlebih dahulu agar Anda dapat memantau perkembangan pembelajaran.
               </p>
-              <button className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-emerald-700 transition-colors shadow-sm">
+              <button 
+                onClick={() => setLinkDialogOpen(true)}
+                className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+              >
                  + Hubungkan Siswa
               </button>
             </div>
           </div>
+          <LinkStudentDialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen} />
         </div>
       </div>
     );
@@ -88,6 +114,8 @@ export default function ParentDashboard() {
             childrenList={children} 
             activeChild={activeChild} 
             onSwitch={setActiveStudentId} 
+            onAddStudent={() => setLinkDialogOpen(true)}
+            onRemoveStudent={handleRemoveStudent}
           />
         </div>
 
@@ -345,7 +373,8 @@ export default function ParentDashboard() {
             )}
           </div>
         </motion.div>
-
+        
+        <LinkStudentDialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen} />
       </div>
     </div>
   );
