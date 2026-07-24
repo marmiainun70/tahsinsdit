@@ -91,24 +91,7 @@ export default function ManageAccounts() {
     queryFn: async () => {
       const db = supabase as any;
 
-      // Prioritaskan RPC security-definer kalau tersedia, karena itu paling tahan terhadap RLS
-      try {
-        const { data: rpcData, error: rpcError } = await db.rpc("list_managed_accounts");
-        if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
-          return (rpcData as ManagedAccountSourceRow[])
-            .map(mapRowToAccount)
-            .sort((a, b) => new Date(b.registered_at).getTime() - new Date(a.registered_at).getTime());
-        }
-      } catch {
-        // RPC belum tersedia di live DB, lanjut ke fallback lama yang lebih toleran
-      }
-
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*");
-
-      let rawProfiles: AccountRow[] = ((error ? [] : data) as AccountRow[]) || [];
-
+      // Always fetch teacher_profiles first to resolve real names and phone numbers
       const { data: teacherProfiles } = await supabase
         .from("teacher_profiles")
         .select("user_id,full_name,nama,phone,whatsapp,created_at")
@@ -124,6 +107,36 @@ export default function ManageAccounts() {
           teacherNameMap.set(id, { name, phone });
         }
       });
+
+      // Prioritaskan RPC security-definer kalau tersedia, dengan penggabungan nama asli guru
+      try {
+        const { data: rpcData, error: rpcError } = await db.rpc("list_managed_accounts");
+        if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
+          return (rpcData as ManagedAccountSourceRow[])
+            .map((row) => {
+              const tpInfo = teacherNameMap.get(row.user_id);
+              const bestFullName =
+                normalizeDisplayName(row.full_name) ||
+                normalizeDisplayName(tpInfo?.name) ||
+                row.full_name;
+              const bestWhatsapp = row.whatsapp || tpInfo?.phone || null;
+              return mapRowToAccount({
+                ...row,
+                full_name: bestFullName,
+                whatsapp: bestWhatsapp,
+              });
+            })
+            .sort((a, b) => new Date(b.registered_at).getTime() - new Date(a.registered_at).getTime());
+        }
+      } catch {
+        // RPC belum tersedia di live DB, lanjut ke fallback lama yang lebih toleran
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*");
+
+      let rawProfiles: AccountRow[] = ((error ? [] : data) as AccountRow[]) || [];
 
       const { data: userRolesData } = await supabase
         .from("user_roles")
