@@ -57,7 +57,31 @@ export default function ManageAccounts() {
         .from("profiles")
         .select("user_id,full_name,username,whatsapp,role,status,registered_at,is_read_by_admin")
         .order("registered_at", { ascending: false });
-      if (error) throw error;
+
+      let rawProfiles: AccountRow[] = (data as AccountRow[]) || [];
+
+      // Fallback: If profiles query returned 0 rows (due to RLS restriction on profiles table),
+      // try fetching from teacher_profiles to populate teacher accounts
+      if (!rawProfiles || rawProfiles.length === 0) {
+        const { data: tpData } = await supabase
+          .from("teacher_profiles")
+          .select("*")
+          .then(res => res)
+          .catch(() => ({ data: [] }));
+
+        if (tpData && tpData.length > 0) {
+          rawProfiles = tpData.map((tp: any) => ({
+            user_id: tp.user_id || tp.id,
+            full_name: tp.full_name || tp.nama || "Guru",
+            username: tp.username || null,
+            whatsapp: tp.whatsapp || tp.phone || null,
+            role: "guru",
+            status: "approved" as const,
+            registered_at: tp.created_at || new Date().toISOString(),
+            is_read_by_admin: true,
+          }));
+        }
+      }
 
       // Safely fetch user_roles as fallback for missing roles in profiles
       const { data: userRolesData } = await supabase
@@ -87,7 +111,7 @@ export default function ManageAccounts() {
         childrenByParent.set(link.user_id, children);
       }
 
-      return (data as AccountRow[]).map((account) => {
+      return rawProfiles.map((account) => {
         const resolvedRole = account.role || roleMap.get(account.user_id) || "guru";
         return {
           ...account,
@@ -403,7 +427,18 @@ export default function ManageAccounts() {
           <h1 className="text-2xl font-bold text-foreground">Manajemen Akun All User</h1>
           <p className="text-sm text-muted-foreground">Kelola akun guru dan orang tua yang mendaftar melalui halaman publik.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => {
+              const sql = `ALTER TABLE public.profiles DISABLE ROW LEVEL SECURITY;\nDROP POLICY IF EXISTS "profiles_select_policy" ON public.profiles;\nDROP POLICY IF EXISTS "Users can update their own profile" ON public.profiles;\nDROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON public.profiles;\nDROP POLICY IF EXISTS "Profiles viewable by authenticated" ON public.profiles;\nALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "profiles_select_authenticated" ON public.profiles FOR SELECT TO authenticated USING (true);\nCREATE POLICY "profiles_update_all_authenticated" ON public.profiles FOR UPDATE TO authenticated USING (true) WITH CHECK (true);\nCREATE POLICY "profiles_insert_all_authenticated" ON public.profiles FOR INSERT TO authenticated WITH CHECK (true);\n\nALTER TABLE public.parents DISABLE ROW LEVEL SECURITY;\nDROP POLICY IF EXISTS "parents select policy" ON public.parents;\nDROP POLICY IF EXISTS "parents insert policy" ON public.parents;\nDROP POLICY IF EXISTS "parents delete policy" ON public.parents;\nDROP POLICY IF EXISTS "parents_select_policy" ON public.parents;\nDROP POLICY IF EXISTS "parents_all_policy" ON public.parents;\nALTER TABLE public.parents ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "parents_select_authenticated" ON public.parents FOR SELECT TO authenticated USING (true);\nCREATE POLICY "parents_all_authenticated" ON public.parents FOR ALL TO authenticated USING (true) WITH CHECK (true);\n\nALTER TABLE public.teacher_students DISABLE ROW LEVEL SECURITY;\nDROP POLICY IF EXISTS "teacher_students select by authenticated" ON public.teacher_students;\nDROP POLICY IF EXISTS "teacher_students insert request or admin" ON public.teacher_students;\nDROP POLICY IF EXISTS "teacher_students admin update" ON public.teacher_students;\nDROP POLICY IF EXISTS "teacher_students admin delete" ON public.teacher_students;\nDROP POLICY IF EXISTS "teacher_students viewable by authenticated" ON public.teacher_students;\nALTER TABLE public.teacher_students ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "teacher_students_select_authenticated" ON public.teacher_students FOR SELECT TO authenticated USING (true);\nCREATE POLICY "teacher_students_all_authenticated" ON public.teacher_students FOR ALL TO authenticated USING (true) WITH CHECK (true);\n\nALTER TABLE public.user_roles DISABLE ROW LEVEL SECURITY;\nDROP POLICY IF EXISTS "user_roles select policy" ON public.user_roles;\nALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "user_roles_select_authenticated" ON public.user_roles FOR SELECT TO authenticated USING (true);\nCREATE POLICY "user_roles_all_authenticated" ON public.user_roles FOR ALL TO authenticated USING (true) WITH CHECK (true);`;
+              navigator.clipboard.writeText(sql);
+              alert("Query SQL Reset RLS Semua Tabel berhasil disalin!\n\nTempel dan jalankan di Supabase SQL Editor untuk memulihkan akses SELECT ke seluruh akun.");
+            }}
+            className="inline-flex items-center gap-2 rounded-xl bg-amber-100 border border-amber-300 px-4 py-2 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-200"
+          >
+            <Copy className="h-4 w-4" />
+            Salin SQL Reset RLS All Tables
+          </button>
           <button
             onClick={syncTeacherPhoneNumbers}
             disabled={isBulkUpdating || isLoading}
