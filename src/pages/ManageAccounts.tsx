@@ -92,10 +92,10 @@ export default function ManageAccounts() {
       const db = supabase as any;
 
       // Always fetch teacher_profiles first to resolve real names and phone numbers
-      const { data: teacherProfiles } = await supabase
+      const { data: teacherProfiles } = await ((supabase as any)
         .from("teacher_profiles")
-        .select("user_id,full_name,nama,phone,whatsapp,created_at")
-        .then((res) => res)
+        .select("user_id,full_name,nama,phone,whatsapp,created_at") as Promise<any>)
+        .then((res: any) => res)
         .catch(() => ({ data: [] }));
 
       const teacherNameMap = new Map<string, { name: string; phone?: string }>();
@@ -138,16 +138,16 @@ export default function ManageAccounts() {
 
       let rawProfiles: AccountRow[] = ((error ? [] : data) as AccountRow[]) || [];
 
-      const { data: userRolesData } = await supabase
+      const { data: userRolesData } = await ((supabase as any)
         .from("user_roles")
-        .select("user_id,role")
-        .then((res) => res)
+        .select("user_id,role") as Promise<any>)
+        .then((res: any) => res)
         .catch(() => ({ data: [] }));
 
-      const { data: parentStudents } = await supabase
+      const { data: parentStudents } = await ((supabase as any)
         .from("parents")
-        .select("user_id,students(nama,kelas,rombel)")
-        .then((res) => res)
+        .select("user_id,students(nama,kelas,rombel)") as Promise<any>)
+        .then((res: any) => res)
         .catch(() => ({ data: [] }));
 
       const roleMap = new Map<string, string>();

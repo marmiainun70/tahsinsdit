@@ -88,9 +88,9 @@ export default function AdminTeacherAssignments() {
     queryFn: async () => {
       const [studentsResult, assignmentsResult, teachersResult, classesResult] = await Promise.all([
         supabase.from("students").select("id,nama,kelas,rombel").eq("status_siswa", "aktif").order("nama", { ascending: true }),
-        supabase.from("teacher_students").select("*").then(res => res).catch(err => ({ data: null, error: err })),
+        (supabase.from("teacher_students").select("*") as unknown as Promise<any>).then((res: any) => res).catch((err: any) => ({ data: null, error: err })),
         supabase.from("profiles").select("user_id,full_name,role,status").eq("status", "approved"),
-        supabase.from("teacher_classes").select("*").then(res => res).catch(err => ({ data: null, error: err }))
+        (supabase.from("teacher_classes").select("*") as unknown as Promise<any>).then((res: any) => res).catch((err: any) => ({ data: null, error: err }))
       ]);
 
       if (studentsResult.error) throw studentsResult.error;

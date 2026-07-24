@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface StudentBasicInfo {
   id: string;
   nama: string;
-  kelas: string;
+  kelas: number;
   rombel: string;
   level: string;
   nis: string | null;
@@ -75,31 +75,31 @@ export const useChildrenTeachers = (studentIds: string[]) => {
         studentsData = sData;
 
         // 2. Get individual assigned teachers for students
-        const { data: tsd } = await supabase
-          .from("teacher_students")
-          .select("student_id, teacher_id")
-          .in("student_id", studentIds)
-          .eq("status", "approved")
-          .then(res => res)
-          .catch(() => ({ data: [] }));
-        if (tsd) tsData = tsd;
+        try {
+          const { data: tsd } = await supabase
+            .from("teacher_students")
+            .select("student_id, teacher_id")
+            .in("student_id", studentIds)
+            .eq("status", "approved");
+          if (tsd) tsData = tsd;
+        } catch {}
 
         // 3. Get class assigned teachers
-        const { data: tcd } = await supabase
-          .from("teacher_classes")
-          .select("teacher_id, kelas, rombel")
-          .then(res => res)
-          .catch(() => ({ data: [] }));
-        if (tcd) tcData = tcd;
+        try {
+          const { data: tcd } = await supabase
+            .from("teacher_classes")
+            .select("teacher_id, kelas, rombel");
+          if (tcd) tcData = tcd;
+        } catch {}
 
         // 3.5 Get evaluator from evaluasi_awal_semester as fallback
-        const { data: evd } = await supabase
-          .from("evaluasi_awal_semester")
-          .select("student_id, evaluator_id")
-          .in("student_id", studentIds)
-          .then(res => res)
-          .catch(() => ({ data: [] }));
-        if (evd) evalData = evd;
+        try {
+          const { data: evd } = await (supabase as any)
+            .from("evaluasi_awal_semester")
+            .select("student_id, evaluator_id")
+            .in("student_id", studentIds);
+          if (evd) evalData = evd;
+        } catch {}
 
       } catch (err) {
         console.warn("Exception in useChildrenTeachers:", err);
