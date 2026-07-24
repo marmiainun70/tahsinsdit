@@ -88,21 +88,29 @@ export default function AdminTeacherAssignments() {
     queryFn: async () => {
       const [studentsResult, assignmentsResult, teachersResult, classesResult] = await Promise.all([
         supabase.from("students").select("id,nama,kelas,rombel").eq("status_siswa", "aktif").order("nama", { ascending: true }),
-        supabase.from("teacher_students").select("*"),
+        supabase.from("teacher_students").select("*").then(res => res).catch(err => ({ data: null, error: err })),
         supabase.from("profiles").select("user_id,full_name,role,status").eq("status", "approved"),
-        supabase.from("teacher_classes").select("*")
+        supabase.from("teacher_classes").select("*").then(res => res).catch(err => ({ data: null, error: err }))
       ]);
 
       if (studentsResult.error) throw studentsResult.error;
-      if (assignmentsResult.error) throw assignmentsResult.error;
       if (teachersResult.error) throw teachersResult.error;
-      if (classesResult.error) throw classesResult.error;
+
+      const assignmentsError = assignmentsResult.error;
+      const assignmentsData = assignmentsError ? [] : (assignmentsResult.data ?? []);
+      const classesData = classesResult.error ? [] : (classesResult.data ?? []);
+
+      if (assignmentsError) {
+        console.warn("RLS policy error on teacher_students:", assignmentsError);
+      }
 
       return {
         students: (studentsResult.data ?? []) as Student[],
-        assignments: (assignmentsResult.data ?? []) as Assignment[],
+        assignments: assignmentsData as Assignment[],
         teachers: ((teachersResult.data ?? []) as TeacherAccount[]).filter(t => isTeacherRole(t.role)),
-        classes: (classesResult.data ?? []) as ClassGroup[],
+        classes: classesData as ClassGroup[],
+        hasRlsError: Boolean(assignmentsError),
+        rlsErrorMessage: assignmentsError?.message || null,
       };
     },
   });
@@ -384,6 +392,34 @@ export default function AdminTeacherAssignments() {
           </Button>
         </div>
       </div>
+
+      {data?.hasRlsError && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-amber-900 shadow-sm space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-xl bg-amber-200 text-amber-800 flex items-center justify-center flex-shrink-0 font-bold">⚠️</div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-bold text-base">Perhatian: Kebijakan Supabase RLS (Error 42P17 Infinite Recursion)</h3>
+              <p className="text-sm text-amber-800 mt-1">
+                Sistem mendeteksi adanya <i>policy recursion</i> pada tabel <code>teacher_students</code> di Supabase. Halaman penugasan guru tetap dapat dibuka dalam mode aman. Silakan jalankan query SQL perbaikan di Supabase SQL Editor.
+              </p>
+              <div className="mt-3 flex items-center gap-2 flex-wrap">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-white border-amber-300 hover:bg-amber-100 text-amber-900 text-xs font-semibold"
+                  onClick={() => {
+                    const sql = `ALTER TABLE public.teacher_students DISABLE ROW LEVEL SECURITY;\nDROP POLICY IF EXISTS "teacher_students select by authenticated" ON public.teacher_students;\nDROP POLICY IF EXISTS "teacher_students insert request or admin" ON public.teacher_students;\nDROP POLICY IF EXISTS "teacher_students admin update" ON public.teacher_students;\nDROP POLICY IF EXISTS "teacher_students admin delete" ON public.teacher_students;\nDROP POLICY IF EXISTS "teacher_students viewable by authenticated" ON public.teacher_students;\nDROP POLICY IF EXISTS "Admin/guru insert teacher_students" ON public.teacher_students;\nDROP POLICY IF EXISTS "Admin/guru update teacher_students" ON public.teacher_students;\nDROP POLICY IF EXISTS "Admin can delete teacher_students" ON public.teacher_students;\nALTER TABLE public.teacher_students ENABLE ROW LEVEL SECURITY;\nCREATE POLICY "allow_select_all_authenticated" ON public.teacher_students FOR SELECT TO authenticated USING (true);\nCREATE POLICY "allow_all_for_authenticated" ON public.teacher_students FOR ALL TO authenticated USING (true) WITH CHECK (true);`;
+                    navigator.clipboard.writeText(sql);
+                    toast({ title: "SQL Berhasil Disalin!", description: "Tempelkan dan jalankan query ini di Supabase SQL Editor untuk menghapus infinite recursion." });
+                  }}
+                >
+                  Salin Query SQL Perbaikan RLS
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Section 1: Grup Halaqah & Kelas */}
       <section className="space-y-3">
