@@ -111,7 +111,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from("profiles")
         .select("full_name, role, status")
         .eq("user_id", userId)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       // Graceful fallback: Jika gagal karena kolom 'status' belum ada di live DB
       // (karena frontend di-deploy sebelum migration backend)
@@ -120,7 +121,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           .from("profiles")
           .select("full_name, role")
           .eq("user_id", userId)
-          .single();
+          .limit(1)
+          .maybeSingle();
         data = fallbackRes.data ? { ...fallbackRes.data, status: "approved" as const } : null;
         error = fallbackRes.error;
       }
@@ -161,11 +163,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const enforceSignOut = async () => {
     if (signingOutRef.current) return;
     signingOutRef.current = true;
-    await supabase.auth.signOut();
-    setSession(null);
-    setUser(null);
-    setProfile(null);
-    signingOutRef.current = false;
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.warn("Failed to sign out from Supabase:", err);
+    } finally {
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setAccountStatus(null);
+      setLoading(false);
+      signingOutRef.current = false;
+    }
   };
 
   // ─── Auth State Listener ─────────────────────────────────────────────────
@@ -177,16 +186,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let verificationId = 0;
 
     const verifySession = async (newSession: Session, currentVerificationId: number) => {
-      const approved = await fetchAndVerifyProfile(newSession.user.id);
+      try {
+        const approved = await fetchAndVerifyProfile(newSession.user.id);
 
-      if (!mounted || currentVerificationId !== verificationId) return;
+        if (!mounted || currentVerificationId !== verificationId) return;
 
-      if (!approved) {
+        if (!approved) {
+          await enforceSignOut();
+        }
+      } catch (err) {
+        console.error("Session verification failed:", err);
         await enforceSignOut();
-      }
-
-      if (mounted && currentVerificationId === verificationId) {
-        setLoading(false);
+      } finally {
+        if (mounted && currentVerificationId === verificationId) {
+          setLoading(false);
+        }
       }
     };
 
