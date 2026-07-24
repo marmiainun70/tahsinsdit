@@ -61,9 +61,21 @@ export default function ManageAccounts() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
 
+  const normalizeDisplayName = (value?: string | null) => {
+    const trimmed = value?.trim();
+    if (!trimmed) return null;
+    const normalized = trimmed.toLowerCase();
+    if (normalized === "pengguna" || normalized === "guru" || normalized === "orang tua") return null;
+    return trimmed;
+  };
+
   const mapRowToAccount = (row: Partial<ManagedAccountSourceRow>): AccountWithChildren => ({
     user_id: row.user_id ?? "",
-    full_name: row.full_name?.trim() || row.username?.trim() || row.whatsapp?.trim() || "Pengguna",
+    full_name:
+      normalizeDisplayName(row.full_name) ||
+      normalizeDisplayName(row.username) ||
+      normalizeDisplayName(row.whatsapp) ||
+      "Pengguna",
     username: row.username?.trim() || null,
     whatsapp: row.whatsapp?.trim() || null,
     role: row.role?.trim() || "guru",
