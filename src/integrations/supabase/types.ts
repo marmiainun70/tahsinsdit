@@ -2347,6 +2347,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      can_access_student: { Args: { _student_id: string }; Returns: boolean }
+      can_manage_student: { Args: { _student_id: string }; Returns: boolean }
       create_notification: {
         Args: {
           _body: string
