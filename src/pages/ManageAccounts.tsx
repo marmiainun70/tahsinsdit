@@ -111,9 +111,19 @@ export default function ManageAccounts() {
 
       const { data: teacherProfiles } = await supabase
         .from("teacher_profiles")
-        .select("user_id,full_name,phone,created_at")
+        .select("user_id,full_name,nama,phone,whatsapp,created_at")
         .then((res) => res)
         .catch(() => ({ data: [] }));
+
+      const teacherNameMap = new Map<string, { name: string; phone?: string }>();
+      ((teacherProfiles ?? []) as any[]).forEach((tp) => {
+        const id = tp.user_id;
+        const name = tp.full_name?.trim() || tp.nama?.trim();
+        const phone = tp.whatsapp?.trim() || tp.phone?.trim();
+        if (id && name) {
+          teacherNameMap.set(id, { name, phone });
+        }
+      });
 
       const { data: userRolesData } = await supabase
         .from("user_roles")
@@ -146,9 +156,21 @@ export default function ManageAccounts() {
       const upsertAccount = (row: Partial<ManagedAccountSourceRow>) => {
         if (!row.user_id) return;
         const current = accountMap.get(row.user_id);
+        const tpInfo = teacherNameMap.get(row.user_id);
+
+        const bestFullName =
+          normalizeDisplayName(row.full_name) ||
+          normalizeDisplayName(current?.full_name) ||
+          normalizeDisplayName(tpInfo?.name) ||
+          row.full_name;
+
+        const bestWhatsapp = row.whatsapp || current?.whatsapp || tpInfo?.phone || null;
+
         const next = mapRowToAccount({
           ...current,
           ...row,
+          full_name: bestFullName,
+          whatsapp: bestWhatsapp,
           role: row.role || current?.role || roleMap.get(row.user_id) || current?.role || "guru",
           children: row.children ?? current?.children ?? childrenByParent.get(row.user_id) ?? [],
         });
