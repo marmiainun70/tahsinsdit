@@ -18,6 +18,18 @@ type AccountRow = {
 
 type AccountWithChildren = AccountRow & { children: string[] };
 
+type ManagedAccountSourceRow = {
+  user_id: string;
+  full_name: string | null;
+  username: string | null;
+  whatsapp: string | null;
+  role: string | null;
+  status: AccountRow["status"] | null;
+  registered_at: string | null;
+  is_read_by_admin: boolean | null;
+  children: string[] | null;
+};
+
 type ParentStudentRow = {
   user_id: string;
   students: {
@@ -49,58 +61,64 @@ export default function ManageAccounts() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
 
+  const mapRowToAccount = (row: Partial<ManagedAccountSourceRow>): AccountWithChildren => ({
+    user_id: row.user_id ?? "",
+    full_name: row.full_name?.trim() || row.username?.trim() || row.whatsapp?.trim() || "Pengguna",
+    username: row.username?.trim() || null,
+    whatsapp: row.whatsapp?.trim() || null,
+    role: row.role?.trim() || "guru",
+    status: (row.status as AccountRow["status"]) || "approved",
+    registered_at: row.registered_at || new Date().toISOString(),
+    is_read_by_admin: row.is_read_by_admin ?? true,
+    children: row.children ?? [],
+  });
+
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ["managed-accounts"],
     enabled: isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("user_id,full_name,username,whatsapp,role,status,registered_at,is_read_by_admin")
-        .order("registered_at", { ascending: false });
+      const db = supabase as any;
 
-      let rawProfiles: AccountRow[] = (data as AccountRow[]) || [];
-
-      // Fallback: If profiles query returned 0 rows (due to RLS restriction on profiles table),
-      // try fetching from teacher_profiles to populate teacher accounts
-      if (!rawProfiles || rawProfiles.length === 0) {
-        const { data: tpData } = await supabase
-          .from("teacher_profiles")
-          .select("*")
-          .then(res => res)
-          .catch(() => ({ data: [] }));
-
-        if (tpData && tpData.length > 0) {
-          rawProfiles = tpData.map((tp: any) => ({
-            user_id: tp.user_id || tp.id,
-            full_name: tp.full_name || tp.nama || "Guru",
-            username: tp.username || null,
-            whatsapp: tp.whatsapp || tp.phone || null,
-            role: "guru",
-            status: "approved" as const,
-            registered_at: tp.created_at || new Date().toISOString(),
-            is_read_by_admin: true,
-          }));
+      // Prioritaskan RPC security-definer kalau tersedia, karena itu paling tahan terhadap RLS
+      try {
+        const { data: rpcData, error: rpcError } = await db.rpc("list_managed_accounts");
+        if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
+          return (rpcData as ManagedAccountSourceRow[])
+            .map(mapRowToAccount)
+            .sort((a, b) => new Date(b.registered_at).getTime() - new Date(a.registered_at).getTime());
         }
+      } catch {
+        // RPC belum tersedia di live DB, lanjut ke fallback lama yang lebih toleran
       }
 
-      // Safely fetch user_roles as fallback for missing roles in profiles
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*");
+
+      let rawProfiles: AccountRow[] = ((error ? [] : data) as AccountRow[]) || [];
+
+      const { data: teacherProfiles } = await supabase
+        .from("teacher_profiles")
+        .select("user_id,full_name,phone,created_at")
+        .then((res) => res)
+        .catch(() => ({ data: [] }));
+
       const { data: userRolesData } = await supabase
         .from("user_roles")
         .select("user_id,role")
-        .then(res => res)
+        .then((res) => res)
         .catch(() => ({ data: [] }));
 
-      const roleMap = new Map<string, string>();
-      ((userRolesData ?? []) as { user_id: string; role: string }[]).forEach(ur => {
-        if (ur.user_id && ur.role) roleMap.set(ur.user_id, ur.role);
-      });
-
-      // Safely fetch parent students link (catch RLS errors if any)
       const { data: parentStudents } = await supabase
         .from("parents")
         .select("user_id,students(nama,kelas,rombel)")
-        .then(res => res)
+        .then((res) => res)
         .catch(() => ({ data: [] }));
+
+      const roleMap = new Map<string, string>();
+      ((userRolesData ?? []) as { user_id: string; role: string }[]).forEach((ur) => {
+        if (ur.user_id && ur.role) roleMap.set(ur.user_id, ur.role);
+      });
 
       const childrenByParent = new Map<string, string[]>();
       for (const link of (parentStudents || []) as ParentStudentRow[]) {
@@ -111,14 +129,59 @@ export default function ManageAccounts() {
         childrenByParent.set(link.user_id, children);
       }
 
-      return rawProfiles.map((account) => {
-        const resolvedRole = account.role || roleMap.get(account.user_id) || "guru";
-        return {
+      const accountMap = new Map<string, AccountWithChildren>();
+
+      const upsertAccount = (row: Partial<ManagedAccountSourceRow>) => {
+        if (!row.user_id) return;
+        const current = accountMap.get(row.user_id);
+        const next = mapRowToAccount({
+          ...current,
+          ...row,
+          role: row.role || current?.role || roleMap.get(row.user_id) || current?.role || "guru",
+          children: row.children ?? current?.children ?? childrenByParent.get(row.user_id) ?? [],
+        });
+        accountMap.set(row.user_id, next);
+      };
+
+      for (const account of rawProfiles) {
+        upsertAccount({
           ...account,
-          role: resolvedRole,
           children: childrenByParent.get(account.user_id) || [],
-        };
-      });
+        });
+      }
+
+      for (const tp of (teacherProfiles ?? []) as Array<{ user_id: string; full_name: string | null; phone: string | null; created_at: string | null }>) {
+        upsertAccount({
+          user_id: tp.user_id,
+          full_name: tp.full_name || "Guru",
+          username: null,
+          whatsapp: tp.phone,
+          role: roleMap.get(tp.user_id) || "guru",
+          status: "approved",
+          registered_at: tp.created_at || new Date().toISOString(),
+          is_read_by_admin: true,
+          children: childrenByParent.get(tp.user_id) || [],
+        });
+      }
+
+      for (const [userId, role] of roleMap.entries()) {
+        upsertAccount({
+          user_id: userId,
+          role,
+          children: childrenByParent.get(userId) || [],
+        });
+      }
+
+      for (const [userId, children] of childrenByParent.entries()) {
+        upsertAccount({
+          user_id: userId,
+          role: roleMap.get(userId) || "parent",
+          children,
+        });
+      }
+
+      return Array.from(accountMap.values())
+        .sort((a, b) => new Date(b.registered_at).getTime() - new Date(a.registered_at).getTime());
     },
   });
 
