@@ -2416,6 +2416,20 @@ export type Database = {
           username: string
         }[]
       }
+      list_managed_accounts: {
+        Args: never
+        Returns: {
+          children: string[]
+          full_name: string
+          is_read_by_admin: boolean
+          registered_at: string
+          role: string
+          status: string
+          user_id: string
+          username: string
+          whatsapp: string
+        }[]
+      }
       list_students_for_registration: {
         Args: never
         Returns: {

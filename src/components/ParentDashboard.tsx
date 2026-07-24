@@ -109,8 +109,8 @@ export default function ParentDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
           <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Profil Siswa</h1>
           <StudentSwitcher 
-            childrenList={children} 
-            activeChild={activeChild} 
+            childrenList={children as any} 
+            activeChild={activeChild as any} 
             onSwitch={setActiveStudentId} 
             onAddStudent={() => setLinkDialogOpen(true)}
             onRemoveStudent={handleRemoveStudent}
@@ -211,7 +211,7 @@ export default function ParentDashboard() {
                       ) : (
                         (() => {
                           const maxPage = 32;
-                          const currentPage = activeChild.halaman_terakhir || 0;
+                          const currentPage = (activeChild as any).halaman_terakhir || 0;
                           const pct = Math.min(100, Math.round((currentPage / maxPage) * 100));
                           return (
                             <>
@@ -258,7 +258,7 @@ export default function ParentDashboard() {
 
                   const isTahfizh = level === "Tahfizh";
                   const maxPage = 20; // Asumsi 1 juz = 20 halaman
-                  const currentPage = isTahfizh ? (activeChild.halaman_terakhir || 0) : 0;
+                  const currentPage = isTahfizh ? ((activeChild as any).halaman_terakhir || 0) : 0;
                   const pct = isTahfizh ? Math.min(100, Math.round((currentPage / maxPage) * 100)) : 0;
                   
                   return (
