@@ -7,14 +7,22 @@ export const useParentStudents = (userId?: string) => {
     queryFn: async () => {
       if (!userId) return [];
 
-      const { data, error } = await supabase
-        .from("parents")
-        .select("student_id")
-        .eq("user_id", userId);
+      try {
+        const { data, error } = await supabase
+          .from("parents")
+          .select("student_id")
+          .eq("user_id", userId);
 
-      if (error) throw error;
+        if (error) {
+          console.warn("Error querying parents table:", error);
+          return [];
+        }
 
-      return Array.from(new Set((data ?? []).map((item: { student_id: string }) => item.student_id)));
+        return Array.from(new Set((data ?? []).map((item: { student_id: string }) => item.student_id)));
+      } catch (err) {
+        console.warn("Exception querying parents table:", err);
+        return [];
+      }
     },
     enabled: !!userId,
   });
@@ -26,39 +34,43 @@ export const useChildrenTeachers = (studentIds: string[]) => {
     queryFn: async () => {
       if (!studentIds.length) return {};
 
-      // 1. Get student details (to know their kelas & rombel)
-      const { data: studentsData, error: studentsError } = await supabase
-        .from("students")
-        .select("id, kelas, rombel")
-        .in("id", studentIds);
+      try {
+        // 1. Get student details (to know their kelas & rombel)
+        const { data: studentsData, error: studentsError } = await supabase
+          .from("students")
+          .select("id, kelas, rombel")
+          .in("id", studentIds);
 
-      if (studentsError) throw studentsError;
-      if (!studentsData || studentsData.length === 0) return {};
+        if (studentsError || !studentsData || studentsData.length === 0) return {};
 
-      // 2. Get individual assigned teachers for students
-      const { data: tsData, error: tsError } = await supabase
-        .from("teacher_students")
-        .select("student_id, teacher_id")
-        .in("student_id", studentIds)
-        .eq("status", "approved");
+        // 2. Get individual assigned teachers for students
+        const { data: tsData } = await supabase
+          .from("teacher_students")
+          .select("student_id, teacher_id")
+          .in("student_id", studentIds)
+          .eq("status", "approved")
+          .then(res => res)
+          .catch(() => ({ data: [] }));
 
-      if (tsError) throw tsError;
+        // 3. Get class assigned teachers
+        const { data: tcData } = await supabase
+          .from("teacher_classes")
+          .select("teacher_id, kelas, rombel")
+          .then(res => res)
+          .catch(() => ({ data: [] }));
 
-      // 3. Get class assigned teachers
-      // To optimize, we just fetch all teacher_classes, usually it's small
-      const { data: tcData, error: tcError } = await supabase
-        .from("teacher_classes")
-        .select("teacher_id, kelas, rombel");
+        // 3.5 Get evaluator from evaluasi_awal_semester as fallback
+        const { data: evalData } = await supabase
+          .from("evaluasi_awal_semester")
+          .select("student_id, evaluator_id")
+          .in("student_id", studentIds)
+          .then(res => res)
+          .catch(() => ({ data: [] }));
 
-      if (tcError) throw tcError;
-
-      // 3.5 Get evaluator from evaluasi_awal_semester as fallback
-      const { data: evalData, error: evalError } = await supabase
-        .from("evaluasi_awal_semester")
-        .select("student_id, evaluator_id")
-        .in("student_id", studentIds);
-
-      if (evalError) throw evalError;
+      } catch (err) {
+        console.warn("Exception in useChildrenTeachers:", err);
+        return {};
+      }
 
       // Collect all teacher IDs to fetch names
       const teacherIds = new Set<string>();
