@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Loader2, ShieldCheck, UserX, Search, Filter, X, SearchX, MessageSquare, Copy, Check, Edit2, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { getRoleLabel } from "@/lib/roleLabels";
+import { getRoleLabel, isTeacherRole } from "@/lib/roleLabels";
 
 type AccountRow = {
   user_id: string;
@@ -59,10 +59,24 @@ export default function ManageAccounts() {
         .order("registered_at", { ascending: false });
       if (error) throw error;
 
-      const { data: parentStudents, error: parentStudentsError } = await supabase
+      // Safely fetch user_roles as fallback for missing roles in profiles
+      const { data: userRolesData } = await supabase
+        .from("user_roles")
+        .select("user_id,role")
+        .then(res => res)
+        .catch(() => ({ data: [] }));
+
+      const roleMap = new Map<string, string>();
+      ((userRolesData ?? []) as { user_id: string; role: string }[]).forEach(ur => {
+        if (ur.user_id && ur.role) roleMap.set(ur.user_id, ur.role);
+      });
+
+      // Safely fetch parent students link (catch RLS errors if any)
+      const { data: parentStudents } = await supabase
         .from("parents")
-        .select("user_id,students(nama,kelas,rombel)");
-      if (parentStudentsError) throw parentStudentsError;
+        .select("user_id,students(nama,kelas,rombel)")
+        .then(res => res)
+        .catch(() => ({ data: [] }));
 
       const childrenByParent = new Map<string, string[]>();
       for (const link of (parentStudents || []) as ParentStudentRow[]) {
@@ -73,10 +87,14 @@ export default function ManageAccounts() {
         childrenByParent.set(link.user_id, children);
       }
 
-      return (data as AccountRow[]).map((account) => ({
-        ...account,
-        children: childrenByParent.get(account.user_id) || [],
-      }));
+      return (data as AccountRow[]).map((account) => {
+        const resolvedRole = account.role || roleMap.get(account.user_id) || "guru";
+        return {
+          ...account,
+          role: resolvedRole,
+          children: childrenByParent.get(account.user_id) || [],
+        };
+      });
     },
   });
 
@@ -239,7 +257,7 @@ export default function ManageAccounts() {
         else if (curr.status === "rejected") acc.rejected++;
         else if (curr.status === "inactive") acc.inactive++;
 
-        if (curr.role === "teacher") acc.teacher++;
+        if (isTeacherRole(curr.role)) acc.teacher++;
         else if (curr.role === "parent") acc.parent++;
 
         return acc;
@@ -258,7 +276,12 @@ export default function ManageAccounts() {
           (acc.whatsapp && acc.whatsapp.includes(searchQuery));
         
         const matchesStatus = statusFilter === "all" || acc.status === statusFilter;
-        const matchesRole = roleFilter === "all" || acc.role === roleFilter;
+        const matchesRole =
+          roleFilter === "all"
+            ? true
+            : roleFilter === "teacher" || roleFilter === "guru"
+            ? isTeacherRole(acc.role)
+            : acc.role === roleFilter;
 
         return matchesSearch && matchesStatus && matchesRole;
       })
