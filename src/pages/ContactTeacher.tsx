@@ -1,6 +1,7 @@
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useParentStudents, useChildrenTeachers } from "@/hooks/useParentStudents";
+import { useStudents } from "@/hooks/useSupabaseData";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, User } from "lucide-react";
@@ -8,10 +9,13 @@ import { Link } from "react-router-dom";
 
 export default function ContactTeacher() {
   const { user } = useAuth();
-  const { data: children = [], isLoading: loadingChildren } = useParentStudents(user?.id);
+  const { data: parentStudentIds = [], isLoading: loadingParentStudents } = useParentStudents(user?.id);
+  const { data: allStudents = [], isLoading: loadingStudents } = useStudents();
+  
+  const children = allStudents.filter(s => parentStudentIds.includes(s.id));
   const { data: childrenTeachers = {}, isLoading: loadingTeachers } = useChildrenTeachers(children.map(c => c.id));
 
-  if (loadingChildren || loadingTeachers) {
+  if (loadingParentStudents || loadingStudents || loadingTeachers) {
     return (
       <div className="flex items-center justify-center p-12">
         <div className="w-8 h-8 rounded-full border-4 border-emerald-600 border-t-transparent animate-spin" />
