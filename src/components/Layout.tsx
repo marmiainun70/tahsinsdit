@@ -44,7 +44,7 @@ const parentNavItems = [
   { to: "/", icon: User, label: "Profil Siswa" },
   { to: "/kalender-akademik", icon: CalendarDays, label: "Kalender Akademik" },
   { to: "/pengumuman", icon: Megaphone, label: "Pengumuman" },
-  { to: "/pengaturan-akun", icon: Settings, label: "Pengaturan Akun" }
+  { to: "/jadwal-ujian", icon: GraduationCap, label: "Jadwal Ujian" },
 ];
 
 interface SidebarContentProps {
@@ -58,18 +58,32 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
   const { data: permissions } = useRolePermissions();
 
   const isAllowed = (featureKey: string) => {
-    // Admin selalu punya akses penuh ke semua menu (bypass table check)
+    // Admin selalu punya akses penuh ke semua menu tanpa terkecuali
     if (profile?.role === "admin") return true;
 
-    // Jika belum loading atau bukan admin/parent, maka cek tabel role_permissions
-    if (!permissions || !profile?.role) return false;
-
-    const perm = permissions.find(p => p.feature_key === featureKey);
-    if (!perm) return false;
-
-    if (featureKey === "evaluasi_diagnostik" && isTeacherRole(profile.role)) return true;
-
-    if (isTeacherRole(profile.role)) return perm.teacher_access;
+    // Role Guru
+    if (isTeacherRole(profile?.role)) {
+      if (permissions && permissions.length > 0) {
+        const perm = permissions.find(p => p.feature_key === featureKey);
+        if (perm !== undefined) return perm.teacher_access;
+      }
+      // Fallback default jika tabel role_permissions belum dikonfigurasi di DB
+      const teacherAllowedKeys = [
+        "dashboard",
+        "kelola_siswa",
+        "murid_binaan",
+        "evaluasi_diagnostik",
+        "profil_kompetensi_guru",
+        "kalender_akademik",
+        "laporan_bulanan",
+        "input_cepat",
+        "rekap_laporan",
+        "monitoring",
+        "jadwal_ujian",
+        "pengumuman",
+      ];
+      return teacherAllowedKeys.includes(featureKey);
+    }
 
     return false;
   };
