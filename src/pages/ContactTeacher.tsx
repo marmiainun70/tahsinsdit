@@ -45,20 +45,28 @@ export default function ContactTeacher() {
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2">
-          {children.map(child => {
-            const teacherData = childrenTeachers[child.id];
+          {children.map((child, index) => {
+            if (!child) return null;
+
+            const childId = child.id || `unknown-${index}`;
+            const childName = child.nama || "Siswa";
+            const childKelas = child.kelas || "-";
+            const childRombel = child.rombel || "";
+            const childLevel = child.level || "-";
+
+            const teacherData = childrenTeachers?.[child.id];
             const teacherName = teacherData?.name || "Guru Tidak Diketahui";
             const whatsapp = teacherData?.whatsapp;
 
-            const messageTemplate = encodeURIComponent(`Assalamu'alaikum ustadz/ustadzah ${teacherName !== "Guru Tidak Diketahui" ? teacherName : ""}, saya orang tua dari ${child.nama}...`);
+            const messageTemplate = encodeURIComponent(`Assalamu'alaikum ustadz/ustadzah ${teacherName !== "Guru Tidak Diketahui" ? teacherName : ""}, saya orang tua dari ${childName}...`);
             const waLink = whatsapp ? `https://wa.me/${whatsapp.replace(/[^0-9]/g, '')}?text=${messageTemplate}` : null;
 
             return (
-              <Card key={child.id} className="bg-white border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+              <Card key={childId} className="bg-white border-slate-100 shadow-sm hover:shadow-md transition-shadow">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-lg text-slate-800">{child.nama}</CardTitle>
+                  <CardTitle className="text-lg text-slate-800">{childName}</CardTitle>
                   <CardDescription className="text-slate-500">
-                    Kelas {child.kelas}{child.rombel} • Level {child.level}
+                    Kelas {childKelas}{childRombel} • Level {childLevel}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
