@@ -9,13 +9,11 @@ import { Link } from "react-router-dom";
 
 export default function ContactTeacher() {
   const { user } = useAuth();
-  const { data: parentStudentIds = [], isLoading: loadingParentStudents } = useParentStudents(user?.id);
-  const { data: allStudents = [], isLoading: loadingStudents } = useStudents();
+  const { data: children = [], isLoading: loadingChildren } = useParentStudents(user?.id);
   
-  const children = allStudents.filter(s => parentStudentIds.includes(s.id));
   const { data: childrenTeachers = {}, isLoading: loadingTeachers } = useChildrenTeachers(children.map(c => c.id));
 
-  if (loadingParentStudents || loadingStudents || loadingTeachers) {
+  if (loadingChildren || loadingTeachers) {
     return (
       <div className="flex items-center justify-center p-12">
         <div className="w-8 h-8 rounded-full border-4 border-emerald-600 border-t-transparent animate-spin" />

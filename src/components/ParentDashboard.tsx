@@ -16,10 +16,8 @@ import { useToast } from "@/components/ui/use-toast";
 
 export default function ParentDashboard() {
   const { user } = useAuth();
-  const { data: parentStudentIds = [], isLoading: loadingParentStudents } = useParentStudents(user?.id);
-  const { data: allStudents = [], isLoading: loadingStudents } = useStudents();
+  const { data: children = [], isLoading: loadingChildren } = useParentStudents(user?.id);
   
-  const children = allStudents.filter(s => parentStudentIds.includes(s.id));
   const { data: childrenTeachers = {}, isLoading: loadingTeachers } = useChildrenTeachers(children.map(c => c.id));
   
   const [activeStudentId, setActiveStudentId] = useState<string | null>(null);
@@ -55,7 +53,7 @@ export default function ParentDashboard() {
   const { data: evaluationDetail, isLoading: loadingEval } = useDiagnosticDetail(activeChild?.id);
   const { data: progressEntries = [] } = useProgressEntries(activeChild?.id || "");
 
-  const isLoading = loadingParentStudents || loadingStudents || loadingTeachers;
+  const isLoading = loadingChildren || loadingTeachers;
 
   if (isLoading) {
     return (

@@ -1,16 +1,26 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export interface StudentBasicInfo {
+  id: string;
+  nama: string;
+  kelas: string;
+  rombel: string;
+  level: string;
+  nis: string | null;
+  nisn: string | null;
+}
+
 export const useParentStudents = (userId?: string) => {
   return useQuery({
     queryKey: ["parent_students", userId],
-    queryFn: async () => {
+    queryFn: async (): Promise<StudentBasicInfo[]> => {
       if (!userId) return [];
 
       try {
         const { data, error } = await supabase
           .from("parents")
-          .select("student_id")
+          .select("student_id, students(id, nama, kelas, rombel, level, nis, nisn)")
           .eq("user_id", userId);
 
         if (error) {
@@ -18,7 +28,17 @@ export const useParentStudents = (userId?: string) => {
           return [];
         }
 
-        return Array.from(new Set((data ?? []).map((item: { student_id: string }) => item.student_id)));
+        const students = (data ?? []).map(item => {
+          const s = Array.isArray(item.students) ? item.students[0] : item.students;
+          return s as unknown as StudentBasicInfo;
+        }).filter(Boolean);
+
+        const unique = new Map<string, StudentBasicInfo>();
+        students.forEach(s => {
+          if (s && s.id) unique.set(s.id, s);
+        });
+
+        return Array.from(unique.values());
       } catch (err) {
         console.warn("Exception querying parents table:", err);
         return [];
@@ -28,44 +48,58 @@ export const useParentStudents = (userId?: string) => {
   });
 };
 
+export interface TeacherContactInfo {
+  name: string;
+  whatsapp: string | null;
+}
+
 export const useChildrenTeachers = (studentIds: string[]) => {
   return useQuery({
     queryKey: ["children_teachers", studentIds],
-    queryFn: async () => {
+    queryFn: async (): Promise<Record<string, TeacherContactInfo>> => {
       if (!studentIds.length) return {};
+
+      let studentsData: any[] = [];
+      let tsData: any[] = [];
+      let tcData: any[] = [];
+      let evalData: any[] = [];
 
       try {
         // 1. Get student details (to know their kelas & rombel)
-        const { data: studentsData, error: studentsError } = await supabase
+        const { data: sData, error: studentsError } = await supabase
           .from("students")
           .select("id, kelas, rombel")
           .in("id", studentIds);
 
-        if (studentsError || !studentsData || studentsData.length === 0) return {};
+        if (studentsError || !sData || sData.length === 0) return {};
+        studentsData = sData;
 
         // 2. Get individual assigned teachers for students
-        const { data: tsData } = await supabase
+        const { data: tsd } = await supabase
           .from("teacher_students")
           .select("student_id, teacher_id")
           .in("student_id", studentIds)
           .eq("status", "approved")
           .then(res => res)
           .catch(() => ({ data: [] }));
+        if (tsd) tsData = tsd;
 
         // 3. Get class assigned teachers
-        const { data: tcData } = await supabase
+        const { data: tcd } = await supabase
           .from("teacher_classes")
           .select("teacher_id, kelas, rombel")
           .then(res => res)
           .catch(() => ({ data: [] }));
+        if (tcd) tcData = tcd;
 
         // 3.5 Get evaluator from evaluasi_awal_semester as fallback
-        const { data: evalData } = await supabase
+        const { data: evd } = await supabase
           .from("evaluasi_awal_semester")
           .select("student_id, evaluator_id")
           .in("student_id", studentIds)
           .then(res => res)
           .catch(() => ({ data: [] }));
+        if (evd) evalData = evd;
 
       } catch (err) {
         console.warn("Exception in useChildrenTeachers:", err);
@@ -74,9 +108,9 @@ export const useChildrenTeachers = (studentIds: string[]) => {
 
       // Collect all teacher IDs to fetch names
       const teacherIds = new Set<string>();
-      tsData?.forEach(t => teacherIds.add(t.teacher_id));
-      tcData?.forEach(t => teacherIds.add(t.teacher_id));
-      evalData?.forEach(e => {
+      tsData.forEach(t => teacherIds.add(t.teacher_id));
+      tcData.forEach(t => teacherIds.add(t.teacher_id));
+      evalData.forEach(e => {
         if (e.evaluator_id) teacherIds.add(e.evaluator_id);
       });
 
@@ -90,15 +124,15 @@ export const useChildrenTeachers = (studentIds: string[]) => {
 
       if (profError) throw profError;
 
-      const profileMap: Record<string, { name: string, whatsapp: string | null }> = {};
+      const profileMap: Record<string, TeacherContactInfo> = {};
       profData?.forEach(p => {
         profileMap[p.user_id] = { name: p.full_name, whatsapp: p.whatsapp };
       });
 
-      const resultMap: Record<string, { name: string, whatsapp: string | null }> = {};
+      const resultMap: Record<string, TeacherContactInfo> = {};
 
       // Map fallback evaluator first (lowest priority)
-      evalData?.forEach(e => {
+      evalData.forEach(e => {
         if (e.evaluator_id) {
           resultMap[e.student_id] = profileMap[e.evaluator_id] || { name: "Guru Tidak Diketahui", whatsapp: null };
         }
@@ -106,7 +140,7 @@ export const useChildrenTeachers = (studentIds: string[]) => {
 
       // Map class assignments (medium priority)
       studentsData.forEach(student => {
-        const classAssignment = tcData?.find(tc => {
+        const classAssignment = tcData.find(tc => {
           if (String(tc.kelas) !== String(student.kelas)) return false;
           if (!tc.rombel) return true; // Matches any rombel if teacher_classes has no rombel specified
           
@@ -122,7 +156,7 @@ export const useChildrenTeachers = (studentIds: string[]) => {
       });
 
       // Override with individual assignments (highest priority)
-      tsData?.forEach(t => {
+      tsData.forEach(t => {
         resultMap[t.student_id] = profileMap[t.teacher_id] || { name: "Guru Tidak Diketahui", whatsapp: null };
       });
 
