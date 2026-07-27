@@ -225,11 +225,10 @@
 
 /* Global horizontal scrolling (seluruh halaman, bukan per tabel). */
 html,
-body,
-#root {
+body {
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;
+  overflow-x: clip;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--primary) / 0.5) hsl(var(--muted) / 0.45);

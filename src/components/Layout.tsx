@@ -332,7 +332,7 @@ const Layout = ({ children }: LayoutProps) => {
       </motion.aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="h-16 bg-card border-b border-border flex items-center justify-between gap-2 px-3 sm:px-4 lg:px-6 flex-shrink-0 shadow-sm">
+        <header className={`fixed top-0 right-0 left-0 z-40 h-16 bg-card/95 backdrop-blur border-b border-border flex items-center justify-between gap-2 px-3 sm:px-4 lg:px-6 shadow-sm transition-all duration-200 ${desktopSidebarOpen ? 'lg:left-64' : ''}`}>
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <button
               type="button"
@@ -379,20 +379,27 @@ const Layout = ({ children }: LayoutProps) => {
             )}
             <ThemeToggle />
             <NotificationBell />
-            <div className="flex items-center gap-2 bg-secondary rounded-xl px-2 sm:px-3 py-2">
+            <div className="flex items-center gap-2 bg-secondary rounded-xl pl-2 pr-1 sm:pl-3 sm:pr-2 py-1.5">
               <div className="w-7 h-7 rounded-full bg-gradient-hero flex items-center justify-center">
                 <span className="text-primary-foreground text-xs font-bold">
                   {profile?.full_name?.charAt(0)?.toUpperCase() ?? "G"}
                 </span>
               </div>
-              <span className="text-sm font-medium text-foreground hidden sm:block max-w-[120px] truncate">
+              <span className="text-sm font-medium text-foreground hidden sm:block max-w-[120px] truncate pr-1">
                 {profile?.full_name ?? "Guru"}
               </span>
+              <button 
+                onClick={handleLogout}
+                className="p-1.5 text-muted-foreground hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                title="Keluar"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-x-hidden p-3 space-y-4 sm:p-4 lg:p-6">
+        <main className="flex-1 overflow-x-hidden p-3 space-y-4 sm:p-4 lg:p-6 mt-16">
           <UpcomingExamBanner />
           {children}
         </main>
