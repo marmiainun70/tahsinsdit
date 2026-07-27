@@ -11,6 +11,9 @@ export interface InstitutionSettings {
   koordinator_ttd_url: string | null;
   kepsek_nama: string;
   kepsek_ttd_url: string | null;
+  curriculum_targets?: any;
+  effective_days_per_month?: number;
+  effective_days_per_semester?: number;
   updated_at: string;
   updated_by: string | null;
 }

@@ -5,6 +5,7 @@ import { useStudents, LEVELS, LEVEL_COLORS, getLevelDisplayLabel, getLevelGroup,
 import { Users, BookOpen, Star, TrendingUp, Award, Loader2, AlertTriangle, ChevronRight, BookOpenCheck, Lock } from "lucide-react";
 import StudentRanking from "@/components/StudentRanking";
 import RelatedSystemCard from "@/components/RelatedSystemCard";
+import { CurriculumPanel } from "@/components/CurriculumPanel";
 import type { Database } from "@/integrations/supabase/types";
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 import { useAuth } from "@/contexts/AuthContext";
@@ -487,6 +488,10 @@ const Dashboard = () => {
       }
 
       <StudentRanking />
+
+      <div className="mt-8">
+        <CurriculumPanel />
+      </div>
 
       {students.length === 0 && !isLoading &&
       <div className="bg-card rounded-2xl border border-border p-10 text-center">

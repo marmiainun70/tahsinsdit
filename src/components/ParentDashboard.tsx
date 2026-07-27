@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { LinkStudentDialog } from "./parent/LinkStudentDialog";
 import { useRemoveParentStudent } from "@/hooks/useParentStudents";
 import { useToast } from "@/components/ui/use-toast";
+import { CurriculumPanel } from "@/components/CurriculumPanel";
 
 export default function ParentDashboard() {
   const { user } = useAuth();
@@ -382,6 +383,10 @@ export default function ParentDashboard() {
             )}
           </div>
         </motion.div>
+        
+        <div className="mt-8">
+          <CurriculumPanel />
+        </div>
         
         <LinkStudentDialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen} />
       </div>
