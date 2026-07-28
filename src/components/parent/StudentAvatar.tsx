@@ -43,29 +43,10 @@ export const StudentAvatar: React.FC<StudentAvatarProps> = ({ gender, className 
   }
 
   return (
-    <svg
-      viewBox="0 0 100 100"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={`w-full h-full rounded-full bg-[#FDF0F3] overflow-hidden ${className}`}
-    >
-      {/* Hijab Shoulders */}
-      <path d="M10 100 C 10 70, 90 70, 90 100 Z" fill="#ECA266" />
-      <path d="M5 100 C 5 60, 95 60, 95 100 Z" fill="#F48FB1" /> {/* Pink Hijab Drape */}
-      <path d="M25 100 C 25 70, 75 70, 75 100 Z" fill="#F06292" /> {/* Inner shadow drape */}
-
-      {/* Face Base */}
-      <path d="M32 45 C 32 70, 68 70, 68 45 C 68 25, 32 25, 32 45 Z" fill="#FDE0BA" />
-      
-      {/* Hijab Head covering */}
-      <path d="M25 50 C 20 15, 80 15, 75 50 C 73 75, 50 85, 25 50 Z" fill="#F48FB1" />
-      <path d="M25 50 C 20 15, 80 15, 75 50 C 73 75, 50 85, 25 50 Z" fill="none" stroke="#F06292" strokeWidth="2" />
-
-      {/* Face Window (Inner Hijab line) */}
-      <path d="M35 40 C 35 25, 65 25, 65 40 C 65 60, 50 65, 35 40 Z" fill="#FDE0BA" />
-      
-      {/* Inner ciput (under-cap) */}
-      <path d="M38 35 Q 50 28 62 35 Q 50 25 38 35 Z" fill="#FCE4EC" />
-    </svg>
+    <img
+      src="/avatar-female.png"
+      alt="Avatar Siswi"
+      className={`w-full h-full rounded-full object-cover ${className}`}
+    />
   );
 };
