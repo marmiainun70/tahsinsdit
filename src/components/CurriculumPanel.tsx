@@ -72,9 +72,9 @@ export function CurriculumPanel() {
   return (
     <div className="space-y-4">
       {isParent && (
-        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md mb-6">
-          <h3 className="font-semibold text-blue-800 mb-2">Informasi untuk Orang Tua</h3>
-          <p className="text-sm text-blue-700">
+        <div className="bg-blue-50 dark:bg-blue-950/40 border-l-4 border-blue-500 p-4 rounded-md mb-6">
+          <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">Informasi untuk Orang Tua</h3>
+          <p className="text-sm text-blue-700 dark:text-blue-400/90">
             Target kurikulum merupakan acuan pembelajaran selama satu tahun ajaran. Capaian setiap siswa dapat berbeda sesuai hasil evaluasi diagnostik, kemampuan membaca, konsistensi latihan di rumah, dan perkembangan selama proses pembelajaran. Pendampingan orang tua melalui muraja'ah dan latihan rutin di rumah sangat membantu tercapainya target pembelajaran.
           </p>
         </div>
@@ -105,51 +105,51 @@ export function CurriculumPanel() {
             <AccordionItem value="item-1">
               <AccordionTrigger className="text-left font-semibold">🎯 1. Target Per Kelas</AccordionTrigger>
               <AccordionContent className="space-y-4">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left border-collapse border border-gray-200">
-                    <thead className="bg-gray-100">
+                <div className="overflow-x-auto rounded-md border border-border">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead className="bg-muted">
                       <tr>
-                        <th className="border border-gray-200 p-2">Kelas</th>
-                        <th className="border border-gray-200 p-2">Target Tahsin</th>
-                        <th className="border border-gray-200 p-2">Target Tahfizh</th>
+                        <th className="border-b border-border p-3 font-semibold text-muted-foreground">Kelas</th>
+                        <th className="border-b border-l border-border p-3 font-semibold text-muted-foreground">Target Tahsin</th>
+                        <th className="border-b border-l border-border p-3 font-semibold text-muted-foreground">Target Tahfizh</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td className="border border-gray-200 p-2 font-medium">Kelas 1</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_per_kelas?.kelas1?.tahsin || '-'}</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_per_kelas?.kelas1?.tahfizh || '-'}</td>
+                      <tr className="hover:bg-muted/50 transition-colors">
+                        <td className="border-b border-border p-3 font-medium">Kelas 1</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_per_kelas?.kelas1?.tahsin || '-'}</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_per_kelas?.kelas1?.tahfizh || '-'}</td>
                       </tr>
-                      <tr>
-                        <td className="border border-gray-200 p-2 font-medium">Kelas 2</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_per_kelas?.kelas2?.tahsin || '-'}</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_per_kelas?.kelas2?.tahfizh || '-'}</td>
+                      <tr className="hover:bg-muted/50 transition-colors">
+                        <td className="border-b border-border p-3 font-medium">Kelas 2</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_per_kelas?.kelas2?.tahsin || '-'}</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_per_kelas?.kelas2?.tahfizh || '-'}</td>
                       </tr>
-                      <tr>
-                        <td className="border border-gray-200 p-2 font-medium">Kelas 3</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_per_kelas?.kelas3?.tahsin || '-'}</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_per_kelas?.kelas3?.tahfizh || '-'}</td>
+                      <tr className="hover:bg-muted/50 transition-colors">
+                        <td className="border-b border-border p-3 font-medium">Kelas 3</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_per_kelas?.kelas3?.tahsin || '-'}</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_per_kelas?.kelas3?.tahfizh || '-'}</td>
                       </tr>
-                      <tr>
-                        <td className="border border-gray-200 p-2 font-medium">Kelas 4</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_per_kelas?.kelas4?.tahsin || '-'}</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_per_kelas?.kelas4?.tahfizh || '-'}</td>
+                      <tr className="hover:bg-muted/50 transition-colors">
+                        <td className="border-b border-border p-3 font-medium">Kelas 4</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_per_kelas?.kelas4?.tahsin || '-'}</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_per_kelas?.kelas4?.tahfizh || '-'}</td>
                       </tr>
-                      <tr>
-                        <td className="border border-gray-200 p-2 font-medium">Kelas 5</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_per_kelas?.kelas5?.tahsin || '-'}</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_per_kelas?.kelas5?.tahfizh || '-'}</td>
+                      <tr className="hover:bg-muted/50 transition-colors">
+                        <td className="border-b border-border p-3 font-medium">Kelas 5</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_per_kelas?.kelas5?.tahsin || '-'}</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_per_kelas?.kelas5?.tahfizh || '-'}</td>
                       </tr>
-                      <tr>
-                        <td className="border border-gray-200 p-2 font-medium">Kelas 6</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_per_kelas?.kelas6?.tahsin || '-'}</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_per_kelas?.kelas6?.tahfizh || '-'}</td>
+                      <tr className="hover:bg-muted/50 transition-colors">
+                        <td className="border-b border-border p-3 font-medium">Kelas 6</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_per_kelas?.kelas6?.tahsin || '-'}</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_per_kelas?.kelas6?.tahfizh || '-'}</td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 mt-4 text-sm">
-                  <p className="font-semibold mb-1">Catatan Program:</p>
+                <div className="bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-400 dark:border-amber-600 p-3 mt-4 text-sm text-foreground">
+                  <p className="font-semibold mb-1 text-amber-800 dark:text-amber-400">Catatan Program:</p>
                   <ul className="list-disc pl-5 space-y-1">
                     <li>Diharapkan pada <strong>Semester 2 Kelas 2</strong>, siswa sudah mulai menggunakan mushaf Al-Qur'an.</li>
                     <li>Diharapkan pada <strong>Semester 2 Kelas 3</strong>, siswa sudah mampu membaca Al-Qur'an secara mandiri dengan penerapan tajwid yang baik.</li>
@@ -162,26 +162,26 @@ export function CurriculumPanel() {
             <AccordionItem value="item-2">
               <AccordionTrigger className="text-left font-semibold">📅 2. Target Harian</AccordionTrigger>
               <AccordionContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left border-collapse border border-gray-200">
-                    <thead className="bg-gray-100">
+                <div className="overflow-x-auto rounded-md border border-border">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead className="bg-muted">
                       <tr>
-                        <th className="border border-gray-200 p-2">Program</th>
-                        <th className="border border-gray-200 p-2">Target</th>
+                        <th className="border-b border-border p-3 font-semibold text-muted-foreground">Program</th>
+                        <th className="border-b border-l border-border p-3 font-semibold text-muted-foreground">Target</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                        <td className="border border-gray-200 p-2">Tahsin Dasar (Iqra')</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_harian?.tahsin_dasar || '-'}</td>
+                      <tr className="hover:bg-muted/50 transition-colors">
+                        <td className="border-b border-border p-3 font-medium">Tahsin Dasar (Iqra')</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_harian?.tahsin_dasar || '-'}</td>
                       </tr>
-                      <tr>
-                        <td className="border border-gray-200 p-2">Tahsin Al-Qur'an</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_harian?.tahsin_lanjutan || '-'}</td>
+                      <tr className="hover:bg-muted/50 transition-colors">
+                        <td className="border-b border-border p-3 font-medium">Tahsin Al-Qur'an</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_harian?.tahsin_lanjutan || '-'}</td>
                       </tr>
-                      <tr>
-                        <td className="border border-gray-200 p-2">Tahfizh</td>
-                        <td className="border border-gray-200 p-2">{curriculumData.target_harian?.tahfizh || '-'}</td>
+                      <tr className="hover:bg-muted/50 transition-colors">
+                        <td className="border-b border-border p-3 font-medium">Tahfizh</td>
+                        <td className="border-b border-l border-border p-3">{curriculumData.target_harian?.tahfizh || '-'}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -195,26 +195,26 @@ export function CurriculumPanel() {
               <AccordionContent className="space-y-6">
                 <div>
                   <h4 className="font-semibold mb-2">Target Pekanan</h4>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left border-collapse border border-gray-200">
-                      <thead className="bg-gray-100">
+                  <div className="overflow-x-auto rounded-md border border-border">
+                    <table className="w-full text-sm text-left border-collapse">
+                      <thead className="bg-muted">
                         <tr>
-                          <th className="border border-gray-200 p-2">Program</th>
-                          <th className="border border-gray-200 p-2">Target</th>
+                          <th className="border-b border-border p-3 font-semibold text-muted-foreground">Program</th>
+                          <th className="border-b border-l border-border p-3 font-semibold text-muted-foreground">Target</th>
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td className="border border-gray-200 p-2">Tahsin Dasar (Iqra')</td>
-                          <td className="border border-gray-200 p-2">{curriculumData.target_pekanan?.tahsin_dasar || '-'}</td>
+                        <tr className="hover:bg-muted/50 transition-colors">
+                          <td className="border-b border-border p-3 font-medium">Tahsin Dasar (Iqra')</td>
+                          <td className="border-b border-l border-border p-3">{curriculumData.target_pekanan?.tahsin_dasar || '-'}</td>
                         </tr>
-                        <tr>
-                          <td className="border border-gray-200 p-2">Tahsin Al-Qur'an</td>
-                          <td className="border border-gray-200 p-2">{curriculumData.target_pekanan?.tahsin_lanjutan || '-'}</td>
+                        <tr className="hover:bg-muted/50 transition-colors">
+                          <td className="border-b border-border p-3 font-medium">Tahsin Al-Qur'an</td>
+                          <td className="border-b border-l border-border p-3">{curriculumData.target_pekanan?.tahsin_lanjutan || '-'}</td>
                         </tr>
-                        <tr>
-                          <td className="border border-gray-200 p-2">Tahfizh</td>
-                          <td className="border border-gray-200 p-2">{curriculumData.target_pekanan?.tahfizh || '-'}</td>
+                        <tr className="hover:bg-muted/50 transition-colors">
+                          <td className="border-b border-border p-3 font-medium">Tahfizh</td>
+                          <td className="border-b border-l border-border p-3">{curriculumData.target_pekanan?.tahfizh || '-'}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -223,31 +223,31 @@ export function CurriculumPanel() {
 
                 <div>
                   <h4 className="font-semibold mb-2">Target Bulanan</h4>
-                  <div className="overflow-x-auto mb-3">
-                    <table className="w-full text-sm text-left border-collapse border border-gray-200">
-                      <thead className="bg-gray-100">
+                  <div className="overflow-x-auto mb-3 rounded-md border border-border">
+                    <table className="w-full text-sm text-left border-collapse">
+                      <thead className="bg-muted">
                         <tr>
-                          <th className="border border-gray-200 p-2">Program</th>
-                          <th className="border border-gray-200 p-2">Target</th>
+                          <th className="border-b border-border p-3 font-semibold text-muted-foreground">Program</th>
+                          <th className="border-b border-l border-border p-3 font-semibold text-muted-foreground">Target</th>
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td className="border border-gray-200 p-2">Tahsin Dasar (Iqra')</td>
-                          <td className="border border-gray-200 p-2">{curriculumData.target_bulanan?.tahsin_dasar || '-'}</td>
+                        <tr className="hover:bg-muted/50 transition-colors">
+                          <td className="border-b border-border p-3 font-medium">Tahsin Dasar (Iqra')</td>
+                          <td className="border-b border-l border-border p-3">{curriculumData.target_bulanan?.tahsin_dasar || '-'}</td>
                         </tr>
-                        <tr>
-                          <td className="border border-gray-200 p-2">Tahsin Al-Qur'an</td>
-                          <td className="border border-gray-200 p-2">{curriculumData.target_bulanan?.tahsin_lanjutan || '-'}</td>
+                        <tr className="hover:bg-muted/50 transition-colors">
+                          <td className="border-b border-border p-3 font-medium">Tahsin Al-Qur'an</td>
+                          <td className="border-b border-l border-border p-3">{curriculumData.target_bulanan?.tahsin_lanjutan || '-'}</td>
                         </tr>
-                        <tr>
-                          <td className="border border-gray-200 p-2">Tahfizh</td>
-                          <td className="border border-gray-200 p-2">{curriculumData.target_bulanan?.tahfizh || '-'}</td>
+                        <tr className="hover:bg-muted/50 transition-colors">
+                          <td className="border-b border-border p-3 font-medium">Tahfizh</td>
+                          <td className="border-b border-l border-border p-3">{curriculumData.target_bulanan?.tahfizh || '-'}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
-                  <div className="bg-green-50 text-green-800 p-3 rounded-md text-sm border-l-4 border-green-500">
+                  <div className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 p-3 rounded-md text-sm border-l-4 border-emerald-500">
                     <p className="font-semibold mb-1">Estimasi capaian yang aman:</p>
                     <ul className="list-disc pl-5 space-y-1">
                       <li>Tahsin Dasar: <strong>{curriculumData.target_bulanan?.aman_dasar || '-'}</strong></li>
@@ -264,26 +264,26 @@ export function CurriculumPanel() {
               <AccordionContent className="space-y-6">
                 <div>
                   <h4 className="font-semibold mb-2">Target Semester</h4>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left border-collapse border border-gray-200">
-                      <thead className="bg-gray-100">
+                  <div className="overflow-x-auto rounded-md border border-border">
+                    <table className="w-full text-sm text-left border-collapse">
+                      <thead className="bg-muted">
                         <tr>
-                          <th className="border border-gray-200 p-2">Program</th>
-                          <th className="border border-gray-200 p-2">Target</th>
+                          <th className="border-b border-border p-3 font-semibold text-muted-foreground">Program</th>
+                          <th className="border-b border-l border-border p-3 font-semibold text-muted-foreground">Target</th>
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td className="border border-gray-200 p-2">Tahsin Dasar (Iqra')</td>
-                          <td className="border border-gray-200 p-2">{curriculumData.target_semester?.tahsin_dasar || '-'}</td>
+                        <tr className="hover:bg-muted/50 transition-colors">
+                          <td className="border-b border-border p-3 font-medium">Tahsin Dasar (Iqra')</td>
+                          <td className="border-b border-l border-border p-3">{curriculumData.target_semester?.tahsin_dasar || '-'}</td>
                         </tr>
-                        <tr>
-                          <td className="border border-gray-200 p-2">Tahsin Al-Qur'an</td>
-                          <td className="border border-gray-200 p-2">{curriculumData.target_semester?.tahsin_lanjutan || '-'}</td>
+                        <tr className="hover:bg-muted/50 transition-colors">
+                          <td className="border-b border-border p-3 font-medium">Tahsin Al-Qur'an</td>
+                          <td className="border-b border-l border-border p-3">{curriculumData.target_semester?.tahsin_lanjutan || '-'}</td>
                         </tr>
-                        <tr>
-                          <td className="border border-gray-200 p-2">Tahfizh</td>
-                          <td className="border border-gray-200 p-2">{curriculumData.target_semester?.tahfizh || '-'}</td>
+                        <tr className="hover:bg-muted/50 transition-colors">
+                          <td className="border-b border-border p-3 font-medium">Tahfizh</td>
+                          <td className="border-b border-l border-border p-3">{curriculumData.target_semester?.tahfizh || '-'}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -291,26 +291,26 @@ export function CurriculumPanel() {
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Target Tahunan</h4>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left border-collapse border border-gray-200">
-                      <thead className="bg-gray-100">
+                  <div className="overflow-x-auto rounded-md border border-border">
+                    <table className="w-full text-sm text-left border-collapse">
+                      <thead className="bg-muted">
                         <tr>
-                          <th className="border border-gray-200 p-2">Program</th>
-                          <th className="border border-gray-200 p-2">Target</th>
+                          <th className="border-b border-border p-3 font-semibold text-muted-foreground">Program</th>
+                          <th className="border-b border-l border-border p-3 font-semibold text-muted-foreground">Target</th>
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td className="border border-gray-200 p-2">Tahsin Dasar (Iqra')</td>
-                          <td className="border border-gray-200 p-2">{curriculumData.target_tahunan?.tahsin_dasar || '-'}</td>
+                        <tr className="hover:bg-muted/50 transition-colors">
+                          <td className="border-b border-border p-3 font-medium">Tahsin Dasar (Iqra')</td>
+                          <td className="border-b border-l border-border p-3">{curriculumData.target_tahunan?.tahsin_dasar || '-'}</td>
                         </tr>
-                        <tr>
-                          <td className="border border-gray-200 p-2">Tahsin Al-Qur'an</td>
-                          <td className="border border-gray-200 p-2">{curriculumData.target_tahunan?.tahsin_lanjutan || '-'}</td>
+                        <tr className="hover:bg-muted/50 transition-colors">
+                          <td className="border-b border-border p-3 font-medium">Tahsin Al-Qur'an</td>
+                          <td className="border-b border-l border-border p-3">{curriculumData.target_tahunan?.tahsin_lanjutan || '-'}</td>
                         </tr>
-                        <tr>
-                          <td className="border border-gray-200 p-2">Tahfizh</td>
-                          <td className="border border-gray-200 p-2">{curriculumData.target_tahunan?.tahfizh || '-'}</td>
+                        <tr className="hover:bg-muted/50 transition-colors">
+                          <td className="border-b border-border p-3 font-medium">Tahfizh</td>
+                          <td className="border-b border-l border-border p-3">{curriculumData.target_tahunan?.tahfizh || '-'}</td>
                         </tr>
                       </tbody>
                     </table>

@@ -12,6 +12,13 @@ interface Child {
   jenis_kelamin?: string;
 }
 
+const getGender = (child: Child) => {
+  if (child.jenis_kelamin) return child.jenis_kelamin;
+  const rombel = child.rombel?.toUpperCase();
+  if (rombel === 'C' || rombel === 'D') return 'P';
+  return 'L';
+};
+
 interface StudentSwitcherProps {
   childrenList: Child[];
   activeChild: Child | null;
@@ -34,7 +41,7 @@ export const StudentSwitcher: React.FC<StudentSwitcherProps> = ({
           {activeChild ? (
             <>
               <div className="w-10 h-10 shrink-0">
-                <StudentAvatar gender={activeChild.jenis_kelamin || "L"} />
+                <StudentAvatar gender={getGender(activeChild)} />
               </div>
               <div className="flex flex-col items-start text-left">
                 <span className="font-semibold text-sm text-slate-900 line-clamp-1 max-w-[150px]">{activeChild.nama}</span>
@@ -57,7 +64,7 @@ export const StudentSwitcher: React.FC<StudentSwitcherProps> = ({
               className="flex items-center gap-3 flex-1 rounded-lg cursor-pointer bg-transparent focus:bg-transparent"
             >
               <div className="w-10 h-10 shrink-0">
-                <StudentAvatar gender={child.jenis_kelamin || "L"} />
+                <StudentAvatar gender={getGender(child)} />
               </div>
               <div className="flex flex-col flex-1">
                 <span className="font-semibold text-sm text-slate-900 line-clamp-1">{child.nama}</span>

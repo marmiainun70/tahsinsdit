@@ -15,6 +15,13 @@ import { useRemoveParentStudent } from "@/hooks/useParentStudents";
 import { useToast } from "@/components/ui/use-toast";
 import { CurriculumPanel } from "@/components/CurriculumPanel";
 
+const getGender = (child: any) => {
+  if (child?.jenis_kelamin) return child.jenis_kelamin;
+  const rombel = child?.rombel?.toUpperCase();
+  if (rombel === 'C' || rombel === 'D') return 'P';
+  return 'L';
+};
+
 export default function ParentDashboard() {
   const { user } = useAuth();
   const { data: children = [], isLoading: loadingChildren } = useParentStudents(user?.id);
@@ -131,7 +138,7 @@ export default function ParentDashboard() {
           {/* LEFT: AVATAR & NAME */}
           <div className="flex flex-col items-center justify-center lg:w-[30%] lg:border-r lg:border-slate-100 lg:pr-6 shrink-0">
             <div className="w-28 h-28 mb-4 drop-shadow-sm">
-              <StudentAvatar gender={(activeChild as any).jenis_kelamin || "L"} />
+              <StudentAvatar gender={getGender(activeChild)} />
             </div>
             <h2 className="text-xl font-bold text-slate-800 text-center leading-tight">{activeChild.nama}</h2>
             <p className="text-slate-500 font-medium text-xs mt-1">NIS : {activeChild.nis || "240015"}</p>
@@ -211,14 +218,26 @@ export default function ParentDashboard() {
                         </div>
                       ) : (
                         (() => {
-                          const maxPage = 32;
+                          let maxPage = 32;
                           const currentPage = (activeChild as any).halaman_terakhir || 0;
+                          let suffix = "";
+                          
+                          if (level === "Tahsin Lanjutan") {
+                            if (currentPage <= 40) {
+                              maxPage = 40;
+                              suffix = " (untuk Tahsin Lanjutan 1)";
+                            } else {
+                              maxPage = 80;
+                              suffix = " (untuk Tahsin Lanjutan 2)";
+                            }
+                          }
+                          
                           const pct = Math.min(100, Math.round((currentPage / maxPage) * 100));
                           return (
                             <>
                               <p className="text-2xl font-black text-emerald-600 leading-none mt-1">{pct}%</p>
                               <Progress value={pct} className="h-1.5 my-1.5 bg-slate-200 [&>div]:bg-emerald-500" />
-                              <p className="text-[12px] text-slate-600 leading-tight">{currentPage} dari {maxPage} halaman dikuasai</p>
+                              <p className="text-[12px] text-slate-600 leading-tight">{currentPage} dari {maxPage} halaman dikuasai{suffix}</p>
                               <div className="mt-1 flex items-center gap-1">
                                 <p className="text-[11px] text-slate-400">Level Aktif:</p>
                                 <p className="text-[12px] font-semibold text-slate-700">{level || "-"}</p>
