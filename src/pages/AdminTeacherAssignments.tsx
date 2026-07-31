@@ -437,8 +437,8 @@ export default function AdminTeacherAssignments() {
             // Retrieve global numbering from activeGroups to match sequence 1-48
             const totalWidth = colWidths.grup + colWidths.guru + colWidths.kelas;
             return (
-              <div key={g.key} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-fit max-w-full overflow-x-auto">
-                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: totalWidth, minWidth: 0 }}>
+              <div key={g.key} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-full md:w-fit max-w-full overflow-x-auto">
+                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: totalWidth, minWidth: totalWidth }}>
                   <colgroup>
                     <col style={{ width: colWidths.grup }} />
                     <col style={{ width: colWidths.guru }} />
@@ -532,8 +532,8 @@ export default function AdminTeacherAssignments() {
             {teacherColumns.map((column, idx) => {
               const sec2TotalWidth = colWidths.grup + colWidths.guru + colWidths.kelas;
               return (
-              <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-fit max-w-full overflow-x-auto">
-                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: sec2TotalWidth, minWidth: 0 }}>
+              <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-full md:w-fit max-w-full overflow-x-auto">
+                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: sec2TotalWidth, minWidth: sec2TotalWidth }}>
                   <colgroup>
                     <col style={{ width: colWidths.grup }} />
                     <col style={{ width: colWidths.guru }} />
@@ -582,7 +582,7 @@ export default function AdminTeacherAssignments() {
                           <Input
                             value={getStudentName(assign.student_id)}
                             onChange={e => updateStudentName(assign.student_id, e.target.value)}
-                            className="h-full min-h-[24px] w-full border-0 rounded-none bg-transparent shadow-none px-1 text-[6px] focus:ring-0 focus-visible:ring-0"
+                            className="h-full min-h-[24px] w-full border-0 rounded-none bg-transparent shadow-none px-1 text-xs focus:ring-0 focus-visible:ring-0"
                           />
                         </td>
                         <td className="px-1 py-0.5 text-center font-medium text-slate-600 dark:text-slate-400 text-[10px] relative">
