@@ -437,8 +437,8 @@ export default function AdminTeacherAssignments() {
             // Retrieve global numbering from activeGroups to match sequence 1-48
             const totalWidth = colWidths.grup + colWidths.guru + colWidths.kelas;
             return (
-              <div key={g.key} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-full md:w-fit max-w-full overflow-x-auto">
-                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: totalWidth, minWidth: totalWidth }}>
+              <div key={g.key} style={{ "--tw-table-width": `${totalWidth}px` } as React.CSSProperties} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-full md:w-fit max-w-full overflow-x-auto">
+                <table className="text-xs border-collapse w-full md:w-[var(--tw-table-width)] md:min-w-[var(--tw-table-width)]" style={{ tableLayout: "fixed" }}>
                   <colgroup>
                     <col style={{ width: colWidths.grup }} />
                     <col style={{ width: colWidths.guru }} />
@@ -532,8 +532,8 @@ export default function AdminTeacherAssignments() {
             {teacherColumns.map((column, idx) => {
               const sec2TotalWidth = colWidths.grup + colWidths.guru + colWidths.kelas;
               return (
-              <div key={column.user_id} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-full md:w-fit max-w-full overflow-x-auto">
-                <table className="text-xs border-collapse" style={{ tableLayout: "fixed", width: sec2TotalWidth, minWidth: sec2TotalWidth }}>
+              <div key={column.user_id} style={{ "--tw-table-width": `${sec2TotalWidth}px` } as React.CSSProperties} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-sm shadow-sm w-full md:w-fit max-w-full overflow-x-auto">
+                <table className="text-xs border-collapse w-full md:w-[var(--tw-table-width)] md:min-w-[var(--tw-table-width)]" style={{ tableLayout: "fixed" }}>
                   <colgroup>
                     <col style={{ width: colWidths.grup }} />
                     <col style={{ width: colWidths.guru }} />
