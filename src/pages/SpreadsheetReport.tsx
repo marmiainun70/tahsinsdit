@@ -55,9 +55,7 @@ const PROGRAMS = [
   { value: "tahfizh", label: "Tahfizh" },
 ];
 
-const IQRA_PAGES = [1, ...Array.from({ length: 29 }, (_, i) => i + 4)]; // 1, 4..32
-const TAHSIN_LANJUTAN_PAGES = 200; // halaman bebas
-const END_NOT_SET = "__empty__";
+// IQRA_PAGES is dynamically computed inside stepPage
 const ADVANCED_LEVELS = ["Tahsin Lanjutan", "Tahfizh"] as const;
 const isAdvancedLevel = (lvl: string): lvl is (typeof ADVANCED_LEVELS)[number] =>
   ADVANCED_LEVELS.some((level) => level === lvl);
@@ -245,11 +243,20 @@ const isDecline = (program: string, sl: string, sp: number, el: string, ep: numb
   return ep < sp;
 };
 
-const stepPage = (program: string, cur: number, dir: 1 | -1): number => {
+const stepPage = (program: string, cur: number, dir: 1 | -1, level?: string): number => {
   if (program === "iqra") {
-    const idx = IQRA_PAGES.indexOf(cur);
-    const newIdx = Math.max(0, Math.min(IQRA_PAGES.length - 1, idx + dir));
-    return IQRA_PAGES[newIdx] ?? cur;
+    let pages: number[] = [];
+    if (level === "1" || level === "Iqra 1" || level === "Iqro 1") {
+      pages = Array.from({ length: 35 }, (_, i) => i + 1); // 1..35
+    } else {
+      pages = Array.from({ length: 30 }, (_, i) => i + 3); // 3..32
+    }
+    const idx = pages.indexOf(cur);
+    if (idx === -1) {
+      return dir === 1 ? pages[0] : pages[pages.length - 1];
+    }
+    const newIdx = Math.max(0, Math.min(pages.length - 1, idx + dir));
+    return pages[newIdx] ?? cur;
   }
   if (program === "tahfizh") return Math.max(1, Math.min(JUZ_PAGES_PER_JUZ, cur + dir));
   return Math.max(1, Math.min(TAHSIN_LANJUTAN_PAGES, cur + dir));
@@ -257,7 +264,9 @@ const stepPage = (program: string, cur: number, dir: 1 | -1): number => {
 
 const getPageLimit = (program: string, level?: string): number => {
   if (level === "Tahfizh" || program === "tahfizh") return JUZ_PAGES_PER_JUZ;
-  if (program === "iqra" && !isAdvancedEndLevel(level || "")) return 32;
+  if (program === "iqra" && !isAdvancedEndLevel(level || "")) {
+    return level === "1" ? 35 : 32;
+  }
   return TAHSIN_LANJUTAN_PAGES;
 };
 
@@ -443,7 +452,8 @@ const SpreadsheetReport = () => {
         ? stripStoredLevelPrefix(prevForStart.end_iqra_level || prevForStart.iqra_level || fallbackLvl)
         : fallbackLvl;
       const sl = program === "tahfizh" && prevForStart?.end_iqra_level === "Tahfizh" ? "30" : prevEndLvlRaw;
-      const sp = prevForStart ? prevForStart.end_page : 1;
+      const defaultSp = program === "iqra" ? (sl === "1" ? 5 : 3) : 1;
+      const sp = prevForStart ? prevForStart.end_page : defaultSp;
       return {
         studentId: s.id,
         studentName: s.nama,
@@ -1226,7 +1236,7 @@ const SpreadsheetReport = () => {
                     </td>
                     <td {...layoutCellProps(r.studentId, "startPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <div className="flex items-center justify-center">
-                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, -1) })}><Minus className="w-2 h-2" /></Button>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, -1, r.startLevel) })}><Minus className="w-2 h-2" /></Button>
                         <Input
                           type="number"
                           min={1}
@@ -1236,7 +1246,7 @@ const SpreadsheetReport = () => {
                           onChange={e => updateRow(idx, { startPage: clampPage(r.program, parseInt(e.target.value) || 1, r.startLevel) })}
                           className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-50 dark:focus-visible:bg-blue-900/30"
                         />
-                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, 1) })}><Plus className="w-2 h-2" /></Button>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { startPage: stepPage(r.program, r.startPage, 1, r.startLevel) })}><Plus className="w-2 h-2" /></Button>
                       </div>
                     </td>
                     <td {...layoutCellProps(r.studentId, "endLevel")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
@@ -1250,7 +1260,7 @@ const SpreadsheetReport = () => {
                     </td>
                     <td {...layoutCellProps(r.studentId, "endPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <div className="flex items-center justify-center">
-                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, actualEndLevel), r.endPage ?? 1, -1) })}><Minus className="w-2 h-2" /></Button>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, actualEndLevel), r.endPage ?? 1, -1, actualEndLevel) })}><Minus className="w-2 h-2" /></Button>
                         <Input
                           type="number"
                           min={1}
@@ -1263,7 +1273,7 @@ const SpreadsheetReport = () => {
                           })}
                           className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-50 dark:focus-visible:bg-blue-900/30"
                         />
-                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, actualEndLevel), r.endPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
+                        <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { endPage: stepPage(pageProgramFor(r.program, actualEndLevel), r.endPage ?? 1, 1, actualEndLevel) })}><Plus className="w-2 h-2" /></Button>
                       </div>
                     </td>
                                           <td {...layoutCellProps(r.studentId, "totalProgress")} className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] ${signed < 0 ? "text-red-600 font-bold" : ""}`}>{hasEnd ? signed : "-"}</td>
@@ -1412,7 +1422,7 @@ const SpreadsheetReport = () => {
                         </td>
                         <td {...layoutCellProps(r.studentId, "startPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                           <div className="flex items-center justify-center">
-                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted text-blue-700" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhStartPage: stepPage("tahfizh", r.tahfizhStartPage, -1) })}><Minus className="w-2 h-2" /></Button>
+                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted text-blue-700" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhStartPage: stepPage("tahfizh", r.tahfizhStartPage, -1, r.tahfizhJuz) })}><Minus className="w-2 h-2" /></Button>
                             <Input
                               type="number"
                               min={1}
@@ -1422,7 +1432,7 @@ const SpreadsheetReport = () => {
                               onChange={e => updateRow(idx, { tahfizhStartPage: clampPage("tahfizh", parseInt(e.target.value) || 1, r.tahfizhJuz) })}
                               className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-100 dark:focus-visible:bg-blue-800/30 text-blue-700 font-medium"
                             />
-                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted text-blue-700" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhStartPage: stepPage("tahfizh", r.tahfizhStartPage, 1) })}><Plus className="w-2 h-2" /></Button>
+                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted text-blue-700" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhStartPage: stepPage("tahfizh", r.tahfizhStartPage, 1, r.tahfizhJuz) })}><Plus className="w-2 h-2" /></Button>
                           </div>
                         </td>
                         <td {...layoutCellProps(r.studentId, "endLevel")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700 bg-muted/10">
@@ -1430,7 +1440,7 @@ const SpreadsheetReport = () => {
                         </td>
                         <td {...layoutCellProps(r.studentId, "endPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                           <div className="flex items-center justify-center">
-                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted text-blue-700" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhEndPage: stepPage("tahfizh", r.tahfizhEndPage ?? 1, -1) })}><Minus className="w-2 h-2" /></Button>
+                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted text-blue-700" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhEndPage: stepPage("tahfizh", r.tahfizhEndPage ?? 1, -1, r.tahfizhJuz) })}><Minus className="w-2 h-2" /></Button>
                             <Input
                               type="number"
                               min={1}
@@ -1441,7 +1451,7 @@ const SpreadsheetReport = () => {
                               onChange={e => updateRow(idx, { tahfizhEndPage: e.target.value === "" ? null : clampPage("tahfizh", parseInt(e.target.value) || 1, r.tahfizhJuz) })}
                               className="h-6 w-9 text-center text-[10px] md:text-[10px] px-0.5 border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:bg-blue-100 dark:focus-visible:bg-blue-800/30 text-blue-700 font-medium"
                             />
-                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted text-blue-700" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhEndPage: stepPage("tahfizh", r.tahfizhEndPage ?? 1, 1) })}><Plus className="w-2 h-2" /></Button>
+                            <Button size="icon" variant="ghost" className="h-5 w-5 rounded-none p-0 hover:bg-muted text-blue-700" disabled={spreadsheetLayout.isEditing} onClick={() => updateRow(idx, { tahfizhEndPage: stepPage("tahfizh", r.tahfizhEndPage ?? 1, 1, r.tahfizhJuz) })}><Plus className="w-2 h-2" /></Button>
                           </div>
                         </td>
                         <td {...layoutCellProps(r.studentId, "totalProgress")} className={`p-0.5 border border-[1.5px] border-blue-400 dark:border-blue-700 text-center text-[10px] text-blue-700 font-medium ${signedTahfizh < 0 ? "text-red-600 font-bold" : ""}`}>

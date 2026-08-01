@@ -124,8 +124,19 @@ const MonthlyReport = () => {
   const teacherAccount = isTeacherRole(profile?.role);
   const teacherOverview = teacherAccount && !isAdmin;
 
-  const [month, setMonth] = useState(now.getMonth() + 1);
-  const [year, setYear] = useState(now.getFullYear());
+  let initialMonth = now.getMonth() + 1;
+  let initialYear = now.getFullYear();
+  if (now.getDate() >= 1 && now.getDate() <= 5) {
+    if (initialMonth === 1) {
+      initialMonth = 12;
+      initialYear -= 1;
+    } else {
+      initialMonth -= 1;
+    }
+  }
+
+  const [month, setMonth] = useState(initialMonth);
+  const [year, setYear] = useState(initialYear);
   const [kelas, setKelas] = useState("");
   const [rombel, setRombel] = useState("");
   const [search, setSearch] = useState("");

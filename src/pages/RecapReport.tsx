@@ -235,10 +235,20 @@ const RecapReport = () => {
   const tableContentRef = useRef<HTMLDivElement>(null);
 
   const now = new Date();
+  let initialMonth = now.getMonth() + 1;
+  let initialYear = now.getFullYear();
+  if (now.getDate() >= 1 && now.getDate() <= 5) {
+    if (initialMonth === 1) {
+      initialMonth = 12;
+      initialYear -= 1;
+    } else {
+      initialMonth -= 1;
+    }
+  }
   const [filterKelas, setFilterKelas] = useState<string>("all");
   const [filterRombel, setFilterRombel] = useState<string>("all");
-  const [filterMonth, setFilterMonth] = useState<string>(String(now.getMonth() + 1));
-  const [filterYear, setFilterYear] = useState<string>(String(now.getFullYear()));
+  const [filterMonth, setFilterMonth] = useState<string>(String(initialMonth));
+  const [filterYear, setFilterYear] = useState<string>(String(initialYear));
   const [search, setSearch] = useState("");
   const [filterReportStatus, setFilterReportStatus] = useState<FilterReportStatusType>("all");
   const [filterAttendanceStatus, setFilterAttendanceStatus] = useState<FilterAttendanceStatusType>("all");

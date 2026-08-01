@@ -39,40 +39,33 @@ export interface MonthlyReport {
   created_at: string;
 }
 
-// Calculate pages read across Iqra levels
-export const IQRA_PAGES_LIST = [1, ...Array.from({ length: 29 }, (_, i) => i + 4)]; // 30 valid pages per level
+export const getIqraAbsoluteIndex = (level: number, page: number): number => {
+  let idx = 0;
+  if (level > 1) {
+    idx += 35; // Level 1 pages (1-35)
+    idx += (level - 2) * 30; // Intermediate levels (30 pages each: 3-32)
+    idx += Math.max(0, page - 3); // Current level offset
+  } else {
+    idx += Math.max(0, page - 1);
+  }
+  return idx;
+};
 
 export const calcIqraPagesRead = (
   startLevel: number, startPage: number,
   endLevel: number, endPage: number
 ): number => {
-  const startIdx = IQRA_PAGES_LIST.indexOf(getValidIqraPage(startPage));
-  const endIdx = IQRA_PAGES_LIST.indexOf(getValidIqraPage(endPage));
-  if (startLevel === endLevel) {
-    return Math.max(0, endIdx - startIdx);
-  }
-  // Cross-level: remaining in start level + full levels in between + pages in end level
-  const remainingInStart = (IQRA_PAGES_LIST.length - 1) - startIdx; // pages left in start level
-  const fullLevelsBetween = Math.max(0, endLevel - startLevel - 1);
-  const pagesInEnd = endIdx + 1; // pages read in end level (from page index 0)
-  return remainingInStart + (fullLevelsBetween * IQRA_PAGES_LIST.length) + pagesInEnd;
+  const startIdx = getIqraAbsoluteIndex(startLevel, startPage);
+  const endIdx = getIqraAbsoluteIndex(endLevel, endPage);
+  return Math.max(0, endIdx - startIdx);
 };
 
-// Iqra: halaman 1, 4-32 (skip 2 & 3)
-export const IQRA_VALID_PAGES = [1, ...Array.from({ length: 29 }, (_, i) => i + 4)]; // 1, 4..32
-
-export const getValidIqraPage = (page: number): number => {
-  if (page <= 1) return 1;
-  if (page <= 3) return 4; // skip 2,3
-  return Math.min(page, 32);
-};
-
-/** Rumus baru Tahsin Dasar (Iqra) — signed: total bisa negatif (TURUN) */
-export const IQRA_PAGES_PER_LEVEL = 30;
 export const calcIqraPagesSigned = (
   startLevel: number, startPage: number,
   endLevel: number, endPage: number,
-): number => (endLevel - startLevel) * IQRA_PAGES_PER_LEVEL + (endPage - startPage);
+): number => {
+  return getIqraAbsoluteIndex(endLevel, endPage) - getIqraAbsoluteIndex(startLevel, startPage);
+};
 
 /** Deteksi TURUN khusus Tahsin Dasar (Iqra) */
 export const isIqraDecline = (
@@ -86,6 +79,7 @@ export const isIqraDecline = (
 /** Notif: siswa selesai Tahsin Dasar (Jilid 6 hal 32) */
 export const isIqraGraduated = (endLevel: number, endPage: number): boolean =>
   endLevel === 6 && endPage >= 32;
+
 
 export const TARGET_TAHFIZH = 1;
 export const TARGET_TAHSIN = 4;
