@@ -5,44 +5,48 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "next-themes";
-import Layout from "@/components/Layout";
 import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import ManageAccounts from "@/pages/ManageAccounts";
-import ManageStudents from "@/pages/ManageStudents";
-import AdminTeacherAssignments from "@/pages/AdminTeacherAssignments";
-import TeacherManagedStudents from "@/pages/TeacherManagedStudents";
-import Dashboard from "@/pages/Dashboard";
-import ClassStudents from "@/pages/ClassStudents";
-import StudentProgress from "@/pages/StudentProgress";
-import Monitoring from "@/pages/Monitoring";
-import TahsinAssessment from "@/pages/TahsinAssessment";
-import ClassReport from "@/pages/ClassReport";
-import ExamSchedule from "@/pages/ExamSchedule";
-import ExamScheduleDetail from "@/pages/ExamScheduleDetail";
-import MonthlyReport from "@/pages/MonthlyReport";
-import RecapReport from "@/pages/RecapReport";
-import SpreadsheetReport from "@/pages/SpreadsheetReport";
-import InstitutionSettings from "@/pages/InstitutionSettings";
-import RestoreAprilReports from "@/pages/RestoreAprilReports";
-import NotificationSettings from "@/pages/NotificationSettings";
-import BroadcastAnnouncement from "@/pages/BroadcastAnnouncement";
-import TeacherProfileDiagnostics from "@/pages/TeacherProfileDiagnostics";
-import Landing from "@/pages/Landing";
-import KalenderAkademik from "@/pages/KalenderAkademik";
-import KalenderMenungguKonfirmasi from "@/pages/KalenderMenungguKonfirmasi";
-import KalenderRiwayatSinkronisasi from "@/pages/KalenderRiwayatSinkronisasi";
-import OAuthConsent from "@/pages/OAuthConsent";
-import KenaikanTahunAjaran from "@/pages/KenaikanTahunAjaran";
-import MasterBankSoal from "@/pages/MasterBankSoal";
-import MasterPaketAsesmen from "@/pages/MasterPaketAsesmen";
-import CBTDashboard from "@/pages/CBTDashboard";
-import CBTRoom from "@/pages/CBTRoom";
-import CBTResultDetails from "@/pages/CBTResultDetails";
-import DiagnosticEvaluation from "@/pages/DiagnosticEvaluation";
+import { lazy, Suspense } from "react";
 
-import NotFound from "@/pages/NotFound";
-import { ExamScheduleRealtimeProvider } from "@/components/ExamScheduleNotification";
+// Halaman selain login dimuat saat benar-benar dibuka. Ini menjaga bundle awal
+// tetap ringan, terutama untuk perangkat mobile yang baru masuk ke aplikasi.
+const Layout = lazy(() => import("@/components/Layout"));
+const Register = lazy(() => import("@/pages/Register"));
+const ManageAccounts = lazy(() => import("@/pages/ManageAccounts"));
+const ManageStudents = lazy(() => import("@/pages/ManageStudents"));
+const AdminTeacherAssignments = lazy(() => import("@/pages/AdminTeacherAssignments"));
+const TeacherManagedStudents = lazy(() => import("@/pages/TeacherManagedStudents"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const ClassStudents = lazy(() => import("@/pages/ClassStudents"));
+const StudentProgress = lazy(() => import("@/pages/StudentProgress"));
+const Monitoring = lazy(() => import("@/pages/Monitoring"));
+const TahsinAssessment = lazy(() => import("@/pages/TahsinAssessment"));
+const ClassReport = lazy(() => import("@/pages/ClassReport"));
+const ExamSchedule = lazy(() => import("@/pages/ExamSchedule"));
+const ExamScheduleDetail = lazy(() => import("@/pages/ExamScheduleDetail"));
+const MonthlyReport = lazy(() => import("@/pages/MonthlyReport"));
+const RecapReport = lazy(() => import("@/pages/RecapReport"));
+const SpreadsheetReport = lazy(() => import("@/pages/SpreadsheetReport"));
+const InstitutionSettings = lazy(() => import("@/pages/InstitutionSettings"));
+const RestoreAprilReports = lazy(() => import("@/pages/RestoreAprilReports"));
+const NotificationSettings = lazy(() => import("@/pages/NotificationSettings"));
+const BroadcastAnnouncement = lazy(() => import("@/pages/BroadcastAnnouncement"));
+const TeacherProfileDiagnostics = lazy(() => import("@/pages/TeacherProfileDiagnostics"));
+const Landing = lazy(() => import("@/pages/Landing"));
+const KalenderAkademik = lazy(() => import("@/pages/KalenderAkademik"));
+const KalenderMenungguKonfirmasi = lazy(() => import("@/pages/KalenderMenungguKonfirmasi"));
+const KalenderRiwayatSinkronisasi = lazy(() => import("@/pages/KalenderRiwayatSinkronisasi"));
+const OAuthConsent = lazy(() => import("@/pages/OAuthConsent"));
+const KenaikanTahunAjaran = lazy(() => import("@/pages/KenaikanTahunAjaran"));
+const MasterBankSoal = lazy(() => import("@/pages/MasterBankSoal"));
+const MasterPaketAsesmen = lazy(() => import("@/pages/MasterPaketAsesmen"));
+const CBTDashboard = lazy(() => import("@/pages/CBTDashboard"));
+const CBTRoom = lazy(() => import("@/pages/CBTRoom"));
+const CBTResultDetails = lazy(() => import("@/pages/CBTResultDetails"));
+const DiagnosticEvaluation = lazy(() => import("@/pages/DiagnosticEvaluation"));
+const ContactTeacher = lazy(() => import("./pages/ContactTeacher"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+const ExamScheduleRealtimeProvider = lazy(() => import("@/components/ExamScheduleNotification"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -59,6 +63,15 @@ const queryClient = new QueryClient({
 
 import { isTeacherRole } from "@/lib/roleLabels";
 
+const PageLoading = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="flex flex-col items-center gap-3">
+      <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+      <p className="text-muted-foreground text-sm">Memuat...</p>
+    </div>
+  </div>
+);
+
 const ProtectedRoute = ({ 
   children, 
   allowedRoles 
@@ -70,14 +83,7 @@ const ProtectedRoute = ({
 
   // Tampilkan spinner selama auth belum selesai diverifikasi.
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          <p className="text-muted-foreground text-sm">Memuat...</p>
-        </div>
-      </div>
-    );
+    return <PageLoading />;
   }
 
   // Tidak ada session → ke halaman login
@@ -90,14 +96,7 @@ const ProtectedRoute = ({
 
   // Profile belum ada meskipun accountStatus sudah diketahui — transisi singkat
   if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          <p className="text-muted-foreground text-sm">Memverifikasi akun...</p>
-        </div>
-      </div>
-    );
+    return <PageLoading />;
   }
 
   // Verifikasi hak akses role:
@@ -116,17 +115,15 @@ const ProtectedRoute = ({
     return <Navigate to="/" replace />;
   }
 
-  return <Layout>{children}</Layout>;
+  return <Suspense fallback={<PageLoading />}><Layout>{children}</Layout></Suspense>;
 };
-
-
-import ContactTeacher from "./pages/ContactTeacher";
 
 const AppRoutes = () => {
   const { session, loading } = useAuth();
   const hasVerifiedSession = !loading && Boolean(session);
 
   return (
+    <Suspense fallback={<PageLoading />}>
     <Routes>
       <Route path="/landing" element={hasVerifiedSession ? <Navigate to="/" replace /> : <Landing />} />
       <Route path="/login" element={hasVerifiedSession ? <Navigate to="/" replace /> : <Login />} />
@@ -173,6 +170,19 @@ const AppRoutes = () => {
       <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
+  );
+};
+
+const AuthenticatedRealtimeProvider = () => {
+  const { session } = useAuth();
+
+  if (!session) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <ExamScheduleRealtimeProvider />
+    </Suspense>
   );
 };
 
@@ -185,7 +195,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <AppRoutes />
-            <ExamScheduleRealtimeProvider />
+            <AuthenticatedRealtimeProvider />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

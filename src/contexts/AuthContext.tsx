@@ -142,20 +142,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
 
-      // 3. Secondary check in user_roles table
+      // 3. Ambil role cadangan hanya bila profil tidak memilikinya. Untuk
+      // akun normal, role sudah tersedia di profiles sehingga satu request
+      // jaringan ini tidak perlu menahan masuknya pengguna ke dashboard.
       let roleFromUserRoles: string | null = null;
-      try {
-        const roleRes = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", userId)
-          .limit(1)
-          .maybeSingle();
-        if (roleRes.data?.role) {
-          roleFromUserRoles = roleRes.data.role;
+      if (!data?.role) {
+        try {
+          const roleRes = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userId)
+            .limit(1)
+            .maybeSingle();
+          if (roleRes.data?.role) {
+            roleFromUserRoles = roleRes.data.role;
+          }
+        } catch {
+          // ignore
         }
-      } catch {
-        // ignore
       }
 
       // 4. Fallback if profile row is not found in DB: extract metadata & auto-heal
