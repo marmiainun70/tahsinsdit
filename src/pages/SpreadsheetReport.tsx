@@ -55,6 +55,8 @@ const PROGRAMS = [
   { value: "tahfizh", label: "Tahfizh" },
 ];
 
+const TAHSIN_LANJUTAN_PAGES = 200; // halaman bebas
+const END_NOT_SET = "__empty__";
 // IQRA_PAGES is dynamically computed inside stepPage
 const ADVANCED_LEVELS = ["Tahsin Lanjutan", "Tahfizh"] as const;
 const isAdvancedLevel = (lvl: string): lvl is (typeof ADVANCED_LEVELS)[number] =>
