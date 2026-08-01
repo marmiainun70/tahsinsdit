@@ -331,8 +331,20 @@ const SpreadsheetReport = () => {
 
   const [kelas, setKelas] = useState<string>("semua");
   const [rombel, setRombel] = useState<string>("semua");
-  const [month, setMonth] = useState(new Date().getMonth() + 1);
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [month, setMonth] = useState(() => {
+    const now = new Date();
+    if (now.getDate() >= 1 && now.getDate() <= 5) {
+      now.setMonth(now.getMonth() - 1);
+    }
+    return now.getMonth() + 1;
+  });
+  const [year, setYear] = useState(() => {
+    const now = new Date();
+    if (now.getDate() >= 1 && now.getDate() <= 5) {
+      now.setMonth(now.getMonth() - 1);
+    }
+    return now.getFullYear();
+  });
   const [studentSearch, setStudentSearch] = useState("");
   const [showGuide, setShowGuide] = useState(true);
   const [savingAll, setSavingAll] = useState(false);
