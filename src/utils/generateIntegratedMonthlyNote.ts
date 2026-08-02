@@ -150,10 +150,10 @@ const buildIndicatorAnalysis = (input: IntegratedMonthlyNoteInput) => {
   const weakest = entries.reduce((low, current) => (current.value < low.value ? current : low), entries[0]);
   const allEqual = entries.every((entry) => entry.value === entries[0].value);
 
-  const appreciation = `Aspek yang paling menonjol adalah ${INDICATOR_TEXT[strongest.key][strongest.value]}.`;
+  const appreciation = `Aspek terkuat: ${INDICATOR_TEXT[strongest.key][strongest.value]}.`;
   const focus = allEqual
-    ? `Fokus berikutnya adalah menjaga ketiga aspek belajar agar berkembang lebih seimbang.`
-    : `Fokus perbaikan berikutnya adalah ${INDICATOR_FOCUS[weakest.key][weakest.value]}.`;
+    ? `Fokus: menjaga keseimbangan ketiga aspek belajar.`
+    : `Fokus perbaikan: ${INDICATOR_FOCUS[weakest.key][weakest.value]}.`;
 
   return `${appreciation} ${focus}`;
 };
@@ -162,30 +162,20 @@ const buildPageProgressAnalysis = (input: IntegratedMonthlyNoteInput) => {
   const progress = Number(input.signedProgress) || 0;
   const target = Math.max(1, Number(input.targetPages) || 1);
 
-  if (progress < 0) {
-    return "Progres halaman bulan ini menurun sehingga materi sebelumnya perlu dikuatkan kembali.";
-  }
-  if (progress === 0) {
-    return "Progres halaman bulan ini masih stagnan, sehingga latihan rutin perlu ditata kembali.";
-  }
-  if (progress >= target * 2) {
-    return "Progres halaman bulan ini sangat baik karena melampaui target yang ditetapkan.";
-  }
-  if (progress >= target) {
-    return "Target halaman bulan ini tercapai dengan baik.";
-  }
-  return "Sudah ada progres halaman, tetapi target bulan ini belum sepenuhnya tercapai.";
+  if (progress < 0) return "Progres halaman menurun; materi sebelumnya perlu diulang.";
+  if (progress === 0) return "Progres halaman stagnan; latihan rutin perlu ditata.";
+  if (progress >= target * 2) return "Progres halaman melampaui target.";
+  if (progress >= target) return "Target halaman tercapai.";
+  return "Progres ada, tetapi target belum tercapai.";
 };
 
 const buildSemesterAchievement = (input: IntegratedMonthlyNoteInput) => {
   if (input.program === "iqra") return "";
 
   const monthCount = Math.max(0, Math.min(5, Math.round(Number(input.pencapaianTargetBulan) || 0)));
-  if (monthCount <= 0) {
-    return "Pencapaian target bulanan selama semester berjalan masih perlu mulai dibangun.";
-  }
+  if (monthCount <= 0) return "Pencapaian target bulanan masih perlu dibangun.";
 
-  return `Selama semester berjalan, target bulanan sudah tercatat tercapai ${monthCount} bulan.`;
+  return `Target bulanan tercapai ${monthCount} bulan dalam semester.`;
 };
 
 export const generateIntegratedMonthlyNote = (input: IntegratedMonthlyNoteInput): string => {
