@@ -26,29 +26,29 @@ type IndicatorKey = "kehadiranKesiapan" | "kualitasBacaan" | "perbaikanBacaan";
 
 const CATEGORY_OPENERS: Record<ProgressCategory, string[]> = {
   "Konsisten & Progresif": [
-    "Ananda menunjukkan perkembangan yang konsisten dan progresif pada bulan ini.",
-    "Perjalanan belajar bulan ini terlihat stabil, terarah, dan terus bergerak maju.",
-    "Alhamdulillah, perkembangan belajar bulan ini tampak kuat dan konsisten.",
+    "Perkembangan belajar bulan ini konsisten dan progresif.",
+    "Alhamdulillah, progres bulan ini stabil dan terus maju.",
+    "Perjalanan belajar bulan ini tampak kuat dan berkelanjutan.",
   ],
   "Ada Progres": [
-    "Ananda sudah menunjukkan progres yang baik pada bulan ini.",
-    "Perkembangan bulan ini mulai terlihat dan dapat terus dikuatkan.",
-    "Ada kemajuan positif dalam proses belajar bulan ini.",
+    "Ada progres positif dalam belajar bulan ini.",
+    "Perkembangan bulan ini mulai terlihat dan dapat dikuatkan.",
+    "Ananda menunjukkan kemajuan yang baik pada bulan ini.",
   ],
   Stagnan: [
-    "Perkembangan bulan ini masih cenderung stabil dan belum banyak berubah.",
-    "Progres belajar bulan ini masih perlu dorongan agar kembali bergerak.",
-    "Bulan ini menjadi fase penguatan agar kemampuan yang ada tidak menurun.",
+    "Progres bulan ini masih stagnan, perlu penguatan.",
+    "Perkembangan belajar bulan ini belum banyak berubah.",
+    "Bulan ini menjadi fase penguatan agar kemampuan tidak menurun.",
   ],
   "Kurang Konsisten": [
-    "Proses belajar bulan ini masih perlu dibuat lebih konsisten.",
-    "Ananda masih membutuhkan pendampingan agar ritme belajar lebih stabil.",
+    "Konsistensi belajar bulan ini masih perlu diperbaiki.",
+    "Ananda masih membutuhkan pendampingan agar ritme belajar stabil.",
     "Perkembangan bulan ini belum merata dan perlu penguatan kebiasaan belajar.",
   ],
   "Tidak Konsisten": [
-    "Bulan ini ananda perlu pendampingan lebih dekat agar proses belajar kembali terarah.",
+    "Perlu pendampingan lebih dekat agar belajar kembali terarah.",
     "Konsistensi belajar bulan ini masih menjadi perhatian utama.",
-    "Perkembangan bulan ini perlu dikuatkan kembali dengan latihan yang lebih teratur.",
+    "Progres bulan ini perlu dikuatkan kembali dengan latihan teratur.",
   ],
 };
 
