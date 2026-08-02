@@ -1078,6 +1078,9 @@ export type Database = {
       institution_settings: {
         Row: {
           alamat: string
+          curriculum_targets: Json | null
+          effective_days_per_month: number | null
+          effective_days_per_semester: number | null
           id: string
           kepsek_nama: string
           kepsek_ttd_url: string | null
@@ -1090,6 +1093,9 @@ export type Database = {
         }
         Insert: {
           alamat?: string
+          curriculum_targets?: Json | null
+          effective_days_per_month?: number | null
+          effective_days_per_semester?: number | null
           id?: string
           kepsek_nama?: string
           kepsek_ttd_url?: string | null
@@ -1102,6 +1108,9 @@ export type Database = {
         }
         Update: {
           alamat?: string
+          curriculum_targets?: Json | null
+          effective_days_per_month?: number | null
+          effective_days_per_semester?: number | null
           id?: string
           kepsek_nama?: string
           kepsek_ttd_url?: string | null
@@ -1156,6 +1165,45 @@ export type Database = {
           id?: number
           ipp_trend_threshold?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      monthly_report_period_settings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_days: number
+          id: string
+          month: number
+          target_iqra: number
+          target_tahfizh: number
+          target_tahsin_lanjutan: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_days?: number
+          id?: string
+          month: number
+          target_iqra?: number
+          target_tahfizh?: number
+          target_tahsin_lanjutan?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_days?: number
+          id?: string
+          month?: number
+          target_iqra?: number
+          target_tahfizh?: number
+          target_tahsin_lanjutan?: number
+          updated_at?: string
+          year?: number
         }
         Relationships: []
       }
