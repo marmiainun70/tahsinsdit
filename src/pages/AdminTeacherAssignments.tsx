@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Plus, Save, Trash2, X, Check, ChevronsUpDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,6 +61,55 @@ export default function AdminTeacherAssignments() {
   useEffect(() => {
     try { localStorage.setItem("ata_col_widths_v2", JSON.stringify(colWidths)); } catch {}
   }, [colWidths]);
+
+  // --- Draf lokal & mode offline ---------------------------------------
+  const DRAFT_KEY = "ata_draft_v1";
+  const CACHE_KEY = "ata_data_cache_v1";
+  const draftHandledRef = useRef(false);
+  const restoredDraftRef = useRef(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator === "undefined" ? true : navigator.onLine);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [draftRestored, setDraftRestored] = useState(false);
+
+  useEffect(() => {
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+  }, []);
+
+  // Autosave draf ke penyimpanan lokal setiap ada perubahan (debounce ringan)
+  useEffect(() => {
+    if (!isDirty) return;
+    const t = setTimeout(() => {
+      try {
+        const savedAt = new Date().toISOString();
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ savedAt, draftGroups, draftAssignments, draftStudents }));
+        setDraftSavedAt(savedAt);
+      } catch {}
+    }, 500);
+    return () => clearTimeout(t);
+  }, [isDirty, draftGroups, draftAssignments, draftStudents]);
+
+  // Cegah halaman tertutup / reload saat masih ada perubahan belum disimpan
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
+  const discardDraft = () => {
+    try { localStorage.removeItem(DRAFT_KEY); } catch {}
+    setDraftSavedAt(null);
+    setDraftRestored(false);
+    setIsDirty(false);
+    draftHandledRef.current = true;
+    restoredDraftRef.current = false;
+    queryClient.invalidateQueries({ queryKey: ["teacher-assignment-dashboard-draft"] });
+  };
+
   const startResize = (key: "grup" | "guru" | "kelas") => (e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -113,10 +162,47 @@ export default function AdminTeacherAssignments() {
         rlsErrorMessage: assignmentsError?.message || null,
       };
     },
+    // Offline-friendly: pakai salinan lokal terakhir bila jaringan mati
+    networkMode: "offlineFirst",
+    refetchOnMount: false,
+    staleTime: 30 * 60 * 1000,
+    retry: false,
+    placeholderData: () => {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        return raw ? JSON.parse(raw) : undefined;
+      } catch { return undefined; }
+    },
   });
 
+  // Simpan salinan data terakhir agar halaman tetap terbuka saat offline
   useEffect(() => {
-    if (data && !isDirty) {
+    if (data) {
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+    }
+  }, [data]);
+
+  // Pulihkan draf yang belum tersimpan (misal setelah refresh / koneksi putus)
+  useEffect(() => {
+    if (draftHandledRef.current) return;
+    draftHandledRef.current = true;
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed?.draftGroups) return;
+      setDraftGroups(parsed.draftGroups);
+      setDraftAssignments(parsed.draftAssignments ?? []);
+      setDraftStudents(parsed.draftStudents ?? []);
+      setDraftSavedAt(parsed.savedAt ?? null);
+      setDraftRestored(true);
+      restoredDraftRef.current = true;
+      setIsDirty(true);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (data && !isDirty && !restoredDraftRef.current) {
       // --- Create the predefined fixed template for classes 1-6, rombels A-D, 2 slots each ---
       const newDraftGroups: DraftGroup[] = [];
       const rombels = ['A', 'B', 'C', 'D'];
@@ -297,6 +383,7 @@ export default function AdminTeacherAssignments() {
       // 2. Process Assignments
       // PENTING: hapus dulu, baru update/insert. Ada unique index 1 siswa hanya boleh
       // punya 1 penugasan berstatus 'approved', jadi insert sebelum delete akan gagal.
+      if (!navigator.onLine) throw new Error("Anda sedang offline. Draf tetap aman — coba simpan lagi setelah koneksi kembali.");
       const newAssignments = draftAssignments.filter(a => a._status === 'new');
       const deletedAssignments = draftAssignments.filter(a => a._status === 'deleted' && !a.id.startsWith('temp-'));
       const updatedAssignments = draftAssignments.filter(a => a._status === 'updated');
@@ -352,6 +439,10 @@ export default function AdminTeacherAssignments() {
     },
     onSuccess: () => {
       toast({ title: "Perubahan berhasil disimpan!" });
+      try { localStorage.removeItem(DRAFT_KEY); } catch {}
+      setDraftSavedAt(null);
+      setDraftRestored(false);
+      restoredDraftRef.current = false;
       setIsDirty(false);
       queryClient.invalidateQueries({ queryKey: ["teacher-assignment-dashboard-draft"] });
     },
@@ -395,7 +486,31 @@ export default function AdminTeacherAssignments() {
 
   return (
     <div className="space-y-8 pb-20">
+      {(!isOnline || isDirty || draftRestored) && (
+        <div className={cn(
+          "rounded-xl border p-4 text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3",
+          !isOnline ? "border-amber-300 bg-amber-50 text-amber-900" : "border-emerald-300 bg-emerald-50 text-emerald-900"
+        )}>
+          <div>
+            <p className="font-semibold">
+              {!isOnline ? "Mode Offline — halaman tetap bisa dipakai" : draftRestored ? "Draf sebelumnya dipulihkan" : "Draf tersimpan otomatis di perangkat ini"}
+            </p>
+            <p className="mt-1 opacity-90">
+              {!isOnline
+                ? "Data ditampilkan dari salinan terakhir. Perubahan Anda tersimpan otomatis dan bisa disimpan ke server setelah kembali online."
+                : "Perubahan yang belum disimpan tidak akan hilang meski halaman ter-refresh."}
+              {draftSavedAt && ` Terakhir disimpan lokal: ${new Date(draftSavedAt).toLocaleTimeString("id-ID")}.`}
+            </p>
+          </div>
+          {isDirty && (
+            <Button variant="outline" size="sm" onClick={discardDraft} className="shrink-0">
+              Buang draf & muat ulang data
+            </Button>
+          )}
+        </div>
+      )}
       {/* Header */}
+
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-900 p-6 md:p-8 text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Penugasan Guru (Draft Mode)</h1>
