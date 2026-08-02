@@ -1210,6 +1210,7 @@ export type Database = {
       monthly_reports: {
         Row: {
           achievement_status: string
+          attendance_percentage: number | null
           created_at: string
           created_by: string | null
           end_iqra_level: string | null
@@ -1244,6 +1245,7 @@ export type Database = {
         }
         Insert: {
           achievement_status?: string
+          attendance_percentage?: number | null
           created_at?: string
           created_by?: string | null
           end_iqra_level?: string | null
@@ -1278,6 +1280,7 @@ export type Database = {
         }
         Update: {
           achievement_status?: string
+          attendance_percentage?: number | null
           created_at?: string
           created_by?: string | null
           end_iqra_level?: string | null
