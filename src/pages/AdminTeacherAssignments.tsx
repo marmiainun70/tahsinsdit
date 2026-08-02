@@ -160,7 +160,43 @@ export default function AdminTeacherAssignments() {
         rlsErrorMessage: assignmentsError?.message || null,
       };
     },
+    // Offline-friendly: pakai salinan lokal terakhir bila jaringan mati
+    networkMode: "offlineFirst",
+    refetchOnMount: false,
+    staleTime: 30 * 60 * 1000,
+    retry: false,
+    placeholderData: () => {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        return raw ? JSON.parse(raw) : undefined;
+      } catch { return undefined; }
+    },
   });
+
+  // Simpan salinan data terakhir agar halaman tetap terbuka saat offline
+  useEffect(() => {
+    if (data) {
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch {}
+    }
+  }, [data]);
+
+  // Pulihkan draf yang belum tersimpan (misal setelah refresh / koneksi putus)
+  useEffect(() => {
+    if (draftHandledRef.current) return;
+    draftHandledRef.current = true;
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!parsed?.draftGroups) return;
+      setDraftGroups(parsed.draftGroups);
+      setDraftAssignments(parsed.draftAssignments ?? []);
+      setDraftStudents(parsed.draftStudents ?? []);
+      setDraftSavedAt(parsed.savedAt ?? null);
+      setDraftRestored(true);
+      setIsDirty(true);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     if (data && !isDirty) {
