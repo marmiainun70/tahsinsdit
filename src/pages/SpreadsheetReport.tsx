@@ -316,6 +316,14 @@ interface Row {
   saving: boolean;
 }
 
+const DRAFT_KEY = "monthly_report_drafts_v1";
+const getDrafts = () => {
+  try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || "{}"); } catch { return {}; }
+};
+const saveDrafts = (drafts: any) => {
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts)); } catch (e) { console.warn("Failed to save drafts", e); }
+};
+
 const SpreadsheetReport = () => {
   const { user, profile } = useAuth();
   const isAdmin = profile?.role === "admin";
@@ -394,6 +402,8 @@ const SpreadsheetReport = () => {
 
   useEffect(() => {
     const reportRows = reports as MonthlyReportRecord[];
+    const drafts = getDrafts();
+    
     const newRows: Row[] = filteredStudents.map(s => {
       const defaultProgram = detectProgramFromLevel(s.level);
       const latestPrev = reportRows
@@ -431,11 +441,13 @@ const SpreadsheetReport = () => {
         poinPerbaikanBacaan: normalizeProgressivePoint(Number(existing?.poin_perbaikan_bacaan ?? 0)),
         pencapaianTargetBulan: clampTargetMonths(existing?.pencapaian_target_bulan ?? 0, program),
       };
+      
+      let baseRow: Row;
 
       if (existing) {
         const lvlRaw = stripStoredLevelPrefix(existing.iqra_level || fallbackLvl);
         const endLvlRaw = stripStoredLevelPrefix(existing.end_iqra_level || existing.iqra_level || fallbackLvl);
-        return {
+        baseRow = {
           studentId: s.id,
           studentName: s.nama,
           studentLevel: s.level as ReadingLevel,
@@ -457,42 +469,101 @@ const SpreadsheetReport = () => {
           dirty: false,
           saving: false,
         };
+      } else {
+        // autofill from previous month's end
+        const transitionPrev = latestPrev && ["Tahsin Lanjutan", "Tahfizh"].includes(latestPrev.end_iqra_level) ? latestPrev : null;
+        const prevForStart = prev || transitionPrev;
+        const prevEndLvlRaw = prevForStart
+          ? stripStoredLevelPrefix(prevForStart.end_iqra_level || prevForStart.iqra_level || fallbackLvl)
+          : fallbackLvl;
+        const sl = program === "tahfizh" && prevForStart?.end_iqra_level === "Tahfizh" ? "30" : prevEndLvlRaw;
+        const defaultSp = program === "iqra" ? (sl === "1" ? 5 : 3) : 1;
+        const sp = prevForStart ? prevForStart.end_page : defaultSp;
+        baseRow = {
+          studentId: s.id,
+          studentName: s.nama,
+          studentLevel: s.level as ReadingLevel,
+          kelas: s.kelas,
+          rombel: s.rombel,
+          program,
+          startLevel: sl,
+          startPage: sp,
+          endLevel: "",
+          endPage: null,
+            tahfizhReportId: undefined,
+            tahfizhJuz: "30",
+            tahfizhStartPage: 1,
+            tahfizhEndPage: null,
+            ...progressiveDefaults,
+          attendancePercentage: 0,
+          notes: "",
+          dirty: false,
+          saving: false,
+        };
+      }
+      
+      const draftKey = `${s.id}_${month}_${year}`;
+      const draft = drafts[draftKey];
+      if (draft) {
+        return {
+          ...baseRow,
+          ...draft,
+          dirty: true,
+        };
       }
 
-      // autofill from previous month's end
-      const transitionPrev = latestPrev && ["Tahsin Lanjutan", "Tahfizh"].includes(latestPrev.end_iqra_level) ? latestPrev : null;
-      const prevForStart = prev || transitionPrev;
-      const prevEndLvlRaw = prevForStart
-        ? stripStoredLevelPrefix(prevForStart.end_iqra_level || prevForStart.iqra_level || fallbackLvl)
-        : fallbackLvl;
-      const sl = program === "tahfizh" && prevForStart?.end_iqra_level === "Tahfizh" ? "30" : prevEndLvlRaw;
-      const defaultSp = program === "iqra" ? (sl === "1" ? 5 : 3) : 1;
-      const sp = prevForStart ? prevForStart.end_page : defaultSp;
-      return {
-        studentId: s.id,
-        studentName: s.nama,
-        studentLevel: s.level as ReadingLevel,
-        kelas: s.kelas,
-        rombel: s.rombel,
-        program,
-        startLevel: sl,
-        startPage: sp,
-        endLevel: "",
-        endPage: null,
-          tahfizhReportId: undefined,
-          tahfizhJuz: "30",
-          tahfizhStartPage: 1,
-          tahfizhEndPage: null,
-          ...progressiveDefaults,
-        attendancePercentage: 0,
-        notes: "",
-        dirty: false,
-        saving: false,
-      };
+      return baseRow;
     });
     setRows(newRows);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredStudents.map(s => s.id).join(","), reports.length, month, year]);
+
+  // Sync draft & warn before unload
+  useEffect(() => {
+    const drafts = getDrafts();
+    let draftChanged = false;
+    let hasDirty = false;
+    
+    rows.forEach(r => {
+      const key = `${r.studentId}_${month}_${year}`;
+      if (r.dirty) {
+        hasDirty = true;
+        drafts[key] = {
+           program: r.program,
+           startLevel: r.startLevel,
+           startPage: r.startPage,
+           endLevel: r.endLevel,
+           endPage: r.endPage,
+           tahfizhJuz: r.tahfizhJuz,
+           tahfizhStartPage: r.tahfizhStartPage,
+           tahfizhEndPage: r.tahfizhEndPage,
+           poinKehadiranKesiapan: r.poinKehadiranKesiapan,
+           poinKualitasBacaan: r.poinKualitasBacaan,
+           poinPerbaikanBacaan: r.poinPerbaikanBacaan,
+           pencapaianTargetBulan: r.pencapaianTargetBulan,
+           notes: r.notes
+        };
+        draftChanged = true;
+      } else {
+        if (drafts[key]) {
+           delete drafts[key];
+           draftChanged = true;
+        }
+      }
+    });
+
+    if (draftChanged) saveDrafts(drafts);
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasDirty || savingAll) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [rows, month, year, savingAll]);
 
   const updateRow = useCallback((idx: number, patch: Partial<Row>) => {
     setRows(prev => prev.map((r, i) => {
