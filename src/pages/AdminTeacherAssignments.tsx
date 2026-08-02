@@ -485,7 +485,31 @@ export default function AdminTeacherAssignments() {
 
   return (
     <div className="space-y-8 pb-20">
+      {(!isOnline || isDirty || draftRestored) && (
+        <div className={cn(
+          "rounded-xl border p-4 text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3",
+          !isOnline ? "border-amber-300 bg-amber-50 text-amber-900" : "border-emerald-300 bg-emerald-50 text-emerald-900"
+        )}>
+          <div>
+            <p className="font-semibold">
+              {!isOnline ? "Mode Offline — halaman tetap bisa dipakai" : draftRestored ? "Draf sebelumnya dipulihkan" : "Draf tersimpan otomatis di perangkat ini"}
+            </p>
+            <p className="mt-1 opacity-90">
+              {!isOnline
+                ? "Data ditampilkan dari salinan terakhir. Perubahan Anda tersimpan otomatis dan bisa disimpan ke server setelah kembali online."
+                : "Perubahan yang belum disimpan tidak akan hilang meski halaman ter-refresh."}
+              {draftSavedAt && ` Terakhir disimpan lokal: ${new Date(draftSavedAt).toLocaleTimeString("id-ID")}.`}
+            </p>
+          </div>
+          {isDirty && (
+            <Button variant="outline" size="sm" onClick={discardDraft} className="shrink-0">
+              Buang draf & muat ulang data
+            </Button>
+          )}
+        </div>
+      )}
       {/* Header */}
+
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-900 p-6 md:p-8 text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Penugasan Guru (Draft Mode)</h1>
