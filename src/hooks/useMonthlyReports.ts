@@ -158,81 +158,81 @@ export const AUTO_NOTE_OPTIONS: Record<AutoNoteProgram, AutoNoteOption[]> = {
     {
       key: "very_weak",
       label: "Sangat lemah",
-      note: "Bacaan Iqra masih sangat perlu dibimbing dari dasar.\nSiswa perlu lebih sering mengenal huruf, harakat, dan sambungan kata.\nLatihan pendek setiap hari akan sangat membantu.\nBarakallah fiik.",
+      note: "Bacaan Iqra masih perlu bimbingan dari dasar.\nLatihan huruf dan harakat rutin di rumah akan sangat membantu.\nBarakallah fiik.",
     },
     {
       key: "weak",
       label: "Lemah",
-      note: "Bacaan Iqra sudah mulai berjalan, tetapi masih sering terbata-bata.\nSiswa perlu mengulang halaman yang sulit dan memperjelas bunyi huruf.\nMohon latihan rutin di rumah dengan pendampingan.\nBarakallah fiik.",
+      note: "Bacaan Iqra mulai berjalan namun masih terbata-bata.\nMohon diulang halaman sulit dan dibimbing secara rutin.\nBarakallah fiik.",
     },
     {
       key: "developing",
       label: "Mulai berkembang",
-      note: "Bacaan Iqra mulai menunjukkan perkembangan yang baik.\nKelancaran dan ketepatan huruf masih perlu terus dikuatkan.\nPertahankan latihan agar lebih percaya diri saat membaca.\nBarakallah fiik.",
+      note: "Bacaan Iqra mulai berkembang.\nTerus latih kelancaran dan ketepatan huruf agar lebih percaya diri.\nBarakallah fiik.",
     },
     {
       key: "good",
       label: "Baik",
-      note: "Bacaan Iqra sudah cukup baik dan semakin lancar.\nSiswa mulai mampu membaca dengan lebih tertib dan percaya diri.\nTetap jaga latihan agar bacaan semakin matang.\nBarakallah fiik.",
+      note: "Bacaan Iqra cukup lancar.\nPertahankan latihan rutin agar semakin matang.\nBarakallah fiik.",
     },
     {
       key: "excellent",
       label: "Berprestasi",
-      note: "Bacaan Iqra sangat baik dan progresnya menonjol.\nSiswa membaca dengan lancar, teliti, dan semangat belajar yang kuat.\nSemoga terus istiqamah hingga tahap berikutnya.\nBarakallah fiik.",
+      note: "Bacaan Iqra sangat baik.\nSemoga istiqamah hingga tahap berikutnya.\nBarakallah fiik.",
     },
   ],
   tahsin: [
     {
       key: "very_weak",
       label: "Sangat lemah",
-      note: "Bacaan Al-Qur'an masih sangat perlu dibimbing secara perlahan.\nSiswa perlu menguatkan makhraj, panjang pendek, dan ketepatan tajwid dasar.\nLatihan rutin dengan contoh bacaan guru sangat dianjurkan.\nBarakallah fiik.",
+      note: "Bacaan Al-Qur'an masih sangat perlu bimbingan.\nLatihan makhraj dan tajwid dasar secara rutin sangat dianjurkan.\nBarakallah fiik.",
     },
     {
       key: "weak",
       label: "Lemah",
-      note: "Bacaan Al-Qur'an sudah mulai terbentuk, tetapi masih kurang stabil.\nPerlu perhatian pada mad, qalqalah, makhraj, dan hukum tajwid yang sering terlewat.\nMohon terus dilatih dengan sabar dan konsisten.\nBarakallah fiik.",
+      note: "Bacaan Al-Qur'an mulai terbentuk tetapi belum stabil.\nPerhatikan mad, qalqalah, dan makhraj.\nBarakallah fiik.",
     },
     {
       key: "developing",
       label: "Mulai berkembang",
-      note: "Bacaan Al-Qur'an mulai berkembang dan lebih terarah.\nPraktik tajwid, mad, qalqalah, dan makhraj sudah mulai terlihat, namun perlu dirapikan.\nTeruskan latihan agar bacaan semakin tartil.\nBarakallah fiik.",
+      note: "Bacaan Al-Qur'an mulai berkembang.\nTerus rapikan tajwid, mad, dan makhraj.\nBarakallah fiik.",
     },
     {
       key: "good",
       label: "Baik",
-      note: "Bacaan Al-Qur'an sudah baik dan cukup lancar.\nPenerapan tajwid, mad, qalqalah, dan makhraj mulai terjaga dengan rapi.\nPertahankan ketelitian agar bacaan semakin indah.\nBarakallah fiik.",
+      note: "Bacaan Al-Qur'an sudah baik.\nPertahankan ketelitian agar semakin tartil.\nBarakallah fiik.",
     },
     {
       key: "excellent",
       label: "Berprestasi",
-      note: "Bacaan Al-Qur'an sangat baik, tartil, dan percaya diri.\nPenerapan tajwid, mad, qalqalah, serta makhraj terlihat kuat dan stabil.\nSemoga terus menjadi teladan dalam membaca Al-Qur'an.\nBarakallah fiik.",
+      note: "Bacaan Al-Qur'an sangat baik dan tartil.\nSemoga menjadi teladan dalam membaca Al-Qur'an.\nBarakallah fiik.",
     },
   ],
   tahfizh: [
     {
       key: "very_weak",
       label: "Sangat lemah",
-      note: "Hafalan siswa masih sangat perlu dikuatkan kembali.\nKelancaran, ketepatan ayat, dan bacaan masih membutuhkan pendampingan dekat.\nFokuskan pada murojaah pendek tetapi rutin setiap hari.\nBarakallah fiik.",
+      note: "Hafalan masih perlu dikuatkan.\nFokuskan murojaah pendek setiap hari.\nBarakallah fiik.",
     },
     {
       key: "weak",
       label: "Lemah",
-      note: "Hafalan siswa mulai terbentuk, tetapi masih sering ragu dan terhenti.\nBacaan serta urutan ayat perlu lebih sering dimurojaah.\nMohon menjaga jadwal hafalan dan pengulangan di rumah.\nBarakallah fiik.",
+      note: "Hafalan mulai terbentuk namun masih ragu.\nPerbanyak murojaah dan jaga jadwal hafalan.\nBarakallah fiik.",
     },
     {
       key: "developing",
       label: "Mulai berkembang",
-      note: "Hafalan siswa mulai berkembang dengan cukup baik.\nKelancaran dan ketepatan bacaan sudah meningkat, namun masih perlu penguatan.\nTeruskan murojaah agar hafalan lebih melekat.\nBarakallah fiik.",
+      note: "Hafalan mulai berkembang.\nTeruskan murojaah agar lebih melekat.\nBarakallah fiik.",
     },
     {
       key: "good",
       label: "Baik",
-      note: "Hafalan siswa sudah baik dan cukup lancar.\nBacaan, urutan ayat, dan ketenangan saat menyetor semakin terjaga.\nPertahankan murojaah agar hafalan tetap kuat.\nBarakallah fiik.",
+      note: "Hafalan sudah cukup lancar.\nPertahankan murojaah agar tetap kuat.\nBarakallah fiik.",
     },
     {
       key: "excellent",
       label: "Berprestasi",
-      note: "Hafalan siswa sangat baik, lancar, dan kuat.\nBacaan saat menyetor terdengar rapi, tenang, dan penuh percaya diri.\nSemoga terus istiqamah menjaga hafalan Al-Qur'an.\nBarakallah fiik.",
+      note: "Hafalan sangat baik dan kuat.\nSemoga istiqamah menjaga hafalan Al-Qur'an.\nBarakallah fiik.",
     },
   ],
 };
