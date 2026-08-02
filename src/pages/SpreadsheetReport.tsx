@@ -8,7 +8,6 @@ import {
 } from "@/hooks/useMonthlyReports";
 import { useMonthlyReportPeriodSettings, useUpsertMonthlyReportPeriodSettings } from "@/hooks/useMonthlyReportPeriodSettings";
 import { JUZ_LIST, JUZ_PAGES_PER_JUZ, calcHafalanPagesSigned, isTahfizhDecline } from "@/lib/juzData";
-import { useEnsureTeacherStudent } from "@/hooks/useTeacherStudents";
 import { useAuth } from "@/contexts/AuthContext";
 import { isTeacherRole } from "@/lib/roleLabels";
 import type { Database } from "@/integrations/supabase/types";
@@ -332,7 +331,6 @@ const SpreadsheetReport = () => {
   const { data: reports = [] } = useAllMonthlyReports();
   const addReport = useAddMonthlyReport();
   const updateReport = useUpdateMonthlyReport();
-  const ensureTS = useEnsureTeacherStudent();
   const [zoom, setZoom] = useState<number>(100);
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
@@ -857,9 +855,6 @@ const SpreadsheetReport = () => {
           savedTahfizhId = res.id;
         }
       }
-
-      const stu = filteredStudents.find(s => s.id === r.studentId);
-      await ensureTS.mutateAsync({ studentId: r.studentId, kelas: stu?.kelas, rombel: stu?.rombel });
 
       setRows(prev => prev.map((x, i) => i === idx ? {
           ...x,
