@@ -383,6 +383,7 @@ export default function AdminTeacherAssignments() {
       // 2. Process Assignments
       // PENTING: hapus dulu, baru update/insert. Ada unique index 1 siswa hanya boleh
       // punya 1 penugasan berstatus 'approved', jadi insert sebelum delete akan gagal.
+      if (!navigator.onLine) throw new Error("Anda sedang offline. Draf tetap aman — coba simpan lagi setelah koneksi kembali.");
       const newAssignments = draftAssignments.filter(a => a._status === 'new');
       const deletedAssignments = draftAssignments.filter(a => a._status === 'deleted' && !a.id.startsWith('temp-'));
       const updatedAssignments = draftAssignments.filter(a => a._status === 'updated');
