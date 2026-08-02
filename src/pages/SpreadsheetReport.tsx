@@ -781,12 +781,12 @@ const SpreadsheetReport = () => {
   const applyBold = () => spreadsheetLayout.applyStyleToSelection({ bold: true });
   const applyWrap = () => spreadsheetLayout.applyStyleToSelection({ wrap: true });
 
-  const saveRow = async (idx: number, silent = false): Promise<boolean> => {
+  const saveRow = async (idx: number, silent = false): Promise<{success: boolean, error?: string}> => {
     const r = rows[idx];
-    if (!r.dirty || r.saving) return true;
+    if (!r.dirty || r.saving) return { success: true };
     if (r.endPage === null) {
       if (!silent) toast({ title: `Lengkapi Hal. Akhir untuk ${r.studentName}`, variant: "destructive" });
-      return false;
+      return { success: false, error: "Hal. Akhir belum diisi" };
     }
     setRows(prev => prev.map((x, i) => i === idx ? { ...x, saving: true } : x));
     try {
@@ -865,11 +865,12 @@ const SpreadsheetReport = () => {
         dirty: false,
         saving: false,
       } : x));
-      return true;
+      return { success: true };
     } catch (e: unknown) {
+      console.error('Error saving ' + r.studentName + ':', e);
       setRows(prev => prev.map((x, i) => i === idx ? { ...x, saving: false } : x));
-      if (!silent) toast({ title: `Gagal menyimpan ${r.studentName}`, description: getErrorMessage(e), variant: "destructive" });
-      return false;
+      if (!silent) toast({ title: 'Gagal menyimpan ' + r.studentName, description: getErrorMessage(e), variant: 'destructive' });
+      return { success: false, error: getErrorMessage(e) };
     }
   };
 
@@ -881,13 +882,24 @@ const SpreadsheetReport = () => {
     }
     setSavingAll(true);
     let ok = 0, fail = 0;
+    const errors: string[] = [];
     for (const i of dirtyIdx) {
-      const success = await saveRow(i, true);
-      if (success) ok++; else fail++;
+      const res = await saveRow(i, true);
+      if (res.success) {
+        ok++;
+      } else {
+        fail++;
+        if (res.error) errors.push(`${rows[i].studentName}: ${res.error}`);
+      }
     }
     setSavingAll(false);
     toast({
-      title: `Tersimpan ${ok} laporan${fail ? ` · ${fail} gagal` : ""}`,
+      title: `Tersimpan ${ok} laporan${fail ? ' · ' + fail + ' gagal' : ''}`,
+      description: errors.length > 0 ? (
+        <div className="max-h-32 overflow-y-auto text-xs mt-1 text-left">
+          {errors.map((e, i) => <div key={i}>{e}</div>)}
+        </div>
+      ) : undefined,
       variant: fail ? "destructive" : "default",
     });
   };
