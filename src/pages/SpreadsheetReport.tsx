@@ -217,8 +217,12 @@ type MonthlyReportPayload = {
 const getErrorMessage = (error: unknown) => {
   if (error instanceof Error) return error.message;
   if (typeof error === 'object' && error !== null) {
-    if ('message' in error) return String((error as any).message);
-    try { return JSON.stringify(error); } catch { return String(error); }
+    let str = "";
+    for (const key in error) {
+      try { str += key + ": " + String((error as any)[key]) + ", "; } catch {}
+    }
+    if (str) return str.slice(0, -2);
+    return String(error);
   }
   return String(error);
 };
