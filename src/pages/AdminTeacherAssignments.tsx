@@ -295,28 +295,51 @@ export default function AdminTeacherAssignments() {
       }
 
       // 2. Process Assignments
+      // PENTING: hapus dulu, baru update/insert. Ada unique index 1 siswa hanya boleh
+      // punya 1 penugasan berstatus 'approved', jadi insert sebelum delete akan gagal.
       const newAssignments = draftAssignments.filter(a => a._status === 'new');
       const deletedAssignments = draftAssignments.filter(a => a._status === 'deleted' && !a.id.startsWith('temp-'));
-
-      if (newAssignments.length > 0) {
-        const { error } = await supabase.from('teacher_students').insert(
-          newAssignments.map(a => ({ teacher_id: a.teacher_id, student_id: a.student_id, status: 'approved' }))
-        );
-        if (error) throw error;
-      }
-
       const updatedAssignments = draftAssignments.filter(a => a._status === 'updated');
-      if (updatedAssignments.length > 0) {
-        for (const a of updatedAssignments) {
-          const { error } = await supabase.from('teacher_students').update({ teacher_id: a.teacher_id }).eq('id', a.id);
-          if (error) throw error;
-        }
-      }
 
       if (deletedAssignments.length > 0) {
         const { error } = await supabase.from('teacher_students').delete().in('id', deletedAssignments.map(a => a.id));
         if (error) throw error;
       }
+
+      if (updatedAssignments.length > 0) {
+        // Lepas dulu status approved lama agar tidak bentrok saat guru dipindah
+        for (const a of updatedAssignments) {
+          const { error: releaseError } = await supabase
+            .from('teacher_students')
+            .delete()
+            .eq('student_id', a.student_id)
+            .neq('id', a.id);
+          if (releaseError) throw releaseError;
+
+          const { error } = await supabase
+            .from('teacher_students')
+            .update({ teacher_id: a.teacher_id, status: 'approved' })
+            .eq('id', a.id);
+          if (error) throw error;
+        }
+      }
+
+      if (newAssignments.length > 0) {
+        for (const a of newAssignments) {
+          // Bersihkan penugasan lain untuk siswa yang sama (satu siswa satu pembina)
+          const { error: cleanupError } = await supabase
+            .from('teacher_students')
+            .delete()
+            .eq('student_id', a.student_id);
+          if (cleanupError) throw cleanupError;
+
+          const { error } = await supabase
+            .from('teacher_students')
+            .insert({ teacher_id: a.teacher_id, student_id: a.student_id, status: 'approved' });
+          if (error) throw error;
+        }
+      }
+
 
       // 3. Process Student Name Updates
       const updatedStudents = draftStudents.filter(s => s._status === 'updated');
