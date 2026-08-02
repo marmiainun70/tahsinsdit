@@ -54,61 +54,61 @@ const CATEGORY_OPENERS: Record<ProgressCategory, string[]> = {
 
 const PROGRAM_SUGGESTIONS: Record<ReportProgram, string[]> = {
   iqra: [
-    "Latihan berikutnya dapat difokuskan pada pengenalan huruf, ketepatan harakat, sambungan kata, dan kelancaran membaca.",
-    "Mohon terus dikuatkan melalui latihan huruf dan harakat secara bertahap, lalu dilanjutkan dengan sambungan kata agar bacaan semakin lancar.",
-    "Pendampingan membaca pendek tetapi rutin akan membantu memperkuat huruf, harakat, sambungan kata, dan kelancaran.",
+    "Fokus latihan: pengenalan huruf, harakat, sambungan kata, dan kelancaran.",
+    "Perkuat huruf dan harakat, lalu sambungan kata agar bacaan semakin lancar.",
+    "Pendampingan membaca pendek rutin akan memperkuat huruf, harakat, dan kelancaran.",
   ],
   tahsin: [
-    "Latihan berikutnya dapat difokuskan pada makhraj, tajwid, mad, qalqalah, dan ketartilan bacaan.",
-    "Mohon terus dikuatkan pada ketepatan makhraj, penerapan tajwid, panjang pendek mad, qalqalah, dan bacaan yang lebih tartil.",
-    "Pendampingan bacaan secara perlahan akan membantu merapikan makhraj, tajwid, mad, qalqalah, dan ketartilan.",
+    "Fokus latihan: makhraj, tajwid, mad, qalqalah, dan ketartilan bacaan.",
+    "Perkuat makhraj, tajwid, mad, qalqalah, dan bacaan yang lebih tartil.",
+    "Pendampingan bacaan perlahan akan merapikan makhraj, tajwid, dan ketartilan.",
   ],
   tahfizh: [
-    "Latihan berikutnya dapat difokuskan pada kelancaran hafalan, urutan ayat, ketepatan bacaan, dan murojaah rutin.",
-    "Mohon terus dijaga murojaahnya agar kelancaran hafalan, urutan ayat, dan ketepatan bacaan semakin kuat.",
-    "Pengulangan hafalan yang singkat tetapi rutin akan membantu menguatkan kelancaran, urutan ayat, ketepatan bacaan, dan murojaah.",
+    "Fokus latihan: kelancaran hafalan, urutan ayat, ketepatan bacaan, dan murojaah.",
+    "Jaga murojaah agar kelancaran hafalan, urutan ayat, dan ketepatan bacaan semakin kuat.",
+    "Pengulangan hafalan singkat rutin akan menguatkan kelancaran, urutan ayat, dan murojaah.",
   ],
 };
 
 const INDICATOR_TEXT: Record<IndicatorKey, Record<number, string>> = {
   kehadiranKesiapan: {
-    2: "kehadiran dan kesiapan belajar yang sangat baik",
-    1: "kehadiran dan kesiapan belajar yang cukup mendukung",
-    0: "kehadiran dan kesiapan belajar yang masih perlu dibuat lebih stabil",
-    [-1]: "kehadiran dan kesiapan belajar yang perlu mendapat perhatian lebih dekat",
+    2: "kehadiran dan kesiapan yang sangat baik",
+    1: "kehadiran dan kesiapan yang cukup",
+    0: "kehadiran dan kesiapan yang perlu ditingkatkan",
+    [-1]: "kehadiran dan kesiapan yang perlu perhatian",
   },
   kualitasBacaan: {
-    2: "kualitas bacaan harian yang lancar dan minim koreksi",
-    1: "kualitas bacaan harian yang cukup lancar meskipun masih perlu dirapikan",
-    0: "kualitas bacaan harian yang masih membutuhkan banyak latihan",
-    [-1]: "kesiapan membaca harian yang perlu dikuatkan kembali",
+    2: "kualitas bacaan yang lancar",
+    1: "kualitas bacaan yang cukup lancar",
+    0: "kualitas bacaan yang perlu banyak latihan",
+    [-1]: "kesiapan bacaan yang perlu dikuatkan",
   },
   perbaikanBacaan: {
-    2: "perbaikan bacaan yang terlihat jelas dari latihan sebelumnya",
-    1: "perbaikan bacaan yang mulai tampak sedikit demi sedikit",
-    0: "perbaikan bacaan yang masih perlu dilatih agar kesalahan tidak berulang",
-    [-1]: "perbaikan bacaan yang perlu mendapat pendampingan lebih intensif",
+    2: "perbaikan bacaan yang jelas",
+    1: "perbaikan bacaan yang mulai tampak",
+    0: "perbaikan bacaan yang masih perlu dilatih",
+    [-1]: "perbaikan bacaan yang perlu bimbingan",
   },
 };
 
 const INDICATOR_FOCUS: Record<IndicatorKey, Record<number, string>> = {
   kehadiranKesiapan: {
-    2: "menjaga kehadiran dan kesiapan belajar agar tetap stabil",
-    1: "membuat kesiapan belajar lebih konsisten dari pertemuan ke pertemuan",
-    0: "membangun kehadiran dan kesiapan belajar yang lebih teratur",
-    [-1]: "menguatkan kembali kehadiran dan kesiapan sebelum pembelajaran dimulai",
+    2: "menjaga kesiapan belajar",
+    1: "membuat kesiapan lebih konsisten",
+    0: "membangun kesiapan belajar",
+    [-1]: "menguatkan kesiapan sebelum belajar",
   },
   kualitasBacaan: {
-    2: "menjaga kualitas bacaan harian agar tetap lancar dan teliti",
-    1: "mengurangi koreksi kecil pada bacaan harian",
-    0: "melatih bacaan harian dengan tempo yang lebih tenang dan terarah",
-    [-1]: "menumbuhkan kesiapan membaca saat mendapat giliran",
+    2: "menjaga kualitas bacaan",
+    1: "mengurangi koreksi kecil",
+    0: "melatih bacaan lebih tenang",
+    [-1]: "menumbuhkan kesiapan membaca",
   },
   perbaikanBacaan: {
-    2: "mempertahankan perbaikan agar kesalahan lama tidak terulang",
-    1: "melanjutkan perbaikan bacaan secara lebih konsisten",
-    0: "mengulang bagian yang masih sering keliru",
-    [-1]: "menguatkan ulang bagian yang belum menunjukkan perbaikan",
+    2: "mempertahankan perbaikan",
+    1: "melanjutkan perbaikan bacaan",
+    0: "mengulang bagian yang sering keliru",
+    [-1]: "menguatkan bagian yang belum baik",
   },
 };
 
