@@ -66,6 +66,7 @@ export default function AdminTeacherAssignments() {
   const DRAFT_KEY = "ata_draft_v1";
   const CACHE_KEY = "ata_data_cache_v1";
   const draftHandledRef = useRef(false);
+  const restoredDraftRef = useRef(false);
   const [isOnline, setIsOnline] = useState(typeof navigator === "undefined" ? true : navigator.onLine);
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [draftRestored, setDraftRestored] = useState(false);
@@ -105,6 +106,7 @@ export default function AdminTeacherAssignments() {
     setDraftRestored(false);
     setIsDirty(false);
     draftHandledRef.current = true;
+    restoredDraftRef.current = false;
     queryClient.invalidateQueries({ queryKey: ["teacher-assignment-dashboard-draft"] });
   };
 
@@ -194,12 +196,13 @@ export default function AdminTeacherAssignments() {
       setDraftStudents(parsed.draftStudents ?? []);
       setDraftSavedAt(parsed.savedAt ?? null);
       setDraftRestored(true);
+      restoredDraftRef.current = true;
       setIsDirty(true);
     } catch {}
   }, []);
 
   useEffect(() => {
-    if (data && !isDirty) {
+    if (data && !isDirty && !restoredDraftRef.current) {
       // --- Create the predefined fixed template for classes 1-6, rombels A-D, 2 slots each ---
       const newDraftGroups: DraftGroup[] = [];
       const rombels = ['A', 'B', 'C', 'D'];
@@ -435,6 +438,10 @@ export default function AdminTeacherAssignments() {
     },
     onSuccess: () => {
       toast({ title: "Perubahan berhasil disimpan!" });
+      try { localStorage.removeItem(DRAFT_KEY); } catch {}
+      setDraftSavedAt(null);
+      setDraftRestored(false);
+      restoredDraftRef.current = false;
       setIsDirty(false);
       queryClient.invalidateQueries({ queryKey: ["teacher-assignment-dashboard-draft"] });
     },
