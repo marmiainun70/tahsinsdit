@@ -61,6 +61,53 @@ export default function AdminTeacherAssignments() {
   useEffect(() => {
     try { localStorage.setItem("ata_col_widths_v2", JSON.stringify(colWidths)); } catch {}
   }, [colWidths]);
+
+  // --- Draf lokal & mode offline ---------------------------------------
+  const DRAFT_KEY = "ata_draft_v1";
+  const CACHE_KEY = "ata_data_cache_v1";
+  const draftHandledRef = useRef(false);
+  const [isOnline, setIsOnline] = useState(typeof navigator === "undefined" ? true : navigator.onLine);
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [draftRestored, setDraftRestored] = useState(false);
+
+  useEffect(() => {
+    const on = () => setIsOnline(true);
+    const off = () => setIsOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); };
+  }, []);
+
+  // Autosave draf ke penyimpanan lokal setiap ada perubahan (debounce ringan)
+  useEffect(() => {
+    if (!isDirty) return;
+    const t = setTimeout(() => {
+      try {
+        const savedAt = new Date().toISOString();
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ savedAt, draftGroups, draftAssignments, draftStudents }));
+        setDraftSavedAt(savedAt);
+      } catch {}
+    }, 500);
+    return () => clearTimeout(t);
+  }, [isDirty, draftGroups, draftAssignments, draftStudents]);
+
+  // Cegah halaman tertutup / reload saat masih ada perubahan belum disimpan
+  useEffect(() => {
+    if (!isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
+  const discardDraft = () => {
+    try { localStorage.removeItem(DRAFT_KEY); } catch {}
+    setDraftSavedAt(null);
+    setDraftRestored(false);
+    setIsDirty(false);
+    draftHandledRef.current = true;
+    queryClient.invalidateQueries({ queryKey: ["teacher-assignment-dashboard-draft"] });
+  };
+
   const startResize = (key: "grup" | "guru" | "kelas") => (e: React.PointerEvent) => {
     e.preventDefault();
     e.stopPropagation();
