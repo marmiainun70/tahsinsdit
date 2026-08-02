@@ -26,89 +26,89 @@ type IndicatorKey = "kehadiranKesiapan" | "kualitasBacaan" | "perbaikanBacaan";
 
 const CATEGORY_OPENERS: Record<ProgressCategory, string[]> = {
   "Konsisten & Progresif": [
-    "Ananda menunjukkan perkembangan yang konsisten dan progresif pada bulan ini.",
-    "Perjalanan belajar bulan ini terlihat stabil, terarah, dan terus bergerak maju.",
-    "Alhamdulillah, perkembangan belajar bulan ini tampak kuat dan konsisten.",
+    "Perkembangan belajar bulan ini konsisten dan progresif.",
+    "Alhamdulillah, progres bulan ini stabil dan terus maju.",
+    "Perjalanan belajar bulan ini tampak kuat dan berkelanjutan.",
   ],
   "Ada Progres": [
-    "Ananda sudah menunjukkan progres yang baik pada bulan ini.",
-    "Perkembangan bulan ini mulai terlihat dan dapat terus dikuatkan.",
-    "Ada kemajuan positif dalam proses belajar bulan ini.",
+    "Ada progres positif dalam belajar bulan ini.",
+    "Perkembangan bulan ini mulai terlihat dan dapat dikuatkan.",
+    "Ananda menunjukkan kemajuan yang baik pada bulan ini.",
   ],
   Stagnan: [
-    "Perkembangan bulan ini masih cenderung stabil dan belum banyak berubah.",
-    "Progres belajar bulan ini masih perlu dorongan agar kembali bergerak.",
-    "Bulan ini menjadi fase penguatan agar kemampuan yang ada tidak menurun.",
+    "Progres bulan ini masih stagnan, perlu penguatan.",
+    "Perkembangan belajar bulan ini belum banyak berubah.",
+    "Bulan ini menjadi fase penguatan agar kemampuan tidak menurun.",
   ],
   "Kurang Konsisten": [
-    "Proses belajar bulan ini masih perlu dibuat lebih konsisten.",
-    "Ananda masih membutuhkan pendampingan agar ritme belajar lebih stabil.",
+    "Konsistensi belajar bulan ini masih perlu diperbaiki.",
+    "Ananda masih membutuhkan pendampingan agar ritme belajar stabil.",
     "Perkembangan bulan ini belum merata dan perlu penguatan kebiasaan belajar.",
   ],
   "Tidak Konsisten": [
-    "Bulan ini ananda perlu pendampingan lebih dekat agar proses belajar kembali terarah.",
+    "Perlu pendampingan lebih dekat agar belajar kembali terarah.",
     "Konsistensi belajar bulan ini masih menjadi perhatian utama.",
-    "Perkembangan bulan ini perlu dikuatkan kembali dengan latihan yang lebih teratur.",
+    "Progres bulan ini perlu dikuatkan kembali dengan latihan teratur.",
   ],
 };
 
 const PROGRAM_SUGGESTIONS: Record<ReportProgram, string[]> = {
   iqra: [
-    "Latihan berikutnya dapat difokuskan pada pengenalan huruf, ketepatan harakat, sambungan kata, dan kelancaran membaca.",
-    "Mohon terus dikuatkan melalui latihan huruf dan harakat secara bertahap, lalu dilanjutkan dengan sambungan kata agar bacaan semakin lancar.",
-    "Pendampingan membaca pendek tetapi rutin akan membantu memperkuat huruf, harakat, sambungan kata, dan kelancaran.",
+    "Fokus latihan: pengenalan huruf, harakat, sambungan kata, dan kelancaran.",
+    "Perkuat huruf dan harakat, lalu sambungan kata agar bacaan semakin lancar.",
+    "Pendampingan membaca pendek rutin akan memperkuat huruf, harakat, dan kelancaran.",
   ],
   tahsin: [
-    "Latihan berikutnya dapat difokuskan pada makhraj, tajwid, mad, qalqalah, dan ketartilan bacaan.",
-    "Mohon terus dikuatkan pada ketepatan makhraj, penerapan tajwid, panjang pendek mad, qalqalah, dan bacaan yang lebih tartil.",
-    "Pendampingan bacaan secara perlahan akan membantu merapikan makhraj, tajwid, mad, qalqalah, dan ketartilan.",
+    "Fokus latihan: makhraj, tajwid, mad, qalqalah, dan ketartilan bacaan.",
+    "Perkuat makhraj, tajwid, mad, qalqalah, dan bacaan yang lebih tartil.",
+    "Pendampingan bacaan perlahan akan merapikan makhraj, tajwid, dan ketartilan.",
   ],
   tahfizh: [
-    "Latihan berikutnya dapat difokuskan pada kelancaran hafalan, urutan ayat, ketepatan bacaan, dan murojaah rutin.",
-    "Mohon terus dijaga murojaahnya agar kelancaran hafalan, urutan ayat, dan ketepatan bacaan semakin kuat.",
-    "Pengulangan hafalan yang singkat tetapi rutin akan membantu menguatkan kelancaran, urutan ayat, ketepatan bacaan, dan murojaah.",
+    "Fokus latihan: kelancaran hafalan, urutan ayat, ketepatan bacaan, dan murojaah.",
+    "Jaga murojaah agar kelancaran hafalan, urutan ayat, dan ketepatan bacaan semakin kuat.",
+    "Pengulangan hafalan singkat rutin akan menguatkan kelancaran, urutan ayat, dan murojaah.",
   ],
 };
 
 const INDICATOR_TEXT: Record<IndicatorKey, Record<number, string>> = {
   kehadiranKesiapan: {
-    2: "kehadiran dan kesiapan belajar yang sangat baik",
-    1: "kehadiran dan kesiapan belajar yang cukup mendukung",
-    0: "kehadiran dan kesiapan belajar yang masih perlu dibuat lebih stabil",
-    [-1]: "kehadiran dan kesiapan belajar yang perlu mendapat perhatian lebih dekat",
+    2: "kehadiran dan kesiapan yang sangat baik",
+    1: "kehadiran dan kesiapan yang cukup",
+    0: "kehadiran dan kesiapan yang perlu ditingkatkan",
+    [-1]: "kehadiran dan kesiapan yang perlu perhatian",
   },
   kualitasBacaan: {
-    2: "kualitas bacaan harian yang lancar dan minim koreksi",
-    1: "kualitas bacaan harian yang cukup lancar meskipun masih perlu dirapikan",
-    0: "kualitas bacaan harian yang masih membutuhkan banyak latihan",
-    [-1]: "kesiapan membaca harian yang perlu dikuatkan kembali",
+    2: "kualitas bacaan yang lancar",
+    1: "kualitas bacaan yang cukup lancar",
+    0: "kualitas bacaan yang perlu banyak latihan",
+    [-1]: "kesiapan bacaan yang perlu dikuatkan",
   },
   perbaikanBacaan: {
-    2: "perbaikan bacaan yang terlihat jelas dari latihan sebelumnya",
-    1: "perbaikan bacaan yang mulai tampak sedikit demi sedikit",
-    0: "perbaikan bacaan yang masih perlu dilatih agar kesalahan tidak berulang",
-    [-1]: "perbaikan bacaan yang perlu mendapat pendampingan lebih intensif",
+    2: "perbaikan bacaan yang jelas",
+    1: "perbaikan bacaan yang mulai tampak",
+    0: "perbaikan bacaan yang masih perlu dilatih",
+    [-1]: "perbaikan bacaan yang perlu bimbingan",
   },
 };
 
 const INDICATOR_FOCUS: Record<IndicatorKey, Record<number, string>> = {
   kehadiranKesiapan: {
-    2: "menjaga kehadiran dan kesiapan belajar agar tetap stabil",
-    1: "membuat kesiapan belajar lebih konsisten dari pertemuan ke pertemuan",
-    0: "membangun kehadiran dan kesiapan belajar yang lebih teratur",
-    [-1]: "menguatkan kembali kehadiran dan kesiapan sebelum pembelajaran dimulai",
+    2: "menjaga kesiapan belajar",
+    1: "membuat kesiapan lebih konsisten",
+    0: "membangun kesiapan belajar",
+    [-1]: "menguatkan kesiapan sebelum belajar",
   },
   kualitasBacaan: {
-    2: "menjaga kualitas bacaan harian agar tetap lancar dan teliti",
-    1: "mengurangi koreksi kecil pada bacaan harian",
-    0: "melatih bacaan harian dengan tempo yang lebih tenang dan terarah",
-    [-1]: "menumbuhkan kesiapan membaca saat mendapat giliran",
+    2: "menjaga kualitas bacaan",
+    1: "mengurangi koreksi kecil",
+    0: "melatih bacaan lebih tenang",
+    [-1]: "menumbuhkan kesiapan membaca",
   },
   perbaikanBacaan: {
-    2: "mempertahankan perbaikan agar kesalahan lama tidak terulang",
-    1: "melanjutkan perbaikan bacaan secara lebih konsisten",
-    0: "mengulang bagian yang masih sering keliru",
-    [-1]: "menguatkan ulang bagian yang belum menunjukkan perbaikan",
+    2: "mempertahankan perbaikan",
+    1: "melanjutkan perbaikan bacaan",
+    0: "mengulang bagian yang sering keliru",
+    [-1]: "menguatkan bagian yang belum baik",
   },
 };
 
@@ -150,10 +150,10 @@ const buildIndicatorAnalysis = (input: IntegratedMonthlyNoteInput) => {
   const weakest = entries.reduce((low, current) => (current.value < low.value ? current : low), entries[0]);
   const allEqual = entries.every((entry) => entry.value === entries[0].value);
 
-  const appreciation = `Aspek yang paling menonjol adalah ${INDICATOR_TEXT[strongest.key][strongest.value]}.`;
+  const appreciation = `Aspek terkuat: ${INDICATOR_TEXT[strongest.key][strongest.value]}.`;
   const focus = allEqual
-    ? `Fokus berikutnya adalah menjaga ketiga aspek belajar agar berkembang lebih seimbang.`
-    : `Fokus perbaikan berikutnya adalah ${INDICATOR_FOCUS[weakest.key][weakest.value]}.`;
+    ? `Fokus: menjaga keseimbangan ketiga aspek belajar.`
+    : `Fokus perbaikan: ${INDICATOR_FOCUS[weakest.key][weakest.value]}.`;
 
   return `${appreciation} ${focus}`;
 };
@@ -162,30 +162,20 @@ const buildPageProgressAnalysis = (input: IntegratedMonthlyNoteInput) => {
   const progress = Number(input.signedProgress) || 0;
   const target = Math.max(1, Number(input.targetPages) || 1);
 
-  if (progress < 0) {
-    return "Progres halaman bulan ini menurun sehingga materi sebelumnya perlu dikuatkan kembali.";
-  }
-  if (progress === 0) {
-    return "Progres halaman bulan ini masih stagnan, sehingga latihan rutin perlu ditata kembali.";
-  }
-  if (progress >= target * 2) {
-    return "Progres halaman bulan ini sangat baik karena melampaui target yang ditetapkan.";
-  }
-  if (progress >= target) {
-    return "Target halaman bulan ini tercapai dengan baik.";
-  }
-  return "Sudah ada progres halaman, tetapi target bulan ini belum sepenuhnya tercapai.";
+  if (progress < 0) return "Progres halaman menurun; materi sebelumnya perlu diulang.";
+  if (progress === 0) return "Progres halaman stagnan; latihan rutin perlu ditata.";
+  if (progress >= target * 2) return "Progres halaman melampaui target.";
+  if (progress >= target) return "Target halaman tercapai.";
+  return "Progres ada, tetapi target belum tercapai.";
 };
 
 const buildSemesterAchievement = (input: IntegratedMonthlyNoteInput) => {
   if (input.program === "iqra") return "";
 
   const monthCount = Math.max(0, Math.min(5, Math.round(Number(input.pencapaianTargetBulan) || 0)));
-  if (monthCount <= 0) {
-    return "Pencapaian target bulanan selama semester berjalan masih perlu mulai dibangun.";
-  }
+  if (monthCount <= 0) return "Pencapaian target bulanan masih perlu dibangun.";
 
-  return `Selama semester berjalan, target bulanan sudah tercatat tercapai ${monthCount} bulan.`;
+  return `Target bulanan tercapai ${monthCount} bulan dalam semester.`;
 };
 
 export const generateIntegratedMonthlyNote = (input: IntegratedMonthlyNoteInput): string => {

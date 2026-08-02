@@ -29,7 +29,7 @@ describe("generateIntegratedMonthlyNote", () => {
 
     expect(first).toBe(second);
     expect(first).toContain("Nilai progresif bulan ini tercatat 85.");
-    expect(first).toContain("Target halaman bulan ini tercapai");
+    expect(first).toContain("Target halaman tercapai.");
     expect(first).toContain("Barakallah fiik.");
   });
 
@@ -54,8 +54,8 @@ describe("generateIntegratedMonthlyNote", () => {
       kategoriProgres: "Stagnan",
     });
 
-    expect(tahsinNote).toContain("semester berjalan");
-    expect(iqraNote).not.toContain("semester berjalan");
+    expect(tahsinNote).toContain("dalam semester");
+    expect(iqraNote).not.toContain("semester");
   });
 
   it("uses program-specific suggestions", () => {
