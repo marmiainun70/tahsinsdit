@@ -214,7 +214,14 @@ type MonthlyReportPayload = {
   notes: string;
 };
 
-const getErrorMessage = (error: unknown) => error instanceof Error ? error.message : String(error);
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null) {
+    if ('message' in error) return String((error as any).message);
+    try { return JSON.stringify(error); } catch { return String(error); }
+  }
+  return String(error);
+};
 const PERIOD_NOT_READY_MESSAGE =
   "Hari efektif bulan ini belum diatur. Silahkan hubungi Koordinator Tahfizh untuk pembaruan.";
 const normalizeNumber = (value: string) => Math.max(0, Math.floor(Number(value) || 0));
