@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
@@ -30,6 +31,7 @@ import {
   ClipboardList,
   Download,
   Upload,
+  RotateCcw,
 } from "lucide-react";
 import {
   Dialog,
@@ -37,7 +39,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { DataTablePagination } from "@/components/DataTablePagination";
 import type { Database } from "@/integrations/supabase/types";
@@ -63,6 +67,8 @@ export default function ManageStudents() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [exporting, setExporting] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -193,6 +199,71 @@ export default function ManageStudents() {
       toast({ title: "Gagal melakukan export", description: e.message, variant: "destructive" });
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleResetStatus = async () => {
+    try {
+      setResetting(true);
+      let query = supabase.from("students").select("id");
+
+      const managedStudentIds = await fetchApprovedManagedStudentIds(user?.id, profile?.role);
+      if (managedStudentIds && managedStudentIds.length === 0) {
+        toast({ title: "Tidak ada siswa", variant: "destructive" });
+        return;
+      }
+      if (managedStudentIds) {
+        query = query.in("id", managedStudentIds);
+      }
+
+      if (search.trim()) {
+        const searchTerm = `%${search.trim()}%`;
+        query = query.or(`nama.ilike.${searchTerm},nis.ilike.${searchTerm},nisn.ilike.${searchTerm},rombel.ilike.${searchTerm}`);
+      }
+
+      if (kelas !== "all") query = query.eq("kelas", parseInt(kelas));
+      if (rombel !== "all") query = query.eq("rombel", rombel);
+
+      if (level !== "all") {
+        if (level === "tahsin-dasar" || level === "Tahsin Dasar") {
+          query = query.in("level", IQRO_LEVELS);
+        } else if (level === "tahsin-lanjutan" || level === "Tahsin Lanjutan") {
+          query = query.eq("level", "Tahsin Lanjutan");
+        } else if (level === "tahfizh" || level === "Tahfizh") {
+          query = query.eq("level", "Tahfizh");
+        } else {
+          query = query.eq("level", level as ReadingLevel);
+        }
+      }
+      
+      if (statusSiswa !== "all") {
+        query = query.eq("status_siswa", statusSiswa);
+      }
+
+      const { data: allFilteredStudents, error } = await query;
+      if (error) throw error;
+
+      if (!allFilteredStudents || allFilteredStudents.length === 0) {
+        toast({ title: "Tidak ada data untuk di-reset", variant: "destructive" });
+        return;
+      }
+
+      const ids = allFilteredStudents.map(s => s.id);
+      
+      const { error: updateErr } = await supabase.from("students")
+        .update({ status_bacaan: "Terbata-bata" as never, halaman_terakhir: 1 })
+        .in("id", ids);
+        
+      if (updateErr) throw updateErr;
+
+      toast({ title: "Berhasil", description: `Status bacaan ${ids.length} siswa berhasil di-reset.` });
+      setShowResetDialog(false);
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (error) {
+      const e = error as Error;
+      toast({ title: "Gagal mereset status", description: e.message, variant: "destructive" });
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -465,6 +536,41 @@ export default function ManageStudents() {
 
           {isAdmin && (
             <>
+              <Dialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+                <DialogTrigger asChild>
+                  <button
+                    className="flex items-center gap-2 px-4 py-2.5 border border-red-200 bg-red-50 text-red-600 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors whitespace-nowrap"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    Reset Status
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="text-red-600 flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5" />
+                      Konfirmasi Reset Status
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <p className="text-sm text-foreground mb-2">
+                      Anda yakin ingin mereset <strong>Status Bacaan</strong> menjadi "Terbata-bata" dan <strong>Halaman Terakhir</strong> menjadi 1?
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Aksi ini akan diaplikasikan ke semua siswa yang sesuai dengan filter pencarian saat ini. 
+                      Pastikan filter kelas/rombel sudah sesuai agar tidak mereset siswa yang salah.
+                    </p>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowResetDialog(false)}>Batal</Button>
+                    <Button variant="destructive" onClick={handleResetStatus} disabled={resetting}>
+                      {resetting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                      Ya, Reset Semua
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
               <button
                 onClick={() => setShowImport(true)}
                 className="flex items-center gap-2 px-4 py-2.5 border border-border bg-card text-foreground rounded-xl text-sm font-medium hover:bg-muted transition-colors whitespace-nowrap"
@@ -1086,3 +1192,4 @@ export default function ManageStudents() {
     </div>
   );
 }
+

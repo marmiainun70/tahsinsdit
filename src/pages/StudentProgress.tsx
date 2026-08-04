@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   useStudent, useProgressEntries,
   useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS,
-  useTahsinAssessments, getLevelDisplayLabel, isTahsinDasar,
 } from "@/hooks/useSupabaseData";
+import { useAcademicYears } from "@/hooks/useAcademicTransition";
 import { useMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
 import { useAddActivityLog } from "@/hooks/useActivityLog";
 import ActivityLogPanel from "@/components/ActivityLogPanel";
@@ -61,9 +62,11 @@ const ScoreBar = ({ value, label }: { value: number; label: string }) => (
 const StudentProgress = () => {
   const { studentId } = useParams();
   const { data: student, isLoading: loadingStudent } = useStudent(studentId ?? "");
-  const { data: progres = [], isLoading: loadingProgress } = useProgressEntries(studentId ?? "");
-  const { data: monthlyReports = [], isLoading: loadingMonthlyReports } = useMonthlyReports(studentId ?? "");
-  const { data: tahsinData = [] } = useTahsinAssessments(studentId ?? "");
+  const { data: progresRaw = [], isLoading: loadingProgress } = useProgressEntries(studentId ?? "");
+  const { data: monthlyReportsRaw = [], isLoading: loadingMonthlyReports } = useMonthlyReports(studentId ?? "");
+  const { data: tahsinDataRaw = [] } = useTahsinAssessments(studentId ?? "");
+  const { data: years = [] } = useAcademicYears();
+  
   const addProgress = useAddProgress();
   const updateStudent = useUpdateStudent();
   const addActivityLog = useAddActivityLog();
@@ -71,6 +74,27 @@ const StudentProgress = () => {
   const { toast } = useToast();
   const { profile } = useAuth();
   const isParent = profile?.role === "parent";
+
+  const activeYear = years.find((y) => y.status === "aktif");
+
+  // Filter data berdasarkan active academic year
+  const progres = progresRaw.filter(p => {
+    if (!activeYear) return true;
+    const d = new Date(p.tanggal);
+    return d >= new Date(activeYear.tanggal_mulai) && d <= new Date(activeYear.tanggal_selesai);
+  });
+  
+  const tahsinData = tahsinDataRaw.filter(t => {
+    if (!activeYear) return true;
+    const d = new Date(t.tanggal);
+    return d >= new Date(activeYear.tanggal_mulai) && d <= new Date(activeYear.tanggal_selesai);
+  });
+  
+  const monthlyReports = monthlyReportsRaw.filter(m => {
+    if (!activeYear) return true;
+    const d = new Date(m.created_at);
+    return d >= new Date(activeYear.tanggal_mulai) && d <= new Date(activeYear.tanggal_selesai);
+  });
 
   const [form, setForm] = useState({
     halaman: "", kelancaran: "", makhraj: "", tajwid: "", catatan: "",
@@ -530,3 +554,4 @@ const StudentProgress = () => {
 };
 
 export default StudentProgress;
+
