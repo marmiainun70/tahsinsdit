@@ -336,7 +336,7 @@ const saveDrafts = (drafts: any) => {
 
 const SpreadsheetReport = () => {
   const { user, profile } = useAuth();
-  const isAdmin = profile?.role === "admin";
+  const isAdmin = (profile?.role === "admin" || profile?.role === "kepala_sekolah");
   const teacherAccount = isTeacherRole(profile?.role);
   const { data: students = [] } = useStudents();
   const { data: reports = [] } = useAllMonthlyReports();

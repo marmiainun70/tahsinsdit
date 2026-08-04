@@ -670,7 +670,7 @@ export default function DiagnosticEvaluation() {
           <p className="text-muted-foreground">Lakukan penilaian awal untuk pemetaan kelas siswa.</p>
         </div>
         <div className="flex flex-col md:flex-row gap-2">
-          {profile?.role === "admin" && (
+          {(profile?.role === "admin" || profile?.role === "kepala_sekolah") && (
             <Button 
               variant="outline" 
               onClick={handleExportUnEvaluatedMD}

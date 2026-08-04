@@ -59,7 +59,7 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
 
   const isAllowed = (featureKey: string) => {
     // Admin selalu punya akses penuh ke semua menu tanpa terkecuali
-    if (profile?.role === "admin") return true;
+    if ((profile?.role === "admin" || profile?.role === "kepala_sekolah")) return true;
 
     // Role Guru
     if (isTeacherRole(profile?.role)) {

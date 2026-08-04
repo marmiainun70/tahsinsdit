@@ -42,7 +42,7 @@ type DraftAssignment = {
 
 export default function AdminTeacherAssignments() {
   const { profile } = useAuth();
-  const isAdmin = profile?.role === "admin";
+  const isAdmin = (profile?.role === "admin" || profile?.role === "kepala_sekolah");
   const queryClient = useQueryClient();
 
   const [draftGroups, setDraftGroups] = useState<DraftGroup[]>([]);

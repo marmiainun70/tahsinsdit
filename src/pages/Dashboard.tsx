@@ -35,7 +35,7 @@ const Dashboard = () => {
   }
 
   const isTeacher = isTeacherRole(profile?.role);
-  useAdminRegistrationNotifier(profile?.role === "admin");
+  useAdminRegistrationNotifier((profile?.role === "admin" || profile?.role === "kepala_sekolah"));
 
   const { data: allStudents = [], isLoading: loadingStudents } = useStudents();
   const { data: assignments = [], isLoading: loadingAssignments } = useTeacherStudents(user?.id, "approved");

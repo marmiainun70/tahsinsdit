@@ -241,7 +241,7 @@ export const useSpreadsheetLayout = <ColumnKey extends string = SpreadsheetColum
   const createDefault = useCallback(() => defaultLayout ?? createDefaultSpreadsheetLayout<ColumnKey>(), [defaultLayout]);
   const sanitize = useCallback((value: unknown) => sanitizeSpreadsheetLayout<ColumnKey>(value, columns), [columns]);
   const queryClient = useQueryClient();
-  const isAdmin = role === "admin";
+  const isAdmin = (role === "admin" || role === "kepala_sekolah");
   const isTeacher = isTeacherRole(role);
   const canEdit = isAdmin || isTeacher;
   const [isEditing, setIsEditing] = useState(false);

@@ -5,6 +5,7 @@ export const getRoleLabel = (role: any) => {
   }
   const normalizedRole = String(role).trim().toLowerCase();
   if (normalizedRole === "admin") return "Admin";
+  if (normalizedRole === "kepala_sekolah") return "Kepala Sekolah";
   if (normalizedRole === "parent") return "Orang Tua";
   if (isTeacherRole(normalizedRole)) return "Guru Tahsin & Tahfizh";
   return String(role);
@@ -17,5 +18,5 @@ export const isTeacherRole = (role: any): boolean => {
   }
   const normalizedRole = String(role).trim().toLowerCase();
   if (!normalizedRole) return false;
-  return normalizedRole !== "admin" && normalizedRole !== "parent";
+  return normalizedRole !== "admin" && normalizedRole !== "kepala_sekolah" && normalizedRole !== "parent";
 };

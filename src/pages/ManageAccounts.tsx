@@ -46,7 +46,7 @@ type ParentStudentRow = {
 export default function ManageAccounts() {
   const { profile, user } = useAuth();
   const queryClient = useQueryClient();
-  const isAdmin = profile?.role === "admin";
+  const isAdmin = (profile?.role === "admin" || profile?.role === "kepala_sekolah");
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const [actionError, setActionError] = useState("");
@@ -295,12 +295,15 @@ export default function ManageAccounts() {
 
     // Update user_roles if changed
     if (editForm.role) {
-      const { error: roleError } = await supabase.from("user_roles").update({
-        role: editForm.role as "admin" | "guru" | "parent"
-      }).eq("user_id", userId);
+      const { error: roleError } = await supabase.from("user_roles").upsert({
+        user_id: userId,
+        role: editForm.role as "admin" | "guru" | "parent" | "kepala_sekolah"
+      });
       
       if (roleError) {
-         console.warn("Gagal memperbarui tabel user_roles: ", roleError.message);
+         setActionError("Gagal memperbarui tabel user_roles: " + roleError.message);
+         setIsSavingEdit(false);
+         return;
       }
     }
 
@@ -661,6 +664,7 @@ export default function ManageAccounts() {
             <option value="admin">Admin</option>
             <option value="teacher">Guru</option>
             <option value="parent">Orang Tua</option>
+                          <option value="kepala_sekolah">Kepala Sekolah</option>
             {accounts.some((a) => a.role === "tester") && <option value="tester">Penguji</option>}
           </select>
           {hasActiveFilters && (
@@ -760,6 +764,7 @@ export default function ManageAccounts() {
                           <option value="admin">Admin</option>
                           <option value="teacher">Guru</option>
                           <option value="parent">Orang Tua</option>
+                          <option value="kepala_sekolah">Kepala Sekolah</option>
                           <option value="koordinator">Koordinator</option>
                         </select>
                       </div>

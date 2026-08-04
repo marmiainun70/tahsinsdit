@@ -120,7 +120,7 @@ const MonthlyReport = () => {
   const { user, profile } = useAuth();
   const isMobile = useIsMobile();
   const profileMap = useProfileMap();
-  const isAdmin = profile?.role === "admin";
+  const isAdmin = (profile?.role === "admin" || profile?.role === "kepala_sekolah");
   const teacherAccount = isTeacherRole(profile?.role);
   const teacherOverview = teacherAccount && !isAdmin;
 

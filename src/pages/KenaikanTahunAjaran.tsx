@@ -78,7 +78,7 @@ const SuccessScreen = ({ result, onBack }: { result: TransitionExecuteResult; on
 const KenaikanTahunAjaran = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const isAdmin = profile?.role === "admin";
+  const isAdmin = (profile?.role === "admin" || profile?.role === "kepala_sekolah");
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedYearId, setSelectedYearId] = useState<string | null>(null);

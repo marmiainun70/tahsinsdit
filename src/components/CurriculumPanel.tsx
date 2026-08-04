@@ -53,7 +53,7 @@ const DEFAULT_CURRICULUM_DATA = {
 
 export function CurriculumPanel() {
   const { profile } = useAuth();
-  const isAdmin = profile?.role === 'admin';
+  const isAdmin = (profile?.role === "admin" || profile?.role === "kepala_sekolah");
   const isParent = profile?.role === 'parent' || profile?.role === 'orangtua';
 
   const { data: settings, isLoading } = useInstitutionSettings();

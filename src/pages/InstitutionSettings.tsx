@@ -17,7 +17,7 @@ const InstitutionSettingsPage = () => {
   const { data: permissions, isLoading: loadingPermissions } = useRolePermissions();
   const updatePermission = useUpdateRolePermission();
   const { profile } = useAuth();
-  const isAdmin = profile?.role === "admin";
+  const isAdmin = (profile?.role === "admin" || profile?.role === "kepala_sekolah");
 
   const [form, setForm] = useState({
     nama_lembaga: "",
