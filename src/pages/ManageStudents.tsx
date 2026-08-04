@@ -772,7 +772,7 @@ export default function ManageStudents() {
                             <select
                               value={s.kelas}
                               onChange={(e) => handleInlineUpdate(s.id, "kelas", parseInt(e.target.value))}
-                              className="w-16 px-1 py-1 text-xs font-bold text-center border-border bg-transparent hover:bg-muted focus:bg-background focus:ring-1 focus:ring-primary rounded cursor-pointer"
+                              className="w-24 px-2 py-1 text-sm font-bold text-center border border-border bg-muted/30 hover:bg-muted focus:bg-background focus:ring-2 focus:ring-primary rounded-md cursor-pointer"
                             >
                               {[1, 2, 3, 4, 5, 6].map(k => <option key={k} value={k} className="bg-background text-foreground text-left">Kelas {k}</option>)}
                             </select>
@@ -881,7 +881,7 @@ export default function ManageStudents() {
                           <select
                             value={s.kelas}
                             onChange={(e) => handleInlineUpdate(s.id, "kelas", parseInt(e.target.value))}
-                            className="w-16 px-1.5 py-1 text-sm font-bold text-center border-border bg-transparent hover:bg-muted focus:bg-background focus:ring-1 focus:ring-primary rounded cursor-pointer"
+                            className="w-24 px-2 py-1.5 text-base font-bold text-center border border-border bg-muted/30 hover:bg-muted focus:bg-background focus:ring-2 focus:ring-primary rounded-md cursor-pointer"
                           >
                             {[1, 2, 3, 4, 5, 6].map(k => <option key={k} value={k} className="bg-background text-foreground text-left">Kelas {k}</option>)}
                           </select>
