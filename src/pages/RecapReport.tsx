@@ -43,7 +43,7 @@ import {
   type RecapJoinedGroup,
   type RecapJoinedRow,
 } from "@/utils/recapMonthlyReportRows";
-import { Eye, FileText, Download, Calendar, Users, ListChecks, FileWarning, Filter, RotateCcw, Search, ShieldCheck, AlertCircle, Star, ClipboardList, Loader2, BookOpen, BookOpenCheck, Award } from "lucide-react";
+import { Eye, FileText, Download, Calendar, Users, ListChecks, FileWarning, Filter, RotateCcw, Search, ShieldCheck, AlertCircle, Star, ClipboardList, Loader2, BookOpen, BookOpenCheck, Award, ChevronRight } from "lucide-react";
 
 import type { Database } from "@/integrations/supabase/types";
 
@@ -1339,8 +1339,9 @@ const RecapReport = () => {
             <Calendar className="w-6 h-6" />
             Rekap Laporan Bulanan
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Tahsin Dasar, Tahsin Lanjutan & Tahfizh - siap export PDF & Excel
+          <p className="text-sm text-muted-foreground mt-1">
+            Tahsin Dasar, Tahsin Lanjutan & Tahfizh<br className="md:hidden" />
+            <span className="hidden md:inline"> - </span>siap export PDF & Excel
           </p>
         </div>
       </div>
@@ -1348,8 +1349,8 @@ const RecapReport = () => {
       {/* Single Month Mode */}
           {/* Filters */}
           <Card className="border-emerald-100 bg-white/90 shadow-sm dark:border-emerald-900/60 dark:bg-emerald-950/20">
-            <CardContent className="grid grid-cols-12 gap-1.5 p-3">
-              <div className="col-span-2">
+            <CardContent className="grid grid-cols-2 md:grid-cols-12 gap-3 md:gap-1.5 p-4 md:p-3">
+              <div className="col-span-1 md:col-span-2">
                 <Label className="text-xs">Cari Siswa</Label>
                 <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
@@ -1361,14 +1362,14 @@ const RecapReport = () => {
                   />
                 </div>
               </div>
-              <div className="col-span-1">
+              <div className="col-span-1 md:col-span-1">
                 <Label className="text-xs">Kelas</Label>
                 <Select value={filterKelas} onValueChange={setFilterKelas}>
                   <SelectTrigger className="h-9 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Semua</SelectItem>
+                    <SelectItem value="all">Semua Kelas</SelectItem>
                     {[1, 2, 3, 4, 5, 6].map(k => (
                       <SelectItem key={k} value={String(k)}>
                         Kelas {k}
@@ -1377,7 +1378,7 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-1">
+              <div className="col-span-1 md:col-span-1">
                 <Label className="text-xs">Tahun</Label>
                 <Select value={filterYear} onValueChange={setFilterYear}>
                   <SelectTrigger className="h-9 text-xs">
@@ -1392,7 +1393,24 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-1">
+              <div className="col-span-1 md:col-span-1">
+                <Label className="text-xs">Bulan</Label>
+                <Select value={filterMonth} onValueChange={setFilterMonth}>
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTH_NAMES.map((m, i) => (
+                      <SelectItem key={i} value={String(i + 1)}>
+                        {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Additional filters visible mainly on desktop, stacked on mobile if needed */}
+              <div className="col-span-1 md:col-span-1 hidden md:block">
                 <Label className="text-xs">Rombel</Label>
                 <Select value={filterRombel} onValueChange={setFilterRombel}>
                   <SelectTrigger className="h-9 text-xs">
@@ -1408,22 +1426,7 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-1">
-                <Label className="text-xs">Bulan</Label>
-                <Select value={filterMonth} onValueChange={setFilterMonth}>
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MONTH_NAMES.map((m, i) => (
-                      <SelectItem key={i} value={String(i + 1)}>
-                        {m}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="col-span-1">
+              <div className="col-span-1 md:col-span-1 hidden md:block">
                 <Label className="text-xs">Laporan</Label>
                 <Select
                   value={filterReportStatus}
@@ -1439,7 +1442,7 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-1">
+              <div className="col-span-1 md:col-span-1 hidden md:block">
                 <Label className="text-xs">Absen</Label>
                 <Select
                   value={filterAttendanceStatus}
@@ -1457,7 +1460,7 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-1">
+              <div className="col-span-1 md:col-span-1 hidden md:block">
                 <Label className="text-xs">Progres</Label>
                 <Select
                   value={filterCategory}
@@ -1476,7 +1479,7 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-1">
+              <div className="col-span-1 md:col-span-1 hidden md:block">
                 <Label className="text-xs">Nilai</Label>
                 <Select
                   value={filterScore}
@@ -1494,20 +1497,21 @@ const RecapReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-2 flex flex-col justify-end gap-1.5 h-[52px] pb-[1px]">
+
+              <div className="col-span-2 md:col-span-2 flex flex-row md:flex-col justify-end gap-2 md:gap-1.5 h-auto md:h-[52px] pt-2 md:pt-0 pb-1 md:pb-[1px]">
                 <Button
-                  className="h-6 gap-1.5 bg-emerald-700 text-[10px] hover:bg-emerald-800"
+                  className="flex-1 md:h-6 gap-1.5 bg-emerald-700 text-sm md:text-[10px] hover:bg-emerald-800"
                   onClick={() => toast({ title: "Filter rekap sudah diterapkan." })}
                 >
-                  <Filter className="h-3 w-3" />
+                  <Filter className="h-4 w-4 md:h-3 md:w-3" />
                   Terapkan
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-6 gap-1.5 text-[10px]"
+                  className="flex-1 md:h-6 gap-1.5 text-sm md:text-[10px]"
                   onClick={resetFilters}
                 >
-                  <RotateCcw className="h-3 w-3" />
+                  <RotateCcw className="h-4 w-4 md:h-3 md:w-3" />
                   Reset
                 </Button>
               </div>
@@ -1515,7 +1519,7 @@ const RecapReport = () => {
           </Card>
 
           {/* Stats */}
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
             <StatCard
               icon={<Users className="w-4 h-4" />}
               label="Total Siswa"
@@ -1588,14 +1592,22 @@ const RecapReport = () => {
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0">
                     <BookOpen className="w-5 h-5 text-gold" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Total Tahsin Dasar</p>
+                    <p className="text-sm font-semibold text-foreground leading-tight">Total Tahsin Dasar</p>
                     <p className="text-2xl font-bold text-foreground leading-tight">{stats.tahsinDasar}</p>
                   </div>
                 </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-7 text-[11px] px-2 gap-1 rounded-md border-border bg-transparent hover:bg-black/5 dark:hover:bg-white/5 ml-auto shrink-0" 
+                  onClick={(e) => { e.stopPropagation(); setFilterProgram(filterProgram === "TD" ? "all" : "TD"); }}
+                >
+                  Lihat Detail <ChevronRight className="w-3 h-3" />
+                </Button>
               </div>
               <div className="bg-muted/30 rounded-lg p-2.5 mt-2">
                 <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
@@ -1625,14 +1637,22 @@ const RecapReport = () => {
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
                     <BookOpenCheck className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Total Tahsin Lanjutan</p>
+                    <p className="text-sm font-semibold text-foreground leading-tight">Total Tahsin Lanjutan</p>
                     <p className="text-2xl font-bold text-foreground leading-tight">{stats.tahsinLanjutan}</p>
                   </div>
                 </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-7 text-[11px] px-2 gap-1 rounded-md border-border bg-transparent hover:bg-black/5 dark:hover:bg-white/5 ml-auto shrink-0" 
+                  onClick={(e) => { e.stopPropagation(); setFilterProgram(filterProgram === "TL" ? "all" : "TL"); }}
+                >
+                  Lihat Detail <ChevronRight className="w-3 h-3" />
+                </Button>
               </div>
               <div className="bg-muted/30 rounded-lg p-2.5 mt-2">
                 <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
@@ -1659,14 +1679,22 @@ const RecapReport = () => {
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0">
                     <Award className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Total Tahfizh</p>
+                    <p className="text-sm font-semibold text-foreground leading-tight">Total Tahfizh</p>
                     <p className="text-2xl font-bold text-foreground leading-tight">{stats.tahfizh}</p>
                   </div>
                 </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-7 text-[11px] px-2 gap-1 rounded-md border-border bg-transparent hover:bg-black/5 dark:hover:bg-white/5 ml-auto shrink-0" 
+                  onClick={(e) => { e.stopPropagation(); setFilterProgram(filterProgram === "TFZ" ? "all" : "TFZ"); }}
+                >
+                  Lihat Detail <ChevronRight className="w-3 h-3" />
+                </Button>
               </div>
               <div className="bg-muted/30 rounded-lg p-2.5 mt-2">
                 <div className="flex justify-between text-[10px] font-bold text-muted-foreground mb-1.5">
@@ -1758,16 +1786,53 @@ const RecapReport = () => {
           )}
 
           {stats.empty > 0 && (
-            <div className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50/80 p-3 text-sm text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-200">
-              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-              <span>
-                Masih ada <strong>{stats.empty} siswa</strong> yang belum diisi laporannya untuk periode ini.
-              </span>
+            <div className="flex flex-row items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50/80 p-3 text-emerald-900 dark:border-emerald-900/60 dark:bg-emerald-950/20 dark:text-emerald-200">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span className="text-xs md:text-sm">
+                  Masih ada <strong>{stats.empty} siswa</strong> yang belum diisi laporannya untuk bulan {MONTH_NAMES[Number(filterMonth)-1]} {filterYear}.
+                </span>
+              </div>
+              <Button 
+                size="sm" 
+                className="h-8 px-3 text-xs bg-emerald-700 hover:bg-emerald-800 text-white shrink-0"
+                onClick={() => setFilterReportStatus("empty")}
+              >
+                Lihat Daftar
+              </Button>
             </div>
           )}
 
-          <Card className="overflow-hidden border-emerald-100 shadow-sm dark:border-emerald-900/60">
-            <CardHeader className="flex flex-col gap-3 border-b border-emerald-100 bg-white/80 py-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
+          {/* Export Section (Mobile optimized view as per mockup) */}
+          <div className="rounded-xl border border-border bg-card p-4 shadow-sm flex flex-col gap-3 md:hidden">
+            <div>
+              <h3 className="text-sm font-bold text-foreground">Export Laporan</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">Unduh laporan dalam format yang Anda butuhkan.</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1 gap-2 text-xs h-9"
+                disabled={!!pdfLoading || activePdfGroups.length === 0}
+                onClick={() => exportPDF("a4")}
+              >
+                {pdfLoading === "download-a4" ? <Loader2 className="w-4 h-4 animate-spin text-emerald-600" /> : <FileText className="w-4 h-4 text-emerald-600" />}
+                Export PDF
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 gap-2 text-xs h-9"
+                disabled={excelLoading || activePdfGroups.length === 0}
+                onClick={exportExcel}
+              >
+                {excelLoading ? <Loader2 className="w-4 h-4 animate-spin text-emerald-600" /> : <ListChecks className="w-4 h-4 text-emerald-600" />}
+                Export Excel
+              </Button>
+            </div>
+          </div>
+
+          <Card className="overflow-hidden border-emerald-100 shadow-sm dark:border-emerald-900/60 mt-4 md:mt-0">
+            <CardHeader className="flex flex-col gap-3 border-b border-emerald-100 bg-white/80 py-3 dark:border-emerald-900/60 dark:bg-emerald-950/20 hidden md:flex">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <ClipboardList className="h-4 w-4 text-emerald-700" />
