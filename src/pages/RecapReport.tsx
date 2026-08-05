@@ -795,7 +795,8 @@ const RecapReport = () => {
         "Kualitas Bacaan Harian", "Perbaikan Bacaan Harian", "Pencapaian Bulanan",
         "Kategori Progres", "Nilai", "Guru"
       ];
-      if (!isF4) headers.push("Catatan");
+      const separateCatatan = paperSize === "a4" || paperSize === "f4";
+      if (!separateCatatan) headers.push("Catatan");
 
       autoTable(doc, {
         startY: cursorY,
@@ -809,7 +810,7 @@ const RecapReport = () => {
             row.pencapaianBulanan, cleanPdfText(row.kategoriProgres), row.nilai,
             cleanPdfText(row.guru)
           ];
-          if (!isF4) rowData.push(cleanPdfText(row.catatan || "-"));
+          if (!separateCatatan) rowData.push(cleanPdfText(row.catatan || "-"));
           return rowData;
         }),
         styles: {
@@ -831,7 +832,7 @@ const RecapReport = () => {
           fontSize: isF4 ? 6.5 : 5.4,
         },
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: isF4 ? {
+        columnStyles: separateCatatan ? {
           0: { cellWidth: 10, halign: "center" },
           6: { cellWidth: 11, halign: "center", fontStyle: "bold" },
           7: { cellWidth: 11, halign: "center" },
@@ -865,7 +866,7 @@ const RecapReport = () => {
           18: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
         },
         didParseCell: data => {
-          if (!isF4 && data.section === "body" && data.column.index === 18) {
+          if (!separateCatatan && data.section === "body" && data.column.index === 18) {
             data.cell.styles.overflow = "linebreak";
             data.cell.styles.valign = "top";
             data.cell.styles.font = hasAmiriFont && hasArabicText(data.cell.raw) ? "Amiri" : "helvetica";
@@ -883,7 +884,7 @@ const RecapReport = () => {
         margin: { left: margin, right: margin, bottom: 22 },
       });
 
-      if (isF4) {
+      if (separateCatatan) {
         doc.addPage();
         drawHeader(month);
         doc.setFont("helvetica", "bold");
@@ -1059,7 +1060,8 @@ const RecapReport = () => {
         "Kualitas Bacaan Harian", "Perbaikan Bacaan Harian", "Pencapaian Bulanan",
         "Kategori Progres", "Nilai", "Guru"
       ];
-      if (!isF4) headers.push("Catatan");
+      const separateCatatan = paperSize === "a4" || paperSize === "f4";
+      if (!separateCatatan) headers.push("Catatan");
 
       autoTable(doc, {
         startY: cursorY,
@@ -1073,7 +1075,7 @@ const RecapReport = () => {
             row.pencapaianBulanan, cleanPdfText(row.kategoriProgres), row.nilai,
             cleanPdfText(row.guru)
           ];
-          if (!isF4) rowData.push(cleanPdfText(row.catatan || "-"));
+          if (!separateCatatan) rowData.push(cleanPdfText(row.catatan || "-"));
           return rowData;
         }),
         styles: {
@@ -1095,7 +1097,7 @@ const RecapReport = () => {
           fontSize: isF4 ? 6.8 : (isLegal ? 6 : 5.4),
         },
         alternateRowStyles: { fillColor: [248, 250, 252] },
-        columnStyles: isF4 ? {
+        columnStyles: separateCatatan ? {
           0: { cellWidth: 10, halign: "center" },
           6: { cellWidth: 11, halign: "center", fontStyle: "bold" },
           7: { cellWidth: 11, halign: "center" },
@@ -1129,7 +1131,7 @@ const RecapReport = () => {
           18: { cellWidth: "auto", overflow: "linebreak", valign: "top" },
         },
         didParseCell: data => {
-          if (!isF4 && data.section === "body" && data.column.index === 18) {
+          if (!separateCatatan && data.section === "body" && data.column.index === 18) {
             data.cell.styles.overflow = "linebreak";
             data.cell.styles.valign = "top";
             data.cell.styles.font = hasAmiriFont && hasArabicText(data.cell.raw) ? "Amiri" : "helvetica";
@@ -1147,7 +1149,7 @@ const RecapReport = () => {
         margin: { left: margin, right: margin, bottom: 22 },
       });
 
-      if (isF4) {
+      if (separateCatatan) {
         doc.addPage();
         drawHeader();
         doc.setFont("helvetica", "bold");
@@ -1766,15 +1768,15 @@ const RecapReport = () => {
 
           <Card className="overflow-hidden border-emerald-100 shadow-sm dark:border-emerald-900/60">
             <CardHeader className="flex flex-col gap-3 border-b border-emerald-100 bg-white/80 py-3 dark:border-emerald-900/60 dark:bg-emerald-950/20">
-              <div className="flex flex-row items-center justify-between gap-2">
-                <CardTitle className="flex items-center gap-2 text-sm whitespace-nowrap">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <CardTitle className="flex items-center gap-2 text-sm">
                   <ClipboardList className="h-4 w-4 text-emerald-700" />
                   Data Rekap Laporan Bulanan
                 </CardTitle>
-                <div className="flex flex-nowrap items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
                     variant="outline"
-                    className="gap-2 text-xs sm:text-sm"
+                    className="gap-2 text-xs sm:text-sm flex-1 md:flex-none"
                     disabled={!!pdfLoading || activePdfGroups.length === 0}
                     onClick={() => previewPDF("a4")}
                   >
@@ -1783,7 +1785,7 @@ const RecapReport = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    className="gap-2 text-xs sm:text-sm"
+                    className="gap-2 text-xs sm:text-sm flex-1 md:flex-none"
                     disabled={!!pdfLoading || activePdfGroups.length === 0}
                     onClick={() => exportPDF("a4")}
                   >
@@ -1792,7 +1794,7 @@ const RecapReport = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    className="gap-2 border-emerald-200 bg-emerald-50/70 text-xs text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 sm:text-sm"
+                    className="gap-2 border-emerald-200 bg-emerald-50/70 text-xs text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 sm:text-sm flex-1 md:flex-none"
                     disabled={!!pdfLoading || activePdfGroups.length === 0}
                     onClick={() => previewPDF("f4")}
                   >
@@ -1801,7 +1803,7 @@ const RecapReport = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    className="gap-2 border-emerald-200 bg-emerald-50/70 text-xs text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 sm:text-sm"
+                    className="gap-2 border-emerald-200 bg-emerald-50/70 text-xs text-emerald-800 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200 sm:text-sm flex-1 md:flex-none"
                     disabled={!!pdfLoading || activePdfGroups.length === 0}
                     onClick={() => exportPDF("f4")}
                   >
@@ -1809,7 +1811,7 @@ const RecapReport = () => {
                     Download/Cetak PDF (F4)
                   </Button>
                   <Button
-                    className="gap-2 bg-emerald-700 text-xs hover:bg-emerald-800 sm:text-sm"
+                    className="gap-2 bg-emerald-700 text-xs hover:bg-emerald-800 sm:text-sm w-full md:w-auto"
                     disabled={!!pdfLoading || activePdfGroups.length === 0}
                     onClick={() => setMultiMonthDialogOpen(true)}
                   >
