@@ -3,8 +3,9 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  useStudent, useProgressEntries,
+  useStudent, useProgressEntries, useTahsinAssessments,
   useAddProgress, useUpdateStudent, LEVEL_COLORS, LEVELS,
+  getLevelDisplayLabel, isTahsinDasar,
 } from "@/hooks/useSupabaseData";
 import { useAcademicYears } from "@/hooks/useAcademicTransition";
 import { useMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";

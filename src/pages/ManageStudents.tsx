@@ -237,7 +237,7 @@ export default function ManageStudents() {
       }
       
       if (statusSiswa !== "all") {
-        query = query.eq("status_siswa", statusSiswa);
+        query = query.eq("status_siswa", statusSiswa as "aktif" | "alumni" | "keluar" | "pindah");
       }
 
       const { data: allFilteredStudents, error } = await query;
