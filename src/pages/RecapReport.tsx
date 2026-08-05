@@ -1812,21 +1812,12 @@ const RecapReport = () => {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="flex-1 gap-2 text-xs h-9"
+                className="w-full gap-2 text-xs h-9"
                 disabled={!!pdfLoading || activePdfGroups.length === 0}
                 onClick={() => exportPDF("a4")}
               >
                 {pdfLoading === "download-a4" ? <Loader2 className="w-4 h-4 animate-spin text-emerald-600" /> : <FileText className="w-4 h-4 text-emerald-600" />}
                 Export PDF
-              </Button>
-              <Button
-                variant="outline"
-                className="flex-1 gap-2 text-xs h-9"
-                disabled={excelLoading || activePdfGroups.length === 0}
-                onClick={exportExcel}
-              >
-                {excelLoading ? <Loader2 className="w-4 h-4 animate-spin text-emerald-600" /> : <ListChecks className="w-4 h-4 text-emerald-600" />}
-                Export Excel
               </Button>
             </div>
           </div>
