@@ -2549,7 +2549,7 @@ export type Database = {
         | "lulus_alumni"
         | "keluar_sekolah"
         | "pindah_sekolah"
-      app_role: "admin" | "guru" | "parent"
+      app_role: "admin" | "guru" | "parent" | "kepala_sekolah"
       diagnostic_level_awal:
         | "belum_bisa_baca"
         | "iqro_1"
@@ -2727,7 +2727,7 @@ export const Constants = {
         "keluar_sekolah",
         "pindah_sekolah",
       ],
-      app_role: ["admin", "guru", "parent"],
+      app_role: ["admin", "guru", "parent", "kepala_sekolah"],
       diagnostic_level_awal: [
         "belum_bisa_baca",
         "iqro_1",
