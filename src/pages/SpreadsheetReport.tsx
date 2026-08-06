@@ -805,7 +805,15 @@ const SpreadsheetReport = () => {
       const signed = calcSigned(r.program, r.startLevel, r.startPage, r.endLevel || r.startLevel, r.endPage);
       const status = isPromotionEnd(r.program, r.endLevel) ? "achieved" : getProgressStatus(signed, target);
       const progressiveScore = scoreForRow(r);
-      const notesForSave = r.notes.trim() ? r.notes : buildIntegratedNote(r);
+      let notesForSave = r.notes.trim() ? r.notes : buildIntegratedNote(r);
+      
+      // Selalu perbarui angka nilai di dalam teks catatan agar 100% sinkron dengan nilai sebenarnya
+      if (notesForSave.match(/Nilai progresif bulan ini tercatat \d+\./)) {
+        notesForSave = notesForSave.replace(
+          /Nilai progresif bulan ini tercatat \d+\./,
+          `Nilai progresif bulan ini tercatat ${progressiveScore.nilaiAkhir}.`
+        );
+      }
       const payload: MonthlyReportPayload = {
         student_id: r.studentId,
         month, year, program_type: r.program,
