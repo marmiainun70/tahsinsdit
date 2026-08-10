@@ -206,6 +206,7 @@ export function MonitoringSEP({
   selectedPeriodLabel,
   selectedMonth,
   selectedYear,
+  attendance,
 }: MonitoringSEPProps) {
   const [activeTab, setActiveTab] = useState("sesi1");
   const { saveSnapshot, saving, historySnapshots } = useKinerjaSnapshot();

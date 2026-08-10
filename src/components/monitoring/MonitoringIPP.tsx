@@ -226,6 +226,7 @@ export function MonitoringIPP({
   allTeacherStudents,
   profileMap,
   selectedPeriodLabel,
+  attendance,
 }: MonitoringIPPProps) {
   const [activeTab, setActiveTab] = useState("sesi1");
 

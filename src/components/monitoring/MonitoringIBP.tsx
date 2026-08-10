@@ -186,6 +186,7 @@ export function MonitoringIBP({
   allTeacherStudents,
   profileMap,
   selectedPeriodLabel,
+  attendance,
 }: MonitoringIBPProps) {
   const [activeTab, setActiveTab] = useState("sesi1");
 
