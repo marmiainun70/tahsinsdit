@@ -141,7 +141,8 @@ export const getProgramLabelFromLevel = (level: string) => {
   if (/^Iqro\s+[1-6]$/i.test(level)) return "Tahsin Dasar (Iqra)";
   if (level === "Tahsin Dasar") return "Tahsin Dasar";
   if (level === "Tahsin Lanjutan") return "Tahsin Lanjutan";
-  if (level === "Tahfizh") return "Tahfizh";
+  const normalized = level.toLowerCase();
+  if (normalized.includes("tahfizh") || normalized.includes("tahfidz") || normalized.includes("tfz") || normalized.includes("juz")) return "Tahfizh";
   return level || "-";
 };
 

@@ -78,7 +78,7 @@ const getPreviousPeriod = (month: number, year: number) => {
 
 const getProgramBucket = (programType: string | null): "TD" | "TL" | "TFZ" => {
   const normalized = (programType ?? "").toLowerCase();
-  if (normalized.includes("tahfizh")) return "TFZ";
+  if (normalized.includes("tahfizh") || normalized.includes("tahfidz") || normalized.includes("tfz") || normalized.includes("juz")) return "TFZ";
   if (normalized.includes("lanjutan") || normalized === "tahsin") return "TL";
   return "TD";
 };
