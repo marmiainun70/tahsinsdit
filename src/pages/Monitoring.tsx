@@ -8,6 +8,7 @@ import { isTeacherRole } from "@/lib/roleLabels";
 import { useStudents } from "@/hooks/useSupabaseData";
 import { useTeacherClasses, useTeacherStudents } from "@/hooks/useTeacherStudents";
 import { useProfileMap } from "@/hooks/useProfiles";
+import { useAttendanceByPeriod } from "@/hooks/useAttendance";
 import { MONTH_NAMES, useMonthlyReportsForPeriod } from "@/hooks/useMonthlyReports";
 import { MonitoringIPP } from "@/components/monitoring/MonitoringIPP";
 import { MonitoringSEP } from "@/components/monitoring/MonitoringSEP";
@@ -199,6 +200,8 @@ export default function Monitoring() {
     year: selectedYear,
     enabled: hasAccess,
   });
+
+  const { data: attendance = [] } = useAttendanceByPeriod(selectedMonth, selectedYear);
 
   const prevMonth1 = selectedMonth === 1 ? 12 : selectedMonth - 1;
   const prevYear1 = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
@@ -866,6 +869,7 @@ export default function Monitoring() {
         <TabsContent value="ibp" className="mt-0 outline-none space-y-6">
           <MonitoringIBP
             reports={reports as never}
+            attendance={attendance as never}
             students={students}
             allTeacherStudents={allTeacherStudents as never}
             profileMap={profileMap}
@@ -876,6 +880,7 @@ export default function Monitoring() {
         <TabsContent value="ipp" className="mt-0 outline-none space-y-6">
           <MonitoringIPP
             reports={reports as never}
+            attendance={attendance}
             reportsM1={reportsM1 as never}
             reportsM2={reportsM2 as never}
             students={accessibleStudents}
@@ -888,6 +893,7 @@ export default function Monitoring() {
         <TabsContent value="sep" className="mt-0 outline-none space-y-6">
           <MonitoringSEP
             reports={reports as never}
+            attendance={attendance as never}
             reportsM1={reportsM1 as never}
             reportsM2={reportsM2 as never}
             students={accessibleStudents}

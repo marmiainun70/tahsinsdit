@@ -20,6 +20,7 @@ interface MonitoringIPPProps {
   allTeacherStudents: TeacherStudent[];
   profileMap: Map<string, string>;
   selectedPeriodLabel: string;
+  attendance?: any[];
 }
 
 interface StudentIPPDetail {
@@ -293,7 +294,17 @@ export function MonitoringIPP({
 
       // Check Absence (same logic as IBP)
       const isAprilOrMay2026 = report.year === 2026 && (report.month === 4 || report.month === 5);
-      const isAbsent = !isAprilOrMay2026 && report.attendance_percentage === 0;
+      
+      let isAbsent = false;
+      const attRecord = attendance?.find((a: any) => a.student_id === student.id);
+      if (attRecord) {
+        const total = (attRecord.present || 0) + (attRecord.sick || 0) + (attRecord.permission || 0) + (attRecord.absent || 0);
+        if (total > 0 && (attRecord.present || 0) === 0) isAbsent = true;
+        else if (total > 0 && (attRecord.present || 0) > 0) isAbsent = false;
+        else isAbsent = !isAprilOrMay2026 && report.attendance_percentage === 0;
+      } else {
+        isAbsent = !isAprilOrMay2026 && report.attendance_percentage === 0;
+      }
 
       if (isAbsent) {
         tData.absentStudents += 1;

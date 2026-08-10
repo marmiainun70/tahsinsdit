@@ -23,6 +23,7 @@ interface MonitoringSEPProps {
   selectedPeriodLabel: string;
   selectedMonth: number;
   selectedYear: number;
+  attendance?: any[];
 }
 
 interface TeacherSEPData {
@@ -277,8 +278,21 @@ export function MonitoringSEP({
       tData.kelasRombel.add(`${student.kelas}${student.rombel}`);
 
       const isAprilOrMay2026 = report.year === 2026 && (report.month === 4 || report.month === 5);
-      const isAbsentForIBP = !isAprilOrMay2026 && report.attendance_percentage === 0;
-      const isAbsentForIPP = report.attendance_percentage === 0;
+      
+      let isAbsentForIPP = report.attendance_percentage === 0;
+      let isAbsentForIBP = !isAprilOrMay2026 && isAbsentForIPP;
+      
+      const attRecord = attendance?.find((a: any) => a.student_id === student.id);
+      if (attRecord) {
+        const total = (attRecord.present || 0) + (attRecord.sick || 0) + (attRecord.permission || 0) + (attRecord.absent || 0);
+        if (total > 0 && (attRecord.present || 0) === 0) {
+          isAbsentForIPP = true;
+          isAbsentForIBP = true;
+        } else if (total > 0 && (attRecord.present || 0) > 0) {
+          isAbsentForIPP = false;
+          isAbsentForIBP = false;
+        }
+      }
 
       // --- IBP Calculation ---
       if (!isAbsentForIBP) {
