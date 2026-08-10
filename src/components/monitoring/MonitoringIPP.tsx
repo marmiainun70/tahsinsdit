@@ -4,6 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Info, ChevronDown, ChevronUp } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
+import { ProgressCategory } from "@/utils/calculateProgressiveReportScore";
+import { buildRecapMap } from "@/utils/recapMonthlyReportRows";
 import { Button } from "@/components/ui/button";
 
 type MonthlyReport = Database["public"]["Tables"]["monthly_reports"]["Row"] & {
@@ -240,12 +242,14 @@ export function MonitoringIPP({
       if (name) studentTeacherMap.set(ts.student_id, { id: ts.teacher_id, name });
     });
 
-    // Create fast lookup for M-1 and M-2 reports by student_id
-    const mapM1 = new Map(reportsM1.map(r => [r.student_id, r]));
-    const mapM2 = new Map(reportsM2.map(r => [r.student_id, r]));
+    // Create fast lookup for M-1 and M-2 reports by student_id, deduplicating with buildRecapMap
+    const mapM1 = new Map(Array.from(buildRecapMap(reportsM1).values()).map(r => [r.student_id, r]));
+    const mapM2 = new Map(Array.from(buildRecapMap(reportsM2).values()).map(r => [r.student_id, r]));
+
+    const reportMap = buildRecapMap(reports);
 
     // We process based on current month reports
-    reports.forEach((report) => {
+    Array.from(reportMap.values()).forEach((report) => {
       let tId = report.teacher_id_snapshot || report.teacher_id;
       let tName = report.teacher_name_snapshot || report.teacher_name;
 

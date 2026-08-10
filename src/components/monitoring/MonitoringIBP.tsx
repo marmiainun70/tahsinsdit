@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle, Info, ChevronDown, ChevronUp } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
+import { buildRecapMap } from "@/utils/recapMonthlyReportRows";
 import { Button } from "@/components/ui/button";
 
 type MonthlyReport = Database["public"]["Tables"]["monthly_reports"]["Row"] & {
@@ -202,7 +203,9 @@ export function MonitoringIBP({
       if (name) studentTeacherMap.set(ts.student_id, { id: ts.teacher_id, name });
     });
 
-    reports.forEach((report) => {
+    const reportMap = buildRecapMap(reports);
+    
+    Array.from(reportMap.values()).forEach((report) => {
       let tId = report.teacher_id_snapshot || report.teacher_id;
       let tName = report.teacher_name_snapshot || report.teacher_name;
 

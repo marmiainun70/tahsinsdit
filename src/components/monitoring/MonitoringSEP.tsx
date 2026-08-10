@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Info, AlertCircle, CheckCircle2, TrendingUp, HelpCircle, Save } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
+import { buildRecapMap } from "@/utils/recapMonthlyReportRows";
 import { Button } from "@/components/ui/button";
 import { useKinerjaSnapshot } from "@/hooks/useKinerjaSnapshot";
 
@@ -224,10 +225,13 @@ export function MonitoringSEP({
       if (name) studentTeacherMap.set(ts.student_id, { id: ts.teacher_id, name });
     });
 
-    const mapM1 = new Map(reportsM1.map(r => [r.student_id, r]));
-    const mapM2 = new Map(reportsM2.map(r => [r.student_id, r]));
+    const mapM1 = new Map(Array.from(buildRecapMap(reportsM1).values()).map(r => [r.student_id, r]));
+    const mapM2 = new Map(Array.from(buildRecapMap(reportsM2).values()).map(r => [r.student_id, r]));
 
-    reports.forEach((report) => {
+    const reportMap = buildRecapMap(reports);
+
+    // We process based on current month reports
+    Array.from(reportMap.values()).forEach((report) => {
       let tId = report.teacher_id_snapshot || report.teacher_id;
       let tName = report.teacher_name_snapshot || report.teacher_name;
 
