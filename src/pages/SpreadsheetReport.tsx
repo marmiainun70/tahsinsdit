@@ -142,7 +142,11 @@ const endLevelOptions = (program: string): string[] => {
   return JUZ_LIST.map(String); // tahfizh
 };
 
-const formatLevel = (program: string, lvl: string): string => {
+const formatLevel = (program: string, lvl: string, page?: number | null): string => {
+  if (program === "tahsin" && lvl === "Tahsin Lanjutan" && page != null) {
+    const juz = Math.min(30, Math.max(1, Math.ceil((page - 1) / 20) || 1));
+    return `Juz ${juz}`;
+  }
   if (isAdvancedLevel(lvl)) return lvl;
   if (program === "iqra") return `Iqro ${lvl}`;
   if (program === "tahfizh") return `Juz ${lvl}`;
@@ -1341,9 +1345,9 @@ const SpreadsheetReport = () => {
                       {showStartLevelSelect ? (
                         <Select value={r.startLevel} onValueChange={v => updateRow(idx, { startLevel: v })} disabled={spreadsheetLayout.isEditing}>
                           <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
-                          <SelectContent>{lvlOpts.map(l => <SelectItem key={l} value={l} className="text-[10px]">{formatLevel(r.program, l)}</SelectItem>)}</SelectContent>
+                          <SelectContent>{lvlOpts.map(l => <SelectItem key={l} value={l} className="text-[10px]">{formatLevel(r.program, l, r.startPage)}</SelectItem>)}</SelectContent>
                         </Select>
-                      ) : <span className="text-[10px] text-muted-foreground px-1">—</span>}
+                      ) : <span className="text-[10px] text-muted-foreground px-1">{formatLevel(r.program, r.startLevel, r.startPage)}</span>}
                     </td>
                     <td {...layoutCellProps(r.studentId, "startPage")} className="p-0 border border-[1.5px] border-blue-400 dark:border-blue-700">
                       <div className="flex items-center justify-center">
@@ -1365,7 +1369,7 @@ const SpreadsheetReport = () => {
                         <SelectTrigger className="h-6 w-full border-none bg-transparent shadow-none hover:bg-muted/30 focus:bg-background text-[10px] px-1 focus:ring-0 focus:ring-offset-0"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value={END_NOT_SET} className="text-[10px]">Akhir</SelectItem>
-                          {endOpts.map(l => <SelectItem key={l} value={l} className="text-[10px]">{formatLevel(r.program, l)}</SelectItem>)}
+                          {endOpts.map(l => <SelectItem key={l} value={l} className="text-[10px]">{formatLevel(r.program, l, r.endPage)}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </td>
