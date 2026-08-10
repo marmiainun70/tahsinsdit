@@ -106,23 +106,39 @@ const Dashboard = () => {
     }
 
     return months.map(m => {
-      const monthReports = allReports.filter(r => r.month === m.month && r.year === m.year && studentIds.has(r.student_id));
+      const allMonthReports = allReports.filter(r => r.month === m.month && r.year === m.year && studentIds.has(r.student_id));
+      
+      const studentPrimaryReports = new Map();
+      allMonthReports.forEach(r => {
+        if (!studentPrimaryReports.has(r.student_id)) {
+          studentPrimaryReports.set(r.student_id, r);
+        } else {
+          const existing = studentPrimaryReports.get(r.student_id);
+          if (existing.program_type === "tahfizh" && (r.program_type === "iqra" || r.program_type === "tahsin")) {
+            studentPrimaryReports.set(r.student_id, r);
+          }
+        }
+      });
+      const monthReports = Array.from(studentPrimaryReports.values());
+
       const totalCount = monthReports.length;
       const achieved = monthReports.filter(r => r.achievement_status === "achieved").length;
       const achievementRate = totalCount > 0 ? Math.round((achieved / totalCount) * 100) : 0;
       
       const sumNilai = monthReports.reduce((sum, r) => sum + (r.nilai_akhir_progresif || 0), 0);
       const avgNilai = totalCount > 0 ? Math.round(sumNilai / totalCount) : 0;
-      const sumHalaman = monthReports.reduce((sum, r) => sum + (r.pages_read || 0), 0);
       
-      const countIqro1 = monthReports.filter(r => r.students?.level === "Iqro 1").length;
-      const countIqro2 = monthReports.filter(r => r.students?.level === "Iqro 2").length;
-      const countIqro3 = monthReports.filter(r => r.students?.level === "Iqro 3").length;
-      const countIqro4 = monthReports.filter(r => r.students?.level === "Iqro 4").length;
-      const countIqro5 = monthReports.filter(r => r.students?.level === "Iqro 5").length;
-      const countIqro6 = monthReports.filter(r => r.students?.level === "Iqro 6").length;
-      const countTL = monthReports.filter(r => getProgramBucket(r.students?.level) === "TL").length;
-      const countTFZ = monthReports.filter(r => getProgramBucket(r.students?.level) === "TFZ").length;
+      // Calculate total pages_read from all reports (including secondary tahfizh setoran)
+      const sumHalaman = allMonthReports.reduce((sum, r) => sum + (r.pages_read || 0), 0);
+      
+      const countIqro1 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("1")).length;
+      const countIqro2 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("2")).length;
+      const countIqro3 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("3")).length;
+      const countIqro4 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("4")).length;
+      const countIqro5 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("5")).length;
+      const countIqro6 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("6")).length;
+      const countTL = monthReports.filter(r => r.program_type === "tahsin").length;
+      const countTFZ = monthReports.filter(r => r.program_type === "tahfizh").length;
 
       return {
         name: `${MONTH_NAMES[m.month - 1].substring(0,3)} ${m.year}`,

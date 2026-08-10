@@ -70,10 +70,11 @@ export default function ManageStudents() {
   const [resetting, setResetting] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showImport, setShowImport] = useState(false);
-  const [isSyncing, setIsSyncing] = useState(false);
+  const [isSyncingEvaluasi, setIsSyncingEvaluasi] = useState(false);
+  const [isSyncingLaporan, setIsSyncingLaporan] = useState(false);
 
   const handleSyncEvaluasi = async () => {
-    setIsSyncing(true);
+    setIsSyncingEvaluasi(true);
     try {
       const { data: evaluations, error: evalErr } = await supabase
         .from("evaluasi_awal_semester")
@@ -115,16 +116,16 @@ export default function ManageStudents() {
     } catch (err) {
       toast({ title: "Gagal Sinkronisasi", description: String(err), variant: "destructive" });
     } finally {
-      setIsSyncing(false);
+      setIsSyncingEvaluasi(false);
     }
   };
 
   const handleSyncLaporanBulanan = async () => {
-    setIsSyncing(true);
+    setIsSyncingLaporan(true);
     try {
       const { data: reports, error: repErr } = await supabase
         .from("monthly_reports")
-        .select('student_id, end_iqra_level, end_page, created_at, year, month')
+        .select('student_id, end_iqra_level, end_page, created_at, year, month, program_type')
         .order('year', { ascending: false })
         .order('month', { ascending: false })
         .order('created_at', { ascending: false });
@@ -132,9 +133,21 @@ export default function ManageStudents() {
       if (repErr) throw repErr;
 
       const latestReports: Record<string, any> = {};
+      const studentLatestMonth: Record<string, { year: number, month: number }> = {};
+      
       (reports || []).forEach((rep: any) => {
-        if (!latestReports[rep.student_id]) {
-          latestReports[rep.student_id] = rep;
+        if (!studentLatestMonth[rep.student_id]) {
+          studentLatestMonth[rep.student_id] = { year: rep.year, month: rep.month };
+        }
+        
+        if (rep.year === studentLatestMonth[rep.student_id].year && rep.month === studentLatestMonth[rep.student_id].month) {
+          if (!latestReports[rep.student_id]) {
+            latestReports[rep.student_id] = rep;
+          } else {
+            if (latestReports[rep.student_id].program_type === "tahfizh" && (rep.program_type === "iqra" || rep.program_type === "tahsin")) {
+              latestReports[rep.student_id] = rep;
+            }
+          }
         }
       });
 
@@ -169,7 +182,7 @@ export default function ManageStudents() {
     } catch (err) {
       toast({ title: "Gagal Sinkronisasi Laporan", description: String(err), variant: "destructive" });
     } finally {
-      setIsSyncing(false);
+      setIsSyncingLaporan(false);
     }
   };
 
@@ -572,20 +585,20 @@ export default function ManageStudents() {
           {isAdmin && (
             <button
               onClick={handleSyncEvaluasi}
-              disabled={isSyncing}
+              disabled={isSyncingEvaluasi || isSyncingLaporan}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-amber-500 text-white hover:bg-amber-600 focus:ring-2 focus:ring-amber-500 focus:outline-none disabled:opacity-50 transition-colors"
             >
-              {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}
+              {isSyncingEvaluasi ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}
               Sync Level Evaluasi
             </button>
           )}
           {isAdmin && (
             <button
               onClick={handleSyncLaporanBulanan}
-              disabled={isSyncing}
+              disabled={isSyncingEvaluasi || isSyncingLaporan}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-blue-500 text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50 transition-colors"
             >
-              {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+              {isSyncingLaporan ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
               Sync Laporan Bulanan
             </button>
           )}
