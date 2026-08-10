@@ -8,7 +8,7 @@ import { isTeacherRole } from "@/lib/roleLabels";
 import { useStudents } from "@/hooks/useSupabaseData";
 import { useTeacherClasses, useTeacherStudents } from "@/hooks/useTeacherStudents";
 import { useProfileMap } from "@/hooks/useProfiles";
-import { useAttendanceByPeriod } from "@/hooks/useAttendance";
+import { useAttendanceForRecapPeriod } from "@/hooks/useAttendance";
 import { MONTH_NAMES, useMonthlyReportsForPeriod } from "@/hooks/useMonthlyReports";
 import { MonitoringIPP } from "@/components/monitoring/MonitoringIPP";
 import { MonitoringSEP } from "@/components/monitoring/MonitoringSEP";
@@ -201,7 +201,11 @@ export default function Monitoring() {
     enabled: hasAccess,
   });
 
-  const { data: attendance = [] } = useAttendanceByPeriod(selectedMonth, selectedYear);
+  const { data: attendance = [] } = useAttendanceForRecapPeriod({
+    month: selectedMonth,
+    year: selectedYear,
+    enabled: hasAccess,
+  });
 
   const prevMonth1 = selectedMonth === 1 ? 12 : selectedMonth - 1;
   const prevYear1 = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
