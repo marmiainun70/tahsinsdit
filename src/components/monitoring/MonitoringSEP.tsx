@@ -242,7 +242,9 @@ export function MonitoringSEP({
           tName = assigned.name;
         }
       }
-      if (!tId || !tName) return;
+      
+      // Ensure the teacher actually exists in the profiles database to prevent foreign key errors on save
+      if (!tId || !tName || !profileMap.has(tId)) return;
 
       const student = studentMap.get(report.student_id);
       if (!student) return;
