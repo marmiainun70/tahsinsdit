@@ -119,6 +119,60 @@ export default function ManageStudents() {
     }
   };
 
+  const handleSyncLaporanBulanan = async () => {
+    setIsSyncing(true);
+    try {
+      const { data: reports, error: repErr } = await supabase
+        .from("monthly_reports")
+        .select('student_id, end_iqra_level, end_page, created_at, year, month')
+        .order('year', { ascending: false })
+        .order('month', { ascending: false })
+        .order('created_at', { ascending: false });
+        
+      if (repErr) throw repErr;
+
+      const latestReports: Record<string, any> = {};
+      (reports || []).forEach((rep: any) => {
+        if (!latestReports[rep.student_id]) {
+          latestReports[rep.student_id] = rep;
+        }
+      });
+
+      const normalizeLevel = (levelName: string): string => {
+        const lower = levelName.toLowerCase();
+        if (lower.match(/(iqra|iqro|jilid)\s*1/) || lower === "1") return "Iqro 1";
+        if (lower.match(/(iqra|iqro|jilid)\s*2/) || lower === "2") return "Iqro 2";
+        if (lower.match(/(iqra|iqro|jilid)\s*3/) || lower === "3") return "Iqro 3";
+        if (lower.match(/(iqra|iqro|jilid)\s*4/) || lower === "4") return "Iqro 4";
+        if (lower.match(/(iqra|iqro|jilid)\s*5/) || lower === "5") return "Iqro 5";
+        if (lower.match(/(iqra|iqro|jilid)\s*6/) || lower === "6") return "Iqro 6";
+        if (lower.includes("tahsin lanjutan") || lower.includes("level 2")) return "Tahsin Lanjutan";
+        if (lower.includes("tahfizh") || lower.includes("tahfiz") || lower.includes("juz")) return "Tahfizh";
+        if (lower.includes("tahsin dasar")) return "Tahsin Dasar";
+        return levelName.replace(/iqra/ig, "Iqro").replace(/jilid/ig, "Iqro");
+      };
+
+      let count = 0;
+      for (const [studentId, rep] of Object.entries(latestReports)) {
+        const updates: any = {};
+        if (rep.end_iqra_level) updates.level = normalizeLevel(rep.end_iqra_level);
+        if (rep.end_page !== null && rep.end_page !== undefined) updates.halaman_terakhir = rep.end_page;
+        
+        if (Object.keys(updates).length > 0) {
+          const { error } = await supabase.from('students').update(updates as never).eq('id', studentId);
+          if (!error) count++;
+        }
+      }
+      
+      toast({ title: "Sinkronisasi Laporan Selesai", description: `${count} data siswa berhasil diperbarui sesuai laporan bulanan terakhir.` });
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      toast({ title: "Gagal Sinkronisasi Laporan", description: String(err), variant: "destructive" });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleExport = async () => {
     try {
       setExporting(true);
@@ -523,6 +577,16 @@ export default function ManageStudents() {
             >
               {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ClipboardList className="w-4 h-4" />}
               Sync Level Evaluasi
+            </button>
+          )}
+          {isAdmin && (
+            <button
+              onClick={handleSyncLaporanBulanan}
+              disabled={isSyncing}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md bg-blue-500 text-white hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50 transition-colors"
+            >
+              {isSyncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+              Sync Laporan Bulanan
             </button>
           )}
           <button
