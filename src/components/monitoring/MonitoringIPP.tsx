@@ -32,6 +32,8 @@ interface StudentIPPDetail {
   rombel: string;
   isAbsent: boolean; // if 0% attendance
   naikLevel: boolean;
+  startLevel?: string | null;
+  endLevel?: string | null;
   perbaikanBaik: boolean;
   isStagnanM1: boolean;
   keluarStagnan: boolean;
@@ -189,11 +191,11 @@ function TeacherIPPCard({ t }: { t: TeacherIPPData }) {
 
         {expanded && (
           <div className="mt-2 text-[10px] space-y-1 animate-in slide-in-from-top-2">
-            <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 pb-1 mb-1 border-b font-medium text-muted-foreground">
+            <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 pb-1 mb-1 border-b font-medium text-muted-foreground items-center">
               <span>Siswa</span>
-              <span title="Naik Level">NL</span>
-              <span title="Perbaikan Bacaan">PB</span>
-              <span title="Stagnan">STG</span>
+              <span className="text-center min-w-[20px]" title="Naik Level">NL</span>
+              <span className="text-center min-w-[20px]" title="Perbaikan Bacaan">PB</span>
+              <span className="text-center min-w-[24px]" title="Stagnan">STG</span>
             </div>
             {t.details.sort((a, b) => a.nama.localeCompare(b.nama)).map((d) => (
               <div key={d.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center py-0.5">
@@ -204,9 +206,21 @@ function TeacherIPPCard({ t }: { t: TeacherIPPData }) {
                   <span className="text-rose-500 text-[10px] col-span-3 text-center">Absen 0%</span>
                 ) : (
                   <>
-                    <span className={d.naikLevel ? "text-emerald-500 font-bold" : "text-muted-foreground"}>{d.naikLevel ? "Y" : "-"}</span>
-                    <span className={d.perbaikanBaik ? "text-indigo-500 font-bold" : "text-muted-foreground"}>{d.perbaikanBaik ? "Y" : "-"}</span>
-                    <span className={d.isStagnanM1 ? (d.keluarStagnan ? "text-emerald-500 font-bold" : "text-rose-500") : "text-muted-foreground"}>
+                    <div 
+                      className="flex flex-col items-center justify-center min-w-[20px]" 
+                      title={d.naikLevel ? `${d.startLevel || '-'} ➔ ${d.endLevel || '-'}` : undefined}
+                    >
+                      <span className={d.naikLevel ? "text-emerald-500 font-bold" : "text-muted-foreground"}>
+                        {d.naikLevel ? "Y" : "-"}
+                      </span>
+                      {d.naikLevel && (
+                        <span className="text-[8px] text-emerald-600 leading-tight mt-0.5 text-center max-w-[40px] truncate" title={d.endLevel || undefined}>
+                          {d.endLevel}
+                        </span>
+                      )}
+                    </div>
+                    <span className={`text-center ${d.perbaikanBaik ? "text-indigo-500 font-bold" : "text-muted-foreground"}`}>{d.perbaikanBaik ? "Y" : "-"}</span>
+                    <span className={`text-center ${d.isStagnanM1 ? (d.keluarStagnan ? "text-emerald-500 font-bold" : "text-rose-500") : "text-muted-foreground"}`}>
                       {d.isStagnanM1 ? (d.keluarStagnan ? "Lulus" : "Ya") : "-"}
                     </span>
                   </>
@@ -320,6 +334,8 @@ export function MonitoringIPP({
           rombel: student.rombel,
           isAbsent: true,
           naikLevel: false,
+          startLevel: null,
+          endLevel: null,
           perbaikanBaik: false,
           isStagnanM1: false,
           keluarStagnan: false,
@@ -367,6 +383,8 @@ export function MonitoringIPP({
         rombel: student.rombel,
         isAbsent: false,
         naikLevel,
+        startLevel: report.iqra_level,
+        endLevel: report.end_iqra_level,
         perbaikanBaik,
         isStagnanM1,
         keluarStagnan,

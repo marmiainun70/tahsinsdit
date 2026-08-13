@@ -84,9 +84,10 @@ export function useKinerjaSnapshot() {
       fetchHistory(); // Refresh data
     } catch (error) {
       console.error('Error saving snapshot:', error);
+      const errorMessage = error?.message || (error instanceof Error ? error.message : "Terjadi kesalahan saat menyimpan");
       toast({
         title: "Gagal menyimpan snapshot",
-        description: error instanceof Error ? error.message : "Terjadi kesalahan saat menyimpan",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
