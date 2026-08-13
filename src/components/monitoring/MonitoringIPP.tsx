@@ -191,15 +191,15 @@ function TeacherIPPCard({ t }: { t: TeacherIPPData }) {
 
         {expanded && (
           <div className="mt-2 text-[10px] space-y-1 animate-in slide-in-from-top-2">
-            <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 pb-1 mb-1 border-b font-medium text-muted-foreground items-center">
-              <span>Siswa</span>
-              <span className="text-center min-w-[20px]" title="Naik Level">NL</span>
-              <span className="text-center min-w-[20px]" title="Perbaikan Bacaan">PB</span>
-              <span className="text-center min-w-[24px]" title="Stagnan">STG</span>
+            <div className="grid grid-cols-[1fr_50px_30px_40px] gap-2 pb-1 mb-1 border-b font-medium text-muted-foreground items-center">
+              <span className="min-w-0 truncate">Siswa</span>
+              <span className="text-center" title="Naik Level">NL</span>
+              <span className="text-center" title="Perbaikan Bacaan">PB</span>
+              <span className="text-center" title="Stagnan">STG</span>
             </div>
             {t.details.sort((a, b) => a.nama.localeCompare(b.nama)).map((d) => (
-              <div key={d.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center py-0.5">
-                <span className={`truncate ${d.isAbsent ? 'text-muted-foreground line-through' : ''}`} title={d.nama}>
+              <div key={d.id} className="grid grid-cols-[1fr_50px_30px_40px] gap-2 items-center py-0.5">
+                <span className={`truncate min-w-0 ${d.isAbsent ? 'text-muted-foreground line-through' : ''}`} title={d.nama}>
                   {d.nama.split(" ")[0]}
                 </span>
                 {d.isAbsent ? (
@@ -207,14 +207,14 @@ function TeacherIPPCard({ t }: { t: TeacherIPPData }) {
                 ) : (
                   <>
                     <div 
-                      className="flex flex-col items-center justify-center min-w-[20px]" 
+                      className="flex flex-col items-center justify-center" 
                       title={d.naikLevel ? `${d.startLevel || '-'} ➔ ${d.endLevel || '-'}` : undefined}
                     >
                       <span className={d.naikLevel ? "text-emerald-500 font-bold" : "text-muted-foreground"}>
                         {d.naikLevel ? "Y" : "-"}
                       </span>
                       {d.naikLevel && (
-                        <span className="text-[8px] text-emerald-600 leading-tight mt-0.5 text-center max-w-[40px] truncate" title={d.endLevel || undefined}>
+                        <span className="text-[8px] text-emerald-600 leading-tight mt-0.5 text-center w-full truncate" title={d.endLevel || undefined}>
                           {d.endLevel}
                         </span>
                       )}
