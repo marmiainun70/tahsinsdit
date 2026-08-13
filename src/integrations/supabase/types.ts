@@ -1778,7 +1778,7 @@ export type Database = {
             columns: ["guru_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["user_id"]
           },
         ]
       }
