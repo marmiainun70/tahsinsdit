@@ -292,3 +292,47 @@ export const useDiagnosticDetail = (studentId: string | undefined) => {
     enabled: !!studentId,
   });
 };
+
+export const useDiagnosticProfileStats = (academicYearId?: string) => {
+  return useQuery({
+    queryKey: ["diagnostic-profile-stats", academicYearId],
+    queryFn: async () => {
+      let query = supabase
+        .from("evaluasi_profil_awal")
+        .select("jawaban, evaluasi_awal_semester!inner(academic_year_id)");
+        
+      if (academicYearId) {
+        query = query.eq("evaluasi_awal_semester.academic_year_id", academicYearId);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error("Error fetching diagnostic profile stats:", error);
+        throw error;
+      }
+      
+      const stats = {
+        rutinitas: {} as Record<string, number>,
+        pendamping: {} as Record<string, number>,
+        total: data.length
+      };
+      
+      data.forEach(item => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const jawaban = item.jawaban as any;
+        if (jawaban?.rutinitas_mengaji) {
+          stats.rutinitas[jawaban.rutinitas_mengaji] = (stats.rutinitas[jawaban.rutinitas_mengaji] || 0) + 1;
+        }
+        if (jawaban?.pendamping_belajar && Array.isArray(jawaban.pendamping_belajar)) {
+          jawaban.pendamping_belajar.forEach((p: string) => {
+            stats.pendamping[p] = (stats.pendamping[p] || 0) + 1;
+          });
+        }
+      });
+      
+      return stats;
+    },
+    enabled: true,
+  });
+};

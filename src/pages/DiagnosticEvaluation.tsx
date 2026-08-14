@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useDiagnosticStudents, useSubmitDiagnosticWizard, FullDiagnosticData } from "@/hooks/useDiagnostic";
+import { useDiagnosticStudents, useSubmitDiagnosticWizard, FullDiagnosticData, useDiagnosticProfileStats } from "@/hooks/useDiagnostic";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAddStudent } from "@/hooks/useSupabaseData";
 import { useAcademicYears } from "@/hooks/useAcademicCalendar";
@@ -224,6 +224,7 @@ export default function DiagnosticEvaluation() {
 
   const { data: years = [] } = useAcademicYears();
   const activeYear = years.find((y) => y.status === "aktif") || years[0];
+  const { data: profileStats } = useDiagnosticProfileStats(activeYear?.id);
   
   // Add Student State
   const [addOpen, setAddOpen] = useState(false);
@@ -745,6 +746,66 @@ export default function DiagnosticEvaluation() {
         </Dialog>
         </div>
       </div>
+
+      {profileStats && profileStats.total > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Rutinitas Mengaji Siswa</CardTitle>
+              <CardDescription>Berdasarkan {profileStats.total} data evaluasi</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {Object.entries(profileStats.rutinitas).sort((a,b)=>b[1]-a[1]).map(([key, value]) => {
+                  const percentage = Math.round((value / profileStats.total) * 100);
+                  return (
+                    <div key={key} className="flex flex-col gap-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{key}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">{percentage}% <span className="text-muted-foreground font-normal text-xs">({value})</span></span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-blue-500 rounded-full" 
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Pendamping Belajar di Rumah</CardTitle>
+              <CardDescription>Berdasarkan {profileStats.total} data evaluasi</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {Object.entries(profileStats.pendamping).sort((a,b)=>b[1]-a[1]).map(([key, value]) => {
+                  const percentage = Math.round((value / profileStats.total) * 100);
+                  return (
+                    <div key={key} className="flex flex-col gap-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="font-medium text-slate-700 dark:text-slate-300">{key}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">{percentage}% <span className="text-muted-foreground font-normal text-xs">({value})</span></span>
+                      </div>
+                      <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-emerald-500 rounded-full" 
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <Card>
         <CardContent className="p-6">
