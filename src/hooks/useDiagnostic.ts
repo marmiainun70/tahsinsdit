@@ -6,6 +6,21 @@ import { useRolePermissions } from "@/hooks/useSupabaseData";
 
 import { fetchApprovedManagedStudentIds } from "@/hooks/useSupabaseData";
 
+export const normalizeRutinitas = (str: string) => {
+  if (!str) return "Tidak Disebutkan";
+  return str;
+};
+
+export const normalizePendamping = (str: string) => {
+  if (!str) return "Lainnya";
+  const lower = str.toLowerCase();
+  if (lower.includes("ibu") || lower.includes("ayah") || lower.includes("orang tua") || lower.includes("orangtua") || lower.includes("bunda") || lower.includes("abi") || lower.includes("umi") || lower.includes("bapak") || lower.includes("mama") || lower.includes("papa")) return "Orang Tua";
+  if (lower.includes("guru") || lower.includes("ustadz") || lower.includes("ustazah") || lower.includes("tpa") || lower.includes("tpq") || lower.includes("madrasah") || lower.includes("sekolah")) return "Guru / TPQ";
+  if (lower.includes("kakak") || lower.includes("adik") || lower.includes("saudara") || lower.includes("kakek") || lower.includes("nenek") || lower.includes("keluarga")) return "Keluarga Lainnya";
+  if (lower.includes("sendiri") || lower.includes("tidak ada") || lower.includes("mandiri")) return "Mandiri";
+  return "Lainnya";
+};
+
 export const useDiagnosticStudents = ({
   page,
   pageSize,
@@ -13,6 +28,8 @@ export const useDiagnosticStudents = ({
   kelas,
   rombel,
   statusEvaluasi,
+  rutinitasFilter,
+  pendampingFilter,
 }: {
   page: number;
   pageSize: number;
@@ -20,12 +37,14 @@ export const useDiagnosticStudents = ({
   kelas: string;
   rombel: string;
   statusEvaluasi?: string;
+  rutinitasFilter?: string;
+  pendampingFilter?: string;
 }) => {
   const { user, profile } = useAuth();
   const { data: permissions } = useRolePermissions();
 
   return useQuery({
-    queryKey: ["diagnostic-students", { page, pageSize, search, kelas, rombel, statusEvaluasi, userId: user?.id, role: profile?.role }],
+    queryKey: ["diagnostic-students", { page, pageSize, search, kelas, rombel, statusEvaluasi, rutinitasFilter, pendampingFilter, userId: user?.id, role: profile?.role }],
     queryFn: async () => {
       let selectStr = "*, evaluasi_awal_semester(final_predicate, evaluator_id, master_level_kemampuan(nama_level, kode_level), evaluasi_kelancaran(score), evaluasi_rekomendasi(manual_iqra, manual_halaman, master_level_kemampuan(kode_level, nama_level)))";
       
@@ -49,6 +68,45 @@ export const useDiagnosticStudents = ({
       if (search.trim()) {
         const searchTerm = `%${search.trim()}%`;
         query = query.or(`nama.ilike.${searchTerm},nis.ilike.${searchTerm},nisn.ilike.${searchTerm}`);
+      }
+
+      if (rutinitasFilter || pendampingFilter) {
+        const { data: allProfiles } = await supabase
+          .from("evaluasi_profil_awal")
+          .select("jawaban, evaluasi_awal_semester!inner(student_id)");
+
+        if (allProfiles) {
+          const matchingStudentIds = allProfiles.filter(item => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const jawaban = item.jawaban as any;
+            if (!jawaban) return false;
+            
+            let matchRutinitas = true;
+            let matchPendamping = true;
+
+            if (rutinitasFilter) {
+              const cat = normalizeRutinitas(jawaban.rutinitas_mengaji);
+              matchRutinitas = (cat === rutinitasFilter);
+            }
+
+            if (pendampingFilter) {
+              if (jawaban.pendamping_belajar && Array.isArray(jawaban.pendamping_belajar)) {
+                matchPendamping = jawaban.pendamping_belajar.some((p: string) => normalizePendamping(p) === pendampingFilter);
+              } else {
+                matchPendamping = false;
+              }
+            }
+
+            return matchRutinitas && matchPendamping;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          }).map(item => (item.evaluasi_awal_semester as any).student_id);
+
+          if (matchingStudentIds.length === 0) {
+            query = query.in("id", ["00000000-0000-0000-0000-000000000000"]); 
+          } else {
+            query = query.in("id", matchingStudentIds);
+          }
+        }
       }
 
       if (kelas && kelas !== "all") {
@@ -316,21 +374,6 @@ export const useDiagnosticProfileStats = (academicYearId?: string) => {
         rutinitas: {} as Record<string, number>,
         pendamping: {} as Record<string, number>,
         total: data.length
-      };
-      
-      const normalizeRutinitas = (str: string) => {
-        if (!str) return "Tidak Disebutkan";
-        return str;
-      };
-
-      const normalizePendamping = (str: string) => {
-        if (!str) return "Lainnya";
-        const lower = str.toLowerCase();
-        if (lower.includes("ibu") || lower.includes("ayah") || lower.includes("orang tua") || lower.includes("orangtua") || lower.includes("bunda") || lower.includes("abi") || lower.includes("umi") || lower.includes("bapak") || lower.includes("mama") || lower.includes("papa")) return "Orang Tua";
-        if (lower.includes("guru") || lower.includes("ustadz") || lower.includes("ustazah") || lower.includes("tpa") || lower.includes("tpq") || lower.includes("madrasah") || lower.includes("sekolah")) return "Guru / TPQ";
-        if (lower.includes("kakak") || lower.includes("adik") || lower.includes("saudara") || lower.includes("kakek") || lower.includes("nenek") || lower.includes("keluarga")) return "Keluarga Lainnya";
-        if (lower.includes("sendiri") || lower.includes("tidak ada") || lower.includes("mandiri")) return "Mandiri";
-        return "Lainnya";
       };
 
       data.forEach(item => {

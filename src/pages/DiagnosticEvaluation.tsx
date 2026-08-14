@@ -219,6 +219,8 @@ export default function DiagnosticEvaluation() {
   const [kelas, setKelas] = useState("all");
   const [rombel, setRombel] = useState("all");
   const [statusEvaluasi, setStatusEvaluasi] = useState("all");
+  const [rutinitasFilter, setRutinitasFilter] = useState("");
+  const [pendampingFilter, setPendampingFilter] = useState("");
   const [customPendamping, setCustomPendamping] = useState("");
   const [localMotivasi, setLocalMotivasi] = useState("");
 
@@ -264,6 +266,8 @@ export default function DiagnosticEvaluation() {
     kelas,
     rombel,
     statusEvaluasi,
+    rutinitasFilter,
+    pendampingFilter,
   });
 
   const students = diagnosticData?.students || [];
@@ -763,7 +767,14 @@ export default function DiagnosticEvaluation() {
                 {Object.entries(profileStats.rutinitas).sort((a,b)=>b[1]-a[1]).map(([key, value]) => {
                   const percentage = Math.round((value / profileStats.total) * 100);
                   return (
-                    <div key={key} className="flex items-center gap-3">
+                    <div 
+                      key={key} 
+                      className={`flex items-center gap-3 p-2 -mx-2 rounded-lg cursor-pointer transition-colors ${rutinitasFilter === key ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent'}`}
+                      onClick={() => {
+                        setRutinitasFilter(rutinitasFilter === key ? "" : key);
+                        setPage(1);
+                      }}
+                    >
                       <div className="w-10 text-right shrink-0">
                         <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{percentage}%</span>
                       </div>
@@ -773,7 +784,7 @@ export default function DiagnosticEvaluation() {
                           <span className="text-xs text-slate-400 shrink-0">{value} siswa</span>
                         </div>
                         <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-blue-500 rounded-full" style={{ width: `${percentage}%` }} />
+                          <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{ width: `${percentage}%` }} />
                         </div>
                       </div>
                     </div>
@@ -789,7 +800,14 @@ export default function DiagnosticEvaluation() {
                 {Object.entries(profileStats.pendamping).sort((a,b)=>b[1]-a[1]).map(([key, value]) => {
                   const percentage = Math.round((value / profileStats.total) * 100);
                   return (
-                    <div key={key} className="flex items-center gap-3">
+                    <div 
+                      key={key} 
+                      className={`flex items-center gap-3 p-2 -mx-2 rounded-lg cursor-pointer transition-colors ${pendampingFilter === key ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent'}`}
+                      onClick={() => {
+                        setPendampingFilter(pendampingFilter === key ? "" : key);
+                        setPage(1);
+                      }}
+                    >
                       <div className="w-10 text-right shrink-0">
                         <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{percentage}%</span>
                       </div>
@@ -799,7 +817,7 @@ export default function DiagnosticEvaluation() {
                           <span className="text-xs text-slate-400 shrink-0">{value} siswa</span>
                         </div>
                         <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${percentage}%` }} />
+                          <div className="h-full bg-emerald-500 rounded-full transition-all duration-500" style={{ width: `${percentage}%` }} />
                         </div>
                       </div>
                     </div>
@@ -850,11 +868,24 @@ export default function DiagnosticEvaluation() {
                 <SelectValue placeholder="Status Evaluasi" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Semua Status</SelectItem>
-                <SelectItem value="sudah">Sudah Dievaluasi</SelectItem>
-                <SelectItem value="belum">Belum Dievaluasi</SelectItem>
+                <SelectItem value="all">Status: Semua</SelectItem>
+                <SelectItem value="belum">Belum Evaluasi</SelectItem>
+                <SelectItem value="sudah">Sudah Evaluasi</SelectItem>
               </SelectContent>
             </Select>
+            {(rutinitasFilter || pendampingFilter) && (
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setRutinitasFilter("");
+                  setPendampingFilter("");
+                  setPage(1);
+                }}
+                className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-200"
+              >
+                Hapus Filter Profil
+              </Button>
+            )}
           </div>
 
           <div className="rounded-md border overflow-x-auto">
