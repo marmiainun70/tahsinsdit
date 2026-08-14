@@ -34,6 +34,11 @@ function RecommendationCard({ rec }: { rec: TeacherRecommendation }) {
       <CardContent className="p-5 flex flex-col flex-1 gap-4">
         <div>
           <h3 className="font-bold text-lg text-foreground">{rec.teacherName}</h3>
+          {rec.classes && (
+            <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-2">
+              Mengampu di kelas {rec.classes}
+            </p>
+          )}
           <p className="text-xs text-muted-foreground mt-1 mb-2">
             Status Kinerja Utama:
           </p>
@@ -110,7 +115,7 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
       if (uniqueClasses.length > 0) {
         return {
           ...rec,
-          teacherName: `${rec.teacherName} ${uniqueClasses.join(", ")}`
+          classes: uniqueClasses.join(", ")
         };
       }
       return rec;

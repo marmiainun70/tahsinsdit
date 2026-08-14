@@ -16,6 +16,7 @@ export interface TeacherRecommendation {
   sessionId: string;
   tags: KinerjaTag[];
   currentSnapshot?: RiwayatKinerjaGuru;
+  classes?: string;
 }
 
 const getPrimaryTag = (sepStatus: string): KinerjaTag => {
@@ -108,10 +109,10 @@ export const generateRecommendations = (
       }
     }
 
-    // 3. Risiko Burnout
-    if (history.length >= 5) {
+    // 3. Risiko Burnout (Dipercepat menjadi 3 bulan dari sebelumnya 5 bulan)
+    if (history.length >= 3) {
       let isBurnoutRisk = true;
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 3; i++) {
         const h = history[i];
         if (
           !(h.ibp_status === "Berat" || h.ibp_status === "Sangat Berat") ||
@@ -126,60 +127,59 @@ export const generateRecommendations = (
           label: "Risiko Burnout",
           category: "Risiko",
           type: "Tambahan",
-          description: "Performa sangat baik, namun perlu diperhatikan agar beban tidak memicu penurunan kinerja jangka panjang.",
+          description: "Performa sangat baik dalam 3 bulan terakhir, namun beban kerja tinggi memicu risiko burnout.",
           color: "bg-rose-100 text-rose-700 border-rose-200 font-bold"
         });
       }
     }
 
-    // 4 & 5. Deteksi Penurunan / Kenaikan Konsisten
-    if (history.length >= 3) {
+    // 4 & 5. Deteksi Penurunan / Kenaikan Konsisten (Dipercepat menjadi 2 bulan dari sebelumnya 3 bulan)
+    if (history.length >= 2) {
       const p1 = history[0].ipp_score; // Current
       const p2 = history[1].ipp_score; // M-1
-      const p3 = history[2].ipp_score; // M-2
       
-      if (p1 <= p2 && p2 <= p3 && (p3 - p1) >= ippTrendThreshold) {
+      if (p1 <= p2 && (p2 - p1) >= ippTrendThreshold) {
         tags.push({
-          label: `Penurunan Kinerja (-${(p3 - p1).toFixed(1)}%)`,
+          label: `Penurunan Kinerja (-${(p2 - p1).toFixed(1)}%)`,
           category: "Tren",
           type: "Tambahan",
-          description: `Skor IPP turun konsisten selama 3 bulan terakhir.`,
+          description: `Skor IPP turun signifikan dalam bulan terakhir.`,
           color: "bg-orange-100 text-orange-700 border-orange-200"
         });
-      } else if (p1 >= p2 && p2 >= p3 && (p1 - p3) >= ippTrendThreshold) {
+      } else if (p1 >= p2 && (p1 - p2) >= ippTrendThreshold) {
         tags.push({
-          label: `Kenaikan Konsisten (+${(p1 - p3).toFixed(1)}%)`,
+          label: `Kenaikan Signifikan (+${(p1 - p2).toFixed(1)}%)`,
           category: "Tren",
           type: "Tambahan",
-          description: `Skor IPP naik konsisten selama 3 bulan terakhir.`,
+          description: `Skor IPP naik memuaskan dalam bulan terakhir.`,
           color: "bg-emerald-100 text-emerald-700 border-emerald-200"
         });
       }
     }
 
-    // 6. Potensi Mentor
-    if (history.length >= 6) {
-      const isMentor = history.slice(0, 6).every(h => h.sep_status === "Sangat Efektif");
+    // 6. Potensi Mentor (Dipercepat menjadi 3 bulan dari sebelumnya 6 bulan)
+    if (history.length >= 3) {
+      const isMentor = history.slice(0, 3).every(h => h.sep_status === "Sangat Efektif");
       if (isMentor) {
         tags.push({
           label: "Potensi Mentor",
           category: "Prestasi",
           type: "Tambahan",
-          description: "Konsisten Sangat Efektif selama 6 bulan terakhir. Cocok untuk mentoring guru lain.",
+          description: "Konsisten Sangat Efektif selama 3 bulan terakhir. Cocok untuk mentoring guru lain.",
           color: "bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200"
         });
       }
     }
 
-    // 7. Prioritas Penghargaan Semester
-    if (history.length >= 3) {
-      const isPrioritas = history.slice(0, 3).every(h => h.sep_status === "Sangat Efektif");
+    // 7. Prioritas Penghargaan Semester (Dipercepat menjadi 2 bulan dari sebelumnya 3 bulan)
+    if (history.length >= 2) {
+      const isPrioritas = history.slice(0, 2).every(h => h.sep_status === "Sangat Efektif");
       if (isPrioritas) {
         tags.push({
           label: "Kandidat Penghargaan",
           category: "Prestasi",
           type: "Tambahan",
-          description: "Konsisten Sangat Efektif selama 3 bulan terakhir.",
+          description: "Konsisten Sangat Efektif selama 2 bulan terakhir.",
           color: "bg-amber-100 text-amber-700 border-amber-200"
         });
       }
