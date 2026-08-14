@@ -117,6 +117,8 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
     );
   }
 
+  const countTag = (label: string) => recommendations.filter(r => r.tags.some(t => t.label === label)).length;
+  
   const summary = {
     apresiasi: countTag("Layak Diapresiasi"),
     pendampingan: countTag("Perlu Pendampingan") + countTag("Perlu Perhatian"),
