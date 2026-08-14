@@ -319,12 +319,8 @@ export const useDiagnosticProfileStats = (academicYearId?: string) => {
       };
       
       const normalizeRutinitas = (str: string) => {
-        if (!str) return "Lainnya";
-        const lower = str.toLowerCase();
-        if (lower.includes("setiap hari") || lower.includes("tiap hari") || lower.includes("rutin") || lower.includes("selalu")) return "Setiap Hari";
-        if (lower.includes("sering") || lower.includes("kadang") || lower.includes("jarang") || lower.includes("kali")) return "Kadang-kadang / Jarang";
-        if (lower.includes("tidak pernah") || lower.includes("belum")) return "Tidak Pernah";
-        return "Lainnya";
+        if (!str) return "Tidak Disebutkan";
+        return str;
       };
 
       const normalizePendamping = (str: string) => {
