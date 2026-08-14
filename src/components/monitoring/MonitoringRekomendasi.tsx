@@ -126,7 +126,7 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
     burnout: countTag("Risiko Burnout"),
   };
 
-  const filteredRecommendations = useMemo(() => {
+  const filteredRecommendations = (() => {
     if (!filterType) return recommendations;
     return recommendations.filter(r => {
       if (filterType === 'Apresiasi') return r.tags.some(t => t.label === "Layak Diapresiasi");
@@ -135,7 +135,7 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
       if (filterType === 'Risiko Burnout') return r.tags.some(t => t.label === "Risiko Burnout");
       return true;
     });
-  }, [recommendations, filterType]);
+  })();
 
   const recSesi1 = filteredRecommendations.filter(r => r.sessionId === "sesi1");
   const recSesi2 = filteredRecommendations.filter(r => r.sessionId === "sesi2");
