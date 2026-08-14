@@ -318,15 +318,36 @@ export const useDiagnosticProfileStats = (academicYearId?: string) => {
         total: data.length
       };
       
+      const normalizeRutinitas = (str: string) => {
+        if (!str) return "Lainnya";
+        const lower = str.toLowerCase();
+        if (lower.includes("setiap hari") || lower.includes("tiap hari") || lower.includes("rutin") || lower.includes("selalu")) return "Setiap Hari";
+        if (lower.includes("sering") || lower.includes("kadang") || lower.includes("jarang") || lower.includes("kali")) return "Kadang-kadang / Jarang";
+        if (lower.includes("tidak pernah") || lower.includes("belum")) return "Tidak Pernah";
+        return "Lainnya";
+      };
+
+      const normalizePendamping = (str: string) => {
+        if (!str) return "Lainnya";
+        const lower = str.toLowerCase();
+        if (lower.includes("ibu") || lower.includes("ayah") || lower.includes("orang tua") || lower.includes("orangtua") || lower.includes("bunda") || lower.includes("abi") || lower.includes("umi") || lower.includes("bapak") || lower.includes("mama") || lower.includes("papa")) return "Orang Tua";
+        if (lower.includes("guru") || lower.includes("ustadz") || lower.includes("ustazah") || lower.includes("tpa") || lower.includes("tpq") || lower.includes("madrasah") || lower.includes("sekolah")) return "Guru / TPQ";
+        if (lower.includes("kakak") || lower.includes("adik") || lower.includes("saudara") || lower.includes("kakek") || lower.includes("nenek") || lower.includes("keluarga")) return "Keluarga Lainnya";
+        if (lower.includes("sendiri") || lower.includes("tidak ada") || lower.includes("mandiri")) return "Mandiri";
+        return "Lainnya";
+      };
+
       data.forEach(item => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const jawaban = item.jawaban as any;
         if (jawaban?.rutinitas_mengaji) {
-          stats.rutinitas[jawaban.rutinitas_mengaji] = (stats.rutinitas[jawaban.rutinitas_mengaji] || 0) + 1;
+          const cat = normalizeRutinitas(jawaban.rutinitas_mengaji);
+          stats.rutinitas[cat] = (stats.rutinitas[cat] || 0) + 1;
         }
         if (jawaban?.pendamping_belajar && Array.isArray(jawaban.pendamping_belajar)) {
           jawaban.pendamping_belajar.forEach((p: string) => {
-            stats.pendamping[p] = (stats.pendamping[p] || 0) + 1;
+            const cat = normalizePendamping(p);
+            stats.pendamping[cat] = (stats.pendamping[cat] || 0) + 1;
           });
         }
       });
