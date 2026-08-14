@@ -22,6 +22,7 @@ interface MonitoringRekomendasiProps {
   selectedMonth: number;
   selectedYear: number;
   profileMap: Map<string, string>;
+  teacherClassesMap: Map<string, string>;
 }
 
 function RecommendationCard({ rec }: { rec: TeacherRecommendation }) {
@@ -64,7 +65,7 @@ function RecommendationCard({ rec }: { rec: TeacherRecommendation }) {
   );
 }
 
-export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap }: MonitoringRekomendasiProps) {
+export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap, teacherClassesMap }: MonitoringRekomendasiProps) {
   const [activeTab, setActiveTab] = useState("sesi1");
   const { historySnapshots, loading: snapshotLoading } = useKinerjaSnapshot();
   const { settings, loading: settingsLoading, saving: settingsSaving, updateThreshold } = useMonitoringSettings();
@@ -89,8 +90,21 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
     }
 
     const recs = generateRecommendations(currentSnapshots, pastSnapshots, profileMap, settings?.ipp_trend_threshold || 5);
-    return { recommendations: recs, currentMonthAvailable: true };
-  }, [historySnapshots, formattedMonth, profileMap, settings]);
+    
+    // Append classes to teacherName
+    const recsWithClasses = recs.map(rec => {
+      const classes = teacherClassesMap.get(rec.teacherId);
+      if (classes) {
+        return {
+          ...rec,
+          teacherName: `${rec.teacherName} ${classes}`
+        };
+      }
+      return rec;
+    });
+
+    return { recommendations: recsWithClasses, currentMonthAvailable: true };
+  }, [historySnapshots, formattedMonth, profileMap, settings, teacherClassesMap]);
 
   const handleSaveSettings = async () => {
     const val = parseFloat(thresholdInput);
