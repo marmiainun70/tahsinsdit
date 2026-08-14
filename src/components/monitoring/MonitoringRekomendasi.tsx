@@ -71,24 +71,6 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
   const { settings, loading: settingsLoading, saving: settingsSaving, updateThreshold } = useMonitoringSettings();
   const { data: allTeacherClasses } = useTeacherClasses();
 
-  const teacherClassesMap = useMemo(() => {
-    const map = new Map<string, string>();
-    if (!allTeacherClasses) return map;
-    
-    const groups = new Map<string, string[]>();
-    allTeacherClasses.forEach(tc => {
-      const g = groups.get(tc.teacher_id) || [];
-      const cls = `${tc.kelas}${tc.rombel}`;
-      if (!g.includes(cls)) g.push(cls);
-      groups.set(tc.teacher_id, g);
-    });
-
-    groups.forEach((classes, id) => {
-      map.set(id, classes.sort().join(", "));
-    });
-    return map;
-  }, [allTeacherClasses]);
-
   const [thresholdInput, setThresholdInput] = useState<string>("5");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [filterType, setFilterType] = useState<string | null>(null);
@@ -110,20 +92,32 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
 
     const recs = generateRecommendations(currentSnapshots, pastSnapshots, profileMap, settings?.ipp_trend_threshold || 5);
     
-    // Append classes to teacherName
+    // Append classes to teacherName based on session
     const recsWithClasses = recs.map(rec => {
-      const classes = teacherClassesMap.get(rec.teacherId);
-      if (classes) {
+      if (!allTeacherClasses) return rec;
+
+      const allowedKelas = rec.sessionId === "sesi1" ? [1, 2] : 
+                           rec.sessionId === "sesi2" ? [5, 6] : 
+                           rec.sessionId === "sesi3" ? [3, 4] : [];
+      
+      const teacherClasses = allTeacherClasses
+        .filter(tc => tc.teacher_id === rec.teacherId && allowedKelas.includes(tc.kelas))
+        .map(tc => `${tc.kelas}${tc.rombel}`)
+        .sort();
+
+      const uniqueClasses = Array.from(new Set(teacherClasses));
+
+      if (uniqueClasses.length > 0) {
         return {
           ...rec,
-          teacherName: `${rec.teacherName} ${classes}`
+          teacherName: `${rec.teacherName} ${uniqueClasses.join(", ")}`
         };
       }
       return rec;
     });
 
     return { recommendations: recsWithClasses, currentMonthAvailable: true };
-  }, [historySnapshots, formattedMonth, profileMap, settings, teacherClassesMap]);
+  }, [historySnapshots, formattedMonth, profileMap, settings, allTeacherClasses]);
 
   const handleSaveSettings = async () => {
     const val = parseFloat(thresholdInput);
