@@ -5,6 +5,7 @@ import { Info, Users, ShieldAlert, Award, TrendingDown, Settings2 } from "lucide
 import { generateRecommendations, TeacherRecommendation } from "@/utils/recommendationEngine";
 import { useKinerjaSnapshot } from "@/hooks/useKinerjaSnapshot";
 import { useMonitoringSettings } from "@/hooks/useMonitoringSettings";
+import { useTeacherClasses } from "@/hooks/useTeacherStudents";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,7 +23,6 @@ interface MonitoringRekomendasiProps {
   selectedMonth: number;
   selectedYear: number;
   profileMap: Map<string, string>;
-  teacherClassesMap: Map<string, string>;
 }
 
 function RecommendationCard({ rec }: { rec: TeacherRecommendation }) {
@@ -65,10 +65,29 @@ function RecommendationCard({ rec }: { rec: TeacherRecommendation }) {
   );
 }
 
-export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap, teacherClassesMap }: MonitoringRekomendasiProps) {
+export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap }: MonitoringRekomendasiProps) {
   const [activeTab, setActiveTab] = useState("sesi1");
   const { historySnapshots, loading: snapshotLoading } = useKinerjaSnapshot();
   const { settings, loading: settingsLoading, saving: settingsSaving, updateThreshold } = useMonitoringSettings();
+  const { data: allTeacherClasses } = useTeacherClasses();
+
+  const teacherClassesMap = useMemo(() => {
+    const map = new Map<string, string>();
+    if (!allTeacherClasses) return map;
+    
+    const groups = new Map<string, string[]>();
+    allTeacherClasses.forEach(tc => {
+      const g = groups.get(tc.teacher_id) || [];
+      const cls = `${tc.kelas}${tc.rombel}`;
+      if (!g.includes(cls)) g.push(cls);
+      groups.set(tc.teacher_id, g);
+    });
+
+    groups.forEach((classes, id) => {
+      map.set(id, classes.sort().join(", "));
+    });
+    return map;
+  }, [allTeacherClasses]);
 
   const [thresholdInput, setThresholdInput] = useState<string>("5");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);

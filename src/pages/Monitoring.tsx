@@ -343,28 +343,6 @@ export default function Monitoring() {
     return result;
   }, [allTeacherStudents, profileMap, students]);
 
-  const teacherClassesMap = useMemo(() => {
-    const map = new Map<string, Set<string>>();
-    const studentMap = new Map(students.map(s => [s.id, s]));
-    
-    allTeacherStudents.forEach(assignment => {
-      const student = studentMap.get(assignment.student_id);
-      if (student) {
-        const classStr = `${student.kelas}${student.rombel}`;
-        if (!map.has(assignment.teacher_id)) {
-          map.set(assignment.teacher_id, new Set());
-        }
-        map.get(assignment.teacher_id)!.add(classStr);
-      }
-    });
-    
-    const result = new Map<string, string>();
-    map.forEach((classes, teacherId) => {
-      result.set(teacherId, Array.from(classes).sort().join(", "));
-    });
-    return result;
-  }, [allTeacherStudents, students]);
-
   // Removed unused Siswa metrics
 
   const teacherLoadRows = useMemo(() => {
@@ -936,7 +914,6 @@ export default function Monitoring() {
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
             profileMap={profileMap}
-            teacherClassesMap={teacherClassesMap}
           />
         </TabsContent>
       </Tabs>
