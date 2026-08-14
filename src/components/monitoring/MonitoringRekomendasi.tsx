@@ -71,6 +71,7 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
 
   const [thresholdInput, setThresholdInput] = useState<string>("5");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [filterType, setFilterType] = useState<string | null>(null);
 
   // Handle setting loaded
   useMemo(() => {
@@ -116,18 +117,27 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
     );
   }
 
-  const recSesi1 = recommendations.filter(r => r.sessionId === "sesi1");
-  const recSesi2 = recommendations.filter(r => r.sessionId === "sesi2");
-  const recSesi3 = recommendations.filter(r => r.sessionId === "sesi3");
-
-  const countTag = (label: string) => recommendations.filter(r => r.tags.some(t => t.label === label)).length;
-  
   const summary = {
     apresiasi: countTag("Layak Diapresiasi"),
     pendampingan: countTag("Perlu Pendampingan") + countTag("Perlu Perhatian"),
     redistribusi: recommendations.filter(r => r.tags.some(t => t.category === "Distribusi")).length,
     burnout: countTag("Risiko Burnout"),
   };
+
+  const filteredRecommendations = useMemo(() => {
+    if (!filterType) return recommendations;
+    return recommendations.filter(r => {
+      if (filterType === 'Apresiasi') return r.tags.some(t => t.label === "Layak Diapresiasi");
+      if (filterType === 'Perlu Perhatian') return r.tags.some(t => t.label === "Perlu Pendampingan" || t.label === "Perlu Perhatian");
+      if (filterType === 'Cek Beban') return r.tags.some(t => t.category === "Distribusi");
+      if (filterType === 'Risiko Burnout') return r.tags.some(t => t.label === "Risiko Burnout");
+      return true;
+    });
+  }, [recommendations, filterType]);
+
+  const recSesi1 = filteredRecommendations.filter(r => r.sessionId === "sesi1");
+  const recSesi2 = filteredRecommendations.filter(r => r.sessionId === "sesi2");
+  const recSesi3 = filteredRecommendations.filter(r => r.sessionId === "sesi3");
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 relative">
@@ -177,7 +187,10 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="bg-blue-50/50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900">
+        <Card 
+          className={`bg-blue-50/50 dark:bg-blue-950/20 border-blue-100 dark:border-blue-900 cursor-pointer transition-all ${filterType === 'Apresiasi' ? 'ring-2 ring-blue-500 shadow-sm' : 'hover:bg-blue-100/50 dark:hover:bg-blue-900/30'}`}
+          onClick={() => setFilterType(filterType === 'Apresiasi' ? null : 'Apresiasi')}
+        >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">Apresiasi</p>
@@ -187,7 +200,10 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
           </CardContent>
         </Card>
         
-        <Card className="bg-rose-50/50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900">
+        <Card 
+          className={`bg-rose-50/50 dark:bg-rose-950/20 border-rose-100 dark:border-rose-900 cursor-pointer transition-all ${filterType === 'Perlu Perhatian' ? 'ring-2 ring-rose-500 shadow-sm' : 'hover:bg-rose-100/50 dark:hover:bg-rose-900/30'}`}
+          onClick={() => setFilterType(filterType === 'Perlu Perhatian' ? null : 'Perlu Perhatian')}
+        >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-rose-600 dark:text-rose-400 mb-1">Perlu Perhatian</p>
@@ -197,7 +213,10 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
           </CardContent>
         </Card>
 
-        <Card className="bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900">
+        <Card 
+          className={`bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900 cursor-pointer transition-all ${filterType === 'Cek Beban' ? 'ring-2 ring-indigo-500 shadow-sm' : 'hover:bg-indigo-100/50 dark:hover:bg-indigo-900/30'}`}
+          onClick={() => setFilterType(filterType === 'Cek Beban' ? null : 'Cek Beban')}
+        >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 mb-1">Cek Beban</p>
@@ -207,7 +226,10 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
           </CardContent>
         </Card>
 
-        <Card className="bg-orange-50/50 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900">
+        <Card 
+          className={`bg-orange-50/50 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900 cursor-pointer transition-all ${filterType === 'Risiko Burnout' ? 'ring-2 ring-orange-500 shadow-sm' : 'hover:bg-orange-100/50 dark:hover:bg-orange-900/30'}`}
+          onClick={() => setFilterType(filterType === 'Risiko Burnout' ? null : 'Risiko Burnout')}
+        >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-medium text-orange-600 dark:text-orange-400 mb-1">Risiko Burnout</p>
@@ -217,6 +239,19 @@ export function MonitoringRekomendasi({ selectedMonth, selectedYear, profileMap 
           </CardContent>
         </Card>
       </div>
+
+      {filterType && (
+        <div className="flex justify-center mt-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setFilterType(null)}
+            className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+          >
+            Hapus Filter ({filterType})
+          </Button>
+        </div>
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex justify-center w-full mb-6 mt-4">
