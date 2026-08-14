@@ -748,63 +748,67 @@ export default function DiagnosticEvaluation() {
       </div>
 
       {profileStats && profileStats.total > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Rutinitas Mengaji Siswa</CardTitle>
-              <CardDescription>Berdasarkan {profileStats.total} data evaluasi</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+        <Card className="bg-gradient-to-br from-slate-50 to-white dark:from-slate-900/40 dark:to-slate-950 border-slate-200/60 shadow-sm overflow-hidden mb-6">
+          <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800/60 bg-white/50 dark:bg-slate-900/50">
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              Ringkasan Profil Siswa
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Berdasarkan {profileStats.total} data evaluasi awal yang terkumpul</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100 dark:divide-slate-800/60">
+            {/* Rutinitas */}
+            <div className="p-5">
+              <h4 className="text-xs font-semibold text-slate-500 mb-4 uppercase tracking-wider">Rutinitas Mengaji</h4>
+              <div className="space-y-4">
                 {Object.entries(profileStats.rutinitas).sort((a,b)=>b[1]-a[1]).map(([key, value]) => {
                   const percentage = Math.round((value / profileStats.total) * 100);
                   return (
-                    <div key={key} className="flex flex-col gap-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium text-slate-700 dark:text-slate-300">{key}</span>
-                        <span className="font-bold text-slate-900 dark:text-white">{percentage}% <span className="text-muted-foreground font-normal text-xs">({value})</span></span>
+                    <div key={key} className="flex items-center gap-3">
+                      <div className="w-10 text-right shrink-0">
+                        <span className="text-sm font-bold text-blue-600 dark:text-blue-400">{percentage}%</span>
                       </div>
-                      <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-500 rounded-full" 
-                          style={{ width: `${percentage}%` }}
-                        />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate pr-2">{key}</span>
+                          <span className="text-xs text-slate-400 shrink-0">{value} siswa</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-500 rounded-full" style={{ width: `${percentage}%` }} />
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Pendamping Belajar di Rumah</CardTitle>
-              <CardDescription>Berdasarkan {profileStats.total} data evaluasi</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            {/* Pendamping */}
+            <div className="p-5">
+              <h4 className="text-xs font-semibold text-slate-500 mb-4 uppercase tracking-wider">Pendamping Belajar</h4>
+              <div className="space-y-4">
                 {Object.entries(profileStats.pendamping).sort((a,b)=>b[1]-a[1]).map(([key, value]) => {
                   const percentage = Math.round((value / profileStats.total) * 100);
                   return (
-                    <div key={key} className="flex flex-col gap-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium text-slate-700 dark:text-slate-300">{key}</span>
-                        <span className="font-bold text-slate-900 dark:text-white">{percentage}% <span className="text-muted-foreground font-normal text-xs">({value})</span></span>
+                    <div key={key} className="flex items-center gap-3">
+                      <div className="w-10 text-right shrink-0">
+                        <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{percentage}%</span>
                       </div>
-                      <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-emerald-500 rounded-full" 
-                          style={{ width: `${percentage}%` }}
-                        />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate pr-2">{key}</span>
+                          <span className="text-xs text-slate-400 shrink-0">{value} siswa</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${percentage}%` }} />
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
+        </Card>
       )}
 
       <Card>
