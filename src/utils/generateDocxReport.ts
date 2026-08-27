@@ -80,18 +80,8 @@ export const exportMonthlyRecapToDocx = async (
     // Sort tahfizh list by class and name
     const tahfizhList: Array<{ nama: string; kelas: string; capaian: string }> = [];
 
-    // Simple grouping logic for multiple reports per student (prioritizing tahfizh)
-    const reportMap = new Map<string, MonthlyReport>();
-    monthReports.forEach(r => {
-      if (!reportMap.has(r.student_id)) {
-        reportMap.set(r.student_id, r);
-      } else {
-         if (r.program_type === 'tahfizh') reportMap.set(r.student_id, r);
-      }
-    });
-
     activeStudents.forEach(s => {
-      const report = reportMap.get(s.id);
+      const report = monthReports.find(r => r.student_id === s.id);
       const bucket = getEffectiveProgramFromReport(report, s.level);
       stats.Total++;
 
@@ -266,9 +256,9 @@ export const exportMonthlyRecapToDocx = async (
                   new TableCell({
                     width: { size: 50, type: WidthType.PERCENTAGE },
                     children: [
-                      new Paragraph({ text: "Mengetahui,", alignment: AlignmentType.CENTER }),
-                      new Paragraph({ text: "Kepala Sekolah", alignment: AlignmentType.CENTER, spacing: { after: 1000 } }),
-                      new Paragraph({ text: "(..................................................)", alignment: AlignmentType.CENTER }),
+                      new Paragraph({ text: "Mengetahui,", alignment: AlignmentType.LEFT }),
+                      new Paragraph({ text: "Kepala Sekolah", alignment: AlignmentType.LEFT, spacing: { after: 1000 } }),
+                      new Paragraph({ text: "(Amrullah Rozy Dalimunthe, S.Si)", alignment: AlignmentType.LEFT, bold: true }),
                     ],
                     borders: {
                       top: { style: BorderStyle.NONE, size: 0, color: "auto" },
@@ -280,9 +270,10 @@ export const exportMonthlyRecapToDocx = async (
                   new TableCell({
                     width: { size: 50, type: WidthType.PERCENTAGE },
                     children: [
-                      new Paragraph({ text: " ", alignment: AlignmentType.CENTER }),
-                      new Paragraph({ text: "Koordinator Tahfizh", alignment: AlignmentType.CENTER, spacing: { after: 1000 } }),
-                      new Paragraph({ text: "(..................................................)", alignment: AlignmentType.CENTER }),
+                      new Paragraph({ text: `Sei Mencirim, ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}`, alignment: AlignmentType.RIGHT }),
+                      new Paragraph({ text: "Disusun Oleh,", alignment: AlignmentType.RIGHT }),
+                      new Paragraph({ text: "Koordinator Tahsin & Tahfizh", alignment: AlignmentType.RIGHT, spacing: { after: 1000 } }),
+                      new Paragraph({ text: "(Miftahul Arsyad Asri, S.H)", alignment: AlignmentType.RIGHT, bold: true }),
                     ],
                     borders: {
                       top: { style: BorderStyle.NONE, size: 0, color: "auto" },
