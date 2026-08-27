@@ -140,7 +140,6 @@ const Dashboard = () => {
       const sumNilai = monthReports.reduce((sum, r) => sum + (r.nilai_akhir_progresif || 0), 0);
       const avgNilai = totalCount > 0 ? Math.round(sumNilai / totalCount) : 0;
       
-      // Calculate total pages_read from all reports (including secondary tahfizh setoran)
       const sumHalaman = allMonthReports.reduce((sum, r) => sum + (r.pages_read || 0), 0);
       
       const countIqro1 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("1")).length;
@@ -149,8 +148,9 @@ const Dashboard = () => {
       const countIqro4 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("4")).length;
       const countIqro5 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("5")).length;
       const countIqro6 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("6")).length;
-      const countTL = monthReports.filter(r => r.program_type === "tahsin").length;
-      const countTFZ = monthReports.filter(r => r.program_type === "tahfizh").length;
+      
+      const countTL = monthReports.filter(r => baseLevelMap.get(r.student_id) === "Tahsin Lanjutan").length;
+      const countTFZ = monthReports.filter(r => baseLevelMap.get(r.student_id) === "Tahfizh").length;
 
       return {
         name: `${MONTH_NAMES[m.month - 1].substring(0,3)} ${m.year}`,
@@ -168,7 +168,27 @@ const Dashboard = () => {
         totalCount
       };
     });
-  }, [allReports, studentIds]);
+  }, [allReports, studentIds, students]);
+
+  useEffect(() => {
+    if (!students.length || !allReports.length) return;
+    const now = new Date();
+    const currentMonthReports = allReports.filter(r => r.month === now.getMonth() + 1 && r.year === now.getFullYear());
+    const baseLevelMap = new Map(students.map(s => [s.id, s.level]));
+    const discrepancies = currentMonthReports.filter(r => {
+      const base = baseLevelMap.get(r.student_id);
+      if (base === "Tahfizh" && r.program_type !== "tahfizh") return true;
+      if (base === "Tahsin Lanjutan" && r.program_type !== "tahsin") return true;
+      return false;
+    });
+    
+    if (discrepancies.length > 0) {
+      console.log("=== SISWA DENGAN PROGRAM LAPORAN TIDAK COCOK DENGAN MASTER ===");
+      discrepancies.forEach(r => {
+        console.log(`- Nama: ${r.student_name_snapshot} | Master: ${baseLevelMap.get(r.student_id)} | Diisi Guru: ${r.program_type}`);
+      });
+    }
+  }, [students, allReports]);
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-64">
