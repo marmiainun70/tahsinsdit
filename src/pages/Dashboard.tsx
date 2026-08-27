@@ -118,9 +118,10 @@ const Dashboard = () => {
           studentPrimaryReports.set(r.student_id, r);
         } else {
           const existing = studentPrimaryReports.get(r.student_id);
-          const baseLevel = baseLevelMap.get(r.student_id);
+          const historicalLevel = r.level_snapshot?.trim() || baseLevelMap.get(r.student_id) || "";
+          const isHistoricalTahfizh = historicalLevel.toLowerCase().includes("tahfizh");
           
-          if (baseLevel === "Tahfizh") {
+          if (isHistoricalTahfizh) {
             if (r.program_type === "tahfizh" && existing.program_type !== "tahfizh") {
               studentPrimaryReports.set(r.student_id, r);
             }
@@ -149,8 +150,15 @@ const Dashboard = () => {
       const countIqro5 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("5")).length;
       const countIqro6 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("6")).length;
       
-      const countTL = monthReports.filter(r => baseLevelMap.get(r.student_id) === "Tahsin Lanjutan").length;
-      const countTFZ = monthReports.filter(r => baseLevelMap.get(r.student_id) === "Tahfizh").length;
+      const countTL = monthReports.filter(r => {
+        const lvl = r.level_snapshot?.trim() || baseLevelMap.get(r.student_id);
+        return lvl === "Tahsin Lanjutan";
+      }).length;
+      
+      const countTFZ = monthReports.filter(r => {
+        const lvl = r.level_snapshot?.trim() || baseLevelMap.get(r.student_id) || "";
+        return lvl.toLowerCase().includes("tahfizh");
+      }).length;
 
       return {
         name: `${MONTH_NAMES[m.month - 1].substring(0,3)} ${m.year}`,
