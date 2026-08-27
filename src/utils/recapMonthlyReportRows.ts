@@ -26,6 +26,7 @@ export interface RecapJoinedRow {
   rombel: string;
   program: string;
   level: string;
+  endLevel: string;
   month: number;
   year: number;
   periode: string;
@@ -203,6 +204,10 @@ export const buildRecapJoinedRow = ({
   const studentClass = report?.kelas_snapshot ?? student.kelas;
   const studentRombel = report?.rombel_snapshot?.trim() || student.rombel;
   const studentLevel = report?.level_snapshot?.trim() || student.level;
+  const studentEndLevel =
+    (hasReport ? report?.end_iqra_level?.trim() : "") ||
+    (hasReport ? report?.iqra_level?.trim() : "") ||
+    studentLevel;
   const teacherSnapshot =
     report?.teacher_name_snapshot?.trim() ||
     report?.teacher_name?.trim() ||
@@ -215,8 +220,9 @@ export const buildRecapJoinedRow = ({
     nama: studentName,
     kelas: studentClass,
     rombel: studentRombel,
-    program: getProgramLabelFromLevel(studentLevel),
+    program: getProgramLabelFromLevel(studentEndLevel),
     level: studentLevel,
+    endLevel: studentEndLevel,
     month,
     year,
     periode: `${monthName} ${year}`,

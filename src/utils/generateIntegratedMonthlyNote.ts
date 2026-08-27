@@ -150,10 +150,10 @@ const buildIndicatorAnalysis = (input: IntegratedMonthlyNoteInput) => {
   const weakest = entries.reduce((low, current) => (current.value < low.value ? current : low), entries[0]);
   const allEqual = entries.every((entry) => entry.value === entries[0].value);
 
-  const appreciation = `Aspek terkuat: ${INDICATOR_TEXT[strongest.key][strongest.value]}.`;
+  const appreciation = `Ananda tampak paling baik pada ${INDICATOR_TEXT[strongest.key][strongest.value]}.`;
   const focus = allEqual
-    ? `Fokus: menjaga keseimbangan ketiga aspek belajar.`
-    : `Fokus perbaikan: ${INDICATOR_FOCUS[weakest.key][weakest.value]}.`;
+    ? `Mari jaga keseimbangan ketiga aspek belajarnya.`
+    : `Yang perlu dibantu berikutnya adalah ${INDICATOR_FOCUS[weakest.key][weakest.value]}.`;
 
   return `${appreciation} ${focus}`;
 };
@@ -162,25 +162,75 @@ const buildPageProgressAnalysis = (input: IntegratedMonthlyNoteInput) => {
   const progress = Number(input.signedProgress) || 0;
   const target = Math.max(1, Number(input.targetPages) || 1);
 
-  if (progress < 0) return "Progres halaman menurun; materi sebelumnya perlu diulang.";
-  if (progress === 0) return "Progres halaman stagnan; latihan rutin perlu ditata.";
-  if (progress >= target * 2) return "Progres halaman melampaui target.";
+  if (progress < 0) return "Bacaan sempat diulang ke halaman sebelumnya agar lebih kuat dasarnya.";
+  if (progress === 0) return "Halaman bacaan belum bertambah bulan ini, latihan rutin perlu ditata kembali.";
+  if (progress >= target * 2) return "Capaian halamannya melampaui target, luar biasa.";
   if (progress >= target) return "Target halaman tercapai.";
-  return "Progres ada, tetapi target belum tercapai.";
+  return "Sudah ada penambahan halaman, tinggal sedikit lagi untuk mencapai target.";
 };
 
 const buildSemesterAchievement = (input: IntegratedMonthlyNoteInput) => {
   if (input.program === "iqra") return "";
 
   const monthCount = Math.max(0, Math.min(5, Math.round(Number(input.pencapaianTargetBulan) || 0)));
-  if (monthCount <= 0) return "Pencapaian target bulanan masih perlu dibangun.";
+  if (monthCount <= 0) return "Target bulanan belum tercapai, mari kita bangun rutinitas belajarnya.";
 
-  return `Target bulanan tercapai ${monthCount} bulan dalam semester.`;
+  return `Target bulanan sudah tercapai ${monthCount} bulan dalam semester ini.`;
+};
+
+const normalizeLevelName = (value: string | number | null | undefined) => {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const lower = raw.toLowerCase();
+  const iqraMatch = lower.match(/(?:iqro|iqra)\s*([1-6])/);
+  if (iqraMatch) return `Iqra ${iqraMatch[1]}`;
+  if (lower.includes("lanjutan")) return "Tahsin Lanjutan";
+  if (lower.includes("tahsin dasar")) return "Tahsin Dasar";
+  if (lower.includes("tahfizh") || lower.includes("tahfidz") || lower.includes("tfz") || lower.includes("juz")) {
+    return "Tahfizh";
+  }
+  return raw;
+};
+
+const getLevelRank = (label: string): number | null => {
+  const iqraMatch = label.match(/^Iqra ([1-6])$/);
+  if (iqraMatch) return Number(iqraMatch[1]);
+  if (label === "Tahsin Dasar") return 6.5;
+  if (label === "Tahsin Lanjutan") return 7;
+  if (label === "Tahfizh") return 8;
+  return null;
+};
+
+const buildLevelChangeNote = (input: IntegratedMonthlyNoteInput, seed: string) => {
+  const start = normalizeLevelName(input.startLevel);
+  const end = normalizeLevelName(input.endLevel);
+  if (!start || !end || start === end) return "";
+
+  const startRank = getLevelRank(start);
+  const endRank = getLevelRank(end);
+  if (startRank === null || endRank === null) return "";
+
+  if (endRank > startRank) {
+    const naik = [
+      `Masya Allah, ananda naik tingkat dari ${start} ke ${end}. Semoga semangat membacanya terus tumbuh.`,
+      `Alhamdulillah, ada kenaikan tingkat dari ${start} ke ${end}. Pertahankan semangat belajarnya ya, Nak.`,
+      `Selamat, ananda berhasil melangkah dari ${start} ke ${end}. Teruskan latihan agar semakin mantap.`,
+    ];
+    return pick(naik, seed, 3);
+  }
+
+  const turun = [
+    `Bacaan ananda diulang dari ${start} kembali ke ${end} agar dasarnya lebih kuat. Mari belajar lebih serius dan rutin, insya Allah segera naik lagi.`,
+    `Tingkat bacaan turun dari ${start} ke ${end}; ini kesempatan memperbaiki dasar. Perbanyak latihan di rumah dan tetap semangat, ya.`,
+    `Ananda kembali ke ${end} setelah sebelumnya ${start}. Jangan berkecil hati, dengan latihan yang lebih giat bacaannya pasti meningkat lagi.`,
+  ];
+  return pick(turun, seed, 4);
 };
 
 export const generateIntegratedMonthlyNote = (input: IntegratedMonthlyNoteInput): string => {
   const seed = `${input.studentId}:${input.month}:${input.year}`;
   const opener = pick(CATEGORY_OPENERS[input.kategoriProgres], seed, 1);
+  const levelChange = buildLevelChangeNote(input, seed);
   const indicatorAnalysis = buildIndicatorAnalysis(input);
   const pageProgress = buildPageProgressAnalysis(input);
   const semesterAchievement = buildSemesterAchievement(input);
@@ -188,6 +238,7 @@ export const generateIntegratedMonthlyNote = (input: IntegratedMonthlyNoteInput)
 
   return [
     opener,
+    levelChange,
     `Nilai progresif bulan ini tercatat ${input.nilaiAkhir}.`,
     indicatorAnalysis,
     pageProgress,
