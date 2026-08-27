@@ -12,7 +12,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isTeacherRole } from "@/lib/roleLabels";
 import { useTeacherStudents } from "@/hooks/useTeacherStudents";
 import { useAllMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
-import { useAllAttendance } from "@/hooks/useAttendance";
 import { LineChart, AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LabelList } from "recharts";
 import TransitionAlertCard from "@/components/kenaikan/TransitionAlertCard";
 import { useAdminRegistrationNotifier } from "@/hooks/useAdminRegistrationNotifier";
@@ -44,59 +43,13 @@ const Dashboard = () => {
   const [trendMetric, setTrendMetric] = useState<"Semua" | "Kelulusan" | "Nilai" | "Halaman" | "Program">("Semua");
 
   const { data: allReports = [] } = useAllMonthlyReports();
-  const { data: allAttendance = [] } = useAllAttendance();
   const isLoading = loadingStudents || (isTeacher && loadingAssignments);
 
   const myStudentIds = new Set(assignments.map((a) => a.student_id));
   const baseStudents = isTeacher ? allStudents.filter((s) => myStudentIds.has(s.id)) : allStudents;
   const students = baseStudents.filter(s => s.status_siswa !== "alumni");
 
-  // Bulan terbaru yang laporan & absensinya sudah 100% terisi
-  const { completeMonth, levelByStudent } = useMemo(() => {
-    const empty = { completeMonth: null as null | { month: number; year: number }, levelByStudent: new Map<string, string>() };
-    if (!students.length) return empty;
-    const activeIds = students.map((s) => s.id);
-    const now = new Date();
-
-    for (let i = 0; i < 12; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const month = d.getMonth() + 1;
-      const year = d.getFullYear();
-
-      const monthReports = allReports.filter((r) => r.month === month && r.year === year);
-      const reportIds = new Set(monthReports.map((r) => r.student_id));
-      const attendanceIds = new Set(
-        allAttendance.filter((a: any) => a.month === month && a.year === year).map((a: any) => a.student_id)
-      );
-
-      const reportsComplete = activeIds.every((id) => reportIds.has(id));
-      const attendanceComplete = activeIds.every((id) => attendanceIds.has(id));
-      if (!reportsComplete || !attendanceComplete) continue;
-
-      const map = new Map<string, string>();
-      const baseLevelMap = new Map<string, string>(students.map(s => [s.id, s.level]));
-      monthReports.forEach((r: any) => {
-        const level = (r.end_iqra_level || r.iqra_level || r.level_snapshot || "").trim();
-        if (!level) return;
-        const existing = map.get(r.student_id);
-        const baseLevel = baseLevelMap.get(r.student_id);
-        
-        if (existing) {
-          if (baseLevel === "Tahfizh") {
-            if (r.program_type !== "tahfizh") return;
-          } else {
-            if (r.program_type === "tahfizh") return;
-          }
-        }
-        map.set(r.student_id, level);
-      });
-      return { completeMonth: { month, year }, levelByStudent: map };
-    }
-    return empty;
-  }, [allReports, allAttendance, students]);
-
-  const effLevel = (s: { id: string; level: string }) =>
-    (levelByStudent.get(s.id) || s.level) as ReadingLevel;
+  const effLevel = (s: { id: string; level: string }) => s.level as ReadingLevel;
 
   const total = students.length;
   // Tahsin Dasar = semua Iqro 1-6 (mereka adalah sub-level Tahsin Dasar)
