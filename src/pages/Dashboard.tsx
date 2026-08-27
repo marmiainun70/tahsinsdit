@@ -6,6 +6,7 @@ import { Users, BookOpen, Star, TrendingUp, Award, Loader2, AlertTriangle, Chevr
 import StudentRanking from "@/components/StudentRanking";
 import RelatedSystemCard from "@/components/RelatedSystemCard";
 import { CurriculumPanel } from "@/components/CurriculumPanel";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Database } from "@/integrations/supabase/types";
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
 import { useAuth } from "@/contexts/AuthContext";
@@ -108,7 +109,7 @@ const Dashboard = () => {
       months.push({ month: d.getMonth() + 1, year: d.getFullYear() });
     }
 
-    return months.map(m => {
+    const data = months.map(m => {
       const allMonthReports = allReports.filter(r => r.month === m.month && r.year === m.year && studentIds.has(r.student_id));
       
       const studentPrimaryReports = new Map();
@@ -179,7 +180,24 @@ const Dashboard = () => {
         totalCount
       };
     });
+    return data.reverse();
   }, [allReports, studentIds, students]);
+
+  // --- VISUAL DEBUGGER UNTUK USER ---
+  const missingStudents = useMemo(() => {
+    if (!students.length || !allReports.length) return [];
+    const now = new Date();
+    const m = trendData.length > 0 ? trendData[0].name : "";
+    const [monthName, yearStr] = m.split(" ");
+    const monthIndex = MONTH_NAMES.indexOf(monthName + " ") !== -1 ? MONTH_NAMES.indexOf(monthName + " ") + 1 : (MONTH_NAMES.findIndex(n => n.startsWith(monthName)) + 1 || now.getMonth() + 1);
+    const year = yearStr ? parseInt(yearStr) : now.getFullYear();
+
+    const currentMonthReports = allReports.filter(r => r.month === monthIndex && r.year === year);
+    const reportStudentIds = new Set(currentMonthReports.map(r => r.student_id));
+    
+    return students.filter(s => (s.level === "Tahfizh" || s.level === "Tahsin Lanjutan") && !reportStudentIds.has(s.id));
+  }, [students, allReports, trendData]);
+  // ------------------------------------
 
   useEffect(() => {
     if (!students.length || !allReports.length) return;
@@ -211,7 +229,23 @@ const Dashboard = () => {
 
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20 md:pb-8 pt-4 md:pt-6 animate-fade-in max-w-7xl mx-auto px-4 sm:px-6">
+      {missingStudents.length > 0 && (
+        <Alert variant="destructive" className="mb-6 bg-red-50/50 border-red-200">
+          <AlertTriangle className="h-5 w-5 text-red-600" />
+          <AlertTitle className="text-red-800 font-bold">Diagnostik Sistem: Laporan Belum Disimpan</AlertTitle>
+          <AlertDescription className="text-red-700 mt-2">
+            Grafik Tren bulan ini tidak menyertakan <strong>{missingStudents.length} siswa</strong> berikut karena laporannya masih terdeteksi kosong (0 halaman/tidak ada catatan) di database, sehingga tidak dihitung dalam rata-rata:
+            <ul className="list-disc pl-5 mt-2 max-h-40 overflow-y-auto font-medium">
+              {missingStudents.map(s => (
+                <li key={s.id}>{s.nama} ({s.kelas}{s.rombel} - {s.level})</li>
+              ))}
+            </ul>
+            <p className="mt-2 text-sm opacity-90">Halaman Rekap menganggap mereka bagian dari kelas (sehingga tertulis Total Tahfizh = 23), tetapi Grafik Tren mengabaikan mereka agar nilai rata-rata kelas tidak hancur menjadi 0.</p>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
