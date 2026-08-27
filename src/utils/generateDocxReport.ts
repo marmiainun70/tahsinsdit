@@ -82,14 +82,24 @@ export const exportMonthlyRecapToDocx = async (
     const tahfizhList: Array<{ nama: string; kelas: string; capaian: string }> = [];
 
     activeStudents.forEach(s => {
-      const report = monthReports.find(r => r.student_id === s.id);
-      const bucket = getEffectiveProgramFromReport(report, s.level);
+      const studentReports = monthReports.filter(r => r.student_id === s.id);
+      let primaryReport = studentReports[0];
+      
+      if (studentReports.length > 1) {
+        if (s.level === "Tahfizh") {
+          primaryReport = studentReports.find(r => r.program_type === "tahfizh") || studentReports[0];
+        } else {
+          primaryReport = studentReports.find(r => r.program_type !== "tahfizh") || studentReports[0];
+        }
+      }
+
+      const bucket = getEffectiveProgramFromReport(primaryReport, s.level);
       stats.Total++;
 
       if (bucket === "TFZ") {
         stats.Tahfizh++;
-        let capaian = report?.end_iqra_level || s.level || "Tahfizh";
-        if (report?.end_page) capaian += ` Hal. ${report.end_page}`;
+        let capaian = primaryReport?.end_iqra_level || s.level || "Tahfizh";
+        if (primaryReport?.end_page) capaian += ` Hal. ${primaryReport.end_page}`;
         tahfizhList.push({
           nama: s.nama,
           kelas: `${s.kelas}${s.rombel}`,
@@ -98,7 +108,7 @@ export const exportMonthlyRecapToDocx = async (
       } else if (bucket === "TL") {
         stats["Tahsin Lanjutan"]++;
       } else {
-        const endLvl = report?.end_iqra_level?.trim() || report?.iqra_level?.trim() || s.level;
+        const endLvl = primaryReport?.end_iqra_level?.trim() || primaryReport?.iqra_level?.trim() || s.level;
         if (endLvl.includes("1")) stats["Iqro 1"]++;
         else if (endLvl.includes("2")) stats["Iqro 2"]++;
         else if (endLvl.includes("3")) stats["Iqro 3"]++;
