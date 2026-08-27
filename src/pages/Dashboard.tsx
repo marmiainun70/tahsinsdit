@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isTeacherRole } from "@/lib/roleLabels";
 import { useTeacherStudents } from "@/hooks/useTeacherStudents";
 import { useAllMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
+import { getProgramBucket, getEffectiveProgramFromReport } from "@/utils/programLogic";
 import { LineChart, AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LabelList } from "recharts";
 import TransitionAlertCard from "@/components/kenaikan/TransitionAlertCard";
 import { useAdminRegistrationNotifier } from "@/hooks/useAdminRegistrationNotifier";
@@ -53,10 +54,9 @@ const Dashboard = () => {
   const effLevel = (s: { id: string; level: string }) => s.level as ReadingLevel;
 
   const total = students.length;
-  // Tahsin Dasar = semua Iqro 1-6 (mereka adalah sub-level Tahsin Dasar)
-  const tahsinDasarCount = students.filter((s) => getLevelGroup(effLevel(s)) === "Tahsin Dasar").length;
-  const tahsinLanjutanCount = students.filter((s) => effLevel(s) === "Tahsin Lanjutan").length;
-  const tahfizhCount = students.filter((s) => effLevel(s) === "Tahfizh").length;
+  const tahsinDasarCount = students.filter((s) => getProgramBucket(effLevel(s)) === "TD").length;
+  const tahsinLanjutanCount = students.filter((s) => getProgramBucket(effLevel(s)) === "TL").length;
+  const tahfizhCount = students.filter((s) => getProgramBucket(effLevel(s)) === "TFZ").length;
   const perluPerhatian = students.filter((s) => s.perlu_perhatian === true);
 
   const getClassStats = (kelas: number) => {
@@ -89,13 +89,6 @@ const Dashboard = () => {
     { label: "Tahfizh", value: tahfizhCount, icon: Award, color: "bg-purple-600", sub: "Hafalan", link: "/kelola-siswa?level=tahfizh" }
   ];
 
-
-  const getProgramBucket = (level: string | null): "TD" | "TL" | "TFZ" => {
-    const normalized = (level ?? "").toLowerCase();
-    if (normalized.includes("tahfizh")) return "TFZ";
-    if (normalized.includes("lanjutan") || normalized === "tahsin") return "TL";
-    return "TD";
-  };
 
   const studentIds = useMemo(() => new Set(students.map(s => s.id)), [students]);
   
@@ -152,17 +145,8 @@ const Dashboard = () => {
       const countIqro5 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("5")).length;
       const countIqro6 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("6")).length;
       
-      const countTL = monthReports.filter(r => {
-        const iqraFallback = r.program_type === "iqra" ? (r.end_iqra_level?.trim() || r.iqra_level?.trim()) : "";
-        const endLevel = iqraFallback || r.level_snapshot?.trim() || baseLevelMap.get(r.student_id) || "";
-        return getProgramBucket(endLevel) === "TL";
-      }).length;
-      
-      const countTFZ = monthReports.filter(r => {
-        const iqraFallback = r.program_type === "iqra" ? (r.end_iqra_level?.trim() || r.iqra_level?.trim()) : "";
-        const endLevel = iqraFallback || r.level_snapshot?.trim() || baseLevelMap.get(r.student_id) || "";
-        return getProgramBucket(endLevel) === "TFZ";
-      }).length;
+      const countTL = monthReports.filter(r => getEffectiveProgramFromReport(r, baseLevelMap.get(r.student_id)) === "TL").length;
+      const countTFZ = monthReports.filter(r => getEffectiveProgramFromReport(r, baseLevelMap.get(r.student_id)) === "TFZ").length;
 
       return {
         name: `${MONTH_NAMES[m.month - 1].substring(0,3)} ${m.year}`,

@@ -196,12 +196,7 @@ const scoreMatchesFilter = (score: number | null, filter: FilterScoreType) => {
   return score < 70;
 };
 
-const getProgramBucket = (level: string | null): "TD" | "TL" | "TFZ" => {
-  const normalized = (level ?? "").toLowerCase();
-  if (normalized.includes("tahfizh") || normalized.includes("tahfidz") || normalized.includes("tfz") || normalized.includes("juz")) return "TFZ";
-  if (normalized.includes("lanjutan") || normalized === "tahsin") return "TL";
-  return "TD";
-};
+const getStatusBadgeVariant = (status: "filled" | "empty") => status === "filled" ? "default" : "secondary";
 
 const RECAP_IDENTITY_COLUMNS = RECAP_REPORT_COLUMNS.filter((column) => column.group === "identity");
 const RECAP_DETAIL_COLUMNS = RECAP_REPORT_COLUMNS.filter((column) => column.group !== "identity");
@@ -392,7 +387,7 @@ const RecapReport = () => {
           if (filterAttendanceStatus !== "all" && r.attendanceStatus !== filterAttendanceStatus) return false;
           if (filterCategory !== "all" && r.kategoriProgres !== filterCategory) return false;
           if (!scoreMatchesFilter(r.nilaiAkhirProgresif, filterScore)) return false;
-          if (filterProgram !== "all" && getProgramBucket(r.endLevel || r.level) !== filterProgram) return false;
+          if (filterProgram !== "all" && r.bucket !== filterProgram) return false;
           return true;
         }).map((r, i) => ({ ...r, no: i + 1 }));
         return { ...g, rows: filtered };
@@ -420,9 +415,9 @@ const RecapReport = () => {
     const iqro4 = all.filter(r => (r.endLevel || r.level) === "Iqro 4").length;
     const iqro5 = all.filter(r => (r.endLevel || r.level) === "Iqro 5").length;
     const iqro6 = all.filter(r => (r.endLevel || r.level) === "Iqro 6").length;
-    const tahsinDasar = all.filter(r => getProgramBucket(r.endLevel || r.level) === "TD").length;
+    const tahsinDasar = all.filter(r => r.bucket === "TD").length;
     
-    const tl = all.filter(r => getProgramBucket(r.endLevel || r.level) === "TL");
+    const tl = all.filter(r => r.bucket === "TL");
     const tahsinLanjutan = tl.length;
     const tlGroupsMap = tl.reduce((acc, r) => {
       const key = `${r.kelas}${r.rombel}`;
@@ -433,7 +428,7 @@ const RecapReport = () => {
       label: key, count: tlGroupsMap[key], color: DYNAMIC_BAR_COLORS[i % DYNAMIC_BAR_COLORS.length]
     }));
 
-    const tfz = all.filter(r => getProgramBucket(r.endLevel || r.level) === "TFZ");
+    const tfz = all.filter(r => r.bucket === "TFZ");
     const tahfizh = tfz.length;
     const tfzGroupsMap = tfz.reduce((acc, r) => {
       const key = `${r.kelas}${r.rombel}`;

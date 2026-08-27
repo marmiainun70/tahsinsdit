@@ -1,6 +1,7 @@
 import type { Attendance, AttendancePeriodSettings } from "@/hooks/useAttendance";
 import type { MonthlyReport } from "@/hooks/useMonthlyReports";
 import type { ProgressCategory, ProgressivePoint } from "@/utils/calculateProgressiveReportScore";
+import { getEffectiveProgramFromReport, getProgramBucket, type ProgramBucket } from "./programLogic";
 
 export type ReportFillStatus = "filled" | "empty";
 export type RecapAttendanceStatus =
@@ -24,6 +25,7 @@ export interface RecapJoinedRow {
   nama: string;
   kelas: number;
   rombel: string;
+  bucket: ProgramBucket;
   program: string;
   level: string;
   endLevel: string;
@@ -220,6 +222,7 @@ export const buildRecapJoinedRow = ({
     nama: studentName,
     kelas: studentClass,
     rombel: studentRombel,
+    bucket: getEffectiveProgramFromReport(report, student.level),
     program: getProgramLabelFromLevel(studentEndLevel),
     level: studentLevel,
     endLevel: studentEndLevel,
