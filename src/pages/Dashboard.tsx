@@ -137,16 +137,26 @@ const Dashboard = () => {
       const avgNilai = totalCount > 0 ? Math.round(sumNilai / totalCount) : 0;
       
       const sumHalaman = allMonthReports.reduce((sum, r) => sum + (r.pages_read || 0), 0);
-      
-      const countIqro1 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("1")).length;
-      const countIqro2 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("2")).length;
-      const countIqro3 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("3")).length;
-      const countIqro4 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("4")).length;
-      const countIqro5 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("5")).length;
-      const countIqro6 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("6")).length;
-      
-      const countTL = monthReports.filter(r => getEffectiveProgramFromReport(r, baseLevelMap.get(r.student_id)) === "TL").length;
-      const countTFZ = monthReports.filter(r => getEffectiveProgramFromReport(r, baseLevelMap.get(r.student_id)) === "TFZ").length;
+      let countIqro1 = 0, countIqro2 = 0, countIqro3 = 0, countIqro4 = 0, countIqro5 = 0, countIqro6 = 0;
+      let countTL = 0, countTFZ = 0;
+
+      students.forEach(s => {
+        const report = studentPrimaryReports.get(s.id);
+        const bucket = getEffectiveProgramFromReport(report, s.level);
+        if (bucket === "TFZ") {
+          countTFZ++;
+        } else if (bucket === "TL") {
+          countTL++;
+        } else {
+          const endLvl = report?.end_iqra_level?.trim() || report?.iqra_level?.trim() || s.level;
+          if (endLvl.includes("1")) countIqro1++;
+          else if (endLvl.includes("2")) countIqro2++;
+          else if (endLvl.includes("3")) countIqro3++;
+          else if (endLvl.includes("4")) countIqro4++;
+          else if (endLvl.includes("5")) countIqro5++;
+          else if (endLvl.includes("6")) countIqro6++;
+        }
+      });
 
       return {
         name: `${MONTH_NAMES[m.month - 1].substring(0,3)} ${m.year}`,
