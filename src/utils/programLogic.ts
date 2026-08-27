@@ -28,6 +28,12 @@ export const getEffectiveProgramFromReport = (
   report: MinimalReportContext | null | undefined,
   studentMasterLevel: string | null | undefined
 ): ProgramBucket => {
+  // Check if they transitioned to Tahfizh (e.g., end_iqra_level contains "Tahfizh")
+  if (report?.end_iqra_level) {
+    const endBucket = getProgramBucket(report.end_iqra_level);
+    if (endBucket === "TFZ") return "TFZ";
+  }
+
   // If a report exists, prioritize the program_type filled by the teacher
   if (report?.program_type) {
     if (report.program_type === "tahfizh") return "TFZ";
