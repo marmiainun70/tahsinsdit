@@ -69,7 +69,8 @@ export const exportMonthlyRecapToDocx = async (
     const monthReports = reports.filter(r => r.month === m && r.year === y);
     const studentsWithReports = new Set(monthReports.map(r => r.student_id));
     const activeStudents = students.filter(
-      st => st.status_siswa === 'aktif' || studentsWithReports.has(st.id)
+      st => (st.status_siswa === 'aktif' || studentsWithReports.has(st.id)) &&
+            (st.kelas >= 1 && st.kelas <= 6)
     );
 
     const stats = {
