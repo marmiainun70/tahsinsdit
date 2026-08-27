@@ -49,7 +49,7 @@ const Dashboard = () => {
 
   const myStudentIds = new Set(assignments.map((a) => a.student_id));
   const baseStudents = isTeacher ? allStudents.filter((s) => myStudentIds.has(s.id)) : allStudents;
-  const students = baseStudents.filter(s => s.status_siswa !== "alumni");
+  const students = baseStudents.filter(s => s.status_siswa === "aktif");
 
   const effLevel = (s: { id: string; level: string }) => s.level as ReadingLevel;
 
@@ -90,7 +90,7 @@ const Dashboard = () => {
   ];
 
 
-  const studentIds = useMemo(() => new Set(students.map(s => s.id)), [students]);
+  const studentIds = useMemo(() => new Set(baseStudents.map(s => s.id)), [baseStudents]);
   
   const trendData = useMemo(() => {
     if (!allReports.length || !studentIds.size) return [];
@@ -143,7 +143,7 @@ const Dashboard = () => {
       if (allMonthReports.length > 0) {
         // Hanya hitung siswa aktif ATAU siswa yang sudah punya laporan di bulan tersebut
         const studentsWithReports = new Set(allMonthReports.map(r => r.student_id));
-        const activeOrReportedStudents = students.filter(
+        const activeOrReportedStudents = baseStudents.filter(
           st => st.status_siswa === 'aktif' || studentsWithReports.has(st.id)
         );
 
