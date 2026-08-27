@@ -150,10 +150,10 @@ const buildIndicatorAnalysis = (input: IntegratedMonthlyNoteInput) => {
   const weakest = entries.reduce((low, current) => (current.value < low.value ? current : low), entries[0]);
   const allEqual = entries.every((entry) => entry.value === entries[0].value);
 
-  const appreciation = `Aspek terkuat: ${INDICATOR_TEXT[strongest.key][strongest.value]}.`;
+  const appreciation = `Ananda tampak paling baik pada ${INDICATOR_TEXT[strongest.key][strongest.value]}.`;
   const focus = allEqual
-    ? `Fokus: menjaga keseimbangan ketiga aspek belajar.`
-    : `Fokus perbaikan: ${INDICATOR_FOCUS[weakest.key][weakest.value]}.`;
+    ? `Mari jaga keseimbangan ketiga aspek belajarnya.`
+    : `Yang perlu dibantu berikutnya adalah ${INDICATOR_FOCUS[weakest.key][weakest.value]}.`;
 
   return `${appreciation} ${focus}`;
 };
@@ -162,20 +162,20 @@ const buildPageProgressAnalysis = (input: IntegratedMonthlyNoteInput) => {
   const progress = Number(input.signedProgress) || 0;
   const target = Math.max(1, Number(input.targetPages) || 1);
 
-  if (progress < 0) return "Progres halaman menurun; materi sebelumnya perlu diulang.";
-  if (progress === 0) return "Progres halaman stagnan; latihan rutin perlu ditata.";
-  if (progress >= target * 2) return "Progres halaman melampaui target.";
+  if (progress < 0) return "Bacaan sempat diulang ke halaman sebelumnya agar lebih kuat dasarnya.";
+  if (progress === 0) return "Halaman bacaan belum bertambah bulan ini, latihan rutin perlu ditata kembali.";
+  if (progress >= target * 2) return "Capaian halamannya melampaui target, luar biasa.";
   if (progress >= target) return "Target halaman tercapai.";
-  return "Progres ada, tetapi target belum tercapai.";
+  return "Sudah ada penambahan halaman, tinggal sedikit lagi untuk mencapai target.";
 };
 
 const buildSemesterAchievement = (input: IntegratedMonthlyNoteInput) => {
   if (input.program === "iqra") return "";
 
   const monthCount = Math.max(0, Math.min(5, Math.round(Number(input.pencapaianTargetBulan) || 0)));
-  if (monthCount <= 0) return "Pencapaian target bulanan masih perlu dibangun.";
+  if (monthCount <= 0) return "Target bulanan belum tercapai, mari kita bangun rutinitas belajarnya.";
 
-  return `Target bulanan tercapai ${monthCount} bulan dalam semester.`;
+  return `Target bulanan sudah tercapai ${monthCount} bulan dalam semester ini.`;
 };
 
 const normalizeLevelName = (value: string | number | null | undefined) => {
