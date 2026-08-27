@@ -254,8 +254,9 @@ export const exportMonthlyRecapToDocx = async (
               new TableRow({
                 children: [
                   new TableCell({
-                    width: { size: 50, type: WidthType.PERCENTAGE },
+                    width: { size: 65, type: WidthType.PERCENTAGE },
                     children: [
+                      new Paragraph({ text: " ", alignment: AlignmentType.LEFT }),
                       new Paragraph({ text: "Mengetahui,", alignment: AlignmentType.LEFT }),
                       new Paragraph({ text: "Kepala Sekolah", alignment: AlignmentType.LEFT, spacing: { after: 1000 } }),
                       new Paragraph({ text: "(Amrullah Rozy Dalimunthe, S.Si)", alignment: AlignmentType.LEFT, bold: true }),
@@ -268,12 +269,12 @@ export const exportMonthlyRecapToDocx = async (
                     }
                   }),
                   new TableCell({
-                    width: { size: 50, type: WidthType.PERCENTAGE },
+                    width: { size: 35, type: WidthType.PERCENTAGE },
                     children: [
-                      new Paragraph({ text: `Sei Mencirim, ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}`, alignment: AlignmentType.RIGHT }),
-                      new Paragraph({ text: "Disusun Oleh,", alignment: AlignmentType.RIGHT }),
-                      new Paragraph({ text: "Koordinator Tahsin & Tahfizh", alignment: AlignmentType.RIGHT, spacing: { after: 1000 } }),
-                      new Paragraph({ text: "(Miftahul Arsyad Asri, S.H)", alignment: AlignmentType.RIGHT, bold: true }),
+                      new Paragraph({ text: `Sei Mencirim, ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}`, alignment: AlignmentType.LEFT }),
+                      new Paragraph({ text: "Disusun Oleh,", alignment: AlignmentType.LEFT }),
+                      new Paragraph({ text: "Koordinator Tahsin & Tahfizh", alignment: AlignmentType.LEFT, spacing: { after: 1000 } }),
+                      new Paragraph({ text: "(Miftahul Arsyad Asri, S.H)", alignment: AlignmentType.LEFT, bold: true }),
                     ],
                     borders: {
                       top: { style: BorderStyle.NONE, size: 0, color: "auto" },
