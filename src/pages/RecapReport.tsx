@@ -1,4 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { downloadPdf } from "@/utils/pdfDownload";
+import { exportMonthlyRecapToDocx } from "@/utils/generateDocxReport";
 import { useQueryClient } from "@tanstack/react-query";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -625,6 +627,28 @@ const RecapReport = () => {
   const restoreDefaultLayout = () => {
     if (!window.confirm("Kembalikan draft layout rekap ke default bawaan?")) return;
     recapLayout.resetDraftToDefault();
+  };
+
+  const handleExportDocx = async () => {
+    if (reports.length === 0 || filteredStudents.length === 0) {
+      toast({ title: "Tidak ada data untuk diexport", variant: "destructive" });
+      return;
+    }
+    try {
+      toast({ title: "Sedang menyiapkan dokumen DOCX...", description: "Mohon tunggu sebentar." });
+      
+      await exportMonthlyRecapToDocx(
+        students,
+        reports,
+        selectedMonth,
+        selectedYear
+      );
+      
+      toast({ title: "Berhasil", description: "Laporan DOCX berhasil diunduh." });
+    } catch (err) {
+      console.error(err);
+      toast({ title: "Gagal mengunduh dokumen", variant: "destructive" });
+    }
   };
 
   const toggleLayoutEdit = async () => {
@@ -1814,6 +1838,14 @@ const RecapReport = () => {
                 {pdfLoading === "download-a4" ? <Loader2 className="w-4 h-4 animate-spin text-emerald-600" /> : <FileText className="w-4 h-4 text-emerald-600" />}
                 Export PDF
               </Button>
+              <Button
+                variant="outline"
+                className="w-full gap-2 text-xs h-9 text-blue-600 border-blue-200 hover:bg-blue-50"
+                onClick={handleExportDocx}
+              >
+                <FileText className="w-4 h-4 text-blue-600" />
+                Export Word
+              </Button>
             </div>
           </div>
 
@@ -1825,6 +1857,14 @@ const RecapReport = () => {
                   Data Rekap Laporan Bulanan
                 </CardTitle>
                 <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="outline"
+                    className="gap-2 text-xs sm:text-sm flex-1 md:flex-none border-blue-200 text-blue-700 hover:bg-blue-50"
+                    onClick={handleExportDocx}
+                  >
+                    <FileText className="w-4 h-4" />
+                    Export Word
+                  </Button>
                   <Button
                     variant="outline"
                     className="gap-2 text-xs sm:text-sm flex-1 md:flex-none"
