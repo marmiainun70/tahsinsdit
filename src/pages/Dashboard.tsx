@@ -180,14 +180,14 @@ const Dashboard = () => {
         totalCount
       };
     });
-    return data.reverse();
+    return data;
   }, [allReports, studentIds, students]);
 
   // --- VISUAL DEBUGGER UNTUK USER ---
   const missingStudents = useMemo(() => {
     if (!students.length || !allReports.length) return [];
     const now = new Date();
-    const m = trendData.length > 0 ? trendData[0].name : "";
+    const m = trendData.length > 0 ? trendData[trendData.length - 1].name : "";
     const [monthName, yearStr] = m.split(" ");
     const monthIndex = MONTH_NAMES.indexOf(monthName + " ") !== -1 ? MONTH_NAMES.indexOf(monthName + " ") + 1 : (MONTH_NAMES.findIndex(n => n.startsWith(monthName)) + 1 || now.getMonth() + 1);
     const year = yearStr ? parseInt(yearStr) : now.getFullYear();
