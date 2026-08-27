@@ -152,13 +152,14 @@ const Dashboard = () => {
       const countIqro6 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("6")).length;
       
       const countTL = monthReports.filter(r => {
-        // Pada RecapReport, end_iqra_level diprioritaskan sebelum fallback ke level
-        const endLevel = r.end_iqra_level?.trim() || r.iqra_level?.trim() || r.level_snapshot?.trim() || baseLevelMap.get(r.student_id) || "";
+        const iqraFallback = r.program_type === "iqra" ? (r.end_iqra_level?.trim() || r.iqra_level?.trim()) : "";
+        const endLevel = iqraFallback || r.level_snapshot?.trim() || baseLevelMap.get(r.student_id) || "";
         return getProgramBucket(endLevel) === "TL";
       }).length;
       
       const countTFZ = monthReports.filter(r => {
-        const endLevel = r.end_iqra_level?.trim() || r.iqra_level?.trim() || r.level_snapshot?.trim() || baseLevelMap.get(r.student_id) || "";
+        const iqraFallback = r.program_type === "iqra" ? (r.end_iqra_level?.trim() || r.iqra_level?.trim()) : "";
+        const endLevel = iqraFallback || r.level_snapshot?.trim() || baseLevelMap.get(r.student_id) || "";
         return getProgramBucket(endLevel) === "TFZ";
       }).length;
 
