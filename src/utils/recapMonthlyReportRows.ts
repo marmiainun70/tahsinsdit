@@ -273,16 +273,38 @@ export const buildRecapJoinedGroups = ({
   attendanceSettings: AttendancePeriodSettings[];
   getTeacherName?: (userId: string | null) => string | undefined;
 }): RecapJoinedGroup[] => {
-  const reportMap = buildRecapMap(reports);
+  const reportsByPeriod = new Map<string, MonthlyReport[]>();
+  reports.forEach((r) => {
+    const key = buildRecapPeriodKey(r.student_id, r.year, r.month);
+    if (!reportsByPeriod.has(key)) {
+      reportsByPeriod.set(key, []);
+    }
+    reportsByPeriod.get(key)!.push(r);
+  });
+  
   const attendanceMap = buildRecapMap(attendance);
   const settingsMap = buildAttendanceSettingsMap(attendanceSettings);
   const groupMap = new Map<string, RecapJoinedGroup>();
 
   students.forEach((student) => {
     const periodKey = buildRecapPeriodKey(student.id, year, month);
-    const report = reportMap.get(periodKey);
-    const groupKelas = report?.kelas_snapshot ?? student.kelas;
-    const groupRombel = report?.rombel_snapshot?.trim() || student.rombel;
+    const studentReports = reportsByPeriod.get(periodKey) || [];
+    
+    let primaryReport: MonthlyReport | undefined;
+    let secondaryReport: MonthlyReport | undefined;
+    
+    if (studentReports.length > 0) {
+      if (student.level === "Tahfizh") {
+        primaryReport = studentReports.find(r => r.program_type === "tahfizh") || studentReports[0];
+        secondaryReport = studentReports.find(r => r.program_type !== "tahfizh" && r.id !== primaryReport?.id);
+      } else {
+        primaryReport = studentReports.find(r => r.program_type !== "tahfizh") || studentReports[0];
+        secondaryReport = studentReports.find(r => r.program_type === "tahfizh" && r.id !== primaryReport?.id);
+      }
+    }
+
+    const groupKelas = primaryReport?.kelas_snapshot ?? student.kelas;
+    const groupRombel = primaryReport?.rombel_snapshot?.trim() || student.rombel;
     const groupKey = `${groupKelas}-${groupRombel}`;
     if (!groupMap.has(groupKey)) {
       groupMap.set(groupKey, { kelas: groupKelas, rombel: groupRombel, rows: [] });
@@ -294,12 +316,18 @@ export const buildRecapJoinedGroups = ({
       month,
       year,
       monthName,
-      report,
+      report: primaryReport,
       attendance: attendanceMap.get(periodKey),
       attendanceSetting: settingsMap.get(buildAttendanceSettingKey(year, month, groupKelas, groupRombel)),
-      teacherName: getTeacherName?.(report?.created_by ?? null),
+      teacherName: getTeacherName?.(primaryReport?.created_by ?? null),
       no: group.rows.length + 1,
     });
+    
+    if (secondaryReport) {
+      const progInfo = secondaryReport.program_type === "tahfizh" ? "Tahfizh" : "Tahsin";
+      const secondaryInfo = `[Tambahan ${progInfo}: ${formatReportProgressPoint(secondaryReport, "end")} - ${secondaryReport.pages_read || 0} hal]`;
+      row.catatan = row.catatan ? `${row.catatan}\n${secondaryInfo}` : secondaryInfo;
+    }
 
     group.rows.push(row);
   });
