@@ -74,12 +74,20 @@ const Dashboard = () => {
       if (!reportsComplete || !attendanceComplete) continue;
 
       const map = new Map<string, string>();
+      const baseLevelMap = new Map<string, string>(students.map(s => [s.id, s.level]));
       monthReports.forEach((r: any) => {
         const level = (r.end_iqra_level || r.iqra_level || r.level_snapshot || "").trim();
         if (!level) return;
         const existing = map.get(r.student_id);
-        // laporan tahfizh sekunder tidak menimpa level utama
-        if (existing && r.program_type === "tahfizh") return;
+        const baseLevel = baseLevelMap.get(r.student_id);
+        
+        if (existing) {
+          if (baseLevel === "Tahfizh") {
+            if (r.program_type !== "tahfizh") return;
+          } else {
+            if (r.program_type === "tahfizh") return;
+          }
+        }
         map.set(r.student_id, level);
       });
       return { completeMonth: { month, year }, levelByStudent: map };
@@ -151,13 +159,22 @@ const Dashboard = () => {
       const allMonthReports = allReports.filter(r => r.month === m.month && r.year === m.year && studentIds.has(r.student_id));
       
       const studentPrimaryReports = new Map();
+      const baseLevelMap = new Map<string, string>(students.map(s => [s.id, s.level]));
       allMonthReports.forEach(r => {
         if (!studentPrimaryReports.has(r.student_id)) {
           studentPrimaryReports.set(r.student_id, r);
         } else {
           const existing = studentPrimaryReports.get(r.student_id);
-          if (existing.program_type === "tahfizh" && (r.program_type === "iqra" || r.program_type === "tahsin")) {
-            studentPrimaryReports.set(r.student_id, r);
+          const baseLevel = baseLevelMap.get(r.student_id);
+          
+          if (baseLevel === "Tahfizh") {
+            if (r.program_type === "tahfizh" && existing.program_type !== "tahfizh") {
+              studentPrimaryReports.set(r.student_id, r);
+            }
+          } else {
+            if (existing.program_type === "tahfizh" && r.program_type !== "tahfizh") {
+              studentPrimaryReports.set(r.student_id, r);
+            }
           }
         }
       });
