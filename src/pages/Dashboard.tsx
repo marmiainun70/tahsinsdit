@@ -119,7 +119,8 @@ const Dashboard = () => {
         } else {
           const existing = studentPrimaryReports.get(r.student_id);
           const historicalLevel = r.level_snapshot?.trim() || baseLevelMap.get(r.student_id) || "";
-          const isHistoricalTahfizh = historicalLevel.toLowerCase().includes("tahfizh");
+          const bucket = getProgramBucket(historicalLevel);
+          const isHistoricalTahfizh = bucket === "TFZ";
           
           if (isHistoricalTahfizh) {
             if (r.program_type === "tahfizh" && existing.program_type !== "tahfizh") {
@@ -151,13 +152,14 @@ const Dashboard = () => {
       const countIqro6 = monthReports.filter(r => r.program_type === "iqra" && r.end_iqra_level?.includes("6")).length;
       
       const countTL = monthReports.filter(r => {
-        const lvl = r.level_snapshot?.trim() || baseLevelMap.get(r.student_id);
-        return lvl === "Tahsin Lanjutan";
+        // Pada RecapReport, end_iqra_level diprioritaskan sebelum fallback ke level
+        const endLevel = r.end_iqra_level?.trim() || r.iqra_level?.trim() || r.level_snapshot?.trim() || baseLevelMap.get(r.student_id) || "";
+        return getProgramBucket(endLevel) === "TL";
       }).length;
       
       const countTFZ = monthReports.filter(r => {
-        const lvl = r.level_snapshot?.trim() || baseLevelMap.get(r.student_id) || "";
-        return lvl.toLowerCase().includes("tahfizh");
+        const endLevel = r.end_iqra_level?.trim() || r.iqra_level?.trim() || r.level_snapshot?.trim() || baseLevelMap.get(r.student_id) || "";
+        return getProgramBucket(endLevel) === "TFZ";
       }).length;
 
       return {
@@ -569,6 +571,13 @@ const Dashboard = () => {
       }
     </div>);
 
+};
+
+const getProgramBucket = (level: string | null): "TD" | "TL" | "TFZ" => {
+  const normalized = (level ?? "").toLowerCase();
+  if (normalized.includes("tahfizh") || normalized.includes("tahfidz") || normalized.includes("tfz") || normalized.includes("juz")) return "TFZ";
+  if (normalized.includes("lanjutan") || normalized === "tahsin") return "TL";
+  return "TD";
 };
 
 export default Dashboard;
