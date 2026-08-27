@@ -28,24 +28,30 @@ export const getEffectiveProgramFromReport = (
   report: MinimalReportContext | null | undefined,
   studentMasterLevel: string | null | undefined
 ): ProgramBucket => {
-  // Check if they transitioned to Tahfizh (e.g., end_iqra_level contains "Tahfizh")
-  if (report?.end_iqra_level) {
-    const endBucket = getProgramBucket(report.end_iqra_level);
-    if (endBucket === "TFZ") return "TFZ";
+  let baseBucket: ProgramBucket = "TD";
+  
+  if (report?.program_type) {
+    if (report.program_type === "tahfizh") baseBucket = "TFZ";
+    else if (report.program_type === "tahsin") baseBucket = "TL";
+    else if (report.program_type === "iqra") baseBucket = "TD";
+  } else if (report?.level_snapshot) {
+    baseBucket = getProgramBucket(report.level_snapshot);
+  } else {
+    baseBucket = getProgramBucket(studentMasterLevel);
   }
 
-  // If a report exists, prioritize the program_type filled by the teacher
-  if (report?.program_type) {
-    if (report.program_type === "tahfizh") return "TFZ";
-    if (report.program_type === "tahsin") return "TL";
-    if (report.program_type === "iqra") return "TD";
+  // Jika ada end_iqra_level, periksa apakah terjadi transisi/naik tingkat di akhir bulan
+  if (report?.end_iqra_level) {
+    const endBucket = getProgramBucket(report.end_iqra_level);
+    // Transisi dari Iqra -> Tahsin Lanjutan / Tahfizh
+    if (baseBucket === "TD" && (endBucket === "TL" || endBucket === "TFZ")) {
+      return endBucket;
+    }
+    // Transisi dari Tahsin Lanjutan -> Tahfizh
+    if (baseBucket === "TL" && endBucket === "TFZ") {
+      return endBucket;
+    }
   }
-  
-  // If program_type is missing but we have a historical snapshot, use it
-  if (report?.level_snapshot) {
-    return getProgramBucket(report.level_snapshot);
-  }
-  
-  // Fallback to current master data
-  return getProgramBucket(studentMasterLevel);
+
+  return baseBucket;
 };
