@@ -141,7 +141,13 @@ const Dashboard = () => {
       let countTL = 0, countTFZ = 0;
 
       if (allMonthReports.length > 0) {
-        students.forEach(s => {
+        // Hanya hitung siswa aktif ATAU siswa yang sudah punya laporan di bulan tersebut
+        const studentsWithReports = new Set(allMonthReports.map(r => r.student_id));
+        const activeOrReportedStudents = students.filter(
+          st => st.status_siswa === 'aktif' || studentsWithReports.has(st.id)
+        );
+
+        activeOrReportedStudents.forEach(s => {
           const report = studentPrimaryReports.get(s.id);
           const bucket = getEffectiveProgramFromReport(report, s.level);
           if (bucket === "TFZ") {
