@@ -140,23 +140,25 @@ const Dashboard = () => {
       let countIqro1 = 0, countIqro2 = 0, countIqro3 = 0, countIqro4 = 0, countIqro5 = 0, countIqro6 = 0;
       let countTL = 0, countTFZ = 0;
 
-      students.forEach(s => {
-        const report = studentPrimaryReports.get(s.id);
-        const bucket = getEffectiveProgramFromReport(report, s.level);
-        if (bucket === "TFZ") {
-          countTFZ++;
-        } else if (bucket === "TL") {
-          countTL++;
-        } else {
-          const endLvl = report?.end_iqra_level?.trim() || report?.iqra_level?.trim() || s.level;
-          if (endLvl.includes("1")) countIqro1++;
-          else if (endLvl.includes("2")) countIqro2++;
-          else if (endLvl.includes("3")) countIqro3++;
-          else if (endLvl.includes("4")) countIqro4++;
-          else if (endLvl.includes("5")) countIqro5++;
-          else if (endLvl.includes("6")) countIqro6++;
-        }
-      });
+      if (allMonthReports.length > 0) {
+        students.forEach(s => {
+          const report = studentPrimaryReports.get(s.id);
+          const bucket = getEffectiveProgramFromReport(report, s.level);
+          if (bucket === "TFZ") {
+            countTFZ++;
+          } else if (bucket === "TL") {
+            countTL++;
+          } else {
+            const endLvl = report?.end_iqra_level?.trim() || report?.iqra_level?.trim() || s.level;
+            if (endLvl.includes("1")) countIqro1++;
+            else if (endLvl.includes("2")) countIqro2++;
+            else if (endLvl.includes("3")) countIqro3++;
+            else if (endLvl.includes("4")) countIqro4++;
+            else if (endLvl.includes("5")) countIqro5++;
+            else if (endLvl.includes("6")) countIqro6++;
+          }
+        });
+      }
 
       return {
         name: `${MONTH_NAMES[m.month - 1].substring(0,3)} ${m.year}`,
@@ -515,10 +517,10 @@ const Dashboard = () => {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 {trendMetric === "Program" ? (
-                  <AreaChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }} stackOffset="expand">
+                  <AreaChart data={trendData} margin={{ top: 5, right: 20, bottom: 5, left: -20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                     <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
-                    <YAxis tickFormatter={(val) => `${Math.round(val * 100)}%`} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
                     <RechartsTooltip 
                       contentStyle={{ borderRadius: '12px', border: '1px solid hsl(var(--border))', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
                     />
