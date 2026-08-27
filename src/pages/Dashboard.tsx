@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStudents, LEVELS, LEVEL_COLORS, getLevelDisplayLabel, getLevelGroup, IQRO_LEVELS, IQRO_JILID_COLORS } from "@/hooks/useSupabaseData";
