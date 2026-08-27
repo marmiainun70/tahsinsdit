@@ -244,6 +244,57 @@ export const exportMonthlyRecapToDocx = async (
             spacing: { before: 600, after: 200 },
           }),
           ...tahfizhContent,
+
+          new Paragraph({
+            text: "",
+            spacing: { before: 800 },
+          }),
+          
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            borders: {
+              top: { style: BorderStyle.NONE, size: 0, color: "auto" },
+              bottom: { style: BorderStyle.NONE, size: 0, color: "auto" },
+              left: { style: BorderStyle.NONE, size: 0, color: "auto" },
+              right: { style: BorderStyle.NONE, size: 0, color: "auto" },
+              insideHorizontal: { style: BorderStyle.NONE, size: 0, color: "auto" },
+              insideVertical: { style: BorderStyle.NONE, size: 0, color: "auto" },
+            },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    width: { size: 50, type: WidthType.PERCENTAGE },
+                    children: [
+                      new Paragraph({ text: "Mengetahui,", alignment: AlignmentType.CENTER }),
+                      new Paragraph({ text: "Kepala Sekolah", alignment: AlignmentType.CENTER, spacing: { after: 1000 } }),
+                      new Paragraph({ text: "(..................................................)", alignment: AlignmentType.CENTER }),
+                    ],
+                    borders: {
+                      top: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                      bottom: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                      left: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                      right: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                    }
+                  }),
+                  new TableCell({
+                    width: { size: 50, type: WidthType.PERCENTAGE },
+                    children: [
+                      new Paragraph({ text: " ", alignment: AlignmentType.CENTER }),
+                      new Paragraph({ text: "Koordinator Tahfizh", alignment: AlignmentType.CENTER, spacing: { after: 1000 } }),
+                      new Paragraph({ text: "(..................................................)", alignment: AlignmentType.CENTER }),
+                    ],
+                    borders: {
+                      top: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                      bottom: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                      left: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                      right: { style: BorderStyle.NONE, size: 0, color: "auto" },
+                    }
+                  }),
+                ],
+              }),
+            ],
+          }),
         ],
       },
     ],
