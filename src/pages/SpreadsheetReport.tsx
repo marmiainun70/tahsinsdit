@@ -41,6 +41,7 @@ import {
   type ReportProgram,
 } from "@/utils/calculateProgressiveReportScore";
 import { generateIntegratedMonthlyNote } from "@/utils/generateIntegratedMonthlyNote";
+import { getEffectiveProgramFromReport } from "@/utils/programLogic";
 import type { SpreadsheetAlign, SpreadsheetColumnKey, SpreadsheetFont } from "@/types/spreadsheetLayout";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -659,7 +660,14 @@ const SpreadsheetReport = () => {
 
   const programStats = useMemo(() => rows.reduce(
     (acc, row) => {
-      acc[row.program] += 1;
+      const bucket = getEffectiveProgramFromReport(
+        { program_type: row.program, end_iqra_level: row.endLevel },
+        row.studentLevel
+      );
+      if (bucket === "TFZ") acc.tahfizh += 1;
+      else if (bucket === "TL") acc.tahsin += 1;
+      else acc.iqra += 1;
+
       acc.totalScore += scoreForRow(row).nilaiAkhir;
       return acc;
     },
