@@ -105,7 +105,7 @@ export const exportMonthlyRecapToDocx = async (
           capaian,
         });
       } else if (bucket === "TL") {
-        stats.TahsinLanjutan++;
+        stats["Tahsin Lanjutan"]++;
       } else {
         const endLvl = report?.end_iqra_level?.trim() || report?.iqra_level?.trim() || s.level;
         if (endLvl.includes("1")) stats["Iqro 1"]++;
