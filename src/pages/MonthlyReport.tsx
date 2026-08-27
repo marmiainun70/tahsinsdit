@@ -93,8 +93,53 @@ const statusClassMobile = (status: string, isLocked: boolean) => {
 const normalizeNumber = (value: string) => Math.max(0, Math.floor(Number(value) || 0));
 const ATTENDANCE_PERIOD_NOT_READY_MESSAGE =
   "Hari efektif bulan ini belum diatur. Silahkan hubungi Koordinator Tahfizh untuk pembaruan.";
-const ATTENDANCE_TOTAL_MISMATCH_MESSAGE =
-  "Total absensi tidak sesuai dengan hari efektif bulan ini. Silahkan hubungi Koordinator Tahfizh untuk pembaruan.";
+
+const DRAFT_KEY = "tahsinsdit_attendance_drafts";
+
+const getDrafts = () => {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveDraft = (month: number, year: number, studentId: string, row: Partial<AttendanceInputRow>) => {
+  try {
+    const drafts = getDrafts();
+    const key = `${month}_${year}_${studentId}`;
+    drafts[key] = {
+      present: row.present,
+      sick: row.sick,
+      permission: row.permission,
+      absent: row.absent,
+      timestamp: new Date().toISOString()
+    };
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+  } catch (e) {
+    console.error("Failed to save draft", e);
+  }
+};
+
+const clearDrafts = (month: number, year: number, studentIds: string[]) => {
+  try {
+    const drafts = getDrafts();
+    let changed = false;
+    for (const id of studentIds) {
+      const key = `${month}_${year}_${id}`;
+      if (drafts[key]) {
+        delete drafts[key];
+        changed = true;
+      }
+    }
+    if (changed) {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(drafts));
+    }
+  } catch (e) {
+    console.error("Failed to clear drafts", e);
+  }
+};
 
 const buildRows = (students: AttendanceStudent[], attendance: AttendanceWithStudent[]): AttendanceInputRow[] =>
   students.map((student) => {
@@ -224,8 +269,32 @@ const MonthlyReport = () => {
   });
 
   useEffect(() => {
-    setRows(buildRows(studentsQuery.data ?? [], attendanceQuery.data ?? []));
-  }, [studentsQuery.data, attendanceQuery.data]);
+    const defaultRows = buildRows(studentsQuery.data ?? [], attendanceQuery.data ?? []);
+    
+    try {
+      const drafts = getDrafts();
+      const rowsWithDrafts = defaultRows.map(row => {
+        const draftKey = `${month}_${year}_${row.studentId}`;
+        const draft = drafts[draftKey];
+        if (draft) {
+          return {
+            ...row,
+            present: draft.present,
+            sick: draft.sick,
+            permission: draft.permission,
+            absent: draft.absent,
+            dirty: true,
+            saveStatus: "dirty" as const
+          };
+        }
+        return row;
+      });
+      setRows(rowsWithDrafts);
+    } catch (e) {
+      console.error("Failed to apply drafts", e);
+      setRows(defaultRows);
+    }
+  }, [studentsQuery.data, attendanceQuery.data, month, year]);
 
   useEffect(() => {
     if (monthlyPeriodSettingsQuery.data) {
@@ -321,9 +390,14 @@ const MonthlyReport = () => {
   const showMissingEffectiveDaysAlert = teacherAccount && adminEffectiveDays <= 0;
 
   const updateRow = (studentId: string, field: "present" | "sick" | "permission" | "absent", value: string) => {
-    setRows((current) =>
-      current.map((row) => row.studentId === studentId ? { ...row, [field]: normalizeNumber(value), dirty: true, saveStatus: "dirty" } : row)
-    );
+    setRows((current) => {
+      const newRows = current.map((row) => row.studentId === studentId ? { ...row, [field]: normalizeNumber(value), dirty: true, saveStatus: "dirty" as const } : row);
+      const updatedRow = newRows.find(r => r.studentId === studentId);
+      if (updatedRow) {
+        saveDraft(month, year, studentId, updatedRow);
+      }
+      return newRows;
+    });
   };
 
   const scrollToRow = (studentId: string) => {
@@ -355,7 +429,6 @@ const MonthlyReport = () => {
       const total = getTotal(row);
       if (total !== effectiveDays) {
         scrollToRow(row.studentId);
-        if (teacherAccount) return ATTENDANCE_TOTAL_MISMATCH_MESSAGE;
         if (total < effectiveDays) return `${row.studentName}: total absensi ${total}, masih kurang dari hari efektif ${effectiveDays}.`;
         return `${row.studentName}: total absensi ${total}, melebihi hari efektif ${effectiveDays}.`;
       }
@@ -370,7 +443,6 @@ const MonthlyReport = () => {
     if (values.some((value) => value < 0)) return `${row.studentName}: angka absensi tidak boleh negatif.`;
     const total = getTotal(row);
     if (total !== effectiveDays) {
-      if (teacherAccount) return ATTENDANCE_TOTAL_MISMATCH_MESSAGE;
       if (total < effectiveDays) return `${row.studentName}: total absensi ${total}, masih kurang dari hari efektif ${effectiveDays}.`;
       return `${row.studentName}: total absensi ${total}, melebihi hari efektif ${effectiveDays}.`;
     }
@@ -396,6 +468,7 @@ const MonthlyReport = () => {
         permission: row.permission,
         absent: row.absent,
       }]);
+      clearDrafts(month, year, [row.studentId]);
       setRows((current) => current.map((item) => item.studentId === row.studentId ? { ...item, dirty: false, saveStatus: "saved" } : item));
       toast({ title: `${row.studentName} tersimpan` });
       return true;
@@ -464,6 +537,7 @@ const MonthlyReport = () => {
         absent: row.absent,
       })));
 
+      clearDrafts(month, year, dirtyRows.map(r => r.studentId));
       setRows((current) => current.map((row) => row.dirty ? { ...row, dirty: false, saveStatus: "saved" } : row));
       toast({ title: "Absensi berhasil disimpan", description: `${saved.length} data absensi tersimpan.` });
       await Promise.all([

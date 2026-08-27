@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { isTeacherRole } from "@/lib/roleLabels";
 import { useTeacherStudents } from "@/hooks/useTeacherStudents";
 import { useAllMonthlyReports, MONTH_NAMES } from "@/hooks/useMonthlyReports";
+import { useAllAttendance } from "@/hooks/useAttendance";
 import { LineChart, AreaChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend, LabelList } from "recharts";
 import TransitionAlertCard from "@/components/kenaikan/TransitionAlertCard";
 import { useAdminRegistrationNotifier } from "@/hooks/useAdminRegistrationNotifier";
