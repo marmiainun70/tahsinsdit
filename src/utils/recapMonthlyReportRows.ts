@@ -26,6 +26,7 @@ export interface RecapJoinedRow {
   rombel: string;
   program: string;
   level: string;
+  endLevel: string;
   month: number;
   year: number;
   periode: string;
