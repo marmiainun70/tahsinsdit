@@ -96,9 +96,14 @@ const Dashboard = () => {
     if (!allReports.length || !studentIds.size) return [];
     
     const now = new Date();
+    let refDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    if (now.getDate() >= 1 && now.getDate() <= 5) {
+      refDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    }
+    
     const months = [];
     for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const d = new Date(refDate.getFullYear(), refDate.getMonth() - i, 1);
       months.push({ month: d.getMonth() + 1, year: d.getFullYear() });
     }
 
@@ -204,7 +209,14 @@ const Dashboard = () => {
   useEffect(() => {
     if (!students.length || !allReports.length) return;
     const now = new Date();
-    const currentMonthReports = allReports.filter(r => r.month === now.getMonth() + 1 && r.year === now.getFullYear());
+    let targetMonth = now.getMonth() + 1;
+    let targetYear = now.getFullYear();
+    if (now.getDate() >= 1 && now.getDate() <= 5) {
+      const prevDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      targetMonth = prevDate.getMonth() + 1;
+      targetYear = prevDate.getFullYear();
+    }
+    const currentMonthReports = allReports.filter(r => r.month === targetMonth && r.year === targetYear);
     const baseLevelMap = new Map(students.map(s => [s.id, s.level]));
     const discrepancies = currentMonthReports.filter(r => {
       const base = baseLevelMap.get(r.student_id);
@@ -244,6 +256,7 @@ const Dashboard = () => {
               ))}
             </ul>
             <p className="mt-2 text-sm opacity-90">Halaman Rekap menganggap mereka bagian dari kelas (sehingga tertulis Total Tahfizh = 23), tetapi Grafik Tren mengabaikan mereka agar nilai rata-rata kelas tidak hancur menjadi 0.</p>
+            <p className="mt-1 text-sm opacity-90 font-medium">Catatan: Peringatan ini secara khusus diprioritaskan hanya untuk mengecek kekosongan data siswa Tahsin Lanjutan dan Tahfizh, bukan karena sistem gagal membaca data Tahsin Dasar.</p>
           </AlertDescription>
         </Alert>
       )}
