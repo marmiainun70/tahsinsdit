@@ -226,10 +226,9 @@ export const exportMonthlyRecapToDocx = async (
             spacing: { after: 200 }
           }),
           new Paragraph({
-            text: `Bulan ${monthName} Tahun ${selectedYear}`,
             alignment: AlignmentType.CENTER,
             spacing: { after: 400 },
-            bold: true,
+            children: [new TextRun({ text: `Bulan ${monthName} Tahun ${selectedYear}`, bold: true })],
           }),
           
           new Paragraph({
