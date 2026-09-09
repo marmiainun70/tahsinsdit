@@ -210,7 +210,7 @@ export const exportMonthlyRecapToDocx = async (
       tahfizhContent.push(table);
     });
   } else {
-    tahfizhContent.push(new Paragraph({ text: "Tidak ada siswa Tahfizh di bulan ini.", italics: true }));
+    tahfizhContent.push(new Paragraph({ children: [new TextRun({ text: "Tidak ada siswa Tahfizh di bulan ini.", italics: true })] }));
   }
 
   // Create Doc
@@ -270,7 +270,7 @@ export const exportMonthlyRecapToDocx = async (
                       new Paragraph({ text: " ", alignment: AlignmentType.LEFT }),
                       new Paragraph({ text: "Mengetahui,", alignment: AlignmentType.LEFT }),
                       new Paragraph({ text: "Kepala Sekolah", alignment: AlignmentType.LEFT, spacing: { after: 1000 } }),
-                      new Paragraph({ text: "(Amrullah Rozy Dalimunthe, S.Si)", alignment: AlignmentType.LEFT, bold: true }),
+                      new Paragraph({ alignment: AlignmentType.LEFT, children: [new TextRun({ text: "(Amrullah Rozy Dalimunthe, S.Si)", bold: true })] }),
                     ],
                     borders: {
                       top: { style: BorderStyle.NONE, size: 0, color: "auto" },
@@ -285,7 +285,7 @@ export const exportMonthlyRecapToDocx = async (
                       new Paragraph({ text: `Sei Mencirim, ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}`, alignment: AlignmentType.LEFT }),
                       new Paragraph({ text: "Disusun Oleh,", alignment: AlignmentType.LEFT }),
                       new Paragraph({ text: "Koordinator Tahsin & Tahfizh", alignment: AlignmentType.LEFT, spacing: { after: 1000 } }),
-                      new Paragraph({ text: "(Miftahul Arsyad Asri, S.H)", alignment: AlignmentType.LEFT, bold: true }),
+                      new Paragraph({ alignment: AlignmentType.LEFT, children: [new TextRun({ text: "(Miftahul Arsyad Asri, S.H)", bold: true })] }),
                     ],
                     borders: {
                       top: { style: BorderStyle.NONE, size: 0, color: "auto" },
