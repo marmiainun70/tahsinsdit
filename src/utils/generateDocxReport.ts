@@ -36,7 +36,7 @@ const createHeaderCell = (text: string, width?: number) => {
   });
 };
 
-const createCell = (text: string | number, align: AlignmentType = AlignmentType.LEFT, bold: boolean = false) => {
+const createCell = (text: string | number, align: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.LEFT, bold: boolean = false) => {
   let display = String(text);
   // Add + sign for positive diff
   if (typeof text === 'number' && align === AlignmentType.CENTER && bold && text > 0) {

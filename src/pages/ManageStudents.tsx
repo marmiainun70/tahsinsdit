@@ -44,6 +44,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { DataTablePagination } from "@/components/DataTablePagination";
+import { useQuery } from "@tanstack/react-query";
 import type { Database } from "@/integrations/supabase/types";
 
 type ReadingLevel = Database["public"]["Enums"]["reading_level"];
@@ -380,6 +381,36 @@ export default function ManageStudents() {
   const totalCount = data?.totalCount || 0;
   const totalPages = Math.ceil(totalCount / 20);
 
+  // Ambil Juz terakhir dari laporan bulanan Tahfizh untuk siswa Tahfizh yang tampil
+  const tahfizhStudentIds = useMemo(
+    () => students.filter((s: any) => s.level === "Tahfizh").map((s: any) => s.id as string),
+    [students]
+  );
+
+  const { data: tahfizhJuzMap = {} } = useQuery({
+    queryKey: ["tahfizh-last-juz", tahfizhStudentIds],
+    enabled: tahfizhStudentIds.length > 0,
+    queryFn: async () => {
+      const { data: reports, error } = await supabase
+        .from("monthly_reports")
+        .select("student_id, end_iqra_level, iqra_level, year, month, created_at")
+        .eq("program_type", "tahfizh")
+        .in("student_id", tahfizhStudentIds)
+        .order("year", { ascending: false })
+        .order("month", { ascending: false })
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      (reports || []).forEach((rep: any) => {
+        if (map[rep.student_id]) return;
+        const raw = rep.end_iqra_level || rep.iqra_level || "";
+        const juz = String(raw).replace(/\D/g, "");
+        if (juz) map[rep.student_id] = juz;
+      });
+      return map;
+    },
+  });
+
 
 
   // Actions
@@ -541,7 +572,7 @@ export default function ManageStudents() {
     });
   };
 
-  const formatProgress = (lvl: string, halaman: number) => {
+  const formatProgress = (lvl: string, halaman: number, studentId?: string) => {
     if (!halaman || halaman === 0) {
       return <span className="text-muted-foreground italic text-xs">Belum ada data</span>;
     }
@@ -552,7 +583,8 @@ export default function ManageStudents() {
       return `Al-Qur'an, Hal. ${halaman}`;
     }
     if (lvl === "Tahfizh") {
-      return `Hafalan, Hal. ${halaman}`;
+      const juz = studentId ? tahfizhJuzMap[studentId] : null;
+      return juz ? `Juz ${juz}, Hal. ${halaman}` : `Hafalan, Hal. ${halaman}`;
     }
     return `Hal. ${halaman}`;
   };
@@ -983,7 +1015,7 @@ export default function ManageStudents() {
                           </span>
                         </td>
                         <td className="py-2.5 px-4 text-xs font-semibold text-foreground">
-                          {formatProgress(s.level, s.halaman_terakhir)}
+                          {formatProgress(s.level, s.halaman_terakhir, s.id)}
                         </td>
                         <td className="py-2.5 px-4">
                           <div className="flex items-center justify-center gap-1.5">
@@ -1085,7 +1117,7 @@ export default function ManageStudents() {
                           </span>
                         </td>
                         <td className="py-3.5 px-5 text-sm font-semibold text-foreground">
-                          {formatProgress(s.level, s.halaman_terakhir)}
+                          {formatProgress(s.level, s.halaman_terakhir, s.id)}
                         </td>
                         <td className="py-3.5 px-5">
                           <div className="flex items-center justify-center gap-2">

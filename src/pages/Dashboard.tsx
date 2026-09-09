@@ -623,11 +623,4 @@ const Dashboard = () => {
 
 };
 
-const getProgramBucket = (level: string | null): "TD" | "TL" | "TFZ" => {
-  const normalized = (level ?? "").toLowerCase();
-  if (normalized.includes("tahfizh") || normalized.includes("tahfidz") || normalized.includes("tfz") || normalized.includes("juz")) return "TFZ";
-  if (normalized.includes("lanjutan") || normalized === "tahsin") return "TL";
-  return "TD";
-};
-
 export default Dashboard;
