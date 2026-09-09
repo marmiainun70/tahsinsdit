@@ -36,7 +36,7 @@ const createHeaderCell = (text: string, width?: number) => {
   });
 };
 
-const createCell = (text: string | number, align: AlignmentType = AlignmentType.LEFT, bold: boolean = false) => {
+const createCell = (text: string | number, align: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.LEFT, bold: boolean = false) => {
   let display = String(text);
   // Add + sign for positive diff
   if (typeof text === 'number' && align === AlignmentType.CENTER && bold && text > 0) {
@@ -210,7 +210,7 @@ export const exportMonthlyRecapToDocx = async (
       tahfizhContent.push(table);
     });
   } else {
-    tahfizhContent.push(new Paragraph({ text: "Tidak ada siswa Tahfizh di bulan ini.", italics: true }));
+    tahfizhContent.push(new Paragraph({ children: [new TextRun({ text: "Tidak ada siswa Tahfizh di bulan ini.", italics: true })] }));
   }
 
   // Create Doc
@@ -226,10 +226,9 @@ export const exportMonthlyRecapToDocx = async (
             spacing: { after: 200 }
           }),
           new Paragraph({
-            text: `Bulan ${monthName} Tahun ${selectedYear}`,
             alignment: AlignmentType.CENTER,
             spacing: { after: 400 },
-            bold: true,
+            children: [new TextRun({ text: `Bulan ${monthName} Tahun ${selectedYear}`, bold: true })],
           }),
           
           new Paragraph({
@@ -270,7 +269,7 @@ export const exportMonthlyRecapToDocx = async (
                       new Paragraph({ text: " ", alignment: AlignmentType.LEFT }),
                       new Paragraph({ text: "Mengetahui,", alignment: AlignmentType.LEFT }),
                       new Paragraph({ text: "Kepala Sekolah", alignment: AlignmentType.LEFT, spacing: { after: 1000 } }),
-                      new Paragraph({ text: "(Amrullah Rozy Dalimunthe, S.Si)", alignment: AlignmentType.LEFT, bold: true }),
+                      new Paragraph({ alignment: AlignmentType.LEFT, children: [new TextRun({ text: "(Amrullah Rozy Dalimunthe, S.Si)", bold: true })] }),
                     ],
                     borders: {
                       top: { style: BorderStyle.NONE, size: 0, color: "auto" },
@@ -285,7 +284,7 @@ export const exportMonthlyRecapToDocx = async (
                       new Paragraph({ text: `Sei Mencirim, ${new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}`, alignment: AlignmentType.LEFT }),
                       new Paragraph({ text: "Disusun Oleh,", alignment: AlignmentType.LEFT }),
                       new Paragraph({ text: "Koordinator Tahsin & Tahfizh", alignment: AlignmentType.LEFT, spacing: { after: 1000 } }),
-                      new Paragraph({ text: "(Miftahul Arsyad Asri, S.H)", alignment: AlignmentType.LEFT, bold: true }),
+                      new Paragraph({ alignment: AlignmentType.LEFT, children: [new TextRun({ text: "(Miftahul Arsyad Asri, S.H)", bold: true })] }),
                     ],
                     borders: {
                       top: { style: BorderStyle.NONE, size: 0, color: "auto" },

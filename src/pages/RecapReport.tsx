@@ -639,7 +639,7 @@ const RecapReport = () => {
       
       await exportMonthlyRecapToDocx(
         students,
-        reports,
+        reports as never,
         selectedMonth,
         selectedYear
       );
