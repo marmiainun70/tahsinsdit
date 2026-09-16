@@ -227,6 +227,10 @@ export default function ManageStudents() {
         }
       }
 
+      if (statusSiswa !== "all") {
+        query = query.eq("status_siswa", statusSiswa as "aktif" | "alumni" | "keluar" | "pindah");
+      }
+
       query = query
         .order("kelas", { ascending: true })
         .order("nama", { ascending: true });
