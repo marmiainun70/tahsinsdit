@@ -264,6 +264,7 @@ export default function ManageStudents() {
       if (kelas !== "all") filterLabel += `_Kelas_${kelas}`;
       if (rombel !== "all") filterLabel += `_Rombel_${rombel}`;
       if (level !== "all") filterLabel += `_${level}`;
+      if (statusSiswa !== "all") filterLabel += `_${statusSiswa}`;
       
       XLSX.writeFile(wb, `Data_Siswa${filterLabel}_${new Date().toISOString().slice(0, 10)}.xlsx`);
       toast({ title: "Export Berhasil", description: `${dataToExport.length} data siswa berhasil diexport` });
