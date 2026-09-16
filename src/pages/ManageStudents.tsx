@@ -253,6 +253,7 @@ export default function ManageStudents() {
         "Level Bacaan": s.level,
         "Halaman Terakhir": s.halaman_terakhir || 0,
         "Status Bacaan": s.status_bacaan || "",
+        "Status Siswa": s.status_siswa || "aktif",
       }));
 
       const ws = XLSX.utils.json_to_sheet(dataToExport);
