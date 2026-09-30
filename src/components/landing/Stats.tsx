@@ -2,15 +2,17 @@ import { motion } from "framer-motion";
 import { Users, Layers, ClipboardCheck, CalendarCheck, FileDown } from "lucide-react";
 import IslamicPattern from "./IslamicPattern";
 
-const stats = [
-  { icon: Users, label: "Siswa Aktif", value: "486+" },
-  { icon: Layers, label: "Rombel", value: "24" },
-  { icon: ClipboardCheck, label: "Catatan Aktivitas", value: "1.2K+" },
-  { icon: CalendarCheck, label: "Kehadiran Tercatat", value: "94%" },
-  { icon: FileDown, label: "Laporan Tersusun", value: "2.4K+" },
-];
+import { useLandingStats, formatCount } from "@/hooks/useLandingStats";
 
 export default function Stats() {
+  const { data: st } = useLandingStats();
+  const stats = [
+    { icon: Users, label: "Siswa Aktif", value: formatCount(st?.siswa_aktif) },
+    { icon: Layers, label: "Rombel", value: formatCount(st?.rombel) },
+    { icon: ClipboardCheck, label: "Catatan Aktivitas", value: formatCount(st?.catatan_aktivitas) },
+    { icon: CalendarCheck, label: "Kehadiran Tercatat", value: st ? `${st.kehadiran}%` : "…" },
+    { icon: FileDown, label: "Laporan Tersusun", value: formatCount(st?.laporan) },
+  ];
   return (
     <section id="rekap" className="relative py-16 sm:py-20 overflow-hidden bg-gradient-to-br from-[#0B1F3A] via-[#0E3D3A] to-[#0A7C66] text-white">
       <div className="absolute inset-0 text-[#E6CB87] pointer-events-none">
