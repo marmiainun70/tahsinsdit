@@ -2435,6 +2435,7 @@ export type Database = {
         Args: { p_academic_year_id: string }
         Returns: Json
       }
+      get_landing_stats: { Args: never; Returns: Json }
       get_transition_history: {
         Args: { p_limit?: number; p_offset?: number }
         Returns: Json

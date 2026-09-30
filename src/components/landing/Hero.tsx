@@ -2,8 +2,13 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, BookOpen, GraduationCap, Users, CalendarCheck, FileText, TrendingUp } from "lucide-react";
 import IslamicPattern from "./IslamicPattern";
+import { useLandingStats, formatCount } from "@/hooks/useLandingStats";
+
+const BULAN = ["", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 
 export default function Hero() {
+  const { data: st } = useLandingStats();
+  const progres = st?.progres ?? 0;
   return (
     <section id="beranda" className="relative pt-24 sm:pt-28 lg:pt-32 pb-16 sm:pb-20 lg:pb-28 overflow-hidden bg-gradient-to-br from-[#0B1F3A] via-[#0E3D3A] to-[#0A7C66]">
       <div className="absolute inset-0 text-[#E6CB87] pointer-events-none">
@@ -94,10 +99,10 @@ export default function Hero() {
 
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { icon: Users, label: "Siswa Aktif", value: "486", color: "from-emerald-500 to-emerald-700" },
-                  { icon: GraduationCap, label: "Guru", value: "32", color: "from-blue-500 to-blue-700" },
-                  { icon: CalendarCheck, label: "Kehadiran", value: "94%", color: "from-amber-500 to-amber-700" },
-                  { icon: FileText, label: "Laporan Bulanan", value: "Aktif", color: "from-purple-500 to-purple-700" },
+                  { icon: Users, label: "Siswa Aktif", value: formatCount(st?.siswa_aktif), color: "from-emerald-500 to-emerald-700" },
+                  { icon: GraduationCap, label: "Guru", value: formatCount(st?.guru), color: "from-blue-500 to-blue-700" },
+                  { icon: CalendarCheck, label: `Kehadiran${st?.kehadiran_bulan ? ` (${BULAN[st.kehadiran_bulan]})` : ""}`, value: st ? `${st.kehadiran}%` : "…", color: "from-amber-500 to-amber-700" },
+                  { icon: FileText, label: "Laporan Bulanan", value: formatCount(st?.laporan), color: "from-purple-500 to-purple-700" },
                 ].map((s) => (
                   <div key={s.label} className="p-3 rounded-xl bg-gradient-to-br from-slate-50 to-white border border-slate-200/70">
                     <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${s.color} flex items-center justify-center mb-2`}>
@@ -111,13 +116,15 @@ export default function Hero() {
 
               <div className="mt-4 p-3 rounded-xl bg-gradient-to-r from-emerald-50 to-amber-50 border border-emerald-100">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-semibold text-[#0B1F3A]">Progres Tahsin Bulanan</p>
-                  <p className="text-xs font-bold text-emerald-700">82%</p>
+                  <p className="text-xs font-semibold text-[#0B1F3A]">
+                    Progres Tahsin Bulanan{st?.progres_bulan ? ` (${BULAN[st.progres_bulan]} ${st.progres_tahun})` : ""}
+                  </p>
+                  <p className="text-xs font-bold text-emerald-700">{st ? `${progres}%` : "…"}</p>
                 </div>
                 <div className="h-2 rounded-full bg-emerald-100 overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: "82%" }}
+                    animate={{ width: `${progres}%` }}
                     transition={{ duration: 1.2, delay: 0.6 }}
                     className="h-full bg-gradient-to-r from-emerald-600 to-[#C9A24C]"
                   />
