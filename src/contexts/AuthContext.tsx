@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 // ─── Tipe Status Akun ────────────────────────────────────────────────────────
 export type AccountStatus = "pending" | "approved" | "rejected" | "inactive";
@@ -86,6 +87,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Ref untuk mencegah signOut dipanggil berulang saat status non-approved
   const signingOutRef = useRef(false);
+  const lastUserIdRef = useRef<string | null>(null);
+  const queryClient = useQueryClient();
 
   const persistAuthError = (msg: string | null) => {
     setAuthError(msg);
@@ -294,6 +297,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const currentVerificationId = ++verificationId;
 
         if (!newSession?.user) {
+          lastUserIdRef.current = null;
+          queryClient.clear();
           setSession(null);
           setUser(null);
           setProfile(null);
@@ -301,6 +306,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setLoading(false);
           return;
         }
+
+        // Ganti akun di perangkat yang sama: buang profil & cache akun sebelumnya
+        if (lastUserIdRef.current && lastUserIdRef.current !== newSession.user.id) {
+          setProfile(null);
+          setAccountStatus(null);
+          queryClient.clear();
+        }
+        lastUserIdRef.current = newSession.user.id;
 
         setLoading(true);
         setSession(newSession);

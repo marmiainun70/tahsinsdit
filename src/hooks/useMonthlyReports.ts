@@ -456,6 +456,7 @@ export const useAddMonthlyReport = () => {
         | "teacher_name_snapshot"
       >,
     ) => {
+      const teacherName = await resolveTeacherName(user?.id, fallbackTeacherName);
       const { data: studentSnapshot, error: studentSnapshotError } = await supabase
         .from("students")
         .select("nama, kelas, rombel, level")
@@ -506,6 +507,7 @@ export const useUpdateMonthlyReport = () => {
       id,
       ...updates
     }: Partial<MonthlyReport> & { id: string }) => {
+      const teacherName = await resolveTeacherName(user?.id, fallbackTeacherName);
       const { data: existingReport, error: existingReportError } = await supabase
         .from("monthly_reports")
         .select("student_id, student_name_snapshot, kelas_snapshot, rombel_snapshot, level_snapshot, teacher_id_snapshot, teacher_name_snapshot")
