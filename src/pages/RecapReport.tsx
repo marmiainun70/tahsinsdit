@@ -1386,19 +1386,48 @@ const RecapReport = () => {
               </div>
               <div className="col-span-1 md:col-span-1">
                 <Label className="text-xs">Kelas</Label>
-                <Select value={filterKelas} onValueChange={setFilterKelas}>
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Kelas</SelectItem>
-                    {[1, 2, 3, 4, 5, 6].map(k => (
-                      <SelectItem key={k} value={String(k)}>
-                        Kelas {k}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {isMobileAdmin ? (
+                  <Select
+                    value={filterKelas !== "all" && filterRombel !== "all" ? `${filterKelas}${filterRombel}` : "all"}
+                    onValueChange={(v) => {
+                      if (v === "all") {
+                        setFilterKelas("all");
+                        setFilterRombel("all");
+                      } else {
+                        setFilterKelas(v.slice(0, -1));
+                        setFilterRombel(v.slice(-1));
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Semua Kelas</SelectItem>
+                      {[1, 2, 3, 4, 5, 6].flatMap(k =>
+                        ["A", "B", "C", "D"].map(r => (
+                          <SelectItem key={`${k}${r}`} value={`${k}${r}`}>
+                            Kelas {k}{r}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Select value={filterKelas} onValueChange={setFilterKelas}>
+                    <SelectTrigger className="h-9 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Semua Kelas</SelectItem>
+                      {[1, 2, 3, 4, 5, 6].map(k => (
+                        <SelectItem key={k} value={String(k)}>
+                          Kelas {k}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div className="col-span-1 md:col-span-1">
                 <Label className="text-xs">Tahun</Label>
