@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
@@ -223,6 +224,8 @@ const getErrorMessage = (error: unknown) =>
 
 const RecapReport = () => {
   const { user, profile } = useAuth();
+  const isMobile = useIsMobile();
+  const isMobileAdmin = isMobile && profile?.role === "admin";
   const { data: students = [], isLoading: ls } = useStudents();
   const { data: reports = [], isLoading: lr } = useAllMonthlyReports();
   const { data: settings } = useInstitutionSettings();
