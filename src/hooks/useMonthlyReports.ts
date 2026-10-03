@@ -432,10 +432,18 @@ export const useMonthlyReportsForPeriod = ({
   });
 };
   
+/** Ambil nama guru langsung dari database berdasarkan ID akun yang sedang login,
+ * agar tidak memakai nama akun lain yang tertinggal di perangkat yang sama. */
+const resolveTeacherName = async (userId: string | undefined, fallback: string) => {
+  if (!userId) return fallback;
+  const { data } = await supabase.from("profiles").select("full_name").eq("user_id", userId).maybeSingle();
+  return data?.full_name?.trim() || fallback;
+};
+
 export const useAddMonthlyReport = () => {
   const qc = useQueryClient();
   const { user, profile } = useAuth();
-  const teacherName =
+  const fallbackTeacherName =
     profile?.full_name?.trim() ||
     (typeof user?.user_metadata?.full_name === "string"
       ? user.user_metadata.full_name.trim()
@@ -456,6 +464,7 @@ export const useAddMonthlyReport = () => {
         | "teacher_name_snapshot"
       >,
     ) => {
+      const teacherName = await resolveTeacherName(user?.id, fallbackTeacherName);
       const { data: studentSnapshot, error: studentSnapshotError } = await supabase
         .from("students")
         .select("nama, kelas, rombel, level")
@@ -493,7 +502,7 @@ export const useAddMonthlyReport = () => {
 export const useUpdateMonthlyReport = () => {
   const qc = useQueryClient();
   const { user, profile } = useAuth();
-  const teacherName =
+  const fallbackTeacherName =
     profile?.full_name?.trim() ||
     (typeof user?.user_metadata?.full_name === "string"
       ? user.user_metadata.full_name.trim()
@@ -506,6 +515,7 @@ export const useUpdateMonthlyReport = () => {
       id,
       ...updates
     }: Partial<MonthlyReport> & { id: string }) => {
+      const teacherName = await resolveTeacherName(user?.id, fallbackTeacherName);
       const { data: existingReport, error: existingReportError } = await supabase
         .from("monthly_reports")
         .select("student_id, student_name_snapshot, kelas_snapshot, rombel_snapshot, level_snapshot, teacher_id_snapshot, teacher_name_snapshot")
