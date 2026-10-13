@@ -60,6 +60,15 @@ const ROMBEL_COLORS: Record<Rombel, string> = {
   D: "bg-orange-500",
 };
 
+const friendlyStudentError = (msg: string) => {
+  const m = (msg || "").toLowerCase();
+  if (m.includes("students_nisn_unique")) return "Nomor NISN sudah terdaftar untuk siswa lain. Silakan periksa kembali.";
+  if (m.includes("students_nis_unique")) return "Nomor NIS sudah digunakan oleh siswa lain. Silakan periksa kembali atau gunakan nomor yang berbeda.";
+  if (m.includes("nisn_format")) return "NISN harus terdiri dari tepat 10 digit angka.";
+  if (m.includes("nis_format")) return "NIS hanya boleh berisi angka.";
+  return msg;
+};
+
 export default function ManageStudents() {
   const { profile, user } = useAuth();
   const isAdmin = (profile?.role === "admin" || profile?.role === "kepala_sekolah");
@@ -491,7 +500,7 @@ export default function ManageStudents() {
       setNewLevel("Iqro 1");
     } catch (error) {
       const e = error as Error;
-      toast({ title: "Gagal menambahkan siswa", description: e.message, variant: "destructive" });
+      toast({ title: "Gagal menambahkan siswa", description: friendlyStudentError(e.message), variant: "destructive" });
     }
   };
 
@@ -525,7 +534,7 @@ export default function ManageStudents() {
       setEditOpen(false);
     } catch (error) {
       const e = error as Error;
-      toast({ title: "Gagal memperbarui data siswa", description: e.message, variant: "destructive" });
+      toast({ title: "Gagal memperbarui data siswa", description: friendlyStudentError(e.message), variant: "destructive" });
     }
   };
 

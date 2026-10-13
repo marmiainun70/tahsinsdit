@@ -100,7 +100,7 @@ export default function Register() {
           return;
         }
         if (!child.nisn) {
-          setError(`NISN Anak ${child.index + 1} wajib diisi.`);
+          setError(`NIS atau NISN Anak ${child.index + 1} wajib diisi.`);
           return;
         }
       }
@@ -113,6 +113,16 @@ export default function Register() {
     }
 
     setSubmitting(true);
+    const { data: precheck, error: precheckError } = await supabase.rpc("check_registration" as any, {
+      p_username: username.trim().toLowerCase(),
+      p_links: parentLinks.map(({ student_id, nisn }) => ({ student_id, nis_or_nisn: nisn })),
+    });
+    if (!precheckError && typeof precheck === "string" && precheck) {
+      setSubmitting(false);
+      setError(precheck);
+      return;
+    }
+
     const { error: signUpError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
@@ -124,7 +134,7 @@ export default function Register() {
           whatsapp: whatsapp.trim(),
           role,
           parent_students: role === "parent"
-            ? parentLinks.map(({ student_id, nisn }) => ({ student_id, nisn }))
+            ? parentLinks.map(({ student_id, nisn }) => ({ student_id, nis_or_nisn: nisn }))
             : undefined,
         },
       },
@@ -136,9 +146,13 @@ export default function Register() {
       setError(
         message.includes("already registered")
           ? "Email tersebut sudah terdaftar."
-          : message.includes("nisn")
-            ? "NISN tidak cocok dengan siswa yang dipilih."
-            : signUpError.message,
+          : message.includes("nis")
+            ? "NIS/NISN tidak cocok dengan siswa yang dipilih."
+            : message.includes("password")
+              ? "Password terlalu lemah atau mudah ditebak. Gunakan kombinasi huruf dan angka."
+              : message.includes("database error")
+                ? "Pendaftaran gagal disimpan. Periksa kembali data anak (NIS/NISN) dan username Anda."
+                : signUpError.message,
       );
       return;
     }
@@ -187,7 +201,7 @@ export default function Register() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h2 className="text-sm font-semibold text-foreground">Data Anak</h2>
-                  <p className="text-xs text-muted-foreground">Pilih siswa lalu isi NISN untuk verifikasi.</p>
+                  <p className="text-xs text-muted-foreground">Pilih siswa lalu isi NIS atau NISN untuk verifikasi.</p>
                 </div>
                 <button
                   type="button"
@@ -356,10 +370,10 @@ function ParentChildFields({
       )}
 
       <Field
-        label="NISN Anak"
+        label="NIS atau NISN Anak"
         value={child.nisn}
         onChange={(value) => onChange({ nisn: value.replace(/\D/g, "") })}
-        placeholder="Masukkan 10 digit NISN"
+        placeholder="Masukkan NIS sekolah atau 10 digit NISN"
       />
     </div>
   );

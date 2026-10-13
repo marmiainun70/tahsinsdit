@@ -2400,6 +2400,10 @@ export type Database = {
       }
       can_access_student: { Args: { _student_id: string }; Returns: boolean }
       can_manage_student: { Args: { _student_id: string }; Returns: boolean }
+      check_registration: {
+        Args: { p_links: Json; p_username: string }
+        Returns: string
+      }
       create_notification: {
         Args: {
           _body: string
