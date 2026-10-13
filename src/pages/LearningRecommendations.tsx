@@ -47,7 +47,7 @@ export default function LearningRecommendations() {
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl gradient-primary p-5 text-primary-foreground">
+      <div className="rounded-2xl bg-primary p-5 text-primary-foreground">
         <div className="flex items-center gap-2 text-sm opacity-90"><Sparkles className="w-4 h-4" /> Rekomendasi Belajar</div>
         <h1 className="text-xl font-bold mt-1">Aplikasi & Website Pendamping Belajar Al-Qur'an</h1>
         <p className="text-sm opacity-90 mt-1">Klik logo untuk langsung membuka aplikasi atau website yang dimaksud.</p>
@@ -67,7 +67,7 @@ export default function LearningRecommendations() {
           <div key={i.name} className={`rounded-2xl bg-card border p-4 flex flex-col gap-3 ${i.featured ? "border-gold shadow-gold" : "border-border"}`}>
             <div className="flex items-center gap-3">
               <a href={i.links[0].url} target="_blank" rel="noopener noreferrer" aria-label={`Buka ${i.name}`}
-                className="w-14 h-14 shrink-0 rounded-2xl gradient-primary text-primary-foreground flex items-center justify-center font-bold text-lg hover:scale-105 transition">
+                className="w-14 h-14 shrink-0 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg hover:scale-105 transition">
                 {i.initial}
               </a>
               <div className="min-w-0">
