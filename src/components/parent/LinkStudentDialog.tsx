@@ -65,7 +65,7 @@ export const LinkStudentDialog: React.FC<LinkStudentDialogProps> = ({ open, onOp
           <Button 
             onClick={handleLink} 
             disabled={addParentStudent.isPending}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             {addParentStudent.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             Hubungkan
