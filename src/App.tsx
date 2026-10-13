@@ -45,6 +45,7 @@ const CBTRoom = lazy(() => import("@/pages/CBTRoom"));
 const CBTResultDetails = lazy(() => import("@/pages/CBTResultDetails"));
 const DiagnosticEvaluation = lazy(() => import("@/pages/DiagnosticEvaluation"));
 const ContactTeacher = lazy(() => import("./pages/ContactTeacher"));
+const LearningRecommendations = lazy(() => import("@/pages/LearningRecommendations"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const ExamScheduleRealtimeProvider = lazy(() => import("@/components/ExamScheduleNotification"));
 const queryClient = new QueryClient({
@@ -132,6 +133,7 @@ const AppRoutes = () => {
       {/* Semua Role Terotentikasi (Admin, Guru, Parent) */}
       <Route path="/" element={hasVerifiedSession ? <ProtectedRoute><Dashboard /></ProtectedRoute> : <Landing />} />
       <Route path="/hubungi-guru" element={<ProtectedRoute allowedRoles={["admin", "guru", "parent"]}><ContactTeacher /></ProtectedRoute>} />
+      <Route path="/rekomendasi-belajar" element={<ProtectedRoute allowedRoles={["admin", "guru", "parent"]}><LearningRecommendations /></ProtectedRoute>} />
       <Route path="/kalender-akademik" element={<ProtectedRoute allowedRoles={["admin", "guru", "parent"]}><KalenderAkademik /></ProtectedRoute>} />
       <Route path="/pengumuman" element={<ProtectedRoute allowedRoles={["admin", "guru", "parent"]}><BroadcastAnnouncement /></ProtectedRoute>} />
       <Route path="/jadwal-ujian" element={<ProtectedRoute allowedRoles={["admin", "guru", "parent"]}><ExamSchedule /></ProtectedRoute>} />

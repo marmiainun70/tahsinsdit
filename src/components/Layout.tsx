@@ -45,6 +45,7 @@ const parentNavItems = [
   { to: "/kalender-akademik", icon: CalendarDays, label: "Kalender Akademik" },
   { to: "/pengumuman", icon: Megaphone, label: "Pengumuman" },
   { to: "/jadwal-ujian", icon: GraduationCap, label: "Jadwal Ujian" },
+  { to: "/rekomendasi-belajar", icon: BookOpen, label: "Rekomendasi Belajar" },
 ];
 
 interface SidebarContentProps {
