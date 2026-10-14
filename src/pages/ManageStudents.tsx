@@ -4,7 +4,6 @@ import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import * as XLSX from "xlsx";
 import BulkImportStudents from "@/components/BulkImportStudents";
 import {
   fetchApprovedManagedStudentIds,
@@ -265,6 +264,7 @@ export default function ManageStudents() {
         "Status Siswa": s.status_siswa || "aktif",
       }));
 
+      const XLSX = await import("xlsx");
       const ws = XLSX.utils.json_to_sheet(dataToExport);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Data Siswa");
