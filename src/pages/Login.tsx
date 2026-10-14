@@ -232,7 +232,7 @@ const Login = () => {
           {/* Heavy illustration only for new users */}
           {!isReturningUser && (
             <img
-              src="/login-quran-illustration-crop.png"
+              src="/login-quran-illustration-crop.webp"
               alt="Al-Qur'an"
               className="absolute -bottom-10 -right-10 w-72 opacity-20 pointer-events-none mix-blend-luminosity"
             />
