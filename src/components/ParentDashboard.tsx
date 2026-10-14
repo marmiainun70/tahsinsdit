@@ -76,11 +76,11 @@ export default function ParentDashboard() {
 
   if (children.length === 0 || !activeChild) {
     return (
-      <div className="min-h-screen bg-background -mx-4 md:-mx-6 -my-4 md:-my-6 px-4 md:px-6 py-8 font-sans">
+      <div className="bg-background md:-mx-6 md:-my-6 md:px-6 py-1 md:py-8 font-sans">
         <div className="max-w-5xl mx-auto space-y-4 h-full flex flex-col">
           {/* HEADER */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Profil Siswa</h1>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 mb-1 md:mb-4">
+            <h1 className="text-lg md:text-3xl font-bold text-foreground">Profil Siswa</h1>
           </div>
 
           <div className="flex-1 flex flex-col items-center justify-center mt-12">
@@ -110,12 +110,12 @@ export default function ParentDashboard() {
   const tahfizhProgress = 20 + (activeChild.nama.length % 40);
 
   return (
-    <div className="min-h-screen bg-background -mx-4 md:-mx-6 -my-4 md:-my-6 px-4 md:px-6 py-8 font-sans">
-      <div className="max-w-5xl mx-auto space-y-4">
+    <div className="bg-background md:-mx-6 md:-my-6 md:px-6 py-1 md:py-8 font-sans">
+      <div className="max-w-5xl mx-auto space-y-3 md:space-y-4">
         
         {/* HEADER */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Profil Siswa</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 mb-1 md:mb-4">
+          <h1 className="text-lg md:text-3xl font-bold text-foreground">Profil Siswa</h1>
           <StudentSwitcher 
             childrenList={children as any} 
             activeChild={activeChild as any} 
@@ -130,17 +130,17 @@ export default function ParentDashboard() {
           key={activeChild.id + "-profile"}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-[24px] shadow-sm border border-border p-5 md:p-6 flex flex-col lg:flex-row gap-6 relative overflow-hidden"
+          className="bg-card rounded-[24px] shadow-sm border border-border p-4 md:p-6 flex flex-col lg:flex-row gap-4 md:gap-6 relative overflow-hidden"
         >
           {/* Subtle Background Accent */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl opacity-50 -z-10 -mr-20 -mt-20"></div>
 
           {/* LEFT: AVATAR & NAME */}
           <div className="flex flex-col items-center justify-center lg:w-[30%] lg:border-r lg:border-border lg:pr-6 shrink-0">
-            <div className="w-28 h-28 mb-4 drop-shadow-sm">
+            <div className="w-20 h-20 md:w-28 md:h-28 mb-2 md:mb-4 drop-shadow-sm">
               <StudentAvatar gender={getGender(activeChild)} />
             </div>
-            <h2 className="text-xl font-bold text-foreground text-center leading-tight">{activeChild.nama}</h2>
+            <h2 className="text-base md:text-xl font-bold text-foreground text-center leading-tight">{activeChild.nama}</h2>
             <p className="text-muted-foreground font-medium text-xs mt-1">NIS : {activeChild.nis || "240015"}</p>
           </div>
 
@@ -150,13 +150,13 @@ export default function ParentDashboard() {
             {/* INFO ROWS */}
             <div className="grid grid-cols-1 gap-y-2 text-[13px]">
               <div className="flex items-center">
-                <div className="w-40 flex items-center gap-2 text-muted-foreground font-medium">
+                <div className="w-28 md:w-40 shrink-0 flex items-center gap-2 text-muted-foreground font-medium">
                   <School className="w-4 h-4 text-blue-500" /> Kelas
                 </div>
                 <div className="text-foreground font-semibold">: {activeChild.kelas}{activeChild.rombel}</div>
               </div>
               <div className="flex items-center">
-                <div className="w-40 flex items-center gap-2 text-muted-foreground font-medium">
+                <div className="w-28 md:w-40 shrink-0 flex items-center gap-2 text-muted-foreground font-medium">
                   <User className="w-4 h-4 text-indigo-500" /> Guru Tahsin
                 </div>
                 <div className="text-foreground font-semibold flex items-center gap-2">
@@ -173,13 +173,13 @@ export default function ParentDashboard() {
                 </div>
               </div>
               <div className="flex items-center">
-                <div className="w-40 flex items-center gap-2 text-muted-foreground font-medium">
+                <div className="w-28 md:w-40 shrink-0 flex items-center gap-2 text-muted-foreground font-medium">
                   <BookOpen className="w-4 h-4 text-purple-500" /> Level
                 </div>
                 <div className="text-foreground font-semibold">: {activeChild.level || "Belum dievaluasi"}</div>
               </div>
               <div className="flex items-center">
-                <div className="w-40 flex items-center gap-2 text-muted-foreground font-medium">
+                <div className="w-28 md:w-40 shrink-0 flex items-center gap-2 text-muted-foreground font-medium">
                   <ShieldCheck className="w-4 h-4 text-muted-foreground" /> Status Belajar
                 </div>
                 <div className="flex items-center gap-2 font-semibold">
@@ -189,9 +189,9 @@ export default function ParentDashboard() {
             </div>
 
             {/* PROGRESS CARDS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2 md:gap-4">
               {/* Tahsin */}
-              <div className="bg-background rounded-[16px] p-4 border border-border flex flex-col gap-1 relative overflow-hidden">
+              <div className="bg-background rounded-[16px] p-3 md:p-4 border border-border flex flex-col gap-1 relative overflow-hidden">
                 {(() => {
                   const level = activeChild.level || "";
                   const isIqraOrDasar = level.startsWith("Iqro") || level === "Tahsin Dasar";
@@ -201,7 +201,7 @@ export default function ParentDashboard() {
                   return (
                     <>
                       <div className="flex justify-between items-start">
-                        <h3 className="font-bold text-[15px] text-foreground">{tahsinTitle}</h3>
+                        <h3 className="font-bold text-[12px] md:text-[15px] text-foreground">{tahsinTitle}</h3>
                         <div className="p-1.5 bg-card rounded-lg shadow-sm border border-border shrink-0">
                           {isTahfizh ? <CheckCircle2 className="w-4 h-4 text-primary" /> : <TrendingUp className="w-4 h-4 text-primary" />}
                         </div>
@@ -235,7 +235,7 @@ export default function ParentDashboard() {
                           const pct = Math.min(100, Math.round((currentPage / maxPage) * 100));
                           return (
                             <>
-                              <p className="text-2xl font-black text-primary leading-none mt-1">{pct}%</p>
+                              <p className="text-xl md:text-2xl font-black text-primary leading-none mt-1">{pct}%</p>
                               <Progress value={pct} className="h-1.5 my-1.5 bg-muted [&>div]:bg-emerald-500" />
                               <p className="text-[12px] text-muted-foreground leading-tight">{currentPage} dari {maxPage} halaman dikuasai{suffix}</p>
                               <div className="mt-1 flex items-center gap-1">
@@ -252,9 +252,9 @@ export default function ParentDashboard() {
               </div>
               
               {/* Tahfizh */}
-              <div className="bg-background rounded-[16px] p-4 border border-border flex flex-col gap-1 relative overflow-hidden">
+              <div className="bg-background rounded-[16px] p-3 md:p-4 border border-border flex flex-col gap-1 relative overflow-hidden">
                 <div className="flex justify-between items-start">
-                  <h3 className="font-bold text-[15px] text-foreground">Progress Tahfizh</h3>
+                  <h3 className="font-bold text-[12px] md:text-[15px] text-foreground">Progress Tahfizh</h3>
                   <div className="p-1.5 bg-card rounded-lg shadow-sm border border-border shrink-0">
                     <Target className="w-4 h-4 text-amber-600" />
                   </div>
@@ -283,7 +283,7 @@ export default function ParentDashboard() {
                   
                   return (
                     <>
-                      <p className="text-2xl font-black text-amber-600 leading-none mt-1">{pct}%</p>
+                      <p className="text-xl md:text-2xl font-black text-amber-600 leading-none mt-1">{pct}%</p>
                       <Progress value={pct} className="h-1.5 my-1.5 bg-muted [&>div]:bg-amber-500" />
                       <p className="text-[12px] text-muted-foreground leading-tight">{currentPage} dari {maxPage} halaman diselesaikan</p>
                       <div className="mt-1 flex items-center gap-1">
@@ -300,55 +300,55 @@ export default function ParentDashboard() {
         </motion.div>
 
         {/* QUICK ACCESS CARDS */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pb-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 pb-1 md:pb-4">
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}
-            className="bg-card p-4 lg:p-5 rounded-[16px] shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-border flex flex-col gap-3 group"
+            className="bg-card p-3 lg:p-5 rounded-[16px] shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-border flex flex-col gap-2 md:gap-3 group"
           >
             <div className="p-2.5 bg-indigo-500/10 w-fit rounded-xl border border-border group-hover:bg-indigo-500/20 transition-colors">
               <ClipboardList className="w-5 h-5 text-indigo-600" />
             </div>
             <div>
-              <h4 className="font-bold text-foreground text-[14px] lg:text-[15px]">Hasil Evaluasi</h4>
+              <h4 className="font-bold text-foreground text-[13px] lg:text-[15px]">Hasil Evaluasi</h4>
               <p className="text-[11px] text-muted-foreground mt-1 leading-tight line-clamp-2">Lihat hasil evaluasi terbaru.</p>
             </div>
           </motion.div>
 
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }}
-            className="bg-card p-4 lg:p-5 rounded-[16px] shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-border flex flex-col gap-3 group"
+            className="bg-card p-3 lg:p-5 rounded-[16px] shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-border flex flex-col gap-2 md:gap-3 group"
           >
             <div className="p-2.5 bg-amber-500/10 w-fit rounded-xl border border-border group-hover:bg-amber-500/20 transition-colors">
               <FileText className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <h4 className="font-bold text-foreground text-[14px] lg:text-[15px]">Catatan Guru</h4>
+              <h4 className="font-bold text-foreground text-[13px] lg:text-[15px]">Catatan Guru</h4>
               <p className="text-[11px] text-muted-foreground mt-1 leading-tight line-clamp-2">Pesan dan perkembangan dari guru Tahsin.</p>
             </div>
           </motion.div>
 
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}
-            className="bg-card p-4 lg:p-5 rounded-[16px] shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-border flex flex-col gap-3 group"
+            className="bg-card p-3 lg:p-5 rounded-[16px] shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-border flex flex-col gap-2 md:gap-3 group"
           >
             <div className="p-2.5 bg-primary/10 w-fit rounded-xl border border-border group-hover:bg-primary/15 transition-colors">
               <BookOpen className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <h4 className="font-bold text-foreground text-[14px] lg:text-[15px]">Riwayat Belajar</h4>
+              <h4 className="font-bold text-foreground text-[13px] lg:text-[15px]">Riwayat Belajar</h4>
               <p className="text-[11px] text-muted-foreground mt-1 leading-tight line-clamp-2">Riwayat kegiatan belajar sebelumnya.</p>
             </div>
           </motion.div>
 
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }}
-            className="bg-card p-4 lg:p-5 rounded-[16px] shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-border flex flex-col gap-3 group"
+            className="bg-card p-3 lg:p-5 rounded-[16px] shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-border flex flex-col gap-2 md:gap-3 group"
           >
             <div className="p-2.5 bg-rose-500/10 w-fit rounded-xl border border-border group-hover:bg-rose-500/20 transition-colors">
               <Target className="w-5 h-5 text-rose-600" />
             </div>
             <div>
-              <h4 className="font-bold text-foreground text-[14px] lg:text-[15px]">Target Belajar</h4>
+              <h4 className="font-bold text-foreground text-[13px] lg:text-[15px]">Target Belajar</h4>
               <p className="text-[11px] text-muted-foreground mt-1 leading-tight line-clamp-2">Target yang sedang dipelajari siswa.</p>
             </div>
           </motion.div>
@@ -357,11 +357,11 @@ export default function ParentDashboard() {
         {/* SECTION 4: Recent Activity Timeline */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          className="bg-card rounded-[24px] border border-border shadow-sm p-6"
+          className="bg-card rounded-[24px] border border-border shadow-sm p-4 md:p-6"
         >
-          <h3 className="text-lg font-bold text-foreground mb-6">Aktivitas Terkini</h3>
+          <h3 className="text-base md:text-lg font-bold text-foreground mb-4 md:mb-6">Aktivitas Terkini</h3>
           
-          <div className="relative border-l-2 border-border ml-4 space-y-8 pb-4">
+          <div className="relative border-l-2 border-border ml-4 space-y-5 md:space-y-8 pb-2 md:pb-4">
             
             {/* Timeline Item (Diagnostic) */}
             {evaluationDetail && (
@@ -380,7 +380,7 @@ export default function ParentDashboard() {
             {/* Timeline Items (Progress Entries) */}
             {progressEntries.slice(0, 3).map((entry, idx) => (
               <div key={entry.id} className="relative pl-6">
-                <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 ${idx === 0 ? "bg-blue-500/15 border-blue-500" : "bg-muted border-slate-300"}`}></div>
+                <div className={`absolute -left-[9px] top-1 w-4 h-4 rounded-full border-2 ${idx === 0 ? "bg-blue-500/15 border-blue-500" : "bg-muted border-border"}`}></div>
                 <p className={`text-xs font-semibold mb-1 ${idx === 0 ? "text-blue-600" : "text-muted-foreground"}`}>
                   {new Date(entry.tanggal).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
@@ -394,7 +394,7 @@ export default function ParentDashboard() {
 
             {!evaluationDetail && progressEntries.length === 0 && (
               <div className="relative pl-6">
-                <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-muted border-2 border-slate-300"></div>
+                <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-muted border-2 border-border"></div>
                 <p className="text-xs font-semibold text-muted-foreground mb-1">Hari ini</p>
                 <h4 className="font-bold text-foreground">Belum ada aktivitas</h4>
                 <p className="text-sm text-muted-foreground mt-1">Siswa belum memiliki catatan progres membaca.</p>
@@ -403,7 +403,7 @@ export default function ParentDashboard() {
           </div>
         </motion.div>
         
-        <div className="mt-8">
+        <div className="mt-4 md:mt-8">
           <CurriculumPanel />
         </div>
         

@@ -8,6 +8,7 @@ import {
 import { RELATED_SYSTEM } from "@/components/RelatedSystemCard";
 import GlobalSearch from "@/components/GlobalSearch";
 import ScrollFab from "@/components/ScrollFab";
+import ParentBottomNav from "@/components/parent/ParentBottomNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { UpcomingExamBanner } from "@/components/ExamScheduleNotification";
 import NotificationBell from "@/components/NotificationBell";
@@ -243,6 +244,7 @@ const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, profile } = useAuth();
+  const isParent = profile?.role === "parent";
 
   const toggleMobileSidebar = () => {
     setMobileSidebarOpen((open) => !open);
@@ -341,7 +343,7 @@ const Layout = ({ children }: LayoutProps) => {
               aria-label={mobileSidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
               aria-expanded={mobileSidebarOpen}
               aria-controls="mobile-dashboard-sidebar"
-              className="lg:hidden p-2 rounded-lg hover:bg-secondary transition-colors flex-shrink-0"
+              className={`${isParent ? "hidden" : "lg:hidden"} p-2 rounded-lg hover:bg-secondary transition-colors flex-shrink-0`}
             >
               <Menu className="w-5 h-5 text-foreground" />
             </button>
@@ -400,14 +402,14 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
         </header>
 
-        <main className="flex-1 overflow-x-hidden p-3 space-y-4 sm:p-4 lg:p-6 mt-16">
+        <main className={`flex-1 overflow-x-hidden ${isParent ? "!pb-24 lg:!pb-6" : ""} p-3 space-y-4 sm:p-4 lg:p-6 mt-16`}>
           <UpcomingExamBanner />
           {children}
         </main>
       </div>
 
       <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
-      <ScrollFab />
+      {isParent ? <ParentBottomNav /> : <ScrollFab />}
       <PWAInstallPrompt />
     </div>
   );
