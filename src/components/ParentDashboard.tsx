@@ -111,7 +111,7 @@ export default function ParentDashboard() {
 
   return (
     <div className="bg-background md:-mx-6 md:-my-6 md:px-6 py-1 md:py-8 font-sans">
-      <div className="max-w-5xl mx-auto space-y-4">
+      <div className="max-w-5xl mx-auto space-y-3 md:space-y-4">
         
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 md:gap-4 mb-1 md:mb-4">

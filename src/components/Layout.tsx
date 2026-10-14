@@ -402,7 +402,7 @@ const Layout = ({ children }: LayoutProps) => {
           </div>
         </header>
 
-        <main className={`flex-1 overflow-x-hidden ${isParent ? "pb-20 lg:pb-6" : ""} p-3 space-y-4 sm:p-4 lg:p-6 mt-16`}>
+        <main className={`flex-1 overflow-x-hidden ${isParent ? "!pb-24 lg:!pb-6" : ""} p-3 space-y-4 sm:p-4 lg:p-6 mt-16`}>
           <UpcomingExamBanner />
           {children}
         </main>
