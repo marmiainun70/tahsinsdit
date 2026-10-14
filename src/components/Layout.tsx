@@ -297,7 +297,7 @@ const Layout = ({ children }: LayoutProps) => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.1 } }}
+            exit={{ opacity: 0, transition: { duration: 0 } }}
             transition={{ duration: 0.15 }}
             onClick={closeMobileSidebar}
             className="fixed inset-0 bg-black/40 z-[45] lg:hidden"
@@ -311,7 +311,7 @@ const Layout = ({ children }: LayoutProps) => {
             id="mobile-dashboard-sidebar"
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
-            exit={{ x: "-100%", transition: { duration: 0.12, ease: "easeIn" } }}
+            exit={{ x: "-100%", transition: { duration: 0 } }}
             transition={{ duration: 0.18, ease: "easeOut" }}
             style={{ willChange: "transform" }}
             className="fixed left-0 top-0 h-full w-[min(18rem,86vw)] bg-sidebar z-50 lg:hidden"
