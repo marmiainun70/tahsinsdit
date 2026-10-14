@@ -297,9 +297,10 @@ const Layout = ({ children }: LayoutProps) => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0.1 } }}
+            transition={{ duration: 0.15 }}
             onClick={closeMobileSidebar}
-            className="fixed inset-0 bg-black/40 z-20 lg:hidden"
+            className="fixed inset-0 bg-black/40 z-[45] lg:hidden"
           />
         )}
       </AnimatePresence>
@@ -308,11 +309,12 @@ const Layout = ({ children }: LayoutProps) => {
         {mobileSidebarOpen && (
           <motion.aside
             id="mobile-dashboard-sidebar"
-            initial={{ x: -280 }}
+            initial={{ x: "-100%" }}
             animate={{ x: 0 }}
-            exit={{ x: -280 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed left-0 top-0 h-full w-[min(18rem,86vw)] bg-sidebar z-30 lg:hidden"
+            exit={{ x: "-100%", transition: { duration: 0.12, ease: "easeIn" } }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            style={{ willChange: "transform" }}
+            className="fixed left-0 top-0 h-full w-[min(18rem,86vw)] bg-sidebar z-50 lg:hidden"
           >
             <SidebarContent location={location} onLogout={handleLogout} profile={profile} onClose={closeMobileSidebar} />
           </motion.aside>
