@@ -44,7 +44,7 @@ export const StudentAvatar: React.FC<StudentAvatarProps> = ({ gender, className 
 
   return (
     <img
-      src="/avatar-female.png"
+      src="/avatar-female.webp"
       alt="Avatar Siswi"
       className={`w-full h-full rounded-full object-cover ${className}`}
     />
