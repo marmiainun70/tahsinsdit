@@ -107,7 +107,7 @@ const SidebarContent = ({ location, onLogout, profile, onClose }: SidebarContent
           type="button"
           onClick={onClose}
           aria-label="Tutup sidebar"
-          className="text-sidebar-foreground/60 hover:text-sidebar-foreground lg:hidden"
+          className="-mr-2 flex h-11 w-11 items-center justify-center rounded-lg text-sidebar-foreground/60 hover:text-sidebar-foreground lg:hidden"
         >
           <X className="w-5 h-5" />
         </button>
@@ -292,34 +292,21 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AnimatePresence>
-        {mobileSidebarOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0 } }}
-            transition={{ duration: 0.15 }}
-            onClick={closeMobileSidebar}
-            className="fixed inset-0 bg-black/40 z-[45] lg:hidden"
-          />
-        )}
-      </AnimatePresence>
+      {mobileSidebarOpen && (
+        <div
+          onClick={closeMobileSidebar}
+          className="fixed inset-0 bg-black/40 z-[45] lg:hidden"
+        />
+      )}
 
-      <AnimatePresence>
-        {mobileSidebarOpen && (
-          <motion.aside
-            id="mobile-dashboard-sidebar"
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%", transition: { duration: 0 } }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            style={{ willChange: "transform" }}
-            className="fixed left-0 top-0 h-full w-[min(18rem,86vw)] bg-sidebar z-50 lg:hidden"
-          >
-            <SidebarContent location={location} onLogout={handleLogout} profile={profile} onClose={closeMobileSidebar} />
-          </motion.aside>
-        )}
-      </AnimatePresence>
+      {mobileSidebarOpen && (
+        <aside
+          id="mobile-dashboard-sidebar"
+          className="fixed left-0 top-0 h-full w-[min(18rem,86vw)] bg-sidebar z-50 lg:hidden"
+        >
+          <SidebarContent location={location} onLogout={handleLogout} profile={profile} onClose={closeMobileSidebar} />
+        </aside>
+      )}
 
       <motion.aside
         initial={false}
