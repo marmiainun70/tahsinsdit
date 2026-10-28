@@ -21,6 +21,21 @@ export function registerAppSW() {
     return;
   }
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then((reg) => {
+        // Auto-reload once when a new version of the app takes control,
+        // so phones running the installed PWA pick up updates automatically.
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            if (sessionStorage.getItem("sw-auto-reloaded")) return;
+            sessionStorage.setItem("sw-auto-reloaded", "1");
+            window.location.reload();
+          });
+        }
+        // Check for a newer version every hour.
+        window.setInterval(() => reg.update().catch(() => {}), 60 * 60 * 1000);
+      })
+      .catch(() => {});
   });
 }
