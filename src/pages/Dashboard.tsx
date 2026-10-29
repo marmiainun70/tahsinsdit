@@ -1,3 +1,4 @@
+import { isStudentInPeriod } from "@/utils/studentPeriodMembership";
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -149,7 +150,7 @@ const Dashboard = () => {
         // Hanya hitung siswa aktif ATAU siswa yang sudah punya laporan di bulan tersebut
         const studentsWithReports = new Set(allMonthReports.map(r => r.student_id));
         const activeOrReportedStudents = baseStudents.filter(
-          st => st.status_siswa === 'aktif' || studentsWithReports.has(st.id)
+          st => isStudentInPeriod(st, m.month, m.year, studentsWithReports)
         );
 
         activeOrReportedStudents.forEach(s => {

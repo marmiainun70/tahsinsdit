@@ -1,3 +1,4 @@
+import { isStudentInPeriod } from "@/utils/studentPeriodMembership";
 import { useState, useMemo, useCallback, useEffect, useRef, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { downloadPdf } from "@/utils/pdfDownload";
 import { exportMonthlyRecapToDocx } from "@/utils/generateDocxReport";
@@ -284,7 +285,7 @@ const RecapReport = () => {
     // Filter siswa: hanya tampilkan yang aktif ATAU yang memiliki laporan di bulan/tahun yang dipilih
     const selectedMonthReports = reports.filter(r => r.month === selectedMonth && r.year === selectedYear);
     const studentsWithReports = new Set(selectedMonthReports.map(r => r.student_id));
-    s = s.filter(st => st.status_siswa === 'aktif' || studentsWithReports.has(st.id));
+    s = s.filter(st => isStudentInPeriod(st, selectedMonth, selectedYear, studentsWithReports));
 
     if (filterKelas !== "all") s = s.filter(st => st.kelas === Number(filterKelas));
     if (filterRombel !== "all") s = s.filter(st => st.rombel === filterRombel);
