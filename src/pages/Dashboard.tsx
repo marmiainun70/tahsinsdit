@@ -149,7 +149,7 @@ const Dashboard = () => {
         // Hanya hitung siswa aktif ATAU siswa yang sudah punya laporan di bulan tersebut
         const studentsWithReports = new Set(allMonthReports.map(r => r.student_id));
         const activeOrReportedStudents = baseStudents.filter(
-          st => st.status_siswa === 'aktif' || studentsWithReports.has(st.id)
+          st => isStudentInPeriod(st, m.month, m.year, studentsWithReports)
         );
 
         activeOrReportedStudents.forEach(s => {

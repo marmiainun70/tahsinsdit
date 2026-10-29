@@ -390,7 +390,7 @@ const SpreadsheetReport = () => {
 
       return students.filter(s => {
         const keyword = studentSearch.trim().toLowerCase();
-        const isActiveOrHasReport = s.status_siswa === 'aktif' || studentsWithReports.has(s.id);
+        const isActiveOrHasReport = isStudentInPeriod(s, month, year, studentsWithReports);
 
         return (
           isActiveOrHasReport &&
