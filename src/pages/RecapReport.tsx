@@ -1,3 +1,4 @@
+import { isStudentInPeriod } from "@/utils/studentPeriodMembership";
 import { useState, useMemo, useCallback, useEffect, useRef, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { downloadPdf } from "@/utils/pdfDownload";
 import { exportMonthlyRecapToDocx } from "@/utils/generateDocxReport";

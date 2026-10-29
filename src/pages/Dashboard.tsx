@@ -1,3 +1,4 @@
+import { isStudentInPeriod } from "@/utils/studentPeriodMembership";
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
