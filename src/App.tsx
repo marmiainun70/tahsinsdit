@@ -1,7 +1,10 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { queryPersister, OFFLINE_CACHE_MAX_AGE } from "@/lib/queryPersister";
+import OfflineBanner from "@/components/OfflineBanner";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "next-themes";
@@ -54,7 +57,7 @@ const queryClient = new QueryClient({
       // Kurangi beban compute: hindari refetch berulang saat pindah tab / reconnect
       // dan anggap data segar selama 5 menit kecuali di-invalidate manual.
       staleTime: 5 * 60 * 1000,
-      gcTime: 10 * 60 * 1000,
+      gcTime: OFFLINE_CACHE_MAX_AGE,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       retry: 1,
@@ -190,8 +193,9 @@ const AuthenticatedRealtimeProvider = () => {
 
 const App = () => (
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="vite-ui-theme">
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: queryPersister, maxAge: OFFLINE_CACHE_MAX_AGE }}>
       <TooltipProvider>
+        <OfflineBanner />
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -201,7 +205,7 @@ const App = () => (
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   </ThemeProvider>
 );
 
