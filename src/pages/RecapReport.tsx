@@ -174,7 +174,7 @@ const getLastAutoTableFinalY = (doc: jsPDF, fallbackY: number) =>
   (doc as unknown as { lastAutoTable?: { finalY?: number } }).lastAutoTable?.finalY ?? fallbackY;
 
 type FilterReportStatusType = "all" | "filled" | "empty";
-type FilterAttendanceStatusType = "all" | RecapAttendanceStatus;
+type FilterAttendanceStatusType = "all" | "not_complete" | RecapAttendanceStatus;
 type FilterCategoryType = "all" | (typeof PROGRESS_CATEGORIES)[number];
 type FilterScoreType = "all" | "good" | "medium" | "low" | "empty";
 type FilterProgramType = "all" | "TD" | "TL" | "TFZ";
@@ -390,7 +390,8 @@ const RecapReport = () => {
         const filtered = g.rows.filter(r => {
           if (filterReportStatus === "filled" && r.reportStatus !== "filled") return false;
           if (filterReportStatus === "empty" && r.reportStatus !== "empty") return false;
-          if (filterAttendanceStatus !== "all" && r.attendanceStatus !== filterAttendanceStatus) return false;
+          if (filterAttendanceStatus === "not_complete") { if (r.attendanceStatus === "Lengkap") return false; }
+          else if (filterAttendanceStatus !== "all" && r.attendanceStatus !== filterAttendanceStatus) return false;
           if (filterCategory !== "all" && r.kategoriProgres !== filterCategory) return false;
           if (!scoreMatchesFilter(r.nilaiAkhirProgresif, filterScore)) return false;
           if (filterProgram !== "all" && r.bucket !== filterProgram) return false;
@@ -1506,6 +1507,7 @@ const RecapReport = () => {
                   <SelectContent>
                     <SelectItem value="all">Semua</SelectItem>
                     <SelectItem value="Lengkap">Lengkap</SelectItem>
+                    <SelectItem value="not_complete">Semua Belum Tuntas</SelectItem>
                     <SelectItem value="Belum Lengkap">Belum Lengkap</SelectItem>
                     <SelectItem value="Belum Diisi">Belum Diisi</SelectItem>
                     <SelectItem value="Melebihi Hari Efektif">Melebihi Hari</SelectItem>
@@ -1623,8 +1625,8 @@ const RecapReport = () => {
               label="Absensi Belum Lengkap"
               value={stats.attendanceIncomplete}
               color="bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400"
-              onClick={() => setFilterAttendanceStatus("Belum Lengkap")}
-              isActive={filterAttendanceStatus === "Belum Lengkap"}
+              onClick={() => setFilterAttendanceStatus("not_complete")}
+              isActive={filterAttendanceStatus === "not_complete"}
               activeColor="border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/30 dark:bg-rose-950/20"
               subtitle={stats.attendanceIncompletePercent}
             />
@@ -1788,7 +1790,7 @@ const RecapReport = () => {
               )}
               {filterAttendanceStatus !== "all" && (
                 <Badge variant="secondary" className="gap-1 bg-background border px-2 py-0.5">
-                  Status absensi: {filterAttendanceStatus}
+                  Status absensi: {filterAttendanceStatus === "not_complete" ? "Semua Belum Tuntas" : filterAttendanceStatus}
                   <button onClick={() => setFilterAttendanceStatus("all")} className="hover:text-foreground text-muted-foreground font-bold ml-1">x</button>
                 </Badge>
               )}
