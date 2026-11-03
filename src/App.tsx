@@ -5,6 +5,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { queryPersister, OFFLINE_CACHE_MAX_AGE } from "@/lib/queryPersister";
 import OfflineBanner from "@/components/OfflineBanner";
+import { AppUpdatePrompt } from "@/components/RefreshAppButton";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "next-themes";
@@ -196,6 +197,7 @@ const App = () => (
     <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: queryPersister, maxAge: OFFLINE_CACHE_MAX_AGE }}>
       <TooltipProvider>
         <OfflineBanner />
+        <AppUpdatePrompt />
         <Toaster />
         <Sonner />
         <BrowserRouter>

@@ -1,4 +1,23 @@
 // Single guarded registration point for the app service worker (/sw.js).
+export const APP_UPDATE_EVENT = "app-update-available";
+let updateAvailable = false;
+export const isAppUpdateAvailable = () => updateAvailable;
+function markAppUpdateAvailable() {
+  if (updateAvailable) return;
+  updateAvailable = true;
+  window.dispatchEvent(new Event(APP_UPDATE_EVENT));
+}
+export function useAppUpdateAvailable(): boolean {
+  const [v, setV] = useState(updateAvailable);
+  useEffect(() => {
+    const on = () => setV(true);
+    window.addEventListener(APP_UPDATE_EVENT, on);
+    if (updateAvailable) setV(true);
+    return () => window.removeEventListener(APP_UPDATE_EVENT, on);
+  }, []);
+  return v;
+}
+import { useEffect, useState } from "react";
 function refused(): boolean {
   if (!import.meta.env.PROD) return true;
   try { if (window.self !== window.top) return true; } catch { return true; }
@@ -24,15 +43,16 @@ export function registerAppSW() {
     navigator.serviceWorker
       .register("/sw.js")
       .then((reg) => {
-        // Auto-reload once when a new version of the app takes control,
-        // so phones running the installed PWA pick up updates automatically.
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.addEventListener("controllerchange", () => {
-            if (sessionStorage.getItem("sw-auto-reloaded")) return;
-            sessionStorage.setItem("sw-auto-reloaded", "1");
-            window.location.reload();
+        // Announce a new version (only when an older version was already running).
+        reg.addEventListener("updatefound", () => {
+          const sw = reg.installing;
+          if (!sw) return;
+          sw.addEventListener("statechange", () => {
+            if ((sw.state === "installed" || sw.state === "activated") && navigator.serviceWorker.controller) {
+              markAppUpdateAvailable();
+            }
           });
-        }
+        });
         // Check for a newer version every hour.
         window.setInterval(() => reg.update().catch(() => {}), 60 * 60 * 1000);
       })
