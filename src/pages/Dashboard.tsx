@@ -29,12 +29,18 @@ const classColors = [
 
 
 import ParentDashboard from "@/components/ParentDashboard";
+import RefreshAppButton from "@/components/RefreshAppButton";
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
   
   if (profile?.role === "parent") {
-    return <ParentDashboard />;
+    return (
+      <>
+        <div className="flex justify-end px-4 pt-3 max-w-7xl mx-auto"><RefreshAppButton /></div>
+        <ParentDashboard />
+      </>
+    );
   }
 
   const isTeacher = isTeacherRole(profile?.role);
@@ -245,6 +251,7 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6 pb-20 md:pb-8 pt-4 md:pt-6 animate-fade-in max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="flex justify-end"><RefreshAppButton /></div>
       {missingStudents.length > 0 && (
         <Alert variant="destructive" className="mb-6 bg-red-50/50 border-red-200">
           <AlertTriangle className="h-5 w-5 text-red-600" />
