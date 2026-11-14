@@ -98,6 +98,8 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
   }, [allStudents, isSearching, query, filterKelas, filterLevel]);
 
   const handleSelect = (s: Student) => {
+    inputRef.current?.blur();
+    (document.activeElement as HTMLElement | null)?.blur?.();
     onClose();
     navigate(`/student/${s.id}`);
   };
@@ -119,7 +121,7 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0 } }}
             onClick={onClose}
             className="fixed inset-0 bg-black/50 z-50 backdrop-blur-sm"
           />
@@ -128,7 +130,7 @@ const GlobalSearch = ({ open, onClose }: GlobalSearchProps) => {
           <motion.div
             initial={{ opacity: 0, scale: 0.96, y: -20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: -20 }}
+            exit={{ opacity: 0, transition: { duration: 0 } }}
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
             className="fixed inset-x-4 top-[5%] sm:top-[10%] mx-auto max-w-2xl z-50 flex flex-col max-h-[90vh] sm:max-h-[80vh]"
           >
