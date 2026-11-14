@@ -280,6 +280,7 @@ const Layout = ({ children }: LayoutProps) => {
 
   useEffect(() => {
     closeMobileSidebar();
+    setSearchOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
