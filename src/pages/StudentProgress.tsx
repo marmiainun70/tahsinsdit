@@ -413,7 +413,37 @@ const StudentProgress = () => {
         ) : monthlyReports.length === 0 ? (
           <div className="py-10 text-center text-muted-foreground text-sm">Belum ada rekap laporan bulanan.</div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {!isParent && (
+            <div className="md:hidden divide-y divide-border">
+              {monthlyReports.map((r) => (
+                <div key={r.id} className="p-3 space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-semibold text-foreground">{MONTH_NAMES[r.month - 1]} {r.year}</p>
+                    {r.nilai_akhir_progresif !== null ? (
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-lg ${
+                        r.nilai_akhir_progresif >= 80 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" :
+                        r.nilai_akhir_progresif >= 65 ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400" :
+                        "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                      }`}>Nilai {r.nilai_akhir_progresif}</span>
+                    ) : null}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="capitalize">{r.program_type}</span> · {r.iqra_level === r.end_iqra_level ? r.iqra_level : `${r.iqra_level} ➔ ${r.end_iqra_level}`}
+                  </p>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    <span>Hal. {r.start_page} ➔ {r.end_page} ({r.pages_read} hal)</span>
+                    <span>Hadir {r.attendance_percentage ?? 0}%</span>
+                  </div>
+                  {r.kategori_progres && (
+                    <span className="inline-block text-[11px] bg-muted text-foreground px-2 py-0.5 rounded-full border border-border">{r.kategori_progres}</span>
+                  )}
+                  {r.notes && <p className="text-xs text-muted-foreground whitespace-pre-wrap">{r.notes}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className={`overflow-x-auto ${isParent ? "" : "hidden md:block"}`}>
             <table className="w-full min-w-[800px]">
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
@@ -469,6 +499,7 @@ const StudentProgress = () => {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
