@@ -265,7 +265,7 @@ function TeacherProfileDiagnostics() {
 
   const classLabelsByTeacher = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const students = new Map((listData?.students ?? []).map((student: any) => [student.id, student]));
+    const students = new Map<string, { kelas: number; rombel: string | null }>((listData?.students ?? []).map((student: any) => [student.id, student]));
     const counts = new Map<string, Map<string, { kelas: number; rombel: string; count: number }>>();
     for (const assignment of listData?.assignments ?? []) {
       const student = students.get(assignment.student_id);
