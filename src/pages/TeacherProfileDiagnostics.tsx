@@ -182,6 +182,15 @@ const formatNameWithTitle = (name: string | null | undefined, gender: string | n
   return baseName;
 };
 
+const hasManualClasses = (value: string | null | undefined) => Boolean(value && value.replace(/[\s\-_,.]/g, ""));
+
+export const sortTeacherClasses = <T extends { kelas: number; rombel: string; count: number }>(items: T[]): T[] => {
+  const sorted = [...items].sort((a, b) => a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
+  if (sorted.length <= 3) return sorted;
+  const tail = sorted.slice(2, 4).sort((a, b) => b.count - a.count || a.kelas - b.kelas || a.rombel.localeCompare(b.rombel));
+  return [...sorted.slice(0, 2), ...tail, ...sorted.slice(4)];
+};
+
 function TeacherProfileDiagnostics() {
   const { profile, user } = useAuth();
   const navigate = useNavigate();
@@ -256,12 +265,21 @@ function TeacherProfileDiagnostics() {
 
   const classLabelsByTeacher = useMemo(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const students = new Map((listData?.students ?? []).map((student: any) => [student.id, `Kelas ${student.kelas}${student.rombel ?? ""}`]));
-    const map = new Map<string, string[]>();
+    const students = new Map((listData?.students ?? []).map((student: any) => [student.id, student]));
+    const counts = new Map<string, Map<string, { kelas: number; rombel: string; count: number }>>();
     for (const assignment of listData?.assignments ?? []) {
-      const label = students.get(assignment.student_id);
-      if (!label) continue;
-      map.set(assignment.teacher_id, Array.from(new Set([...(map.get(assignment.teacher_id) ?? []), label])) as string[]);
+      const student = students.get(assignment.student_id);
+      if (!student) continue;
+      const key = `${student.kelas}${student.rombel ?? ""}`;
+      const byClass = counts.get(assignment.teacher_id) ?? new Map();
+      const entry = byClass.get(key) ?? { kelas: Number(student.kelas), rombel: student.rombel ?? "", count: 0 };
+      entry.count += 1;
+      byClass.set(key, entry);
+      counts.set(assignment.teacher_id, byClass);
+    }
+    const map = new Map<string, string[]>();
+    for (const [teacherId, byClass] of counts) {
+      map.set(teacherId, sortTeacherClasses(Array.from(byClass.values())).map((item) => `Kelas ${item.kelas}${item.rombel}`));
     }
     return map;
   }, [listData?.assignments, listData?.students]);
@@ -276,8 +294,8 @@ function TeacherProfileDiagnostics() {
           account,
           teacherProfile,
           latest,
-          classLabels: teacherProfile?.current_classes
-            ? teacherProfile.current_classes.split(",").map((item) => item.trim()).filter(Boolean)
+          classLabels: hasManualClasses(teacherProfile?.current_classes)
+            ? teacherProfile!.current_classes!.split(",").map((item) => item.trim()).filter(Boolean)
             : classLabelsByTeacher.get(account.user_id) ?? [],
         };
       })
@@ -394,7 +412,7 @@ function TeacherProfileDiagnostics() {
                   </div>
                   <Badge variant="secondary" className="w-fit">{getRoleLabel(account.role)}</Badge>
                   <div className="flex flex-wrap gap-1">
-                    {classLabels.length > 0 ? classLabels.slice(0, 3).map((label) => <Badge key={label} variant="outline">{label}</Badge>) : <span className="text-sm text-muted-foreground">-</span>}
+                    {classLabels.length > 0 ? classLabels.map((label) => <Badge key={label} variant="outline">{label}</Badge>) : <span className="text-sm text-muted-foreground">-</span>}
                   </div>
                   {latest ? <CategoryBadge category={latest.category} /> : <Badge variant="outline" className="w-fit">Belum ada evaluasi</Badge>}
                   <p className="font-semibold text-foreground">{latest ? Math.round(latest.mapping_score) : "-"}</p>
