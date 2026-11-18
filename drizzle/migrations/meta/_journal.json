@@ -8,6 +8,13 @@
       "when": 1791857116720,
       "tag": "0000_parent_register_nis_or_nisn",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794971432193,
+      "tag": "0001_create_teacher_supervisions",
+      "breakpoints": true
     }
   ]
 }

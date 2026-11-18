@@ -2300,6 +2300,71 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_supervisions: {
+        Row: {
+          class_label: string | null
+          created_at: string
+          final_score: number
+          id: string
+          improvement_note: string | null
+          material: string | null
+          observations: Json
+          predicate: string
+          scores: Json
+          strengths_note: string | null
+          supervision_date: string
+          supervisor_id: string | null
+          supervisor_name: string | null
+          teacher_profile_id: string
+          total_score: number
+          updated_at: string
+        }
+        Insert: {
+          class_label?: string | null
+          created_at?: string
+          final_score?: number
+          id?: string
+          improvement_note?: string | null
+          material?: string | null
+          observations?: Json
+          predicate?: string
+          scores?: Json
+          strengths_note?: string | null
+          supervision_date?: string
+          supervisor_id?: string | null
+          supervisor_name?: string | null
+          teacher_profile_id: string
+          total_score?: number
+          updated_at?: string
+        }
+        Update: {
+          class_label?: string | null
+          created_at?: string
+          final_score?: number
+          id?: string
+          improvement_note?: string | null
+          material?: string | null
+          observations?: Json
+          predicate?: string
+          scores?: Json
+          strengths_note?: string | null
+          supervision_date?: string
+          supervisor_id?: string | null
+          supervisor_name?: string | null
+          teacher_profile_id?: string
+          total_score?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_supervisions_teacher_profile_id_fkey"
+            columns: ["teacher_profile_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
