@@ -295,9 +295,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       (_event, newSession) => {
         if (!mounted) return;
 
-        const currentVerificationId = ++verificationId;
-
         if (!newSession?.user) {
+          ++verificationId;
           lastUserIdRef.current = null;
           queryClient.clear();
           setSession(null);
@@ -323,9 +322,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Pembaruan token saat kembali ke tab/aplikasi (user sama): verifikasi
         // senyap tanpa loading, agar halaman & isian form tidak ter-reset.
         if (sameUser) {
+          // Jangan menaikkan verificationId: verifikasi login yang sedang
+          // berjalan tetap boleh menyelesaikan loading.
           window.setTimeout(() => {
-            if (!mounted || currentVerificationId !== verificationId) return;
-            if (!navigator.onLine) return;
+            if (!mounted || !navigator.onLine) return;
             void fetchAndVerifyProfile(newSession.user).then((ok) => {
               if (mounted && !ok) void enforceSignOut();
             }).catch(() => {});
@@ -333,6 +333,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           return;
         }
 
+        const currentVerificationId = ++verificationId;
         setLoading(true);
 
         window.setTimeout(() => {
