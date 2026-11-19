@@ -34,6 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { getRoleLabel, isTeacherRole } from "@/lib/roleLabels";
+import { TeacherSupervisionTab } from "@/components/TeacherSupervisionTab";
 
 type ProfileRow = {
   user_id: string;
@@ -661,12 +662,13 @@ function TeacherDetail({
       </section>
 
       <Tabs defaultValue="biodata" className="space-y-4">
-        <TabsList className="grid h-auto grid-cols-2 gap-1 md:grid-cols-5">
+        <TabsList className="grid h-auto grid-cols-2 gap-1 md:grid-cols-6">
           <TabsTrigger value="biodata"><UserRound className="mr-2 h-4 w-4" />Biodata Guru</TabsTrigger>
           <TabsTrigger value="asesmen"><FileText className="mr-2 h-4 w-4" />Asesmen Tertulis</TabsTrigger>
           <TabsTrigger value="diagnostik"><BookOpenCheck className="mr-2 h-4 w-4" />Diagnostik Bacaan</TabsTrigger>
           <TabsTrigger value="riwayat"><CalendarDays className="mr-2 h-4 w-4" />Riwayat Evaluasi</TabsTrigger>
           <TabsTrigger value="rekomendasi"><ClipboardCheck className="mr-2 h-4 w-4" />Rekomendasi</TabsTrigger>
+          <TabsTrigger value="supervisi"><MonitorPlay className="mr-2 h-4 w-4" />Supervisi KBM</TabsTrigger>
         </TabsList>
 
         <TabsContent value="biodata">
@@ -863,6 +865,16 @@ function TeacherDetail({
 
         <TabsContent value="rekomendasi">
           {activeDiagnostic ? <Recommendation diagnostic={activeDiagnostic} /> : <EmptyState title="Rekomendasi belum tersedia" description="Simpan evaluasi diagnostik untuk menampilkan rekomendasi penempatan dan pembinaan." />}
+        </TabsContent>
+
+        <TabsContent value="supervisi">
+          <TeacherSupervisionTab
+            teacherProfileId={teacherProfile?.id || undefined}
+            canEdit={isDiagnosticAdmin}
+            classOptions={(teacherProfile?.current_classes ?? "").split(",").map((item) => item.trim()).filter((item) => item.replace(/[\s\-_.]/g, ""))}
+            supervisorId={currentUserId}
+            supervisorName={currentFullName}
+          />
         </TabsContent>
       </Tabs>
     </div>

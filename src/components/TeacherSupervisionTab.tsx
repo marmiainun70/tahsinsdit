@@ -76,7 +76,7 @@ export function TeacherSupervisionTab({
   });
 
   const history = listQuery.data ?? [];
-  const viewed = history.find((item) => item.id === viewId) ?? null;
+  const viewed = history.find((item) => item.id === viewId) ?? (!canEdit ? history[0] ?? null : null);
   const active = viewed
     ? { ...viewed, class_label: viewed.class_label ?? "", material: viewed.material ?? "", strengths_note: viewed.strengths_note ?? "", improvement_note: viewed.improvement_note ?? "" }
     : form;
@@ -172,8 +172,6 @@ export function TeacherSupervisionTab({
           </CardContent>
         </Card>
       )}
-
-      {!showForm && history[0] && setViewId(history[0].id) === undefined && null}
 
       {display && (
         <>
