@@ -284,6 +284,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(true);
         setSession(initSession);
         setUser(initSession.user);
+        lastUserIdRef.current = initSession.user.id;
         void verifySession(initSession, currentVerificationId);
       } else if (mounted && !initSession && verificationId === 0) {
         setLoading(false);
@@ -313,11 +314,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setAccountStatus(null);
           queryClient.clear();
         }
+        const sameUser = lastUserIdRef.current === newSession.user.id;
         lastUserIdRef.current = newSession.user.id;
 
-        setLoading(true);
         setSession(newSession);
         setUser(newSession.user);
+
+        // Pembaruan token saat kembali ke tab/aplikasi (user sama): verifikasi
+        // senyap tanpa loading, agar halaman & isian form tidak ter-reset.
+        if (sameUser) {
+          window.setTimeout(() => {
+            if (!mounted || currentVerificationId !== verificationId) return;
+            if (!navigator.onLine) return;
+            void fetchAndVerifyProfile(newSession.user).then((ok) => {
+              if (mounted && !ok) void enforceSignOut();
+            }).catch(() => {});
+          }, 0);
+          return;
+        }
+
+        setLoading(true);
 
         window.setTimeout(() => {
           if (!mounted || currentVerificationId !== verificationId) return;
