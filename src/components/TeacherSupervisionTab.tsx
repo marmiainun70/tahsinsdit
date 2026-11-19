@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer } from "recharts";
-import { Loader2, Save, Sparkles, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Save, Sparkles, Trash2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,6 +64,7 @@ export function TeacherSupervisionTab({
   const queryClient = useQueryClient();
   const [form, setForm] = useState(emptyForm);
   const [viewId, setViewId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const listQuery = useQuery({
     queryKey: ["teacher-supervisions", teacherProfileId],
@@ -101,13 +102,10 @@ export function TeacherSupervisionTab({
     mutationFn: async () => {
       if (!teacherProfileId) throw new Error("Lengkapi profil guru terlebih dahulu.");
       if (filled < 8) throw new Error("Isi skor untuk ke-8 indikator terlebih dahulu.");
-      const { error } = await db.from("teacher_supervisions").insert({
-        teacher_profile_id: teacherProfileId,
+      const payload = {
         supervision_date: form.supervision_date,
         class_label: form.class_label || null,
         material: form.material || null,
-        supervisor_id: supervisorId ?? null,
-        supervisor_name: supervisorName ?? null,
         scores: form.scores,
         observations: form.observations,
         total_score: calc.total,
@@ -115,7 +113,10 @@ export function TeacherSupervisionTab({
         predicate: calc.predicate,
         strengths_note: form.strengths_note || null,
         improvement_note: form.improvement_note || null,
-      });
+      };
+      const { error } = editingId
+        ? await db.from("teacher_supervisions").update(payload).eq("id", editingId)
+        : await db.from("teacher_supervisions").insert({ ...payload, teacher_profile_id: teacherProfileId, supervisor_id: supervisorId ?? null, supervisor_name: supervisorName ?? null });
       if (error) throw error;
     },
     onSuccess: async () => {
@@ -123,11 +124,35 @@ export function TeacherSupervisionTab({
         queryClient.invalidateQueries({ queryKey: ["teacher-supervisions"] }),
         queryClient.invalidateQueries({ queryKey: ["teacher-supervisions-latest"] }),
       ]);
+      const wasEditing = editingId;
       setForm(emptyForm());
-      toast({ title: "Hasil supervisi berhasil disimpan" });
+      setEditingId(null);
+      if (wasEditing) setViewId(wasEditing);
+      toast({ title: wasEditing ? "Perubahan supervisi berhasil disimpan" : "Hasil supervisi berhasil disimpan" });
     },
     onError: (error: Error) => toast({ title: "Gagal menyimpan supervisi", description: error.message, variant: "destructive" }),
   });
+
+  const startEdit = (item: Supervision) => {
+    setForm({
+      supervision_date: item.supervision_date,
+      class_label: item.class_label ?? "",
+      material: item.material ?? "",
+      scores: { ...(item.scores ?? {}) },
+      observations: { ...(item.observations ?? {}) },
+      strengths_note: item.strengths_note ?? "",
+      improvement_note: item.improvement_note ?? "",
+    });
+    setEditingId(item.id);
+    setViewId(null);
+  };
+
+  const cancelEdit = () => {
+    const id = editingId;
+    setEditingId(null);
+    setForm(emptyForm());
+    setViewId(id);
+  };
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
@@ -162,10 +187,10 @@ export function TeacherSupervisionTab({
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">
             {canEdit && (
-              <Button size="sm" variant={viewId ? "outline" : "default"} onClick={() => setViewId(null)}>+ Supervisi Baru</Button>
+              <Button size="sm" variant={viewId || editingId ? "outline" : "default"} onClick={() => { setEditingId(null); setForm(emptyForm()); setViewId(null); }}>+ Supervisi Baru</Button>
             )}
             {history.map((item) => (
-              <Button key={item.id} size="sm" variant={viewId === item.id ? "default" : "outline"} onClick={() => setViewId(item.id)}>
+              <Button key={item.id} size="sm" variant={viewId === item.id || editingId === item.id ? "default" : "outline"} onClick={() => { setEditingId(null); setForm(emptyForm()); setViewId(item.id); }}>
                 {new Date(item.supervision_date).toLocaleDateString("id-ID")} · {Number(item.final_score)}
               </Button>
             ))}
@@ -177,7 +202,12 @@ export function TeacherSupervisionTab({
         <>
           <Card>
             <CardHeader>
-              <CardTitle>{viewed ? "Hasil Supervisi KBM" : "Formulir Supervisi KBM"}</CardTitle>
+              <CardTitle>{viewed ? "Hasil Supervisi KBM" : editingId ? "Edit Supervisi KBM" : "Formulir Supervisi KBM"}</CardTitle>
+              {viewed && canEdit && (
+                <Button size="sm" variant="outline" className="mt-2 w-fit gap-2" onClick={() => startEdit(viewed)}>
+                  <Pencil className="h-4 w-4" /> Edit Data
+                </Button>
+              )}
               <CardDescription>Pilih skor 1–4 di setiap indikator. Catatan pengamatan terisi otomatis dan tetap bisa diubah sesuai fakta di kelas.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 sm:grid-cols-3">
@@ -285,9 +315,19 @@ export function TeacherSupervisionTab({
                     <Trash2 className="h-4 w-4" /> Hapus
                   </Button>
                 )}
+                {viewed && canEdit && (
+                  <Button variant="outline" className="gap-2" onClick={() => startEdit(viewed)}>
+                    <Pencil className="h-4 w-4" /> Edit
+                  </Button>
+                )}
+                {!viewed && canEdit && editingId && (
+                  <Button variant="outline" className="gap-2" disabled={save.isPending} onClick={cancelEdit}>
+                    <X className="h-4 w-4" /> Batal
+                  </Button>
+                )}
                 {!viewed && canEdit && (
                   <Button className="gap-2" disabled={save.isPending} onClick={() => save.mutate()}>
-                    {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Simpan Supervisi
+                    {save.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} {editingId ? "Simpan Perubahan" : "Simpan Supervisi"}
                   </Button>
                 )}
               </div>
