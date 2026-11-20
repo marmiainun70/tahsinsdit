@@ -294,11 +294,14 @@ export default function ManageAccounts() {
     } 
 
     // Update user_roles if changed
-    if (editForm.role) {
+    // Samakan nama di biodata guru (jika ada) agar tidak tertimpa nama lama
+    await (supabase as any).from("teacher_profiles").update({ full_name: editForm.full_name }).eq("user_id", userId);
+
+    if (editForm.role && ["admin", "guru", "parent", "kepala_sekolah"].includes(editForm.role)) {
       const { error: roleError } = await supabase.from("user_roles").upsert({
         user_id: userId,
         role: editForm.role as "admin" | "guru" | "parent" | "kepala_sekolah"
-      });
+      }, { onConflict: "user_id,role", ignoreDuplicates: true });
       
       if (roleError) {
          setActionError("Gagal memperbarui tabel user_roles: " + roleError.message);
@@ -310,6 +313,7 @@ export default function ManageAccounts() {
     await queryClient.invalidateQueries({ queryKey: ["managed-accounts"] });
     setEditingUserId(null);
     setIsSavingEdit(false);
+    if (userId === user?.id) window.location.reload();
   };
 
   const deleteAccount = async (userId: string) => {
@@ -662,7 +666,7 @@ export default function ManageAccounts() {
           >
             <option value="all">Semua Role</option>
             <option value="admin">Admin</option>
-            <option value="teacher">Guru</option>
+            <option value="guru">Guru</option>
             <option value="parent">Orang Tua</option>
                           <option value="kepala_sekolah">Kepala Sekolah</option>
             {accounts.some((a) => a.role === "tester") && <option value="tester">Penguji</option>}
@@ -762,7 +766,7 @@ export default function ManageAccounts() {
                           className="h-8 rounded-lg border border-border bg-background px-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
                         >
                           <option value="admin">Admin</option>
-                          <option value="teacher">Guru</option>
+                          <option value="guru">Guru</option>
                           <option value="parent">Orang Tua</option>
                           <option value="kepala_sekolah">Kepala Sekolah</option>
                           <option value="koordinator">Koordinator</option>
