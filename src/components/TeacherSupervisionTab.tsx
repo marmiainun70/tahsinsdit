@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer } from "recharts";
-import { Loader2, Pencil, Save, Sparkles, Trash2, X } from "lucide-react";
+import { Award, BookOpen, CalendarDays, Loader2, Pencil, Save, Sparkles, Target, Trash2, User, Users, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -198,7 +198,19 @@ export function TeacherSupervisionTab({
         </Card>
       )}
 
-      {display && (
+      {display && readOnly && viewed && (
+        <SupervisionReport
+          item={viewed}
+          calc={calc}
+          chartData={chartData}
+          canEdit={canEdit}
+          removing={remove.isPending}
+          onEdit={() => startEdit(viewed)}
+          onRemove={() => confirm("Hapus riwayat supervisi ini?") && remove.mutate(viewed.id)}
+        />
+      )}
+
+      {display && !(readOnly && viewed) && (
         <>
           <Card>
             <CardHeader>
@@ -334,6 +346,125 @@ export function TeacherSupervisionTab({
             </CardContent>
           </Card>
         </>
+      )}
+    </div>
+  );
+}
+
+const scoreTone: Record<number, string> = {
+  4: "bg-primary/15 text-primary border-primary/30",
+  3: "bg-secondary text-secondary-foreground border-border",
+  2: "bg-accent text-accent-foreground border-border",
+  1: "bg-destructive/15 text-destructive border-destructive/30",
+};
+
+function SupervisionReport({
+  item,
+  calc,
+  chartData,
+  canEdit,
+  removing,
+  onEdit,
+  onRemove,
+}: {
+  item: Supervision;
+  calc: ReturnType<typeof calcSupervision>;
+  chartData: { indikator: string; skor: number }[];
+  canEdit: boolean;
+  removing: boolean;
+  onEdit: () => void;
+  onRemove: () => void;
+}) {
+  const date = new Date(item.supervision_date).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+  const meta = [
+    { icon: CalendarDays, label: "Tanggal", value: date },
+    { icon: Users, label: "Kelas", value: item.class_label || "-" },
+    { icon: BookOpen, label: "Materi", value: item.material || "-" },
+    { icon: User, label: "Supervisor", value: item.supervisor_name || "-" },
+  ];
+  return (
+    <div className="space-y-4">
+      <Card className="overflow-hidden border-primary/20">
+        <div className="h-1.5 bg-gradient-to-r from-primary via-primary/60 to-accent" />
+        <CardContent className="grid gap-5 p-5 md:grid-cols-[minmax(0,1fr)_280px] md:items-center">
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Rapor Supervisi KBM</p>
+              <div className="mt-2 flex flex-wrap items-end gap-3">
+                <span className="text-5xl font-bold leading-none text-foreground">{calc.finalScore}</span>
+                <Badge variant="outline" className={`mb-1 gap-1 px-3 py-1 text-sm ${predicateStyle[calc.predicate] ?? ""}`}>
+                  <Award className="h-3.5 w-3.5" /> {calc.predicate}
+                </Badge>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">Jumlah skor {calc.total} dari 32</p>
+              <Progress value={calc.finalScore} className="mt-3 h-2" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {meta.map(({ icon: Icon, label, value }) => (
+                <div key={label} className="flex items-start gap-2 rounded-xl bg-muted/40 p-2.5">
+                  <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-muted-foreground">{label}</p>
+                    <p className="break-words text-sm font-medium text-foreground">{value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="h-60 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart data={chartData} outerRadius="72%">
+                <PolarGrid stroke="hsl(var(--border))" />
+                <PolarAngleAxis dataKey="indikator" tick={{ fill: "hsl(var(--foreground))", fontSize: 12, fontWeight: 600 }} />
+                <PolarRadiusAxis domain={[0, 4]} tickCount={5} tick={false} axisLine={false} />
+                <Radar dataKey="skor" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-3 md:grid-cols-2">
+        <div className="rounded-2xl border border-primary/25 bg-primary/5 p-4">
+          <p className="flex items-center gap-2 text-sm font-semibold text-primary"><Sparkles className="h-4 w-4" /> Kelebihan & Praktik Baik</p>
+          <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground">{item.strengths_note || "Belum ada catatan."}</p>
+        </div>
+        <div className="rounded-2xl border border-accent bg-accent/30 p-4">
+          <p className="flex items-center gap-2 text-sm font-semibold text-accent-foreground"><Target className="h-4 w-4" /> Prioritas Peningkatan</p>
+          <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground">{item.improvement_note || "Belum ada catatan."}</p>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Rincian 8 Indikator</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2.5">
+          {SUPERVISION_INDICATORS.map((ind, i) => {
+            const score = Number(item.scores?.[ind.key]) || 0;
+            const note = item.observations?.[ind.key];
+            return (
+              <div key={ind.key} className="rounded-xl border border-border bg-card p-3.5">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">{i + 1}</span>
+                  <p className="min-w-0 flex-1 text-sm font-semibold leading-snug text-foreground">{ind.title}</p>
+                  <Badge variant="outline" className={`shrink-0 ${scoreTone[score] ?? ""}`}>{score ? `${score} · ${SCORE_LABELS[score]}` : "-"}</Badge>
+                </div>
+                <div className="ml-10 mt-2 flex gap-1">
+                  {[1, 2, 3, 4].map((v) => <span key={v} className={`h-1.5 flex-1 rounded-full ${v <= score ? "bg-primary" : "bg-muted"}`} />)}
+                </div>
+                {note && <p className="ml-10 mt-2.5 border-l-2 border-primary/40 pl-3 text-sm leading-relaxed text-muted-foreground">{note}</p>}
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
+      {canEdit && (
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="outline" className="gap-2 text-destructive" disabled={removing} onClick={onRemove}><Trash2 className="h-4 w-4" /> Hapus</Button>
+          <Button className="gap-2" onClick={onEdit}><Pencil className="h-4 w-4" /> Edit Data</Button>
+        </div>
       )}
     </div>
   );
