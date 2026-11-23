@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer } from "recharts";
 import { Award, BookOpen, CalendarDays, Loader2, Pencil, Save, Sparkles, Target, Trash2, User, Users, X } from "lucide-react";
@@ -46,6 +46,7 @@ const emptyForm = () => ({
   observations: {} as Record<string, string>,
   strengths_note: "",
   improvement_note: "",
+  supervisor_name: "",
 });
 
 export function TeacherSupervisionTab({
@@ -75,6 +76,10 @@ export function TeacherSupervisionTab({
       return (data ?? []) as Supervision[];
     },
   });
+
+  useEffect(() => {
+    if (!editingId && supervisorName) setForm((p) => (p.supervisor_name ? p : { ...p, supervisor_name: supervisorName }));
+  }, [editingId, supervisorName, form.supervisor_name === ""]);
 
   const history = listQuery.data ?? [];
   const viewed = history.find((item) => item.id === viewId) ?? (!canEdit ? history[0] ?? null : null);
@@ -113,10 +118,11 @@ export function TeacherSupervisionTab({
         predicate: calc.predicate,
         strengths_note: form.strengths_note || null,
         improvement_note: form.improvement_note || null,
+        supervisor_name: form.supervisor_name.trim() || null,
       };
       const { error } = editingId
         ? await db.from("teacher_supervisions").update(payload).eq("id", editingId)
-        : await db.from("teacher_supervisions").insert({ ...payload, teacher_profile_id: teacherProfileId, supervisor_id: supervisorId ?? null, supervisor_name: supervisorName ?? null });
+        : await db.from("teacher_supervisions").insert({ ...payload, teacher_profile_id: teacherProfileId, supervisor_id: supervisorId ?? null });
       if (error) throw error;
     },
     onSuccess: async () => {
@@ -142,6 +148,7 @@ export function TeacherSupervisionTab({
       observations: { ...(item.observations ?? {}) },
       strengths_note: item.strengths_note ?? "",
       improvement_note: item.improvement_note ?? "",
+      supervisor_name: item.supervisor_name ?? "",
     });
     setEditingId(item.id);
     setViewId(null);
@@ -236,7 +243,14 @@ export function TeacherSupervisionTab({
                 <Label>Materi tajwid/makhraj</Label>
                 <Input disabled={readOnly} placeholder="Contoh: Makhraj huruf Qaf & Kaf" value={active.material} onChange={(e) => setForm((p) => ({ ...p, material: e.target.value }))} />
               </div>
-              {viewed?.supervisor_name && <p className="text-xs text-muted-foreground sm:col-span-3">Supervisor: {viewed.supervisor_name}</p>}
+              {readOnly ? (
+                viewed?.supervisor_name && <p className="text-xs text-muted-foreground sm:col-span-3">Supervisor: {viewed.supervisor_name}</p>
+              ) : (
+                <div className="space-y-1.5 sm:col-span-3">
+                  <Label>Nama supervisor / penilai</Label>
+                  <Input placeholder={supervisorName || "Nama supervisor"} value={form.supervisor_name} onChange={(e) => setForm((p) => ({ ...p, supervisor_name: e.target.value }))} />
+                </div>
+              )}
             </CardContent>
           </Card>
 
