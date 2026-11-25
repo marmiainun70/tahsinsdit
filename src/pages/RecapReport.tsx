@@ -43,9 +43,14 @@ import {
   formatAttendanceCompact,
   formatProgressivePoint,
   formatRecapValue,
+  averageSemesterValues,
+  buildSemesterScoreMap,
+  getSemesterMonths,
+  getSemesterPredikat,
   type RecapAttendanceStatus,
   type RecapJoinedGroup,
   type RecapJoinedRow,
+  type SemesterScoreSummary,
 } from "@/utils/recapMonthlyReportRows";
 import { Eye, FileText, Download, Calendar, Users, ListChecks, FileWarning, Filter, RotateCcw, Search, ShieldCheck, AlertCircle, Star, ClipboardList, Loader2, BookOpen, BookOpenCheck, Award, ChevronRight } from "lucide-react";
 
@@ -85,6 +90,21 @@ interface PdfGroupData {
   kelas: number;
   rombel: string;
   rows: PdfRowData[];
+}
+
+interface SemesterDisplayRow {
+  studentId: string;
+  nama: string;
+  kelas: number;
+  rombel: string;
+  program: string;
+  score: SemesterScoreSummary;
+}
+
+interface SemesterDisplayGroup {
+  kelas: number;
+  rombel: string;
+  rows: SemesterDisplayRow[];
 }
 
 interface ExportSettings {
@@ -256,6 +276,7 @@ const RecapReport = () => {
   const [filterCategory, setFilterCategory] = useState<FilterCategoryType>("all");
   const [filterScore, setFilterScore] = useState<FilterScoreType>("all");
   const [filterProgram, setFilterProgram] = useState<FilterProgramType>("all");
+  const [recapView, setRecapView] = useState<"monthly" | "semester">("monthly");
   const [previewOpen, setPreviewOpen] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [pdfPreviewSize, setPdfPreviewSize] = useState<PdfPaperSize>("a4");
@@ -277,6 +298,13 @@ const RecapReport = () => {
   });
   const selectedMonth = Number(filterMonth);
   const selectedYear = Number(filterYear);
+  const isSemesterPeriod = selectedMonth === 6 || selectedMonth === 12;
+  const showSemesterView = isSemesterPeriod && recapView === "semester";
+  const semesterMonths = isSemesterPeriod ? getSemesterMonths(selectedMonth as 6 | 12) : [];
+
+  useEffect(() => {
+    setRecapView(selectedMonth === 6 || selectedMonth === 12 ? "semester" : "monthly");
+  }, [selectedMonth, selectedYear]);
 
   // Filter siswa sesuai kelas/rombel/search
   const filteredStudents = useMemo(() => {
@@ -383,6 +411,58 @@ const RecapReport = () => {
     selectedMonth,
     selectedYear,
   ]);
+
+  const semesterScoresByStudent = useMemo(() => {
+    if (!isSemesterPeriod) return new Map<string, SemesterScoreSummary>();
+    const studentIds = groups.flatMap(group => group.rows.map(row => row.studentId));
+    return buildSemesterScoreMap(reports, studentIds, selectedYear, selectedMonth === 6 ? 6 : 12);
+  }, [groups, isSemesterPeriod, reports, selectedMonth, selectedYear]);
+
+  const semesterGroups = useMemo<SemesterDisplayGroup[]>(() => {
+    return groups
+      .map(group => ({
+        kelas: group.kelas,
+        rombel: group.rombel,
+        rows: group.rows
+          .filter(row => {
+            if (filterReportStatus === "filled" && row.reportStatus !== "filled") return false;
+            if (filterReportStatus === "empty" && row.reportStatus !== "empty") return false;
+            if (filterAttendanceStatus === "not_complete" && row.attendanceStatus === "Lengkap") return false;
+            if (filterAttendanceStatus !== "all" && filterAttendanceStatus !== "not_complete" && row.attendanceStatus !== filterAttendanceStatus) return false;
+            if (filterCategory !== "all" && row.kategoriProgres !== filterCategory) return false;
+            if (filterProgram !== "all" && row.bucket !== filterProgram) return false;
+            const score = semesterScoresByStudent.get(row.studentId)?.semesterAverage ?? null;
+            return scoreMatchesFilter(score, filterScore);
+          })
+          .map(row => ({
+            studentId: row.studentId,
+            nama: row.nama,
+            kelas: group.kelas,
+            rombel: group.rombel,
+            program: row.program,
+            score: semesterScoresByStudent.get(row.studentId) ?? {
+              monthlyScores: semesterMonths.map(() => null),
+              semesterAverage: null,
+              isEndMonthProjected: true,
+            },
+          })),
+      }))
+      .filter(group => group.rows.length > 0);
+  }, [
+    filterAttendanceStatus,
+    filterCategory,
+    filterProgram,
+    filterReportStatus,
+    filterScore,
+    groups,
+    semesterMonths,
+    semesterScoresByStudent,
+  ]);
+
+  const semesterOverallAverage = useMemo(
+    () => averageSemesterValues(semesterGroups.flatMap(group => group.rows.map(row => row.score.semesterAverage))),
+    [semesterGroups],
+  );
 
   const displayGroups = useMemo(() => {
     return groups

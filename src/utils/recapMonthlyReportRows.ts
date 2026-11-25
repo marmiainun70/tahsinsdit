@@ -84,6 +84,79 @@ export const buildRecapMap = <T extends { student_id: string; year: number; mont
   return map;
 };
 
+export interface SemesterScoreSummary {
+  monthlyScores: (number | null)[];
+  semesterAverage: number | null;
+  isEndMonthProjected: boolean;
+}
+
+export const getSemesterMonths = (endMonth: 6 | 12) =>
+  endMonth === 6 ? [1, 2, 3, 4, 5, 6] : [7, 8, 9, 10, 11, 12];
+
+export const averageSemesterValues = (values: (number | null | undefined)[]) => {
+  const availableValues = values.filter((value): value is number =>
+    typeof value === "number" && Number.isFinite(value)
+  );
+  return availableValues.length
+    ? availableValues.reduce((total, value) => total + value, 0) / availableValues.length
+    : null;
+};
+
+export const buildSemesterScoreMap = (
+  reports: MonthlyReport[],
+  studentIds: string[],
+  year: number,
+  endMonth: 6 | 12,
+) => {
+  const months = getSemesterMonths(endMonth);
+  const monthIndexes = new Map(months.map((month, index) => [month, index]));
+  const scoresByStudent = new Map<string, number[][]>();
+
+  studentIds.forEach((studentId) => scoresByStudent.set(studentId, months.map(() => [])));
+
+  reports.forEach((report) => {
+    const monthIndex = monthIndexes.get(report.month);
+    const score = report.nilai_akhir_progresif;
+    const studentScores = scoresByStudent.get(report.student_id);
+    if (
+      report.year !== year ||
+      monthIndex === undefined ||
+      !studentScores ||
+      typeof score !== "number" ||
+      !Number.isFinite(score) ||
+      !isReportMeaningfullyFilled(report)
+    ) return;
+
+    studentScores[monthIndex].push(score);
+  });
+
+  const summaries = new Map<string, SemesterScoreSummary>();
+  scoresByStudent.forEach((monthlyBuckets, studentId) => {
+    const monthlyScores = monthlyBuckets.map((scores) => averageSemesterValues(scores));
+    const endIndex = monthlyScores.length - 1;
+    const isEndMonthProjected = monthlyScores[endIndex] === null;
+    if (isEndMonthProjected) {
+      monthlyScores[endIndex] = averageSemesterValues(monthlyScores.slice(0, endIndex));
+    }
+
+    summaries.set(studentId, {
+      monthlyScores,
+      semesterAverage: averageSemesterValues(monthlyScores),
+      isEndMonthProjected,
+    });
+  });
+
+  return summaries;
+};
+
+export const getSemesterPredikat = (score: number | null) => {
+  if (score === null) return "Belum ada nilai";
+  if (score >= 90) return "Amat Baik";
+  if (score >= 80) return "Baik";
+  if (score >= 70) return "Cukup";
+  return "Perlu Bimbingan";
+};
+
 export const buildAttendanceSettingsMap = (settings: AttendancePeriodSettings[]) => {
   const map = new Map<string, AttendancePeriodSettings>();
   settings.forEach((setting) => {

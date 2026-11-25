@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import type { Attendance, AttendancePeriodSettings } from "@/hooks/useAttendance";
 import type { MonthlyReport } from "@/hooks/useMonthlyReports";
 import {
+  averageSemesterValues,
+  buildSemesterScoreMap,
   buildRecapJoinedGroups,
   buildRecapPeriodKey,
   formatProgressivePoint,
+  getSemesterPredikat,
 } from "@/utils/recapMonthlyReportRows";
 
 const report = (overrides: Partial<MonthlyReport> = {}): MonthlyReport => ({
@@ -237,5 +240,49 @@ describe("recapMonthlyReportRows", () => {
     expect(groups[0].rows[0].pencapaianTargetBulan).toBeNull();
     expect(groups[0].rows[1].pencapaianTargetBulan).toBe(3);
     expect(formatProgressivePoint(groups[0].rows[1].poinKehadiranKesiapan)).toBe("+2");
+  });
+
+  it("uses the average of earlier months as June when June has no score", () => {
+    const scores = buildSemesterScoreMap([
+      report({ id: "jan", month: 1, nilai_akhir_progresif: 80 }),
+      report({ id: "mar", month: 3, nilai_akhir_progresif: 90 }),
+      report({ id: "may", month: 5, nilai_akhir_progresif: 70 }),
+    ], ["student-1"], 2026, 6).get("student-1");
+
+    expect(scores?.monthlyScores).toEqual([80, null, 90, null, 70, 80]);
+    expect(scores?.isEndMonthProjected).toBe(true);
+    expect(scores?.semesterAverage).toBe(80);
+  });
+
+  it("includes an entered December score in the semester average", () => {
+    const scores = buildSemesterScoreMap([
+      report({ id: "jul", month: 7, nilai_akhir_progresif: 70 }),
+      report({ id: "aug", month: 8, nilai_akhir_progresif: 80 }),
+      report({ id: "dec", month: 12, nilai_akhir_progresif: 100 }),
+    ], ["student-1"], 2026, 12).get("student-1");
+
+    expect(scores?.monthlyScores).toEqual([70, 80, null, null, null, 100]);
+    expect(scores?.isEndMonthProjected).toBe(false);
+    expect(scores?.semesterAverage).toBe(250 / 3);
+  });
+
+  it("averages multiple program scores within a month before averaging the semester", () => {
+    const scores = buildSemesterScoreMap([
+      report({ id: "jul-tahsin", month: 7, nilai_akhir_progresif: 70 }),
+      report({ id: "jul-tahfizh", month: 7, program_type: "tahfizh", nilai_akhir_progresif: 90 }),
+      report({ id: "dec", month: 12, nilai_akhir_progresif: 80 }),
+    ], ["student-1"], 2026, 12).get("student-1");
+
+    expect(scores?.monthlyScores[0]).toBe(80);
+    expect(scores?.semesterAverage).toBe(80);
+  });
+
+  it("uses the agreed semester score labels and ignores missing values", () => {
+    expect(getSemesterPredikat(90)).toBe("Amat Baik");
+    expect(getSemesterPredikat(80)).toBe("Baik");
+    expect(getSemesterPredikat(70)).toBe("Cukup");
+    expect(getSemesterPredikat(69)).toBe("Perlu Bimbingan");
+    expect(getSemesterPredikat(null)).toBe("Belum ada nilai");
+    expect(averageSemesterValues([null, 80, 100])).toBe(90);
   });
 });
