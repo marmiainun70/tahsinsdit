@@ -243,6 +243,9 @@ const DYNAMIC_BAR_COLORS = [
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Terjadi kesalahan saat memproses layout.";
 
+const formatSemesterScore = (score: number | null) =>
+  score === null ? "-" : score.toLocaleString("id-ID", { maximumFractionDigits: 1 });
+
 const RecapReport = () => {
   const { user, profile } = useAuth();
   const isMobile = useIsMobile();
@@ -300,7 +303,10 @@ const RecapReport = () => {
   const selectedYear = Number(filterYear);
   const isSemesterPeriod = selectedMonth === 6 || selectedMonth === 12;
   const showSemesterView = isSemesterPeriod && recapView === "semester";
-  const semesterMonths = isSemesterPeriod ? getSemesterMonths(selectedMonth as 6 | 12) : [];
+  const semesterMonths = useMemo(
+    () => isSemesterPeriod ? getSemesterMonths(selectedMonth as 6 | 12) : [],
+    [isSemesterPeriod, selectedMonth],
+  );
 
   useEffect(() => {
     setRecapView(selectedMonth === 6 || selectedMonth === 12 ? "semester" : "monthly");
@@ -1652,6 +1658,53 @@ const RecapReport = () => {
             </CardContent>
           </Card>
 
+          {isSemesterPeriod && (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between" role="tablist" aria-label="Tampilan rekap">
+              <div className="inline-flex w-full gap-1 rounded-md border border-border bg-muted p-1 sm:w-auto">
+                <Button
+                  type="button"
+                  role="tab"
+                  aria-selected={recapView === "semester"}
+                  variant={recapView === "semester" ? "default" : "ghost"}
+                  className="h-9 flex-1 gap-2 px-3 text-xs sm:flex-none"
+                  onClick={() => setRecapView("semester")}
+                >
+                  <Award className="h-4 w-4" />
+                  Rekap Nilai Semester
+                </Button>
+                <Button
+                  type="button"
+                  role="tab"
+                  aria-selected={recapView === "monthly"}
+                  variant={recapView === "monthly" ? "default" : "ghost"}
+                  className="h-9 flex-1 gap-2 px-3 text-xs sm:flex-none"
+                  onClick={() => setRecapView("monthly")}
+                >
+                  <Calendar className="h-4 w-4" />
+                  Rekap Bulanan Biasa
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Semester {selectedMonth === 6 ? "1 (Januari–Juni)" : "2 (Juli–Desember)"} · {selectedYear}
+              </p>
+            </div>
+          )}
+
+          {showSemesterView ? (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-lg border border-border bg-card p-3">
+                <p className="text-xs text-muted-foreground">Siswa dalam rekap semester</p>
+                <p className="mt-1 text-2xl font-bold text-foreground">
+                  {semesterGroups.reduce((total, group) => total + group.rows.length, 0)}
+                </p>
+              </div>
+              <div className="rounded-lg border border-border bg-card p-3">
+                <p className="text-xs text-muted-foreground">Rata-rata nilai semester</p>
+                <p className="mt-1 text-2xl font-bold text-foreground">{formatSemesterScore(semesterOverallAverage)}</p>
+              </div>
+            </div>
+          ) : (
+            <>
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
             <StatCard
@@ -1718,7 +1771,6 @@ const RecapReport = () => {
               subtitle={stats.scoreLabel}
             />
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mt-2">
             <div 
               onClick={() => setFilterProgram(filterProgram === "TD" ? "all" : "TD")}
@@ -1849,6 +1901,8 @@ const RecapReport = () => {
               </div>
             </div>
           </div>
+            </>
+          )}
 
           {/* Active Filter Cues */}
           {(filterProgram !== "all" || filterReportStatus !== "all" || filterAttendanceStatus !== "all" || filterCategory !== "all" || filterScore !== "all" || search.trim() || filterKelas !== "all" || filterRombel !== "all") && (
@@ -1937,6 +1991,111 @@ const RecapReport = () => {
             </div>
           )}
 
+          {showSemesterView ? (
+            <Card className="overflow-hidden border-border shadow-sm">
+              <CardHeader className="border-b border-border bg-card py-3">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Award className="h-4 w-4 text-primary" />
+                  Rekap Nilai Semester {selectedMonth === 6 ? "1" : "2"} · {selectedYear}
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Nilai asli {MONTH_NAMES[selectedMonth - 1]} dipakai bila tersedia. Jika belum, nilainya dirata-ratakan dari bulan sebelumnya dan tetap masuk ke rata-rata semester.
+                </p>
+              </CardHeader>
+              <CardContent className="p-0">
+                {semesterGroups.length === 0 ? (
+                  <div className="p-8 text-center text-sm text-muted-foreground">Tidak ada siswa pada filter ini.</div>
+                ) : (
+                  <>
+                    <div className="hidden overflow-x-auto md:block">
+                      <table className="w-full min-w-[1080px] border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-muted/50 text-center font-semibold text-foreground">
+                            <th rowSpan={2} className="border border-border px-3 py-3">No.</th>
+                            <th rowSpan={2} className="border border-border px-3 py-3 text-left">Nama Siswa</th>
+                            <th rowSpan={2} className="border border-border px-3 py-3">Kelas</th>
+                            <th rowSpan={2} className="border border-border px-3 py-3">Program</th>
+                            <th colSpan={semesterMonths.length} className="border border-border px-3 py-3">Nilai Per Bulan</th>
+                            <th rowSpan={2} className="border border-border px-3 py-3">Rata-rata Semester</th>
+                            <th rowSpan={2} className="border border-border px-3 py-3">Predikat</th>
+                          </tr>
+                          <tr className="bg-muted/30 text-center font-medium text-muted-foreground">
+                            {semesterMonths.map(month => (
+                              <th key={month} className="border border-border px-3 py-2">{MONTH_NAMES[month - 1]}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        {semesterGroups.map(group => (
+                          <tbody key={`${group.kelas}-${group.rombel}`}>
+                            <tr className="bg-muted/40 font-semibold text-foreground">
+                              <td colSpan={semesterMonths.length + 6} className="border border-border px-3 py-2">
+                                Kelas {group.kelas} {group.rombel} · {group.rows.length} siswa
+                              </td>
+                            </tr>
+                            {group.rows.map((row, index) => (
+                              <tr key={row.studentId} className="hover:bg-muted/30">
+                                <td className="border border-border px-3 py-2 text-center">{index + 1}</td>
+                                <td className="border border-border px-3 py-2 font-medium">{row.nama}</td>
+                                <td className="border border-border px-3 py-2 text-center">{row.kelas}{row.rombel}</td>
+                                <td className="border border-border px-3 py-2 text-center">{row.program}</td>
+                                {row.score.monthlyScores.map((score, monthIndex) => (
+                                  <td key={semesterMonths[monthIndex]} className="border border-border px-3 py-2 text-center">
+                                    <span>{formatSemesterScore(score)}</span>
+                                    {monthIndex === semesterMonths.length - 1 && row.score.isEndMonthProjected && score !== null && (
+                                      <span className="ml-1 text-[10px] text-muted-foreground">Rata-rata</span>
+                                    )}
+                                  </td>
+                                ))}
+                                <td className="border border-border px-3 py-2 text-center font-semibold">{formatSemesterScore(row.score.semesterAverage)}</td>
+                                <td className="border border-border px-3 py-2 text-center">{getSemesterPredikat(row.score.semesterAverage)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        ))}
+                      </table>
+                    </div>
+                    <div className="divide-y border-t border-border md:hidden">
+                      {semesterGroups.map(group => (
+                        <section key={`${group.kelas}-${group.rombel}`}>
+                          <div className="flex items-center justify-between bg-muted/40 px-3 py-2 text-xs font-semibold">
+                            <span>Kelas {group.kelas} {group.rombel}</span>
+                            <span className="text-muted-foreground">{group.rows.length} siswa</span>
+                          </div>
+                          {group.rows.map((row, index) => (
+                            <div key={row.studentId} className="space-y-2 border-t border-border px-3 py-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-sm font-semibold text-foreground">{index + 1}. {row.nama}</p>
+                                  <p className="text-xs text-muted-foreground">{row.kelas}{row.rombel} · {row.program}</p>
+                                </div>
+                                <Badge variant="outline" className="shrink-0 text-[10px]">{getSemesterPredikat(row.score.semesterAverage)}</Badge>
+                              </div>
+                              <div className="grid grid-cols-3 gap-1.5">
+                                {row.score.monthlyScores.map((score, monthIndex) => (
+                                  <div key={semesterMonths[monthIndex]} className="min-w-0 rounded-md border border-border bg-muted/30 px-2 py-1.5 text-center">
+                                    <p className="truncate text-[10px] text-muted-foreground">{MONTH_NAMES[semesterMonths[monthIndex] - 1]}</p>
+                                    <p className="font-semibold text-foreground">{formatSemesterScore(score)}</p>
+                                    {monthIndex === semesterMonths.length - 1 && row.score.isEndMonthProjected && score !== null && (
+                                      <p className="text-[9px] text-muted-foreground">Rata-rata</p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="flex items-center justify-between border-t border-border pt-2 text-xs">
+                                <span className="text-muted-foreground">Rata-rata semester</span>
+                                <span className="font-bold text-foreground">{formatSemesterScore(row.score.semesterAverage)}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </section>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <>
           {/* Export Section (Mobile optimized view as per mockup) */}
           <div className="rounded-xl border border-border bg-card p-4 shadow-sm flex flex-col gap-3 md:hidden">
             <div>
@@ -2389,6 +2548,9 @@ const RecapReport = () => {
                 </ul>
               </div>
             </div>
+          )}
+
+            </>
           )}
 
       {/* Dialog Download Multi Bulan per Rombel */}
